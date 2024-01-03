@@ -1,0 +1,41 @@
+{% load static %}
+<!-- Spinner début -->
+    <!-- pour afficher un "spinner" ou une icône de chargement lorsqu'une action asynchrone est en cours sur une page web. -->
+    <div id="spinner"
+        class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <!-- Spinner fin -->
+
+    <!-- Navbar début -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="{% url 'index' %}" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <h2 class="m-0 text-primary"><i class="fa fa-book me-3"></i>Appenligne</h2>
+        </a>
+        <!-- bouton de basculement de la barre de navigation -->
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="{% url 'index' %}" class="nav-item nav-link active" onclick="return false;" >Cours à domicile</a>
+                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Cours en ligne</a>
+                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Stage en ligne</a>
+                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Présentiel en groupe</a>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Autres</a>
+                    <div class="dropdown-menu fade-down m-0">
+                        <a href="{% url 'index' %}" class="dropdown-item" onclick="return false;" >Notre équipe</a>
+                        <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient" ><a  class="dropdown-item">Compte élève</a></div>
+                        <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteProf" ><a  class="dropdown-item">Compte prof</a></div>
+                    </div>
+                </div>
+                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Contact</a>
+            </div>
+            <a href="#" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block" >Votre compte<i
+                    class="fa fa-arrow-right ms-3"></i></a>
+        </div>
+    </nav>
+    <!-- Navbar fin -->

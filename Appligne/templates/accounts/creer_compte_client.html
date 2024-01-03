@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Home{% endblock %}
+
+{% block content %}
+
+        <!-- mon compte début -->
+        <!-- identité et coordonnees debut -->
+        <div class="container-xxl py-5 p-5" id="identite" >
+            <div class="container p-5">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+                    <h3 class="mb-5">Votre identité et vos coordonnées</h3>
+                </div>
+                <div class="container bg-light  p-5">
+                    
+                    <div class="row g-4">
+                    
+                        <div class="col-md-4 position-relative">
+                            <label for="validationTooltipCivil" class="form-label">Civilité</label>
+                            <select class="form-select" id="validationTooltipCivil" required>
+                                <option >Monsieur</option>
+                                <option   >Madame</option>
+                                <option  >Autre</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-md-4 position-relative">
+                            <label for="validationTooltipPrenom" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
+                        </div>
+                        <div class="col-md-4 position-relative">
+                            <label for="validationTooltipNom" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="validationTooltipNom" value="" required>
+                        </div>
+                        
+                        <div class=" col-md-6   position-relative">
+                            <label for="validationTooltipAdr" class="form-label">Addresse</label>
+                            <input type="text" class="form-control" id="validationTooltipAdr" required>
+                        </div>
+                        <div class="col-md-6 position-relative">
+                            <label for="validationTooltipUsername" class="form-label">Email </label>
+                            <div class="input-group has-validation">
+                                <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
+                                <input type="text" class="form-control" id="validationTooltipUsername"
+                                    aria-describedby="validationTooltipUsernamePrepend" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3 position-relative">
+                            <label  class="form-label" for="phoneInput">Numéro de téléphone :</label>
+                            <input type="text"  class="form-control" id="phoneInput" name="phoneInput" pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00" required>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-4 position-relative">
+                            <label for="dateInput" class="form-label">Date de naissance</label>
+                            <input type="text" class="form-control " id="dateInput" placeholder="Sélectionnez une date" readonly required>
+                        </div>
+                        <div class="row justify-content-end g-2 p-3 ">
+                            <div class="col-lg-1 col-md-4 col-sm-6">
+                                <a class="btn btn-primary"  href="#identite_payeur" ><span style="color: white;">Suivant</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div> 
+<!-- identité et coordonnees  Fin -->
+<!-- coordonnees payeur debut -->
+<div class="container-xxl py-5 p-5" id="identite_payeur" >
+    <div class="container p-5">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h3 class="mb-5">Coordonnées payeur</h3>
+        </div>
+        <div class="container bg-light  p-5">
+            
+            <div class="row g-4">
+                <div class="col-md-4 position-relative">
+                    <label for="validationTooltipPrenom" class="form-label">Prénom</label>
+                    <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
+                </div>
+                <div class="col-md-4 position-relative">
+                    <label for="validationTooltipNom" class="form-label">Nom</label>
+                    <input type="text" class="form-control" id="validationTooltipNom" value="" required>
+                </div>
+                <div class=" col-md-4  position-relative">
+                    <label for="dateInput2" class="form-label">Date de naissance</label>
+                    <input type="text" class="form-control " id="dateInput2" placeholder="Sélectionnez une date" readonly required>
+                </div>
+                <div class=" col-12   position-relative">
+                    <label for="validationTooltipAdr" class="form-label">Addresse</label>
+                    <input type="text" class="form-control" id="validationTooltipAdr" required>
+                </div>
+                <div class="row justify-content-between g-2 p-3">
+                    <div class="col-lg-1 col-md-4 col-sm-6 " >
+                        <a class="btn btn-primary"  href="#identite" ><span style="color: white;">Précédent</span></a>
+                    </div>
+                    <div class="col-lg-1 col-md-4 col-sm-6">
+                        <a  class="btn btn-primary" href="#mot_de_passe" ><span style="color: white;">Suivant</span></a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div> 
+<!-- coordonnees payeur Fin -->
+<!-- Mot de passe debut -->
+<div class="container-xxl py-5 p-5" id="mot_de_passe" >
+    <div class="container p-5">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h3 class="mb-5">Mot de passe</h3>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-4">
+                <div class="col-md-6 position-relative">
+                    <label for="validationTooltipPrenom" class="form-label">Nouveau mot de passe</label>
+                    <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
+                </div>
+                <div class="col-md-6 position-relative">
+                    <label for="validationTooltipNom" class="form-label">Ressaisir le nouveau mot de passe</label>
+                    <input type="text" class="form-control" id="validationTooltipNom" value="" required>
+                </div>
+                <div class="row justify-content-between g-2 p-3">
+                    <div class="col-lg-1 col-md-4 col-sm-6 " >
+                        <a class="btn btn-primary"  href="#identite_payeur" ><span style="color: white;">Précédent</span></a>
+                    </div>
+                    <div class="col-lg-1 col-md-4 col-sm-6">
+                        <a  class="btn btn-primary" href="#validation" ><span style="color: white;">Suivant</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
+<!-- coordonnees payeur Fin -->
+<!-- Validation debut -->
+    <div class="container p-5" id="validation" >
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h3 class="mb-5">Validation</h3>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 "  >
+                <div class="text-center">
+                    <p class="mb-4">Après avoir confirmé, vous êtes libre d'envoyer une demande de cours à l'enseignant de votre choix.</p>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-warning" >
+                    Confirmer l'enregistrement
+                </button>
+            </div>
+
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 " >
+                    <a class="btn btn-primary"  href="#mot_de_passe" ><span style="color: white;">Précédent</span></a>
+                </div>
+            </div>
+        </div>
+    </div> 
+<!-- Validation fin -->
+<!-- mon compte fin -->
+
+{% endblock %}
