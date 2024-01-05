@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -78,11 +81,11 @@ WSGI_APPLICATION = 'Appligne.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Appligne',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',   # ou l'adresse de votre serveur MySQL
-        'PORT': '3306',        # ou le port que vous utilisez pour MySQL
+        'NAME':  os.getenv("NAME_DATABASE"),
+        'USER': os.getenv("USER_DATABASE"),
+        'PASSWORD': os.getenv("PASSWORD_DATABASE"),
+        'HOST': os.getenv("HOST_DATABASE"),   # ou l'adresse de votre serveur MySQL
+        'PORT': os.getenv("PORT_DATABASE"),        # ou le port que vous utilisez pour MySQL
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",  # pour corriger l'erreur que vous pouvez rencontrer (mysql.W002) concernant le mode strict de MariaDB qui n'est pas activé pour la connexion à la base de données par défaut de Django (ChatGPT)
         },
