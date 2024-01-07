@@ -10,4 +10,4 @@ python-magic==0.4.27
 sqlparse==0.4.4
 tzdata==2023.3
 virtualenv==20.19.0
-python-dotenv==1.0.0
+python-decouple==3.5

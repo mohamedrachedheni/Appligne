@@ -11,10 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
-import os
+from decouple import config
 
-load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,7 +27,7 @@ SECRET_KEY = 'django-insecure-yjb=-9#-u7!9%++z)*)au0z*j_nsognm2mt#=jem%y=5cfx0%l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [config('ALLOWED_HOST1', "localhost")]
 
 
 # Application definition
@@ -81,11 +80,11 @@ WSGI_APPLICATION = 'Appligne.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME':  os.getenv("NAME_DATABASE"),
-        'USER': os.getenv("USER_DATABASE"),
-        'PASSWORD': os.getenv("PASSWORD_DATABASE"),
-        'HOST': os.getenv("HOST_DATABASE"),   # ou l'adresse de votre serveur MySQL
-        'PORT': os.getenv("PORT_DATABASE"),        # ou le port que vous utilisez pour MySQL
+        'NAME':  config('NAME_DATABASE', default=False),
+        'USER': config('USER_DATABASE', default=False),
+        'PASSWORD': config('PASSWORD_DATABASE', default=False),
+        'HOST': config('HOST_DATABASE', default=False),   # ou l'adresse de votre serveur MySQL
+        'PORT': config('PORT_DATABASE', default=False),        # ou le port que vous utilisez pour MySQL
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",  # pour corriger l'erreur que vous pouvez rencontrer (mysql.W002) concernant le mode strict de MariaDB qui n'est pas activé pour la connexion à la base de données par défaut de Django (ChatGPT)
         },
