@@ -4,862 +4,983 @@
 
 {% block content %}
 
-    <!-- formulaire créer compte prof début -->
-    
-        <!-- mon compte début -->
-        <!-- identité et coordonnees debut -->
-                <div class="container-xxl py-5 p-5" id="identite" >
-                    <div class="container p-5">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                            <h3 class="mb-5">Votre identité et vos coordonnées</h3>
-                        </div>
-                        <div class="container bg-light  p-5">
-                            
-                            <div class="row g-4">
-                            
-                                <div class="col-md-4 position-relative">
-                                    <label for="validationTooltipCivil" class="form-label">Civilité</label>
-                                    <select class="form-select" id="validationTooltipCivil" required>
-                                        <option >Monsieur</option>
-                                        <option   >Madame</option>
-                                        <option  >Autre</option>
-                                        
-                                    </select>
-                                </div>
-                                <div class="col-md-4 position-relative">
-                                    <label for="validationTooltipPrenom" class="form-label">Prénom</label>
-                                    <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
-                                </div>
-                                <div class="col-md-4 position-relative">
-                                    <label for="validationTooltipNom" class="form-label">Nom</label>
-                                    <input type="text" class="form-control" id="validationTooltipNom" value="" required>
-                                </div>
-                                
-                                <div class=" col-md-6   position-relative">
-                                    <label for="validationTooltipAdr" class="form-label">Addresse</label>
-                                    <input type="text" class="form-control" id="validationTooltipAdr" required>
-                                </div>
-                                <div class="col-md-6 position-relative">
-                                    <label for="validationTooltipUsername" class="form-label">Email </label>
-                                    <div class="input-group has-validation">
-                                        <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
-                                        <input type="text" class="form-control" id="validationTooltipUsername"
-                                            aria-describedby="validationTooltipUsernamePrepend" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 position-relative">
-                                    <label  class="form-label" for="phoneInput">Numéro de téléphone :</label>
-                                    <input type="text"  class="form-control" id="phoneInput" name="phoneInput" pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00" required>
-                                </div>
+<!-- formulaire créer compte prof début -->
 
-                                <div class="col-lg-3 col-md-4 col-sm-4 position-relative">
-                                    <label for="dateInput" class="form-label">Date de naissance</label>
-                                    <input type="text" class="form-control" id="dateInput" placeholder="Sélectionnez une date" readonly required>
-                                </div>
-                                <div class="row justify-content-end g-2 p-3 ">
-                                    <div class="col-lg-1 col-md-4 col-sm-6">
-                                        <a class="btn btn-primary"  href="#parcours-scolaire" ><span style="color: white;">Suivant</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div> 
-        <!-- identité et coordonnees Fin -->
-        <!-- parcours scolaire debut -->
-        <div class="container-xxl py-5 p-5" id="parcours-scolaire">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Les diplômes </h3>
-                </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 ajout-dipl" id="supprimerDivDiplome-1" >
-                        <div class="col-md-1  position-relative">
-                        
-                            <label class="form-label" for="invalidCheckDipl1">Principal</label>
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheckDipl1" >
-                        </div>   
-                        <div class=" col-md-4  position-relative">
-                            <label for="validationTooltipDipl1" class="form-label">Diplôme</label>
-                            <select class="form-select" id="validationTooltipDipl1" required>
-                                <option >AgroParsTech</option>
-                                <option   >Polytechnique</option>
-                                <option  >MathSup</option>
-                                
-                            </select>
-                        </div>
-                        <div class="col-lg-2 col-md-3 col-sm-4 position-relative">
-                            <label for="validationTooltipAnnnee1" class="form-label">Optenu</label>
-                            <input type="text" class="form-control" id="validationTooltipAnnee1" value="" required>
-                        </div>
-                        <div class="col-lg-5 col-md-12 col-sm-12 position-relative">
-                            <label for="validationTooltipIntitule1" class="form-label">Intitulé</label>
-                            <div class="row">
-                                <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
-                                    <input type="text" class="form-control" id="validationTooltipIntitule1" value="" required>
-                                </div>
-                                <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
-                                    <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivDiplome-1')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"  viewBox="0 0 26 26">
-                                        <path d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
+<!-- mon compte début -->
+<!-- identité et coordonnees debut -->
+<div class="container-xxl py-5 " id="identite">
+    <div class="container ">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Votre identité et vos coordonnées</h1>
+        </div>
+        <div class="container bg-light  p-5">
 
-                    <div class="row g-2 p-3" id="boutonAjouterDiplome" >
-                        <div class="col-12">
-                            <button class="btn btn-secondary" onclick="ajouterDiplome()" >Ajouter un diplôme</button>
-                        </div>
-                    </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#identite" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#experience" ><span style="color: white;">Suivant</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div> 
-        </div> 
-        <!-- parcours scolaire fin -->
-        <!-- Expériences éducation debut -->
-        <div class="container-xxl py-5 p-5" id="experience">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Votre éxpérience dans l'éducation </h3>
-                </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 ajout-exper" id="supprimerDivExperience-1" >
-                        <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
-                        
-                            <label class="form-label" for="invalidCheckExp1">Principal</label>
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheckExp1" >
-                        </div>   
-                        <div class="col-lg-2 col-md-10 col-sm-10 position-relative">
-                            <label for="validationTooltipExpTyp1" class="form-label">Type</label>
-                            <select class="form-select" id="validationTooltipExpTyp1" required>
-                                <option >Professeur(e) en sciences</option>
-                                <option   >Professeur(e) en chimie</option>
-                                <option  >Professeur(e) en physique</option>
-                                
-                            </select>
-                        </div>
-                        <div class="col-lg-1 col-md-6 col-sm-6 position-relative">
-                            <label for="validationTooltipDebut1" class="form-label">Début</label>
-                            <input type="text" class="form-control" id="validationTooltipDebut1" value="" required>
-                        </div>
-                        <div class="col-lg-1 col-md-6 col-sm-6 position-relative">
-                            <label for="validationTooltipFin1" class="form-label">Fin</label>
-                            <input type="text" class="form-control" id="validationTooltipFin1" value="" required>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6 g-3 ">
-                            <div class="row " >
-                                <div class="col-12"  style="padding: -25px; margin-top: -8px;">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked" >Actuellement</label>
+            <div class="row g-4">
 
-                                </div>
-                                <div class="col-12" style="padding: 15px; padding-left: 45px;">
-                                    <div class="form-check form-switch switch-column">
-                                        <input class="form-check-input mg-checkbox" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked onchange="toggleText()" style="padding-right: -5px;" >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-5 col-md-8 col-sm-6 position-relative" style="margin-left: -40px; ">
-                            <label for="validationTooltipExpComm1" class="form-label">Commentaires</label>
-                            <div class="row" style="margin-right:-100px" >
-                                <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
-                                    <input type="text" class="form-control" id="validationTooltipExpComm1" value="" required>
-                                </div>
-                                <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
-                                    <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivExperience-1')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"  viewBox="0 0 26 26">
-                                        <path d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
+                <div class="col-md-4 position-relative">
+                    <label for="validationTooltipCivil" class="form-label">Civilité</label>
+                    <select class="form-select" id="validationTooltipCivil" required>
+                        <option>Monsieur</option>
+                        <option>Madame</option>
+                        <option>Autre</option>
 
-                    <div class="row g-2 p-3" id="boutonAjouterExperience" >
-                        <div class="col-12">
-                            <button class="btn btn-secondary" onclick="ajouterExperience()" >Ajouter une autre éxpérience</button>
-                        </div>
-                    </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#parcours-scolaire" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#format-cours" ><span style="color: white;">Suivant</span></a>
-                        </div>
-                    </div>
+                    </select>
                 </div>
-            </div> 
-        </div> 
-        <!-- Expériences éducation fin -->
-        <!-- Les formats de vos cours debut -->
-        <div class="container-xxl py-5 p-5" id="format-cours">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Les formats de vos cours</h3>
+                <div class="col-md-4 position-relative">
+                    <label for="validationTooltipPrenom" class="form-label">Prénom</label>
+                    <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
                 </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 "  >
-                        <div class="col-12">
-                            <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-1" >
-                            <label class="form-check-label" for="invalidCheck-cours-1">
-                                Cours individuels chez l'éléve
-                            </label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-2" >
-                            <label class="form-check-label" for="invalidCheck-cours-2">
-                                Cours individuels par webcam
-                            </label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-3" >
-                            <label class="form-check-label" for="invalidCheck-cours-3">
-                                Stages intensifs pendant les vacances scolaires en présentiel
-                            </label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-4" >
-                            <label class="form-check-label" for="invalidCheck-cours-4">
-                                Cours en petits groupes par webcam
-                            </label>
-                            </div>
-                        </div>  
-                    </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#experience" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#matieres" ><span style="color: white;">Suivant</span></a>
-                        </div>
+                <div class="col-md-4 position-relative">
+                    <label for="validationTooltipNom" class="form-label">Nom</label>
+                    <input type="text" class="form-control" id="validationTooltipNom" value="" required>
+                </div>
+
+                <div class=" col-md-6   position-relative">
+                    <label for="validationTooltipAdr" class="form-label">Addresse</label>
+                    <input type="text" class="form-control" id="validationTooltipAdr" required>
+                </div>
+                <div class="col-md-6 position-relative">
+                    <label for="validationTooltipUsername" class="form-label">Email </label>
+                    <div class="input-group has-validation">
+                        <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
+                        <input type="text" class="form-control" id="validationTooltipUsername"
+                            aria-describedby="validationTooltipUsernamePrepend" required>
                     </div>
                 </div>
-            </div> 
-        </div> 
-        <!-- Les formats de vos course fin -->
-        <!-- Les détailles des matières debut -->
-        <div class="container-xxl py-5 p-5" id="matieres">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Les détailles des matières que vous enseignez </h3>
+                <div class="col-md-3 position-relative">
+                    <label class="form-label" for="phoneInput">Numéro de téléphone :</label>
+                    <input type="text" class="form-control" id="phoneInput" name="phoneInput"
+                        pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00" required>
                 </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 ajout-matiere" id="supprimerDivMatiere-1" >
-                        <div class="col-md-1  position-relative">
-                        
-                            <label class="form-label" for="invalidCheckMat1">Principal</label>
-                            <input class="form-check-input" type="checkbox" value="" id="invalidCheckMat1" >
-                        </div>   
-                        <div class=" col-md-5  position-relative">
-                            <label for="validationTooltipMat1" class="form-label">Matières</label>
-                            <select class="form-select" id="validationTooltipMat1" required>
-                                
-                                <optgroup label="Enseignements scientifiques">
-                                    <option>Chimie</option>
-                                    <option>Dessin industriel</option>
-                                    <option>Electronique</option>
-                                    <option>Informatique</option>
-                                    <option>Logique maths</option>
-                                    <option>Maths</option>
-                                    <option>NSI</option>
-                                    <option>Physique</option>
-                                    <option>Physique-chimie</option>
-                                    <option>Sciences de l'ingénieurs</option>
-                                    <option>Statistique</option>
-                                </optgroup>
-                            
-                                <optgroup label="Lettres">
-                                    <option>Français</option>
-                                    <option>Grec</option>
-                                    <option>Latin</option>
-                                    <option>Orthographe</option>
-                                    <option>Synthèse de document</option>
-                                </optgroup>
-                            
-                                <optgroup label="Langues vivantes">
-                                    <option>Allemand</option>
-                                    <option>Anglais</option>
-                                    <option>Arabe</option>
-                                    <option>Chinois</option>
-                                    <option>Coréen</option>
-                                    <option>Espagnol</option>
-                                    <option>FLE</option>
-                                    <option>Italien</option>
-                                    <option>Japonais</option>
-                                    <option>Portugais</option>
-                                    <option>Russe</option>
-                                </optgroup>
-                                <optgroup label="Sciences humaines">
-                                    <option>Culture générale</option>
-                                    <option>Education civique</option>
-                                    <option>ESH</option>
-                                    <option>Géopolitique</option>
-                                    <option>Histoire - Géographie</option>
-                                    <option>Humanites litérature philosophie</option>
-                                    <option>Management</option>
-                                    <option>Philosophie</option>
-                                    <option>Sciences politiques</option>
-                                </optgroup>
-                                <optgroup label="Economie">
-                                    <option>Comptabilité</option>
-                                    <option>Control de gestion</option>
-                                    <option>Droit</option>
-                                    <option>Economie</option>
-                                    <option>Fiscalité</option>
-                                    <option>Gestion financière</option>
-                                    <option>Macroéconomie</option>
-                                    <option>Marketing</option>
-                                    <option>Microéconomie</option>
-                                    <option>SES</option>
-                                </optgroup>
-                                <optgroup label="Sciences naturelles">
-                                    <option>Anatomie</option>
-                                    <option>Biologie</option>
-                                    <option>Biologie - Ecologie</option>
-                                    <option>Biochimie</option>
-                                    <option>Biophysique</option>
-                                    <option>Biostatique</option>
-                                    <option>SVT</option>
-                                </optgroup>
-                                <optgroup label="Préparation orale">
-                                    <option>Coaching scolaire</option>
-                                    <option>Entretien de motivation</option>
-                                    <option>Grand oral du bac</option>
-                                    <option>Orientation scolaire</option>
-                                    <option>TIPE</option>
-                                    <option>TPE</option>
-                                </optgroup>
-                                <optgroup label="Enseignements artistiques">
-                                    <option>Art du cirque</option>
-                                    <option>Arts plastiques</option>
-                                    <option>Cinéma audiovisuel</option>
-                                    <option>Danse</option>
-                                    <option>Histoire des arts</option>
-                                    <option>Musique</option>
-                                    <option>Théatre</option>
-                                </optgroup>
-                            </select>
+
+                <div class="col-lg-3 col-md-4 col-sm-4 position-relative">
+                    <label for="dateInput" class="form-label">Date de naissance</label>
+                    <input type="text" class="form-control" id="dateInput" placeholder="Sélectionnez une date" readonly
+                        required>
+                </div>
+                <div class="row justify-content-end g-2 p-3 ">
+                    <div class="col-lg-1 col-md-4 col-sm-6">
+                        <a class="btn btn-primary" href="#parcours-scolaire"><span
+                                style="color: white;">Suivant</span></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- identité et coordonnees Fin -->
+<!-- parcours scolaire debut -->
+<div class="container-xxl py-5" id="parcours-scolaire">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Les diplômes </h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ajout-dipl" id="supprimerDivDiplome-1">
+                <div class="col-md-1  position-relative">
+
+                    <label class="form-label" for="invalidCheckDipl1">Principal</label>
+                    <input class="form-check-input" type="checkbox" value="" id="invalidCheckDipl1">
+                </div>
+                <div class=" col-md-4  position-relative">
+                    <label for="validationTooltipDipl1" class="form-label">Diplôme</label>
+                    <select class="form-select" id="validationTooltipDipl1" required>
+                        <option>AgroParsTech</option>
+                        <option>Polytechnique</option>
+                        <option>MathSup</option>
+
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3 col-sm-4 position-relative">
+                    <label for="validationTooltipAnnnee1" class="form-label">Optenu</label>
+                    <input type="text" class="form-control" id="validationTooltipAnnee1" value="" required>
+                </div>
+                <div class="col-lg-5 col-md-12 col-sm-12 position-relative">
+                    <label for="validationTooltipIntitule1" class="form-label">Intitulé</label>
+                    <div class="row">
+                        <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
+                            <input type="text" class="form-control" id="validationTooltipIntitule1" value="" required>
                         </div>
-                        <div class=" col-md-5  position-relative">
-                            <label for="validationTooltipNiv1" class="form-label">Niveaux (Sélectionnez un ou plusieurs niveaux)</label>
-                            <select class="form-select" id="validationTooltipNiv1" required multiple >
-                                <option disabled selected >Sélectionnez un ou plusieurs niveaux"</option>
-                                <option>Tou les niveaux</option>
-                                <optgroup label="Collège" id="college">
-                                    <option>Tou les niveaux du collège</option>
-                                    <option>6ème</option>
-                                    <option>5ème</option>
-                                    <option>4ème</option>
-                                    <option>3ème</option>
-                                </optgroup>
-                                <optgroup label="Lycée">
-                                    <option>Tou les niveaux du lycée</option>
-                                    <option>Seconde</option>
-                                    <option>Première STMGL</option>
-                                    <option>Première STL</option>
-                                    <option>Première Générale</option>
-                                    <option>Première STI2D</option>
-                                    <option>Terminale STMG</option>
-                                    <option>Terminale STI2D</option>
-                                    <option>Terminale Générale</option>
-                                    <option>Terminale STL</option>
-                                </optgroup>
-                                <optgroup label="Concours et prépa">
-                                    <option>Prépa Concours Geipi Polytech</option>
-                                    <option>Avenir-Puissance Alpha-Advance-Geipi</option>
-                                    <option>Acces-Sésame</option>
-                                    <option>Prépa Concours Avenir</option>
-                                    <option>Prépa Sciences Po</option>
-                                    <option>Prépa Concours ESA</option>
-                                    <option>Prépa Concours Advance</option>
-                                    <option>Prépa Concours Acces</option>
-                                    <option>Prépa Concours CRPE</option>
-                                    <option>Pass BBA</option>
-                                    <option>Prépa Concours Puissance Alpha</option>
-                                    <option>Prépa Concours Sésame</option>
-                                    <option>Prépa intégrée 1ère année</option>
-                                </optgroup>
-                                <optgroup label="Autres">
-                                    <option>MP2I</option>
-                                    <option>MPSI</option>
-                                    <option>TSI</option>
-                                    <option>TB</option>
-                                    <option>TBC</option>
-                                    <option>ATS</option>
-                                    <option>PTSI</option>
-                                    <option>BBPST 1</option>
-                                    <option>PCSI</option>
-                                    <option>Math Sup</option>
-                                    <option>MP</option>
-                                    <option>PSI</option>
-                                    <option>PC</option>
-                                    <option>Prépa intégré 2ème année</option>
-                                    <option>TSI 2</option>
-                                    <option>MPI</option>
-                                    <option>PT</option>
-                                    <option>BCPST 2</option>
-                                    <option>Maths Spé</option>
-                                    <option>ECG 1</option>
-                                    <option>D1 ENS Cachan</option>
-                                    <option>Hypokhâgne ALL</option>
-                                    <option>Khâgne AL</option>
-                                    <option>Khâgne BL</option>
-                                    <option>Gei Univ</option>
-                                    <option>CAST Ing</option>
-                                    <option>TOEIC</option>
-                                    <option>Tage Mage</option>
-                                    <option>GMAT</option>
-                                    <option>Score IAE Message</option>
-                                    <option>TOEFL</option>
-                                    <option>Architechture</option>
-                                    <option>Infirmier</option>
-                                    <option>Capes</option>
-                                    <option>Tage 2</option>
-                                    <option>IELTS</option>
-                                    <option>DCG</option>
-                                    <option>DSCG</option>
-                                    <option>Agrégation</option>
-                                    <option>BUT</option>
-                                    <option>BTS</option>
-                                    <option>Licence 1</option>
-                                    <option>Licence 2</option>
-                                    <option>Licence 3</option>
-                                    <option>Master 1</option>
-                                    <option>Master 2</option>
-                                    <option>Adultes</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="col-lg-1 col-md-6 col-sm-6 position-relative p-2 g-4">
-                            <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivMatiere-1')">
-                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"  viewBox="0 0 26 26">
-                                <path d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z"></path>
+                        <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                            <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivDiplome-1')">
+                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                    <path
+                                        d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                    </path>
                                 </svg>
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="row g-2 p-3" id="boutonAjouterMatiere" >
-                        <div class="col-12">
-                            <button class="btn btn-secondary" onclick="ajouterMatiere()" >Ajouter une matière</button>
+            </div>
+
+            <div class="row g-2 p-3" id="boutonAjouterDiplome">
+                <div class="col-12">
+                    <button class="btn btn-secondary" onclick="ajouterDiplome()">Ajouter un diplôme</button>
+                </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#identite"><span style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#experience"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- parcours scolaire fin -->
+<!-- Expériences éducation debut -->
+<div class="container-xxl py-5" id="experience">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Votre éxpérience dans l'éducation </h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ajout-exper" id="supprimerDivExperience-1">
+                <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
+
+                    <label class="form-label" for="invalidCheckExp1">Principal</label>
+                    <input class="form-check-input" type="checkbox" value="" id="invalidCheckExp1">
+                </div>
+                <div class="col-lg-2 col-md-10 col-sm-10 position-relative">
+                    <label for="validationTooltipExpTyp1" class="form-label">Type</label>
+                    <select class="form-select" id="validationTooltipExpTyp1" required>
+                        <option>Professeur(e) en sciences</option>
+                        <option>Professeur(e) en chimie</option>
+                        <option>Professeur(e) en physique</option>
+
+                    </select>
+                </div>
+                <div class="col-lg-1 col-md-6 col-sm-6 position-relative">
+                    <label for="validationTooltipDebut1" class="form-label">Début</label>
+                    <input type="text" class="form-control" id="validationTooltipDebut1" value="" required>
+                </div>
+                <div class="col-lg-1 col-md-6 col-sm-6 position-relative">
+                    <label for="validationTooltipFin1" class="form-label">Fin</label>
+                    <input type="text" class="form-control" id="validationTooltipFin1" value="" required>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 g-3 ">
+                    <div class="row ">
+                        <div class="col-12" style="padding: -25px; margin-top: -8px;">
+                            <label class="form-check-label" for="flexSwitchCheckChecked">Actuellement</label>
+
                         </div>
-                    </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#format-cours" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#zone" ><span style="color: white;">Suivant</span></a>
+                        <div class="col-12" style="padding: 15px; padding-left: 45px;">
+                            <div class="form-check form-switch switch-column">
+                                <input class="form-check-input mg-checkbox" type="checkbox" role="switch"
+                                    id="flexSwitchCheckChecked" checked onchange="toggleText()"
+                                    style="padding-right: -5px;">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div> 
-        </div> 
-        <!-- Les détailles des matières fin -->
-
-        <!-- Zone d'activité debut -->
-        <div class="container-xxl py-5 p-5" id="zone">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">La zone d'activité </h3>
-                </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 ajout-zone" id="supprimerDivZone-1" >
-    
-                        <div class=" col-md-3  position-relative">
-                            <label for="validationTooltipReg1" class="form-label">Régions</label>
-                            <select class="form-select" id="validationTooltipReg1" required>
-                                    <option>ALSACE</option>
-                                    <option>AQUITAINE</option>
-                                    <option>AUVERGNE</option>
-                                    <option>BASSE-NORMANDIE</option>
-                                    <option>BOURGOGNE</option>
-                                    <option>BRETAGNE</option>
-                                    <option>CENTRE</option>
-                                    <option>CHAMPAGNE-ARDENNE</option>
-                                    <option>CORSE</option>
-                                    <option>FRANCHE-COMTE</option>
-                                    <option>GUADELOUPE</option>
-                                    <option>GUYANE</option>
-                                    <option>HAUTE-NORMANDIE</option>
-                                    <option>ILE-DE-FRANCE</option>
-                                    <option>LANGUEDOC-ROUSSILLON</option>
-                                    <option>LIMOUSIN</option>
-                                    <option>LORRAINE</option>
-                                    <option>MARTINIQUE</option>
-                                    <option>MAYOTTE</option>
-                                    <option>MIDI-PYRENEES</option>
-                                    <option>NORD-PAS-DE-CALAIS</option>
-                                    <option>PAYS DE LA LOIRE</option>
-                                    <option>PICARDIE</option>
-                                    <option>POITOU-CHARENTES</option>
-                                    <option>PROVENCE-ALPES-COTE D'AZUR</option>
-                                    <option>REUNION</option>
-                                    <option>RHONE-ALPES</option>
-                            </select>
+                <div class="col-lg-5 col-md-8 col-sm-6 position-relative" style="margin-left: -40px; ">
+                    <label for="validationTooltipExpComm1" class="form-label">Commentaires</label>
+                    <div class="row" style="margin-right:-100px">
+                        <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
+                            <input type="text" class="form-control" id="validationTooltipExpComm1" value="" required>
                         </div>
-                        <div class=" col-md-3  position-relative">
-                            <label for="validationTooltipDep1" class="form-label">Département</label>
-                            <select class="form-select" id="validationTooltipDep1" required>
-                                <option>ESSONNE</option>
-                                <option>HAUTS-DE-SEINE</option>
-                                <option>PARIS</option>
-                                <option>SEINE-ET-MARNE</option>
-                                <option>SEINE-SAINT-DENIS</option>
-                                <option>VAL-DE-MARNE</option>
-                                <option>VAL-D'OISE</option>
-                                <option>YVELINES</option>
-                            </select>
-                        </div>
-                        <div class=" col-md-5  position-relative">
-                            <label for="validationTooltipCom1" class="form-label">Communes (Sélectionnez une ou plusieurs Communes)</label>
-                            <select class="form-select" id="validationTooltipCom1" required multiple>
-                                <option disabled selected >Sélectionnez un ou plusieurs niveaux"</option>
-                                <option>Tous les communes</option>
-                                <option>PARIS-1ER-ARRONDISSEMENT   (75001)</option>
-                                <option>PARIS-2E-ARRONDISSEMENT   (75002)</option>
-                                <option>PARIS-3E-ARRONDISSEMENT   (75003)</option>
-                                <option>PARIS-4E-ARRONDISSEMENT   (75004)</option>
-                                <option>PARIS-5E-ARRONDISSEMENT   (75005)</option>
-                                <option>PARIS-6E-ARRONDISSEMENT   (75006)</option>
-                                <option>PARIS-7E-ARRONDISSEMENT   (75007)</option>
-                                <option>PARIS-8E-ARRONDISSEMENT   (75008)</option>
-                                <option>PARIS-9E-ARRONDISSEMENT   (75009)</option>
-                                <option>PARIS-10E-ARRONDISSEMENT   (75010)</option>
-                                <option>PARIS-11E-ARRONDISSEMENT   (75011)</option>
-                                <option>PARIS-12E-ARRONDISSEMENT   (75012)</option>
-                                <option>PARIS-13E-ARRONDISSEMENT   (75013)</option>
-                                <option>PARIS-14E-ARRONDISSEMENT   (75014)</option>
-                                <option>PARIS-15E-ARRONDISSEMENT   (75015)</option>
-                                <option>PARIS-16E-ARRONDISSEMENT   (75016)</option>
-                                <option>PARIS-17E-ARRONDISSEMENT   (75017)</option>
-                                <option>PARIS-18E-ARRONDISSEMENT   (75018)</option>
-                                <option>PARIS-19E-ARRONDISSEMENT   (75019)</option>
-                                <option>PARIS-20E-ARRONDISSEMENT   (75020)</option>
-                            </select>
-                        </div>
-                        <div class="col-lg-1 col-md-6 col-sm-6 position-relative p-2 g-4">
-                            <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivZone-1')">
-                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"  viewBox="0 0 26 26">
-                                <path d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z"></path>
+                        <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                            <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivExperience-1')">
+                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                    <path
+                                        d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                    </path>
                                 </svg>
                             </button>
                         </div>
                     </div>
-
-                    <div class="row g-2 p-3" id="boutonAjouterZone" >
-                        <div class="col-12">
-                            <button class="btn btn-secondary" onclick="ajouterZone()" >Ajouter une zone</button>
-                        </div>
-                    </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#matieres" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#intitulez_Votre_fiche" ><span style="color: white;">Suivant</span></a>
-                        </div>
-                    </div>
                 </div>
-            </div> 
-        </div> 
-        <!-- Zone d'activité fin -->
 
-        <!-- Intitulez votre fiche de professeur debut -->
-        <div class="container-xxl py-5 p-5" id="intitulez_Votre_fiche">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Intitulez votre fiche de professeur </h3>
+            </div>
+
+            <div class="row g-2 p-3" id="boutonAjouterExperience">
+                <div class="col-12">
+                    <button class="btn btn-secondary" onclick="ajouterExperience()">Ajouter une autre
+                        éxpérience</button>
                 </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 " >
-                        <div class="col-12 position-relative">
-                            <label for="validationTooltipTitre" class="form-label">Titre de votre fiche</label>
-                            <input type="text" class="form-control" id="validationTooltipTitre" value="" required placeholder="Prof de mathématique">
-                        </div>
-                    </div>
-                    <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                        <p class="mb-4">Optimisez l'impact de votre profil en le rendant attrayant pour les parents qui recherchent un enseignant. Choisissez un titre percutant qui met en avant les informations essentielles : les matières enseignées, la localisation, le format des cours, une expérience marquante, ainsi que votre diplôme ou école.</p>
-                        </div>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
-                            En savoir plus
-                        </button>
-    
-    <!-- Modal Début -->
-    <div class="modal fade " id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable ">
-        <div class="modal-content  ">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel1">Intitulez votre fiche de professeur</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body ">
-            <h5>Exemple de titre :</h5>
-            <p>"Enseignant passionné à <strong>[Nom de la ville]</strong> : Expert en <strong>[Matières enseignées]</strong> | Cours dynamiques et engageants | Expérience remarquable dans <strong>[Domaine spécifique]</strong> | Diplômé de <strong>[Nom de l'école]</strong>"</p>
-            <p>N'hésitez pas à personnaliser en fonction de votre situation spécifique et à ajuster les éléments en fonction de leur pertinence.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#parcours-scolaire"><span
+                            style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#format-cours"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
         </div>
     </div>
-    </div>
-    <!-- Modal Fin -->
-                    </div>
-
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#zone" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#parcours" ><span style="color: white;">Suivant</span></a>
-                        </div>
+</div>
+<!-- Expériences éducation fin -->
+<!-- Les formats de vos cours debut -->
+<div class="container-xxl py-5" id="format-cours">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Les formats de vos cours</h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-1">
+                        <label class="form-check-label" for="invalidCheck-cours-1">
+                            Cours individuels chez l'éléve
+                        </label>
                     </div>
                 </div>
-            </div> 
-        </div> 
-        <!-- Intitulez votre fiche de professeur fin -->
-
-        <!-- Détaillez votre parcours debut -->
-        <div class="container-xxl py-5 p-5" id="parcours">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Détaillez votre parcours</h3>
-                </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 "  >
-                        <div class="col-12 position-relative">
-                            <label for="validationTooltipDescr" class="form-label">Description</label>
-                            <textarea class="form-control" id="validationTooltipDescr" rows="4" required>Découvrez davantage sur mon parcours éducatif pour établir une connexion transparente avant toute demande de cours :</textarea>
-                        </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-2">
+                        <label class="form-check-label" for="invalidCheck-cours-2">
+                            Cours individuels par webcam
+                        </label>
                     </div>
-                    <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                        <p class="mb-4">Fournissez une présentation complète de votre parcours éducatif pour permettre aux parents de mieux vous connaître avant de solliciter vos services.</p>
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Diplômes : Titulaire d'un <strong>[Nom du diplôme]</strong> de <strong>[Nom de l'institution]</strong> dans <strong>[Spécialisation]</strong>.</p>
-                            </div>
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Filières suivies : Ayant suivi des filières enrichissantes en <strong>[Nom de la filière]</strong> et, j'ai développé une expertise approfondie dans ces domaines.</p>
-                            </div>
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Classements et distinctions : Fier de mes réalisations, j'ai obtenu des classements élogieux et des distinctions notables au cours de mon parcours académique. Ces reconnaissances témoignent de mon engagement et de ma passion pour l'apprentissage.</p>
-                            </div>
-                        </div>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal2">
-                            Exemple:
-                        </button>
-    
-    <!-- Modal Début -->
-    <div class="modal fade " id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel2">Détaillez votre parcours</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>Découvrez davantage sur mon parcours éducatif, une invitation à explorer les fondements de ma passion pour l'enseignement avant même de formuler toute demande de cours :</p>
-            <p><strong>. Diplômes et Institution :</strong> Je suis titulaire d'un prestigieux <strong>[Nom du diplôme]</strong> délivré par <strong>[Nom de l'institution]</strong>, une formation rigoureuse qui a façonné ma compréhension approfondie dans le domaine de <strong>[Votre spécialisation]</strong></p>
-            <p><strong>. Filières d'études enrichissantes :</strong> Ma quête de connaissances s'est développée à travers des filières captivantes telles que <strong>[Nom de la filière]</strong> et <strong>[Nom de la filière]</strong>, des chemins académiques qui ont cultivé ma polyvalence et ma compréhension holistique du savoir.</p>
-            <p><strong>. Classements élogieux et distinctions notables :</strong> Mon parcours a été ponctué de classements honorifiques et de distinctions remarquables, témoignant de ma détermination et de ma recherche constante de l'excellence. Ces reconnaissances sont le reflet de mon engagement envers l'apprentissage et la qualité.</p>
-            <p>Ces éléments de mon parcours, bien au-delà de simples annotations sur un CV, sont le socle de ma passion pour l'éducation. Ils incarnent ma conviction profonde que chaque étape de mon cheminement académique a contribué à forger la pédagogie réfléchie et l'enthousiasme que je mets à la disposition de chaque élève que j'ai la chance de guider.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-3">
+                        <label class="form-check-label" for="invalidCheck-cours-3">
+                            Stages intensifs pendant les vacances scolaires en présentiel
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="invalidCheck-cours-4">
+                        <label class="form-check-label" for="invalidCheck-cours-4">
+                            Cours en petits groupes par webcam
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#experience"><span style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#matieres"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+<!-- Les formats de vos course fin -->
+<!-- Les détailles des matières debut -->
+<div class="container-xxl py-5" id="matieres">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Les détailles des matières que vous enseignez </h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ajout-matiere" id="supprimerDivMatiere-1">
+                <div class="col-md-1  position-relative">
+
+                    <label class="form-label" for="invalidCheckMat1">Principal</label>
+                    <input class="form-check-input" type="checkbox" value="" id="invalidCheckMat1">
+                </div>
+                <div class=" col-md-5  position-relative">
+                    <label for="validationTooltipMat1" class="form-label">Matières</label>
+                    <select class="form-select" id="validationTooltipMat1" required>
+
+                        <optgroup label="Enseignements scientifiques">
+                            <option>Chimie</option>
+                            <option>Dessin industriel</option>
+                            <option>Electronique</option>
+                            <option>Informatique</option>
+                            <option>Logique maths</option>
+                            <option>Maths</option>
+                            <option>NSI</option>
+                            <option>Physique</option>
+                            <option>Physique-chimie</option>
+                            <option>Sciences de l'ingénieurs</option>
+                            <option>Statistique</option>
+                        </optgroup>
+
+                        <optgroup label="Lettres">
+                            <option>Français</option>
+                            <option>Grec</option>
+                            <option>Latin</option>
+                            <option>Orthographe</option>
+                            <option>Synthèse de document</option>
+                        </optgroup>
+
+                        <optgroup label="Langues vivantes">
+                            <option>Allemand</option>
+                            <option>Anglais</option>
+                            <option>Arabe</option>
+                            <option>Chinois</option>
+                            <option>Coréen</option>
+                            <option>Espagnol</option>
+                            <option>FLE</option>
+                            <option>Italien</option>
+                            <option>Japonais</option>
+                            <option>Portugais</option>
+                            <option>Russe</option>
+                        </optgroup>
+                        <optgroup label="Sciences humaines">
+                            <option>Culture générale</option>
+                            <option>Education civique</option>
+                            <option>ESH</option>
+                            <option>Géopolitique</option>
+                            <option>Histoire - Géographie</option>
+                            <option>Humanites litérature philosophie</option>
+                            <option>Management</option>
+                            <option>Philosophie</option>
+                            <option>Sciences politiques</option>
+                        </optgroup>
+                        <optgroup label="Economie">
+                            <option>Comptabilité</option>
+                            <option>Control de gestion</option>
+                            <option>Droit</option>
+                            <option>Economie</option>
+                            <option>Fiscalité</option>
+                            <option>Gestion financière</option>
+                            <option>Macroéconomie</option>
+                            <option>Marketing</option>
+                            <option>Microéconomie</option>
+                            <option>SES</option>
+                        </optgroup>
+                        <optgroup label="Sciences naturelles">
+                            <option>Anatomie</option>
+                            <option>Biologie</option>
+                            <option>Biologie - Ecologie</option>
+                            <option>Biochimie</option>
+                            <option>Biophysique</option>
+                            <option>Biostatique</option>
+                            <option>SVT</option>
+                        </optgroup>
+                        <optgroup label="Préparation orale">
+                            <option>Coaching scolaire</option>
+                            <option>Entretien de motivation</option>
+                            <option>Grand oral du bac</option>
+                            <option>Orientation scolaire</option>
+                            <option>TIPE</option>
+                            <option>TPE</option>
+                        </optgroup>
+                        <optgroup label="Enseignements artistiques">
+                            <option>Art du cirque</option>
+                            <option>Arts plastiques</option>
+                            <option>Cinéma audiovisuel</option>
+                            <option>Danse</option>
+                            <option>Histoire des arts</option>
+                            <option>Musique</option>
+                            <option>Théatre</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class=" col-md-5  position-relative">
+                    <label for="validationTooltipNiv1" class="form-label">Niveaux (Sélectionnez un ou plusieurs
+                        niveaux)</label>
+                    <select class="form-select" id="validationTooltipNiv1" required multiple>
+                        <option disabled selected>Sélectionnez un ou plusieurs niveaux"</option>
+                        <option>Tou les niveaux</option>
+                        <optgroup label="Collège" id="college">
+                            <option>Tou les niveaux du collège</option>
+                            <option>6ème</option>
+                            <option>5ème</option>
+                            <option>4ème</option>
+                            <option>3ème</option>
+                        </optgroup>
+                        <optgroup label="Lycée">
+                            <option>Tou les niveaux du lycée</option>
+                            <option>Seconde</option>
+                            <option>Première STMGL</option>
+                            <option>Première STL</option>
+                            <option>Première Générale</option>
+                            <option>Première STI2D</option>
+                            <option>Terminale STMG</option>
+                            <option>Terminale STI2D</option>
+                            <option>Terminale Générale</option>
+                            <option>Terminale STL</option>
+                        </optgroup>
+                        <optgroup label="Concours et prépa">
+                            <option>Prépa Concours Geipi Polytech</option>
+                            <option>Avenir-Puissance Alpha-Advance-Geipi</option>
+                            <option>Acces-Sésame</option>
+                            <option>Prépa Concours Avenir</option>
+                            <option>Prépa Sciences Po</option>
+                            <option>Prépa Concours ESA</option>
+                            <option>Prépa Concours Advance</option>
+                            <option>Prépa Concours Acces</option>
+                            <option>Prépa Concours CRPE</option>
+                            <option>Pass BBA</option>
+                            <option>Prépa Concours Puissance Alpha</option>
+                            <option>Prépa Concours Sésame</option>
+                            <option>Prépa intégrée 1ère année</option>
+                        </optgroup>
+                        <optgroup label="Autres">
+                            <option>MP2I</option>
+                            <option>MPSI</option>
+                            <option>TSI</option>
+                            <option>TB</option>
+                            <option>TBC</option>
+                            <option>ATS</option>
+                            <option>PTSI</option>
+                            <option>BBPST 1</option>
+                            <option>PCSI</option>
+                            <option>Math Sup</option>
+                            <option>MP</option>
+                            <option>PSI</option>
+                            <option>PC</option>
+                            <option>Prépa intégré 2ème année</option>
+                            <option>TSI 2</option>
+                            <option>MPI</option>
+                            <option>PT</option>
+                            <option>BCPST 2</option>
+                            <option>Maths Spé</option>
+                            <option>ECG 1</option>
+                            <option>D1 ENS Cachan</option>
+                            <option>Hypokhâgne ALL</option>
+                            <option>Khâgne AL</option>
+                            <option>Khâgne BL</option>
+                            <option>Gei Univ</option>
+                            <option>CAST Ing</option>
+                            <option>TOEIC</option>
+                            <option>Tage Mage</option>
+                            <option>GMAT</option>
+                            <option>Score IAE Message</option>
+                            <option>TOEFL</option>
+                            <option>Architechture</option>
+                            <option>Infirmier</option>
+                            <option>Capes</option>
+                            <option>Tage 2</option>
+                            <option>IELTS</option>
+                            <option>DCG</option>
+                            <option>DSCG</option>
+                            <option>Agrégation</option>
+                            <option>BUT</option>
+                            <option>BTS</option>
+                            <option>Licence 1</option>
+                            <option>Licence 2</option>
+                            <option>Licence 3</option>
+                            <option>Master 1</option>
+                            <option>Master 2</option>
+                            <option>Adultes</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="col-lg-1 col-md-6 col-sm-6 position-relative p-2 g-4">
+                    <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivMatiere-1')">
+                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                            <path
+                                d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-2 p-3" id="boutonAjouterMatiere">
+                <div class="col-12">
+                    <button class="btn btn-secondary" onclick="ajouterMatiere()">Ajouter une matière</button>
+                </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#format-cours"><span style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#zone"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
+        </div>
     </div>
-    <!-- Modal Fin -->
-                    </div>
+</div>
+<!-- Les détailles des matières fin -->
 
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#intitulez_Votre_fiche" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#pedagogie" ><span style="color: white;">Suivant</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div> 
-        </div> 
-        <!-- Détaillez votre parcours fin -->
+<!-- Zone d'activité debut -->
+<div class="container-xxl py-5" id="zone">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">La zone d'activité </h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ajout-zone" id="supprimerDivZone-1">
 
-        <!-- Déroulement et pédagogie de votre cours debut -->
-        <div class="container-xxl py-5 p-5" id="pedagogie">
-            <div class="container p-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Déroulement et pédagogie de votre cours</h3>
+                <div class=" col-md-3  position-relative">
+                    <label for="validationTooltipReg1" class="form-label">Régions</label>
+                    <select class="form-select" id="validationTooltipReg1" required>
+                        <option>ALSACE</option>
+                        <option>AQUITAINE</option>
+                        <option>AUVERGNE</option>
+                        <option>BASSE-NORMANDIE</option>
+                        <option>BOURGOGNE</option>
+                        <option>BRETAGNE</option>
+                        <option>CENTRE</option>
+                        <option>CHAMPAGNE-ARDENNE</option>
+                        <option>CORSE</option>
+                        <option>FRANCHE-COMTE</option>
+                        <option>GUADELOUPE</option>
+                        <option>GUYANE</option>
+                        <option>HAUTE-NORMANDIE</option>
+                        <option>ILE-DE-FRANCE</option>
+                        <option>LANGUEDOC-ROUSSILLON</option>
+                        <option>LIMOUSIN</option>
+                        <option>LORRAINE</option>
+                        <option>MARTINIQUE</option>
+                        <option>MAYOTTE</option>
+                        <option>MIDI-PYRENEES</option>
+                        <option>NORD-PAS-DE-CALAIS</option>
+                        <option>PAYS DE LA LOIRE</option>
+                        <option>PICARDIE</option>
+                        <option>POITOU-CHARENTES</option>
+                        <option>PROVENCE-ALPES-COTE D'AZUR</option>
+                        <option>REUNION</option>
+                        <option>RHONE-ALPES</option>
+                    </select>
                 </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 "  >
-                        <div class="col-12 position-relative">
-                            <label for="validationTooltipPedag" class="form-label">Description, aux parents, de votre pédagogie</label>
-                            <textarea class="form-control" id="validationTooltipPedag" rows="4" required>Explorez ma pédagogique et découvrez comment je façonne une expérience d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.</textarea>
-                        </div>
-                    </div>
-                    <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Pédagogie et Déroulement du Cours :</strong> Stimuler la réflexion critique, favoriser la participation active et encourager la compréhension profonde des concepts abordés.</p>
-                            </div>
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Séance Type et Préparation de Cours :</strong> Une brève révision établissant des connexions avec les nouveaux éléments à aborder, incluant des exercices pertinents, minutieusement préparés en fonction des besoins spécifiques de l’élève.</p>
-                            </div>
-                            <div class="col-12">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Méthodes pour Favoriser la Progression :</strong> Une évaluation régulière, identifiant les domaines à renforcer. Des retours constructifs sont fournis, accompagnés de conseils personnalisés. J'encourage l'autonomie dans le processus d'apprentissage.</p>
-                            </div>
-                        </div>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal3">
-                            Exemple:
-                        </button>
-    
-    <!-- Modal Début -->
-    <div class="modal fade " id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel3">Déroulement et pédagogie de votre cours</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>Explorez ma pédagogique et découvrez comment je façonne une expérience d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.</p>
-            <p><strong>Pédagogie et Déroulement du Cours :</strong> Mon approche pédagogique repose sur l'interaction, l'engagement et la personnalisation. Chaque séance est conçue pour stimuler la réflexion critique, favoriser la participation active et encourager la compréhension profonde des concepts abordés. L'environnement de la classe est ouvert, encourageant les questions et les discussions, créant ainsi une dynamique propice à l'apprentissage.</p>
-            <p><strong>Séance Type et Préparation de Cours :</strong> Une séance type commence par une brève révision des concepts antérieurs, établissant des connexions avec les nouveaux éléments à aborder. Les supports de cours sont soigneusement préparés, incluant des exemples concrets et des exercices pertinents. Avant chaque séance, je m'investis dans une préparation minutieuse, ajustant le contenu en fonction des besoins spécifiques des élèves pour maximiser la pertinence et l'efficacité de chaque session.</p>
-            <p><strong>Soutien Continu entre les Séances :</strong> Je valorise la continuité de l'apprentissage. Entre chaque séance, des ressources complémentaires, des exercices supplémentaires et des conseils spécifiques sont mis à disposition. Cette approche vise à renforcer la compréhension et à fournir aux élèves les outils nécessaires pour progresser de manière autonome.</p>
-            <p><strong>Méthodes pour Favoriser la Progression :</strong> Pour assurer une progression optimale, j'adopte une évaluation régulière des performances des élèves, identifiant les points forts et les domaines à renforcer. Des retours constructifs sont fournis, accompagnés de conseils personnalisés pour guider les élèves dans leur développement. J'encourage également l'autonomie en stimulant l'initiative personnelle et la prise de responsabilité dans le processus d'apprentissage.</p>
-            <p>Chaque aspect de ma méthodologie est conçu pour créer une expérience d'apprentissage engageante, dynamique et adaptée à chaque élève, favorisant ainsi une progression continue et une maîtrise approfondie des sujets abordés.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        </div>
+                <div class=" col-md-3  position-relative">
+                    <label for="validationTooltipDep1" class="form-label">Département</label>
+                    <select class="form-select" id="validationTooltipDep1" required>
+                        <option>ESSONNE</option>
+                        <option>HAUTS-DE-SEINE</option>
+                        <option>PARIS</option>
+                        <option>SEINE-ET-MARNE</option>
+                        <option>SEINE-SAINT-DENIS</option>
+                        <option>VAL-DE-MARNE</option>
+                        <option>VAL-D'OISE</option>
+                        <option>YVELINES</option>
+                    </select>
+                </div>
+                <div class=" col-md-5  position-relative">
+                    <label for="validationTooltipCom1" class="form-label">Communes (Sélectionnez une ou plusieurs
+                        Communes)</label>
+                    <select class="form-select" id="validationTooltipCom1" required multiple>
+                        <option disabled selected>Sélectionnez un ou plusieurs niveaux"</option>
+                        <option>Tous les communes</option>
+                        <option>PARIS-1ER-ARRONDISSEMENT (75001)</option>
+                        <option>PARIS-2E-ARRONDISSEMENT (75002)</option>
+                        <option>PARIS-3E-ARRONDISSEMENT (75003)</option>
+                        <option>PARIS-4E-ARRONDISSEMENT (75004)</option>
+                        <option>PARIS-5E-ARRONDISSEMENT (75005)</option>
+                        <option>PARIS-6E-ARRONDISSEMENT (75006)</option>
+                        <option>PARIS-7E-ARRONDISSEMENT (75007)</option>
+                        <option>PARIS-8E-ARRONDISSEMENT (75008)</option>
+                        <option>PARIS-9E-ARRONDISSEMENT (75009)</option>
+                        <option>PARIS-10E-ARRONDISSEMENT (75010)</option>
+                        <option>PARIS-11E-ARRONDISSEMENT (75011)</option>
+                        <option>PARIS-12E-ARRONDISSEMENT (75012)</option>
+                        <option>PARIS-13E-ARRONDISSEMENT (75013)</option>
+                        <option>PARIS-14E-ARRONDISSEMENT (75014)</option>
+                        <option>PARIS-15E-ARRONDISSEMENT (75015)</option>
+                        <option>PARIS-16E-ARRONDISSEMENT (75016)</option>
+                        <option>PARIS-17E-ARRONDISSEMENT (75017)</option>
+                        <option>PARIS-18E-ARRONDISSEMENT (75018)</option>
+                        <option>PARIS-19E-ARRONDISSEMENT (75019)</option>
+                        <option>PARIS-20E-ARRONDISSEMENT (75020)</option>
+                    </select>
+                </div>
+                <div class="col-lg-1 col-md-6 col-sm-6 position-relative p-2 g-4">
+                    <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivZone-1')">
+                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                            <path
+                                d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-2 p-3" id="boutonAjouterZone">
+                <div class="col-12">
+                    <button class="btn btn-secondary" onclick="ajouterZone()">Ajouter une zone</button>
+                </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#matieres"><span style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#intitulez_Votre_fiche"><span
+                            style="color: white;">Suivant</span></a>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+<!-- Zone d'activité fin -->
+
+<!-- Intitulez votre fiche de professeur debut -->
+<div class="container-xxl py-5" id="intitulez_Votre_fiche">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Intitulez votre fiche de professeur </h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ">
+                <div class="col-12 position-relative">
+                    <label for="validationTooltipTitre" class="form-label">Titre de votre fiche</label>
+                    <input type="text" class="form-control" id="validationTooltipTitre" value="" required
+                        placeholder="Prof de mathématique">
+                </div>
+            </div>
+            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                <p class="mb-4">Optimisez l'impact de votre profil en le rendant attrayant pour les parents qui
+                    recherchent un enseignant. Choisissez un titre percutant qui met en avant les informations
+                    essentielles : les matières enseignées, la localisation, le format des cours, une expérience
+                    marquante, ainsi que votre diplôme ou école.</p>
+            </div>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                En savoir plus
+            </button>
+
+            <!-- Modal Début -->
+            <div class="modal fade " id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable ">
+                    <div class="modal-content  ">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel1">Intitulez votre fiche de professeur
+                            </h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body ">
+                            <h5>Exemple de titre :</h5>
+                            <p>"Enseignant passionné à <strong>[Nom de la ville]</strong> : Expert en <strong>[Matières
+                                    enseignées]</strong> | Cours dynamiques et engageants | Expérience remarquable dans
+                                <strong>[Domaine spécifique]</strong> | Diplômé de <strong>[Nom de l'école]</strong>"
+                            </p>
+                            <p>N'hésitez pas à personnaliser en fonction de votre situation spécifique et à ajuster les
+                                éléments en fonction de leur pertinence.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Fin -->
+        </div>
+
+        <div class="row justify-content-between g-2 p-3">
+            <div class="col-lg-1 col-md-4 col-sm-6 ">
+                <a class="btn btn-primary" href="#zone"><span style="color: white;">Précédent</span></a>
+            </div>
+            <div class="col-lg-1 col-md-4 col-sm-6">
+                <a class="btn btn-primary" href="#parcours"><span style="color: white;">Suivant</span></a>
+            </div>
+        </div>
     </div>
-    <!-- Modal Fin -->
-                    </div>
+</div>
+</div>
+<!-- Intitulez votre fiche de professeur fin -->
 
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#parcours" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#Video" ><span style="color: white;">Suivant</span></a>
-                        </div>
+<!-- Détaillez votre parcours debut -->
+<div class="container-xxl py-5" id="parcours">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Détaillez votre parcours</h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ">
+                <div class="col-12 position-relative">
+                    <label for="validationTooltipDescr" class="form-label">Description</label>
+                    <textarea class="form-control" id="validationTooltipDescr" rows="4"
+                        required>Découvrez davantage sur mon parcours éducatif pour établir une connexion transparente avant toute demande de cours :</textarea>
+                </div>
+            </div>
+            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                <p class="mb-4">Fournissez une présentation complète de votre parcours éducatif pour permettre aux
+                    parents de mieux vous connaître avant de solliciter vos services.</p>
+                <div class="row gy-2 gx-4 mb-4">
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Diplômes : Titulaire d'un
+                            <strong>[Nom du diplôme]</strong> de <strong>[Nom de l'institution]</strong> dans
+                            <strong>[Spécialisation]</strong>.</p>
+                    </div>
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Filières suivies : Ayant
+                            suivi des filières enrichissantes en <strong>[Nom de la filière]</strong> et, j'ai développé
+                            une expertise approfondie dans ces domaines.</p>
+                    </div>
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Classements et distinctions :
+                            Fier de mes réalisations, j'ai obtenu des classements élogieux et des distinctions notables
+                            au cours de mon parcours académique. Ces reconnaissances témoignent de mon engagement et de
+                            ma passion pour l'apprentissage.</p>
                     </div>
                 </div>
-            </div> 
-        </div>  
-        <!-- Déroulement et pédagogie de votre cours fin -->
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal2">
+                    Exemple:
+                </button>
 
-        <!-- Viédo de présentation debut -->
-            <div class="container p-5" id="Video" >
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Viédo de présentation</h3>
-                </div>
-                <div class="container bg-light  ">
-                    <div class="row g-2 "  >
-                        <div class="col-12 position-relative">
-                            <label for="validationTooltipVideo" class="form-label">Lien de votre vidéo</label>
-                            <input type="text" class="form-control" id="validationTooltipVideo" value="" required placeholder="https://www.youtube.com/watch?v=Axkpyigw6eA" >
-                        </div>
-                        <div class="col-12">
-                            <div class="container ">
-                                <div class="text-center">
-                                <iframe width="560" height="315" src="https://www.youtube.com/embed/Axkpyigw6eA?si=fQij40rorTPM2G-M" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                                </div>
+                <!-- Modal Début -->
+                <div class="modal fade " id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel2">Détaillez votre parcours</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Découvrez davantage sur mon parcours éducatif, une invitation à explorer les
+                                    fondements de ma passion pour l'enseignement avant même de formuler toute demande de
+                                    cours :</p>
+                                <p><strong>. Diplômes et Institution :</strong> Je suis titulaire d'un prestigieux
+                                    <strong>[Nom du diplôme]</strong> délivré par <strong>[Nom de
+                                        l'institution]</strong>, une formation rigoureuse qui a façonné ma compréhension
+                                    approfondie dans le domaine de <strong>[Votre spécialisation]</strong></p>
+                                <p><strong>. Filières d'études enrichissantes :</strong> Ma quête de connaissances s'est
+                                    développée à travers des filières captivantes telles que <strong>[Nom de la
+                                        filière]</strong> et <strong>[Nom de la filière]</strong>, des chemins
+                                    académiques qui ont cultivé ma polyvalence et ma compréhension holistique du savoir.
+                                </p>
+                                <p><strong>. Classements élogieux et distinctions notables :</strong> Mon parcours a été
+                                    ponctué de classements honorifiques et de distinctions remarquables, témoignant de
+                                    ma détermination et de ma recherche constante de l'excellence. Ces reconnaissances
+                                    sont le reflet de mon engagement envers l'apprentissage et la qualité.</p>
+                                <p>Ces éléments de mon parcours, bien au-delà de simples annotations sur un CV, sont le
+                                    socle de ma passion pour l'éducation. Ils incarnent ma conviction profonde que
+                                    chaque étape de mon cheminement académique a contribué à forger la pédagogie
+                                    réfléchie et l'enthousiasme que je mets à la disposition de chaque élève que j'ai la
+                                    chance de guider.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
                             </div>
                         </div>
-        
                     </div>
-                    <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                        <p class="mb-4">
-                            Intégrer une vidéo YouTube à ton profil contribuera à embellir ta présentation en offrant une perspective plus vivante de ta personnalité et en mettant en lumière ton expertise. Cette approche s'avère également être une stratégie efficace pour te démarquer de manière unique et captivante.</p>
-                        </div>
-                    </div>
+                </div>
+                <!-- Modal Fin -->
+            </div>
 
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#pedagogie" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <a  class="btn btn-primary" href="#validation" ><span style="color: white;">Suivant</span></a>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#intitulez_Votre_fiche"><span
+                            style="color: white;">Précédent</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Détaillez votre parcours fin -->
+
+<!-- Déroulement et pédagogie de votre cours debut -->
+<div class="container-xxl py-5" id="pedagogie">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Déroulement et pédagogie de votre cours</h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ">
+                <div class="col-12 position-relative">
+                    <label for="validationTooltipPedag" class="form-label">Description, aux parents, de votre
+                        pédagogie</label>
+                    <textarea class="form-control" id="validationTooltipPedag" rows="4"
+                        required>Explorez ma pédagogique et découvrez comment je façonne une expérience d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.</textarea>
+                </div>
+            </div>
+            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                <div class="row gy-2 gx-4 mb-4">
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Pédagogie et
+                                Déroulement du Cours :</strong> Stimuler la réflexion critique, favoriser la
+                            participation active et encourager la compréhension profonde des concepts abordés.</p>
+                    </div>
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Séance Type et
+                                Préparation de Cours :</strong> Une brève révision établissant des connexions avec les
+                            nouveaux éléments à aborder, incluant des exercices pertinents, minutieusement préparés en
+                            fonction des besoins spécifiques de l’élève.</p>
+                    </div>
+                    <div class="col-12">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Méthodes pour
+                                Favoriser la Progression :</strong> Une évaluation régulière, identifiant les domaines à
+                            renforcer. Des retours constructifs sont fournis, accompagnés de conseils personnalisés.
+                            J'encourage l'autonomie dans le processus d'apprentissage.</p>
+                    </div>
+                </div>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal3">
+                    Exemple:
+                </button>
+
+                <!-- Modal Début -->
+                <div class="modal fade " id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel3">Déroulement et pédagogie de votre
+                                    cours</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Explorez ma pédagogique et découvrez comment je façonne une expérience
+                                    d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.
+                                </p>
+                                <p><strong>Pédagogie et Déroulement du Cours :</strong> Mon approche pédagogique repose
+                                    sur l'interaction, l'engagement et la personnalisation. Chaque séance est conçue
+                                    pour stimuler la réflexion critique, favoriser la participation active et encourager
+                                    la compréhension profonde des concepts abordés. L'environnement de la classe est
+                                    ouvert, encourageant les questions et les discussions, créant ainsi une dynamique
+                                    propice à l'apprentissage.</p>
+                                <p><strong>Séance Type et Préparation de Cours :</strong> Une séance type commence par
+                                    une brève révision des concepts antérieurs, établissant des connexions avec les
+                                    nouveaux éléments à aborder. Les supports de cours sont soigneusement préparés,
+                                    incluant des exemples concrets et des exercices pertinents. Avant chaque séance, je
+                                    m'investis dans une préparation minutieuse, ajustant le contenu en fonction des
+                                    besoins spécifiques des élèves pour maximiser la pertinence et l'efficacité de
+                                    chaque session.</p>
+                                <p><strong>Soutien Continu entre les Séances :</strong> Je valorise la continuité de
+                                    l'apprentissage. Entre chaque séance, des ressources complémentaires, des exercices
+                                    supplémentaires et des conseils spécifiques sont mis à disposition. Cette approche
+                                    vise à renforcer la compréhension et à fournir aux élèves les outils nécessaires
+                                    pour progresser de manière autonome.</p>
+                                <p><strong>Méthodes pour Favoriser la Progression :</strong> Pour assurer une
+                                    progression optimale, j'adopte une évaluation régulière des performances des élèves,
+                                    identifiant les points forts et les domaines à renforcer. Des retours constructifs
+                                    sont fournis, accompagnés de conseils personnalisés pour guider les élèves dans leur
+                                    développement. J'encourage également l'autonomie en stimulant l'initiative
+                                    personnelle et la prise de responsabilité dans le processus d'apprentissage.</p>
+                                <p>Chaque aspect de ma méthodologie est conçu pour créer une expérience d'apprentissage
+                                    engageante, dynamique et adaptée à chaque élève, favorisant ainsi une progression
+                                    continue et une maîtrise approfondie des sujets abordés.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div> 
-        <!-- Viédo de présentation fin -->
+                <!-- Modal Fin -->
+            </div>
 
-        <!-- Validation debut -->
-            <div class="container p-5" id="validation" >
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                    <h3 class="mb-5">Validation de la candidature</h3>
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#parcours"><span style="color: white;">Précédent</span></a>
                 </div>
-                <div class="container bg-light  p-5">
-                    <div class="row g-2 "  >
-                        <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                            
-                                <div class="text-center">
-                                    <p class="mb-4">Vous êtes sur le point de finaliser l'envoi de votre candidature. Dès réception, nous procéderons à son évaluation dans les plus brefs délais et vous informerons par email ou téléphone quant à sa conformité avec les attentes des parents.</p>
-                                </div>
-                            
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="#Video"><span style="color: white;">Suivant</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Déroulement et pédagogie de votre cours fin -->
+
+<!-- Vidéo de présentation début -->
+<div class="container py-5" id="Video">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveau compte</h6>
+            <h1 class="mb-5">Vidéo de présentation</h1>
+        </div>
+        <div class="container bg-light">
+            <div class="row g-2">
+                <div class="col-12 ">
+                    <label for="validationTooltipVideo" class="form-label">Lien de votre vidéo</label>
+                </div>
+                <div class="col-12 ">
+                    <input type="text" class="form-control" id="validationTooltipVideo" value="" required
+                        placeholder="https://www.youtube.com/watch?v=Axkpyigw6eA">
+                </div>
+                <div class="col-12 position-relative d-flex justify-content-center align-items-center">
+                    
+                        
+                        <div class="embed-responsive embed-responsive-16by9">
+                            <iframe class="embed-responsive-item"
+                                src="https://www.youtube.com/embed/Axkpyigw6eA?si=fQij40rorTPM2G-M"
+                                title="YouTube video player" frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen></iframe>
                         </div>
-                    </div>
+                        
+                    
+                </div>
+            </div>
+            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                <p class="mb-4">
+                    Intégrer une vidéo YouTube à ton profil contribuera à embellir ta présentation en offrant une
+                    perspective plus vivante de ta personnalité et en mettant en lumière ton expertise. Cette approche
+                    s'avère également être une stratégie efficace pour te démarquer de manière unique et captivante.
+                </p>
+            </div>
+        </div>
+
+        <div class="row justify-content-between g-2 p-3">
+            <div class="col-lg-1 col-md-4 col-sm-6">
+                <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Précédent</span></a>
+            </div>
+            <div class="col-lg-1 col-md-4 col-sm-6">
+                <a class="btn btn-primary" href="#validation"><span style="color: white;">Suivant</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Vidéo de présentation fin -->
+
+
+<!-- Validation debut -->
+<div class="container py-5" id="validation">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
+            <h1 class="mb-5">Validation de la candidature</h1>
+        </div>
+        <div class="container bg-light  p-5">
+            <div class="row g-2 ">
+                <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+
                     <div class="text-center">
-                        <button type="button" class="btn btn-warning" >
-                            Envoyer ma candidature
-                        </button>
+                        <p class="mb-4">Vous êtes sur le point de finaliser l'envoi de votre candidature. Dès réception,
+                            nous procéderons à son évaluation dans les plus brefs délais et vous informerons par email ou
+                            téléphone quant à sa conformité avec les attentes des parents.</p>
                     </div>
 
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-1 col-md-4 col-sm-6 " >
-                            <a class="btn btn-primary"  href="#Video" ><span style="color: white;">Précédent</span></a>
-                        </div>
-                    </div>
                 </div>
-            </div> 
-        <!-- Validation fin -->
-        <!-- mon compte fin -->
-    
-    <!-- formulaire créer compte prof fin -->
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-warning">
+                    Envoyer ma candidature
+                </button>
+            </div>
+
+            <div class="row justify-content-between g-2 p-3">
+                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                    <a class="btn btn-primary" href="#Video"><span style="color: white;">Précédent</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Validation fin -->
+<!-- mon compte fin -->
+
+<!-- formulaire créer compte prof fin -->
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>

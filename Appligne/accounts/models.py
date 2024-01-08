@@ -64,23 +64,17 @@ class Diplome_cathegorie(models.Model):
 
 class Diplome(models.Model):
     professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE)
-    dip_cathegorie = models.ForeignKey(Diplome_cathegorie, on_delete=models.CASCADE)
-    diplome = models.CharField(max_length=100)
+    diplome = models.CharField(max_length=100, null=True, blank=True)
     obtenu = models.DateField()
-    intitule = models.CharField(max_length=255)
+    intitule = models.CharField(max_length=255, null=True, blank=True)
     principal = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.professeur.prenom} {self.professeur.nom} - {self.diplome}"
+        return f"{self.professeur.prenom} - {self.diplome}"
 
     class Meta:
         ordering = ['-principal', '-obtenu']
 
-    class Meta:
-        ordering = ['professeur']
-        constraints = [
-            models.UniqueConstraint(fields=['professeur', 'dip_cathegorie'], name='unique_prof_dip')
-        ]
 
 # n'est pas apparament nécessaire pour le buckofice
 # car la liste déroulante est par défaut
@@ -103,25 +97,20 @@ class Experience_cathegorie(models.Model):
 
 class Experience(models.Model):
     professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE)
-    exp_cathegorie = models.ForeignKey(Experience_cathegorie, on_delete=models.CASCADE)
-    type = models.CharField(max_length=100)
+    type = models.CharField(max_length=100, null=True, blank=True)
     debut = models.DateField()
     fin = models.DateField(null=True, blank=True)
     actuellement = models.BooleanField(default=False)
-    commentaire = models.CharField(max_length=255)
+    commentaire = models.CharField(max_length=255, null=True, blank=True)
     principal = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.professeur.prenom} {self.professeur.nom} - {self.type}"
+        return f"{self.professeur.prenom} - {self.type}"
 
     class Meta:
         ordering = ['professeur','-principal', '-debut']
 
-    class Meta:
-        ordering = ['professeur']
-        constraints = [
-            models.UniqueConstraint(fields=['professeur', 'exp_cathegorie'], name='unique_prof_exp')
-        ]
+
 
 class Format_cour(models.Model):
     professeur = models.OneToOneField(Professeur, on_delete=models.CASCADE)
