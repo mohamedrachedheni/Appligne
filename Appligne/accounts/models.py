@@ -74,6 +74,13 @@ class Diplome(models.Model):
 
     class Meta:
         ordering = ['-principal', '-obtenu']
+    
+    class Meta:
+        ordering = ['professeur']
+        constraints = [
+            models.UniqueConstraint(fields=['professeur', 'diplome'], name='unique_prof_diplome')
+        ]
+
 
 
 # n'est pas apparament nécessaire pour le buckofice
@@ -109,6 +116,13 @@ class Experience(models.Model):
 
     class Meta:
         ordering = ['professeur','-principal', '-debut']
+    
+    class Meta:
+        ordering = ['professeur']
+        constraints = [
+            models.UniqueConstraint(fields=['professeur', 'type'], name='unique_prof_type')
+        ]
+
 
 
 
@@ -283,3 +297,4 @@ class Prof_doc_telecharge(models.Model):
 
     class Meta:
         ordering = ['-date_telechargement']
+

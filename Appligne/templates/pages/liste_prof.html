@@ -249,56 +249,89 @@
             </div>
         </div>
         <div class="container liste-prof" id="liste-prof-1">
-<form>
-    {% for prof in professeurs %}
-    <div class="container  bg-light shadow-sm rounded mb-4 p-4" >
-        <div class="container" >
-            <div class="row g-5">
-                <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
-                    <div class="position-relative h-100" >
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{{prof.photo.url}}" style="width: 80px; height: 80px;" alt="{{prof.nom}}" >
-                        <h5 class="mb-0">{{prof.nom}}</h5>
-                        </div>
-                </div>
-                <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
-                    
-                    <p">Polytechnique | Professeur(e) indépendant </p>
-                    <h5 class="mb-0">Maths</h5>
-                    <p class="mb-4">Ancien étudiant à Paris I Panthéon Sorbonne. Je suis diplômé d'un Master en économie appliquée. J'enseigne l'économie, les mathématiques, l'anglais et l'histoire géopolitique depuis 2019.</p>
-                </div>    
-                <div class="col-lg-3 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-sm-12">
-                            <div class="mb-3">
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small>(3 avis)</small>
+            <form >
+                {% for prof in professeurs%}
+                <div class="container  bg-light shadow-sm rounded mb-4 p-4" >
+                    <div class="container" >
+                        <div class="row g-5">
+                            <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
+                                <div class="position-relative h-100" >
+                                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{{prof.photo.url}}" style="width: 80px; height: 80px;" alt="{{prof.nom}}" >
+                                    <h5 class="mb-0">{{prof.prenom}}</h5>
+                                    </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>157 heures dispensées</p>
-                        </div>
-                        <div class="col-sm-12">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong></p>
-                        </div>
-                        <div class="col-sm-12">
-                            <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'profil_prof'%}">Voir profil</a>
+                            <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
+                                <!-- on n'a pas besoin de faire un regroupement car la contrainte des tables di^plome et experience suffisent -->
+                                <p>
+                                    {% for diplome in prof.diplome_set.all %}
+                                        {{ diplome.diplome }}{% if not forloop.last %} | {% endif %}
+                                    {% endfor %}
+                                      */*   {% for experience in prof.experience_set.all %}
+                                        {{ experience.type }}{% if not forloop.last %} | {% endif %}
+                                      {% endfor %}
+                                </p>                    
+                                <!-- la class grid pour aligner les matières sur une meme ligne -->
+                                    <div class="grid  ">
+                                        <!-- à introduire le code dans un fichier css -->
+                                        <div class="left-align-content" style="font-size: 16px; font-weight: bold;" >
+                                            <!-- pour éviter les répétitions des matières -->
+                                {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                {% for unique_matiere in unique_matiere_list %}
+                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                                        </div>
+                                    </div>
+                                
+                                <p class="mb-4">
+                                    {% if prof.pro_fichier %}
+                                    <!-- pour tronquer le texte et nafficher que les premiers 250 caractaires -->
+                                    {{ prof.pro_fichier.description_cours|truncatechars:250 }}
+                                    {% endif %}
+                                </p>
+                            </div>    
+                            <div class="col-lg-3 wow fadeInUp" data-wow-delay="0.3s">
+                                <div class="row gy-2 gx-4 mb-4">
+                                    <div class="col-sm-12  ">
+                                        <div class="mb-3">
+                                            <small class="fa fa-star text-primary"></small>
+                                            <small class="fa fa-star text-primary"></small>
+                                            <small class="fa fa-star text-primary"></small>
+                                            <small class="fa fa-star text-primary"></small>
+                                            <small class="fa fa-star text-primary"></small>
+                                            <small>(3 avis)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>157 heures dispensées</p>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <!-- les prix ne sont pas encore integres dans la base -->
+                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong></p>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'profil_prof'%}">Voir profil</a>
+                                    </div>
+                                </div>
+                            </div>  
                         </div>
                     </div>
-                </div>  
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</form>
-
-        </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'index'%}" onclick="return false;" >Plus de résultats</a>
+                </div>
+                {% endfor %}
+            </form>
+            <div class="row">
+                <div class="col-12 d-flex justify-content-center">
+                    {% if professeurs.has_previous %}
+                        <a href="?page=1">&laquo;&nbsp; Début &nbsp;</a>
+                        <a href="?page={{ professeurs.previous_page_number }}">Précédant&nbsp;&nbsp;</a>
+                    {% endif %}
+            
+                    Page:&nbsp;{{ professeurs.number }}&nbsp;&nbsp;parmis&nbsp;&nbsp;{{ professeurs.paginator.num_pages }}
+                    {% if professeurs.has_next %}
+                    <a href="?page={{ professeurs.next_page_number }}">&nbsp; suivant &nbsp;</a>
+                        <a href="?page={{ professeurs.paginator.num_pages  }}">Fin&nbsp;&nbsp;&raquo;</a>
+                    {% endif %}
+            
+                </div>
             </div>
         </div>
     </div>
