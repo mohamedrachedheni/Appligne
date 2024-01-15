@@ -3,88 +3,145 @@
 {% block title %} | Home{% endblock %}
 
 {% block content %}
+<form>
 
-<!-- Header Start -->
-<div class="container-fluid bg-ciel  mb-5 ">
-    <div class="container py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 ">
-                <div class="row g-5">
-                    <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
-                        <div class="position-relative h-100">
-                            <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-1.jpg'%}"
-                                style="width: 180px; height: 180px;">
+    <!-- Header Start -->
+    <div class="container-fluid bg-ciel  mb-5 ">
+        <div class="container py-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 ">
+                    <div class="row g-5">
+                        <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
+                            <div class="position-relative h-100">
+                                <!-- professeur et peas professeurs car il y a un seul professeur sélectionné par son id -->
+                                <img class="border rounded-circle p-2 mx-auto mb-3" src="{{professeur.photo.url}}"
+                                    style="width: 180px; height: 180px;">
 
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
-                        <h5 class="mb-0">Nom du prof</h5>
-
-                        <h6 class="mb-0">Maths</h5>
-                            <p">Polytechnique | Professeur(e) indépendant </p>
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small>(4 avis)</small>
+                        <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
+                            <h5 class="mb-0">{{professeur.prenom}}</h5>
+                            <!-- la class grid pour aligner les matières sur une meme ligne -->
+                            <div class="grid  ">
+                                <!-- à introduire le code dans un fichier css -->
+                                <div class="left-align-content" style="font-size: 16px; font-weight: bold;">
+                                    <!-- pour éviter les répétitions des matières -->
+                                    {% regroup professeur.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% for unique_matiere in unique_matiere_list %}
+                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                    {% endfor %}
                                 </div>
-                                <p class="mb-0"><i class="fa fa-arrow-right text-warning me-2"></i>157 heures
-                                    dispensées</p>
+                            </div>
+
+                            <!-- on n'a pas besoin de faire un regroupement car la contrainte des tables di^plome et experience suffisent -->
+                            <p>
+                                {% for diplome in professeur.diplome_set.all %}
+                                {{ diplome.diplome }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                                */* {% for experience in professeur.experience_set.all %}
+                                {{ experience.type }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                            </p>
+                            <div class="mb-3">
+                                <small class="fa fa-star text-warning"></small>
+                                <small class="fa fa-star text-warning"></small>
+                                <small class="fa fa-star text-warning"></small>
+                                <small class="fa fa-star text-warning"></small>
+                                <small class="fa fa-star text-warning"></small>
+                                <small>(4 avis)</small>
+                            </div>
+                            <p class="mb-0"><i class="fa fa-arrow-right text-warning me-2"></i>157 heures
+                                dispensées</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!-- Header End -->
+    <!-- Header End -->
 
-<!-- Testimonial début -->
+    <!-- Testimonial début -->
 
-<div class="container py-4">
+    <div class="container py-4">
 
-    <h4>Diplômé de Polytechnique donne cours de Maths niveau Lycée/Prépa</h4>
-    <a href="#" class="btn btn-lg btn-primary onclick="return false;" ">
-        <h5>Contacter <strong>[Nom du prof]</strong></h5>
+        <h4>{{ professeur.pro_fichier.titre_fiche }}</h4>
+        <a href="#" class="btn btn-lg btn-primary onclick=" return false;" ">
+        <h5>Contacter <strong>{{professeur.prenom}}</strong></h5>
     </a>
 
-</div>
+    </div>
 
-<div class="container py-5">
-    <div class="row g-5">
-        <h5>Présentation</h5>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-
-            <span><textarea class="form-control profil bg-light" id="validationTooltip02" rows="" required
-                    style="border:transparent;">Diplômé de l'Ecole Polytechnique depuis 2019 (promotion 2014), ancien élève en classe préparatoire au lycée Louis Le Grand.
-Spécialisé dans l'enseignement des mathématiques depuis 2017, j'ai accompagné des centaines d'élèves de tous horizons et tous niveaux à atteindre leurs objectifs d'Ecole.
-                    
-J'ai moi-même lutté en queue de classe au début de la prépa et c'est en conséquence de ces premiers échecs que j'ai élaboré ma propre méthode de travail qui combine apprentissage du cours et des démos et acquisition des méthodes de résolution d'exercices de base en mettant au maximum l'accent sur l'autonomie. Ce qui m'a permis en l'espace de quelques mois d'atteindre le top 10 de la classe et finalement d'obtenir l'Ecole Polytechnique en 3/2. 
-                    
-C'est donc afin de partager d'une part ces outils de travail (peaufinés et optimisés par mon expérience de professeur) et d'autre part ma passion pour les mathématiques que je propose ce coaching. La prépa est souvent perçue comme une période difficile mais une bonne méthode de travail et d'organisation permet de révéler ce qu'elle est réellement : un formidable apprentissage et un catalyseur de potentiel pour l'élève.</textarea></span>
-
-        </div>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
+<div class=" container py-2">
             <div class="row g-5">
+                <h5>Présentation</h5>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <div class="wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <i class="fa fa-3x fa-graduation-cap text-primary mb-4"></i>
-                                <h5 class="mb-3">Tarif</h5>
-                                <p><strong><b class="prix_par_heure">A partir de 25</b>&nbsp;€/h</strong></p>
+
+                    <span><textarea class="form-control profil bg-light" id="validationTooltip02" rows="" required
+                            style="border:transparent;">{{ professeur.pro_fichier.description_cours }}</textarea></span>
+
+                </div>
+                <div class="col-lg-6 col-md-6 justify-content-start ">
+                    <div class="row g-5">
+                        <div class="col-lg-6 col-md-6 justify-content-start ">
+                            <div class="wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <i class="fa fa-3x fa-graduation-cap text-primary mb-4"></i>
+                                        <h5 class="mb-3">Tarif</h5>
+                                        <p><strong><b class="prix_par_heure">A partir de 25</b>&nbsp;€/h</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 justify-content-start ">
+                            <div class="wow fadeInUp" data-wow-delay="0.3s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <i class="fa fa-3x fa fa-users text-primary mb-4"></i>
+                                        <h5 class="mb-3">Elèves suivis </h5>
+                                        <p><strong><b>25</strong></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <div class="wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <i class="fa fa-3x fa fa-users text-primary mb-4"></i>
-                                <h5 class="mb-3">Elèves suivis </h5>
-                                <p><strong><b>25</strong></p>
+            </div>
+    </div>
+
+    <div class="container py-2">
+        <div class="row g-5">
+            <h5>Méthodologie</h5>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+
+                <span><textarea class="form-control profil bg-light " id="validationTooltip01" required
+                        style="border:transparent;">{{ professeur.pro_fichier.pedagogie }}</textarea></span>
+            </div>
+
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <div class="row g-5">
+                    <div class="col-lg-6 col-md-6 justify-content-start ">
+                        <div class="wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="service-item text-center pt-3">
+                                <div class="p-4">
+                                    <i class="fa fa-3x fa-flag text-primary mb-4"></i>
+                                    <h5 class="mb-3">Ancienneté</h5>
+                                    <p><strong><b>2019</b></strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6 justify-content-start ">
+                        <div class="wow fadeInUp" data-wow-delay="0.3s">
+                            <div class="service-item text-center pt-3">
+                                <div class="p-4">
+                                    <i class="fa fa-3x fa-home text-primary mb-4"></i>
+                                    <h5 class="mb-3">Lieu</h5>
+
+                                    <!-- first: car il y a plusieur communes liées a leurs département bien que le département est unique -->
+                                    <p><strong><b>{{ professeur.prof_zone_set.first.commune.departement.departement }}</strong></p>
+                                    
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -92,117 +149,87 @@ C'est donc afin de partager d'une part ces outils de travail (peaufinés et opti
             </div>
         </div>
     </div>
-</div>
 
-<div class="container py-5">
-    <div class="row g-5">
-        <h5>Méthodologie</h5>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-
-            <span><textarea class="form-control profil bg-light " id="validationTooltip01" required
-                    style="border:transparent;">Ma méthode consiste en un accompagnement personnalisé de l'élève sur une durée suffisamment longue pour lui transmettre les outils méthodologiques et notamment les points clés pour être plus autonome et plus efficace dans son propre travail. Nous travaillons ainsi de manière précise et intelligente tout d'abord sur l'identification de ses lacunes, puis nous mettons en place un plan d'organisation de travail qui lui permettra d'une part de combler ses lacunes et d'autre part de pouvoir approfondir sa compréhension et son assimilation des chapitres en cours qui sont traités en classe. 
-
-Ma méthode est systémique : elle ne laisse rien au hasard. Nous ne validons un chapitre que si je m'assure que l'élève a assimilé et maîtrisé les compétences requises pour avancer. Elle est aussi flexible, c'est à dire que je m'adapte au niveau de l'élève d'une part, en dosant la difficulté des exercices précisément afin qu'ils soient un challenge pour l'élève, et d'autre part à la personnalité de l'élève, en lui procurant des conseils adéquats afin de lui permettre d'optimiser sa progression. Enfin, elle tient compte des chapitres en cours traités par l'élève et offre un complément parfait à l'apprentissage des cours magistraux. 
-                    
-Elle est enfin efficace : chaque année, des étudiants réalisent des miracles et passent de 5 à 17 en maths en suivant ma préparation. Tout dépend de l'élève : s'il/elle est motivé(e), travailleur et suit scrupuleusement la méthode proposée, je garantis des résultats rapides et surtout une meilleure compréhension globale des mathématiques de prépa, ce qui est vraiment la clé pour réussir ses DS et ses Concours. 
-                    
-Enfin, j'offre un suivi permanent à l'élève : à tout moment, il/elle peut m'envoyer un message s'il/elle a la moindre question sur un chapitre et je donne une garantie de réponse sous 24h
-                    
-NB1: L'élève aura à sa disposition des fiches méthodes et des corrections d'exercice que je partagerai au fur et à mesure sur un espace de travail partagé spécialement concu à cet effet.
-Le cas échéant, les cours par visio peuvent être enregistrés directement sur Zoom/Google Meet afin que l'élève puisse revisionner ses cours et s'améliorer après la séance.                       
-NB2 : Je donne aussi des cours niveau Lycée et Lice</textarea></span>
-        </div>
-
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <div class="row g-5">
-                <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <div class="wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <i class="fa fa-3x fa-flag text-primary mb-4"></i>
-                                <h5 class="mb-3">Ancienneté</h5>
-                                <p><strong><b>2019</b></strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <div class="wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <i class="fa fa-3x fa-home text-primary mb-4"></i>
-                                <h5 class="mb-3">Lieu</h5>
-                                <p><strong><b>Paris</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="container py-2">
+        <div class="row g-5">
+            <h5> Parcours académique</h5>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <ul class="list-group bg-light">
+                    {% for diplome in professeur.diplome_set.all %}
+                    <li class="list-group-item bg-light" style="border:transparent;">
+                        <i class="fa fa-arrow-right text-primary me-2"></i>
+                        <!-- pour afficher le date abrégée 00/00/0000 -->
+                        {{ diplome.obtenu|date:"d/m/Y" }} | {{ diplome.diplome }} - {{ diplome.intitule }}
+                    </li>
+                    {% endfor %}
+                </ul>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="container py-5">
-    <div class="row g-5">
-        <h5> Parcours académique</h5>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <ul class="list-group bg-light">
-                <li class="list-group-item bg-light" style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i>2016 | CAPES - Mathématiques</li>
-                <li class="list-group-item bg-light" style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i>2008 | Doctorat - Sciences de gestion</li>
-                <li class="list-group-item bg-light" style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i> Master MEEF - Mathématiques</li>
-            </ul>
-        </div>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <div class="row g-5">
-                <div class="col-lg-12 col-md-12 justify-content-start">
-                    <div class="wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="service-item text-center pt-3  container-fluid >
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <div class="row g-5">
+                    <div class="col-lg-12 col-md-12 justify-content-start">
+                        <div class="wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="service-item text-center pt-3  container-fluid >
                                         <div class=" p-4 ">
                                             <h5 class=" mb-3">Matières</h5>
-                            <div class="row align-items-start py-3">
-                                <div class="col  btn-info p-2 " style="margin: 3px;">Physique - chimie</div>
-                                <div class=" col  btn-info p-2 " style="margin: 3px;">Math</div>
-                                <div class="col  btn-info p-2 " style="margin: 3px;">Humanites littérature
-                                    philosophie</div>
+                                <div class="row align-items-start py-3">
+                                    <!-- pour éviter les répétitions des matières -->
+                                    {% regroup professeur.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% for unique_matiere in unique_matiere_list %}
+                                    <div class="col  btn-info p-2 " style="margin: 3px;">{{unique_matiere.grouper.matiere }}</div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
-</div>
 
-<div class="container py-5 ">
-    <div class="row g-5">
-        <h5>Expériences</h5>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <ul class="list-group bg-light">
-                <li class="list-group-item bg-light " style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i>2011 - Présent | Professeur(e) en CPGE -
-                    Suivi d’élèves en CPGE , prépa scientifique MP PC ou littéraire</li>
-                <li class="list-group-item bg-light " style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i>2005 - Présent | Professeur(e) en grande
-                    école - Je suis enseignant en philosophie à EPITA</li>
-                <li class="list-group-item bg-light " style="border:transparent;"><i
-                        class="fa fa-arrow-right text-primary me-2"></i>1996 - Présent | Professeur(e) en grande
-                    école - Actuellement professeur de philosophie , culture générale et méthodologie .</li>
-            </ul>
-        </div>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <div class="row g-5">
-                <div class="col-lg-12 col-md-12 justify-content-start">
-                    <div class="wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="service-item text-center pt-3  container-fluid >
+    <div class="container py-2 ">
+        <div class="row g-5">
+            <h5>Expériences</h5>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <ul class="list-group bg-light">
+                    {% for exp in professeur.experience_set.all %}
+                    <li class="list-group-item bg-light" style="border:transparent;">
+                        <i class="fa fa-arrow-right text-primary me-2"></i>
+                        {{ exp.debut|date:"d/m/Y" }} | {{ exp.type }} - {{ exp.commentaire }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <div class="row g-5">
+                    <div class="col-lg-12 col-md-12 justify-content-start">
+                        <div class="wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="service-item text-center pt-3  container-fluid >
                                     <div class=" p-4 ">
                                         <h5 class=" mb-3">Cadre des cours</h5>
-                            <div class="row align-items-start py-3">
-                                <div class="col  btn-info p-2 " style="margin: 3px;" disabled >Individuel</div>
-                                <div class=" col  btn-info p-2" style="margin: 3px;" disabled >En petit groupe</div>
+                                <div class="row align-items-start py-3">
+
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px; {% if not professeur.format_cour.a_domicile %} display: none; {% endif %}"
+                                        disabled>
+                                        Cours à domicile
+                                    </div>
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px; {% if not professeur.format_cour.webcam %} display: none; {% endif %}"
+                                        disabled>
+                                        Cours à distance
+                                    </div>
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px; {% if not professeur.format_cour.stage %} display: none; {% endif %}"
+                                        disabled>
+                                        Cours en petit groupe
+                                    </div>
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px; {% if not professeur.format_cour.stage_webcam %} display: none; {% endif %}"
+                                        disabled>
+                                        Webcam en groupe
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -210,335 +237,338 @@ NB2 : Je donne aussi des cours niveau Lycée et Lice</textarea></span>
             </div>
         </div>
     </div>
-</div>
 
-<div class="container py-5">
-    <div class="row g-5">
-        <div class="input-group justify-content-start ">
-            <h5>Vos avis.&nbsp;&nbsp;</h5>
-            <div class="mb-3">
-                <small class="fa fa-star text-primary"></small>
-                <small class="fa fa-star text-primary"></small>
-                <small class="fa fa-star text-primary"></small>
-                <small class="fa fa-star text-primary"></small>
-                <small class="fa fa-star text-primary"></small>
+    <div class="container py-2">
+        <div class="row g-5">
+            <div class="input-group justify-content-start ">
+                <h5>Vos avis.&nbsp;&nbsp;</h5>
+                <div class="mb-3">
+                    <small class="fa fa-star text-primary"></small>
+                    <small class="fa fa-star text-primary"></small>
+                    <small class="fa fa-star text-primary"></small>
+                    <small class="fa fa-star text-primary"></small>
+                    <small class="fa fa-star text-primary"></small>
+                </div>
+                <small class="p-2">&nbsp;&nbsp;(3 avis)</small>
             </div>
-            <small class="p-2">&nbsp;&nbsp;(3 avis)</small>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <div class="testimonial-item  ">
+                    <div class="testimonial-text bg-light  p-4" style="height: 200px;">
+                        <div class="row gy-2 gx-4 mb-4">
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Nom éléve</strong></p>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <div class="mb-3">
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Novem 2023</strong></p>
+                            </div>
+                            <div class="col-lg-12 justify-content-start">
+                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
+                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
+                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
+                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item  ">
+                    <div class="testimonial-text  p-4" style="height: 200px;">
+                        <div class="row gy-2 gx-4 mb-4">
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Nom éléve</strong></p>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <div class="mb-3">
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Novem 2023</strong></p>
+                            </div>
+                            <div class="col-lg-12 justify-content-start">
+                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
+                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
+                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
+                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item  ">
+                    <div class="testimonial-text bg-light   p-4" style="height: 200px;">
+                        <div class="row gy-2 gx-4 mb-4">
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Nom éléve</strong></p>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <div class="mb-3">
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Novem 2023</strong></p>
+                            </div>
+                            <div class="col-lg-12 justify-content-start">
+                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
+                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
+                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
+                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item  ">
+                    <div class="testimonial-text   p-4" style="height: 200px;">
+                        <div class="row gy-2 gx-4 mb-4">
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Nom éléve</strong></p>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <div class="mb-3">
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                    <small class="fa fa-star text-primary"></small>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 justify-content-start">
+                                <p class="mb-0"><strong>Novem 2023</strong></p>
+                            </div>
+                            <div class="col-lg-12 justify-content-start">
+                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
+                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
+                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
+                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-item  ">
+                    <div class="testimonial-text   p-4">
+                        <div class="row gy-2 gx-4 mb-4 ">
+                            <div class="col-lg-12 d-flex justify-content-center ">
+                                <nav aria-label="Page navigation example ">
+                                    <ul class="pagination">
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 justify-content-start ">
+                <div class="row g-5">
+
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 200px;">
+                        <div class="position-relative h-100">
+                            <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg'%}"
+                                alt="" style="object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <h6 class="section-title bg-white text-start text-primary pe-3">About Us</h6>
+                        <h6 class="mb-4">Bienvenue sur Appenligne</h6>
+
+                        <div class="row gy-2 gx-4 mb-4">
+                            <div class="col-sm-6">
+                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Online </p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>International </p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
+                            </div>
+                        </div>
+                        <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'index'%}">En savoir plus</a>
+                    </div>
+                </div>
+
+            </div>
         </div>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <div class="testimonial-item  ">
-                <div class="testimonial-text bg-light  p-4" style="height: 200px;">
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Nom éléve</strong></p>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <div class="mb-3">
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Novem 2023</strong></p>
-                        </div>
-                        <div class="col-lg-12 justify-content-start">
-                            <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="testimonial-item  ">
-                <div class="testimonial-text  p-4" style="height: 200px;">
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Nom éléve</strong></p>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <div class="mb-3">
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Novem 2023</strong></p>
-                        </div>
-                        <div class="col-lg-12 justify-content-start">
-                            <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                        </div>
 
-                    </div>
-                </div>
-            </div>
-            <div class="testimonial-item  ">
-                <div class="testimonial-text bg-light   p-4" style="height: 200px;">
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Nom éléve</strong></p>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <div class="mb-3">
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Novem 2023</strong></p>
-                        </div>
-                        <div class="col-lg-12 justify-content-start">
-                            <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                        </div>
 
-                    </div>
+        <!-- Testimonial fin -->
+
+        <!-- Liste profs début -->
+        <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="container">
+                <div class="text-center">
+                    <h6 class="section-title bg-white text-center text-primary px-3">AutreA profs</h6>
+                    <h4 class="mb-5">D'autres éminents enseignants.</h4>
+                    <a class="btn btn-link p-3" href="{% url 'index'%}">Voire tous les profs</a>
                 </div>
-            </div>
-            <div class="testimonial-item  ">
-                <div class="testimonial-text   p-4" style="height: 200px;">
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Nom éléve</strong></p>
-                        </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <div class="mb-3">
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
-                                <small class="fa fa-star text-primary"></small>
+                <div class="owl-carousel testimonial-carousel position-relative">
+                    <div class="testimonial-item text-center">
+                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-1.jpg'%}"
+                            style="width: 80px; height: 80px;">
+                        <h5 class="mb-0">Nom</h5>
+                        <p>Matière</p>
+                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                            <div class="row gy-2 gx-4 mb-4">
+                                <div class="col-lg-6 justify-content-start">
+                                    <div class="mb-3">
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small>(3 avis)</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
+                                    </p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">157 h dispensées</p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 justify-content-start">
-                            <p class="mb-0"><strong>Novem 2023</strong></p>
-                        </div>
-                        <div class="col-lg-12 justify-content-start">
-                            <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
+                    </div>
+                    <div class="testimonial-item text-center">
+                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-2.jpg'%}"
+                            style="width: 80px; height: 80px;">
+                        <h5 class="mb-0">Nom</h5>
+                        <p>Matière</p>
+                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                            <div class="row gy-2 gx-4 mb-4">
+                                <div class="col-lg-6 justify-content-start">
+                                    <div class="mb-3">
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small>(3 avis)</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
+                                    </p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">157 h dispensées</p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="testimonial-item  ">
-                <div class="testimonial-text   p-4">
-                    <div class="row gy-2 gx-4 mb-4 ">
-                        <div class="col-lg-12 d-flex justify-content-center ">
-                            <nav aria-label="Page navigation example ">
-                                <ul class="pagination">
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
+                    <div class="testimonial-item text-center">
+                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-3.jpg'%}"
+                            style="width: 80px; height: 80px;">
+                        <h5 class="mb-0">Nom</h5>
+                        <p>Matière</p>
+                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                            <div class="row gy-2 gx-4 mb-4">
+                                <div class="col-lg-6 justify-content-start">
+                                    <div class="mb-3">
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small>(3 avis)</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
+                                    </p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">157 h dispensées</p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-item text-center">
+                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-4.jpg'%}"
+                            style="width: 80px; height: 80px;">
+                        <h5 class="mb-0">Nom</h5>
+                        <p>Matière</p>
+                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                            <div class="row gy-2 gx-4 mb-4">
+                                <div class="col-lg-6 justify-content-start">
+                                    <div class="mb-3">
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small class="fa fa-star text-primary"></small>
+                                        <small>(3 avis)</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
+                                    </p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">157 h dispensées</p>
+                                </div>
+                                <div class="col-lg-6 justify-content-start">
+                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 col-md-6 justify-content-start ">
-            <div class="row g-5">
-                
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 200px;">
-                    <div class="position-relative h-100">
-                        <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg'%}" alt="" style="object-fit: cover;">
-                    </div>
-                </div>
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <h6 class="section-title bg-white text-start text-primary pe-3">About Us</h6>
-                    <h6 class="mb-4">Bienvenue sur Appenligne</h6>
+        <!-- Liste profs fin -->
 
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Online </p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>International </p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
-                        </div>
-                    </div>
-                    <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'index'%}">En savoir plus</a>
-                </div>
-            </div>
-            
-        </div>
     </div>
-
-
     <!-- Testimonial fin -->
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary  back-to-top" onclick="return false;">
+        <h5>Contacter <strong>{{professeur.prenom}}</strong></h5>
+    </a>
 
-    <!-- Liste profs début -->
-    <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container">
-            <div class="text-center">
-                <h6 class="section-title bg-white text-center text-primary px-3">AutreA profs</h6>
-                <h4 class="mb-5">D'autres éminents enseignants.</h4>
-                <a class="btn btn-link p-3" href="{% url 'index'%}">Voire tous les profs</a>
-            </div>
-            <div class="owl-carousel testimonial-carousel position-relative">
-                <div class="testimonial-item text-center">
-                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-1.jpg'%}"
-                        style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Nom</h5>
-                    <p>Matière</p>
-                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-6 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small>(3 avis)</small>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">157 h dispensées</p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-item text-center">
-                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-2.jpg'%}"
-                        style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Nom</h5>
-                    <p>Matière</p>
-                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-6 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small>(3 avis)</small>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">157 h dispensées</p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-item text-center">
-                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-3.jpg'%}"
-                        style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Nom</h5>
-                    <p>Matière</p>
-                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-6 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small>(3 avis)</small>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">157 h dispensées</p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-item text-center">
-                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-4.jpg'%}"
-                        style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Nom</h5>
-                    <p>Matière</p>
-                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-6 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small>(3 avis)</small>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">157 h dispensées</p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Liste profs fin -->
-
-</div>
-<!-- Testimonial fin -->
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary  back-to-top" onclick="return false;" ><h5>Contacter <strong>[Nom du prof]</strong></h5></a>
-
+</form>
 {% endblock %}
