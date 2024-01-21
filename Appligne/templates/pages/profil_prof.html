@@ -14,19 +14,19 @@
                         <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
                             <div class="position-relative h-100">
                                 <!-- professeur et peas professeurs car il y a un seul professeur sélectionné par son id -->
-                                <img class="border rounded-circle p-2 mx-auto mb-3" src="{{professeur.photo.url}}"
+                                <img class="border rounded-circle p-2 mx-auto mb-3" src="{{user.professeur.photo.url}}"
                                     style="width: 180px; height: 180px;">
 
                             </div>
                         </div>
                         <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
-                            <h5 class="mb-0">{{professeur.prenom}}</h5>
+                            <h5 class="mb-0">{{user.first_name}}</h5>
                             <!-- la class grid pour aligner les matières sur une meme ligne -->
                             <div class="grid  ">
                                 <!-- à introduire le code dans un fichier css -->
                                 <div class="left-align-content" style="font-size: 16px; font-weight: bold;">
                                     <!-- pour éviter les répétitions des matières -->
-                                    {% regroup professeur.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
                                     {% for unique_matiere in unique_matiere_list %}
                                     {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
                                     {% endfor %}
@@ -35,10 +35,10 @@
 
                             <!-- on n'a pas besoin de faire un regroupement car la contrainte des tables di^plome et experience suffisent -->
                             <p>
-                                {% for diplome in professeur.diplome_set.all %}
+                                {% for diplome in user.diplome_set.all %}
                                 {{ diplome.diplome }}{% if not forloop.last %} | {% endif %}
                                 {% endfor %}
-                                */* {% for experience in professeur.experience_set.all %}
+                                */* {% for experience in user.experience_set.all %}
                                 {{ experience.type }}{% if not forloop.last %} | {% endif %}
                                 {% endfor %}
                             </p>
@@ -64,9 +64,9 @@
 
     <div class="container py-4">
 
-        <h4>{{ professeur.pro_fichier.titre_fiche }}</h4>
+        <h4>{{ user.pro_fichier.titre_fiche }}</h4>
         <a href="#" class="btn btn-lg btn-primary onclick=" return false;" ">
-        <h5>Contacter <strong>{{professeur.prenom}}</strong></h5>
+        <h5>Contacter <strong>{{user.first_name}}</strong></h5>
     </a>
 
     </div>
@@ -77,7 +77,7 @@
                 <div class="col-lg-6 col-md-6 justify-content-start ">
 
                     <span><textarea class="form-control profil bg-light" id="validationTooltip02" rows="" required
-                            style="border:transparent;">{{ professeur.pro_fichier.description_cours }}</textarea></span>
+                            style="border:transparent;">{{ user.pro_fichier.description_cours }}</textarea></span>
 
                 </div>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
@@ -115,7 +115,7 @@
             <div class="col-lg-6 col-md-6 justify-content-start ">
 
                 <span><textarea class="form-control profil bg-light " id="validationTooltip01" required
-                        style="border:transparent;">{{ professeur.pro_fichier.pedagogie }}</textarea></span>
+                        style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
             </div>
 
             <div class="col-lg-6 col-md-6 justify-content-start ">
@@ -139,7 +139,7 @@
                                     <h5 class="mb-3">Lieu</h5>
 
                                     <!-- first: car il y a plusieur communes liées a leurs département bien que le département est unique -->
-                                    <p><strong><b>{{ professeur.prof_zone_set.first.commune.departement.departement }}</strong></p>
+                                    <p><strong><b>{{ user.prof_zone_set.first.commune.departement.departement }}</strong></p>
                                     
                                 </div>
                             </div>
@@ -155,7 +155,7 @@
             <h5> Parcours académique</h5>
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <ul class="list-group bg-light">
-                    {% for diplome in professeur.diplome_set.all %}
+                    {% for diplome in user.diplome_set.all %}
                     <li class="list-group-item bg-light" style="border:transparent;">
                         <i class="fa fa-arrow-right text-primary me-2"></i>
                         <!-- pour afficher le date abrégée 00/00/0000 -->
@@ -173,7 +173,7 @@
                                             <h5 class=" mb-3">Matières</h5>
                                 <div class="row align-items-start py-3">
                                     <!-- pour éviter les répétitions des matières -->
-                                    {% regroup professeur.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
                                     {% for unique_matiere in unique_matiere_list %}
                                     <div class="col  btn-info p-2 " style="margin: 3px;">{{unique_matiere.grouper.matiere }}</div>
                                     {% endfor %}
@@ -192,7 +192,7 @@
             <h5>Expériences</h5>
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <ul class="list-group bg-light">
-                    {% for exp in professeur.experience_set.all %}
+                    {% for exp in user.experience_set.all %}
                     <li class="list-group-item bg-light" style="border:transparent;">
                         <i class="fa fa-arrow-right text-primary me-2"></i>
                         {{ exp.debut|date:"d/m/Y" }} | {{ exp.type }} - {{ exp.commentaire }}
@@ -210,22 +210,22 @@
                                 <div class="row align-items-start py-3">
 
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not professeur.format_cour.a_domicile %} display: none; {% endif %}"
+                                        style="margin: 3px; {% if not user.format_cour.a_domicile %} display: none; {% endif %}"
                                         disabled>
                                         Cours à domicile
                                     </div>
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not professeur.format_cour.webcam %} display: none; {% endif %}"
+                                        style="margin: 3px; {% if not user.format_cour.webcam %} display: none; {% endif %}"
                                         disabled>
                                         Cours à distance
                                     </div>
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not professeur.format_cour.stage %} display: none; {% endif %}"
+                                        style="margin: 3px; {% if not user.format_cour.stage %} display: none; {% endif %}"
                                         disabled>
                                         Cours en petit groupe
                                     </div>
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not professeur.format_cour.stage_webcam %} display: none; {% endif %}"
+                                        style="margin: 3px; {% if not user.format_cour.stage_webcam %} display: none; {% endif %}"
                                         disabled>
                                         Webcam en groupe
                                     </div>
@@ -567,7 +567,7 @@
     <!-- Testimonial fin -->
     <!-- Back to Top -->
     <a href="#" class="btn btn-lg btn-primary  back-to-top" onclick="return false;">
-        <h5>Contacter <strong>{{professeur.prenom}}</strong></h5>
+        <h5>Contacter <strong>{{user.first_name}}</strong></h5>
     </a>
 
 </form>

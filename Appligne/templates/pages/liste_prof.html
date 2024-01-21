@@ -256,8 +256,8 @@
                         <div class="row g-5">
                             <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
                                 <div class="position-relative h-100" >
-                                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{{prof.photo.url}}" style="width: 80px; height: 80px;" alt="{{prof.nom}}" >
-                                    <h5 class="mb-0">{{prof.prenom}}</h5>
+                                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{{prof.professeur.photo.url}}" style="width: 80px; height: 80px;" alt="" >
+                                    <h5 class="mb-0">{{ prof.first_name }}</h5>
                                     </div>
                             </div>
                             <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
@@ -309,7 +309,7 @@
                                         <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong></p>
                                     </div>
                                     <div class="col-sm-12">
-                                        <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'profil_prof' id_prof=prof.id %}">Voir profil</a>
+                                        <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'profil_prof' id_user=prof.id %}">Voir profil</a>
                                     </div>
                                 </div>
                             </div>  
