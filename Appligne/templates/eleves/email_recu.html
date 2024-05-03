@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte professeur{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_eleve.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-5 ">
+                <div class="container ">
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                    <div class="container bg-light  ">
+                        <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu' %}">
+                            {% csrf_token %}
+                            
+                            <!-- parcours scolaire debut -->
+                            <div class="container-xxl py-5 " >
+                                <div class="container">
+                                    <div class="container bg-light ">
+                                        <div class="container bg-light ">
+                                        {% for email in emails %}
+                                            <div class="row  ajout-dipl p3 py-3"  >
+                                                <div class="col-lg-3 position-relative ">
+                                                    <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" >
+                                                </div>
+                                                <div class="col-lg-3 position-relative">
+                                                    <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" >
+                                                </div>
+                                                <div class="col-lg-3 position-relative">
+                                                    <div class="row  ajout-dipl p3">
+                                                        <label for="first_name_id_{{ forloop.counter }}" class="form-label">Prénom</label>
+                                                        <div class="col-lg-9 position-relative">
+                                                
+                                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
+                                                                value="{{email.user.first_name}}">
+                                                        </div>
+                                                        <div class="col-lg-3 position-relative">
+                                                            <a class="btn btn-primary" name="btn_détaille_{{ email.id }}"
+                                                                href="{% url 'email_detaille' email_id=email.id %}"><span
+                                                                    style="color: white;">Détaille {{email.id }}</span></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>                        
+                        </form>
+                    </div>
+                </div>
+            </div> 
+        </div>
+    </div>
+</div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}

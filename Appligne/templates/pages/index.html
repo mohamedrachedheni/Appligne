@@ -5,12 +5,12 @@
 {% block content %}
 
 <!-- Carousel début -->
-<div class="container-fluid p-0 mb-5">
-    <div class="owl-carousel header-carousel position-relative">
-        <div class="owl-carousel-item position-relative">
+<div class="container-fluid p-0 mb-5" >
+    <div class="owl-carousel header-carousel position-relative"  >
+        <div class="owl-carousel-item position-relative"  >
             <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
             <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center"
-                style="background: rgba(24, 29, 56, .7);">
+                style="background: rgba(46, 66, 178, 0.7);">
                 <div class="container">
                     <div class="row justify-content-start">
                         <div class="col-sm-10 col-lg-8">
@@ -57,194 +57,149 @@
 <!-- Carousel fin -->
 
 <!-- Cherchez votre prof début -->
-<div class="container ">
-    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-        <h6 class="section-title bg-white text-center text-primary px-3">Recherchez maintenant</h6>
-        <h1 class="mb-5">Votre meilleur professeur</h1>
-    </div>
-    <div class="col-12 g-1 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="mx-auto mb-5" style="width: 100%; ">
-            <div class="input-group">
-                <div class="input-group-prepend container ">
-                    <select  class="form-select bg-light text-body px-4 dropdown-toggle">
-                        <option>Tous les matières</option>
-                        <option>Maths</option>
-                        <option>Physique-chimie</option>
-                        <option>Physique</option>
-                        <option>Chimie</option>
-                        <option>Anglais</option>
-                        <option>Français</option>
-                        <option>Sciences de l'ingénieurs</option>
-                        <option>SES</option>
-                        <option>SVT</option>
-                        <option>Informatique</option>
-                        <option>Philosophie</option>
-                        <option>Espagnol</option>
-                        <option>Culture générale</option>
-                        <option>Synthèse de document</option>
-                        <option>Géopolitique</option>
-                        <option>Analyse documentaire</option>
-                        <option>ESH</option>
-                        <option>Entretien de motivation</option>
-                        <option>Biologie</option>
-                        <option>Economie</option>
-                        <option>Sciences politiques</option>
-                        <option>Statistique</option>
-                        <option>Allemand</option>
-                        <option>Grand oral du bac</option>
-                        <option>Histoire - Géographie</option>
-                        <option>Latin</option>
-                        <option>Grec</option>
-                        <option>Orthographe</option>
-                        <option>Comptabilité</option>
-                        <option>Control de gestion</option>
-                        <option>Marketing</option>
-                        <option>Microéconomie</option>
-                        <option>Macroéconomie</option>
-                        <option>Fiscalité</option>
-                        <option>Management</option>
-                        <option>Education civique</option>
-                        <option>Anatomie</option>
-                        <option>Biophysique</option>
-                        <option>Biologie - Ecologie</option>
-                        <option>Biostatique</option>
-                        <option>NSI</option>
-                        <option>Dessin industriel</option>
-                        <option>Chinois</option>
-                        <option>Italien</option>
-                        <option>Gaponais</option>
-                        <option>Portugais</option>
-                        <option>Arabe</option>
-                        <option>Russe</option>
-                        <option>Orientation scolaire</option>
-                        <option>FLE</option>
-                        <option>Coaching scolaire</option>
-                        <option>Coréen</option>
-                        <option>TIPE</option>
-                        <option>TPE</option>
-                        <option>Musique</option>
-                        <option>Arts plastiques</option>
-                        <option>Cinéma audiovisuel</option>
-                        <option>Théatre</option>
-                        <option>Histoire des arts</option>
-                        <option>Danse</option>
-                        <option>Art du cirque</option>
+<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'index' %}" id="index_id" >
+    <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
+    {% csrf_token %}
 
-                    </select>
-                    <select  class="form-select bg-light text-body px-4 dropdown-toggle">
-                        <option>Tous les niveaux</option>
-                        <option>6ème</option>
-                        <option>5ème</option>
-                        <option>4ème</option>
-                        <option>3ème</option>
-                        <option>Seconde</option>
-                        <option>Première STMGL</option>
-                        <option>Première STL</option>
-                        <option>Première Générale</option>
-                        <option>Première STI2D</option>
-                        <option>Terminale STMG</option>
-                        <option>Terminale STI2D</option>
-                        <option>Terminale Générale</option>
-                        <option>Terminale STL</option>
-                        <option>Prépa Concours Geipi Polytech</option>
-                        <option>Avenir-Puissance Alpha-Advance-Geipi</option>
-                        <option>Acces-Sésame</option>
-                        <option>Prépa Concours Avenir</option>
-                        <option>Prépa Sciences Po</option>
-                        <option>Prépa Concours ESA</option>
-                        <option>Prépa Concours Advance</option>
-                        <option>Prépa Concours Acces</option>
-                        <option>Prépa Concours CRPE</option>
-                        <option>Pass BBA</option>
-                        <option>Prépa Concours Puissance Alpha</option>
-                        <option>Prépa Concours Sésame</option>
-                        <option>Prépa intégrée 1ère année</option>
-                        <option>MP2I</option>
-                        <option>MPSI</option>
-                        <option>TSI</option>
-                        <option>TB</option>
-                        <option>TBC</option>
-                        <option>ATS</option>
-                        <option>PTSI</option>
-                        <option>BBPST 1</option>
-                        <option>PCSI</option>
-                        <option>Math Sup</option>
-                        <option>MP</option>
-                        <option>PSI</option>
-                        <option>PC</option>
-                        <option>Prépa intégré 2ème année</option>
-                        <option>TSI 2</option>
-                        <option>MPI</option>
-                        <option>PT</option>
-                        <option>BCPST 2</option>
-                        <option>Maths Spé</option>
-                        <option>ECG 1</option>
-                        <option>D1 ENS Cachan</option>
-                        <option>Hypokhâgne ALL</option>
-                        <option>Khâgne AL</option>
-                        <option>Khâgne BL</option>
-                        <option>Gei Univ</option>
-                        <option>CAST Ing</option>
-                        <option>TOEIC</option>
-                        <option>Tage Mage</option>
-                        <option>GMAT</option>
-                        <option>Score IAE Message</option>
-                        <option>TOEFL</option>
-                        <option>Architechture</option>
-                        <option>Infirmier</option>
-                        <option>Capes</option>
-                        <option>Tage 2</option>
-                        <option>IELTS</option>
-                        <option>DCG</option>
-                        <option>DSCG</option>
-                        <option>Agrégation</option>
-                        <option>BUT</option>
-                        <option>BTS</option>
-                        <option>Licence 1</option>
-                        <option>Licence 2</option>
-                        <option>Licence 3</option>
-                        <option>Master 1</option>
-                        <option>Master 2</option>
-                        <option>Adultes</option>
-                    </select>
-                    <select  class="form-select bg-light text-body px-4 dropdown-toggle">
-                        <option>Cours à domicile</option>
-                        <option>Cours en ligne</option>
-                        <option>Stage en présentiel</option>
-                        <option>Stage en ligne</option>
-                    </select>
-                    <select  class="form-select bg-light text-body px-4 dropdown-toggle">
-                        <option>Paris</option>
-                        <option>Marseille</option>
-                        <option>Lyon</option>
-                        <option>Toulouse</option>
-                        <option>Nice</option>
-                        <option>Nantes</option>
-                        <option>Montpellier</option>
-                        <option>Strasbourg</option>
-                        <option>Bordeaux</option>
-                        <option>Lille</option>
-                        <option>Rennes</option>
-                        <option>Reims</option>
-                        <option>Saint-Étienne</option>
-                        <option>Le Havre</option>
-                        <option>Toulon</option>
-                        <option>Grenoble</option>
-                        <option>Dijon</option>
-                        <option>Angers</option>
-                        <option>Nîmes</option>
-                        <option>Villeurbanne</option>
-                    </select>
-                    <a class="btn btn-primary py-3 px-5 " href="{% url 'liste_prof'%}">Chercher</a>
-                </div>
+    
+
+    <div class="container  ">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Recherchez maintenant</h6>
+            <h3 class="mb-1">Votre meilleur professeur</h3>
+        </div>
+        <div class="col-md-12">
+            {% include 'partials/_alerts.html' %}
+        </div>
+        <div class="container  bg-light shadow-sm rounded mb-4 p-4" >
+            <div class="container " >
+                <div class="row g-1 ">
+                    <!-- format cours -->
+                    <div class="col-md-12 position-relative">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="a_domicile" id="a_domicile_id" {% if radio_name == 'a_domicile' %} checked {% endif %} >
+                            <label class="form-check-label" for="a_domicile_id">
+                            Cours particuliers à domicile
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="webcam" id="webcam_id" {% if radio_name == 'webcam' %} checked {% endif %} >
+                            <label class="form-check-label" for="webcam_id">
+                            Cours particuliers en ligne
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="stage" id="stage_id" {% if radio_name == 'stage' %} checked {% endif %} >
+                            <label class="form-check-label" for="stage_id">
+                            Stage Vacances scolaires
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="stage_webcam" id="stage_webcam_id" {% if radio_name == 'stage_webcam' %} checked {% endif %} >
+                            <label class="form-check-label" for="stage_webcam_id">
+                            Cours en groupe à distance par webcam
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Matière -->
+                    <div class="col-md-3 position-relative">
+                        <label class="form-label">Matière</label>
+                        <div class="dropdown">
+                            <div class="input-group">
+                                <input type="text" class="form-control"
+                                    id="matiere_id"
+                                    name="matiere" value="{{matiere_defaut}}" readonly >
+                                <ul class="dropdown-menu"
+                                    id="dropdownMenu_matiere_id"
+                                    style="max-height: 300px; overflow-y:auto; width: 300px;" 
+                                    aria-labelledby="dropdownMenu_matiere_id">
+                                    {% for une_matiere in matieres %}
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="une_matiere_{{ forloop.counter }}"
+                                            data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                                <input type="hidden" id="selected_experience_id">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Niveaux -->
+                    <div class="col-md-3 position-relative">
+                        <label class="form-label">Niveau</label>
+                        <div class="dropdown">
+                            <div class="input-group">
+                                <input type="text" class="form-control"
+                                    id="niveau_id"
+                                    name="niveau" value="{{niveau_defaut}}" readonly >
+                                <ul class="dropdown-menu"
+                                    id="dropdownMenu_niveau_id"
+                                    style="max-height: 300px; overflow-y:auto; width: 300px;" 
+                                    aria-labelledby="dropdownMenu_niveau_id">
+                                    {% for niveau in niveaux %}
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="niveau_{{ forloop.counter }}"
+                                            data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                                <input type="hidden" id="selected_niveau_id">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Régions -->
+                    <div class="col-md-3 position-relative">
+                        <label class="form-label">Région</label>
+                        <div class="dropdown">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-input"
+                                    id="region_id"
+                                    name="region" value="{{region_defaut}}" readonly >
+                                <ul class="dropdown-menu"
+                                    id="dropdownMenu_region_id"
+                                    style="max-height: 300px; overflow-y:auto; width: 200px;" 
+                                    aria-labelledby="dropdownMenu_region_id">
+                                    {% for region in regions %}
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="region_{{ forloop.counter }}"
+                                            data-value="{{ region.region }}">{{ region.region }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                                <input type="hidden" id="selected_region_id">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Département -->
+                    <div class="col-md-3 position-relative">
+                        <label class="form-label">Département</label>
+                        <div class="row g-1">
+                            <div class="col-md-9 position-relative">
+                                <div class="dropdown">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-input "
+                                            id="departement_id"
+                                            name="departement" value="{{departement_defaut}}" readonly >
+                                        <ul class="dropdown-menu"
+                                            id="dropdownMenu_departement_id"
+                                            style="max-height: 300px; overflow-y:auto; width: 200px;" 
+                                            aria-labelledby="dropdownMenu_departement_id">
+                                            {% for departement in departements %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="departement_{{ forloop.counter }}"
+                                                    data-value="{{ departement.departement }}">{{ departement.departement }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <input type="hidden" id="selected_departement_id">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Bouton Rechercher -->
+                            <div class="col-md-3 position-relative">
+                                <button class="btn btn-primary " type="submit" name="btn_rechercher">Rechercher</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>                        
             </div>
         </div>
     </div>
-</div>
+</form>
 <!--Cherchez votre prof fin -->
-
-
 
 <!-- Service début -->
 <div class="container-xxl py-5">
@@ -519,7 +474,7 @@
                 <div class="col-12">
                     <div class="col-12">
                         <div class="btn" type="submit"><a class="btn btn-primary"
-                                href="{% url 'creer_compte_client'%}">Enregistrer</a></div>
+                                href="">Enregistrer</a></div>
                     </div>
                 </div>
             </form>
@@ -557,7 +512,7 @@
                 <div class="col-12">
                     <div class="col-12">
                         <div class="btn" type="submit"><a class="btn btn-primary"
-                                href="{% url 'compte_client'%}">Se connecterr</a></div>
+                                href="">Se connecterr</a></div>
                     </div>
                 </div>
             </form>
@@ -619,9 +574,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form class="row g-3">
+                <form class="row g-3"  action="{% url 'index' %}" >
                     <div class="col-md-12">
                         <div class="input-group">
+                            {% if messages %}
+                                {% for mgs in messages %}
+                                    <div style="border: 2px solide #000; margin: 10px; ">
+                                        {{mgs}}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
                             <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
                             <input type="text" class="form-control" aria-describedby="inputGroupPrepend2"
                                 placeholder="votre email" required>
@@ -642,8 +604,8 @@
                         </div>
                     </div>
                     <div class="col-12">
-                        <div class="btn" type="submit"><a class="btn btn-primary"
-                                href="{% url 'creer_compte_prof'%}">Enregistrer</a></div>
+                        <div class="btn " type="submit"><a class="btn btn-primary"
+                            href="">Enregistrer</a></div>
                     </div>
                 </form>
             </div>
@@ -657,4 +619,7 @@
 </div>
 <!-- Modal créer un compte prof ou se connecter fin -->
 
+{% endblock %}
+{% block javascript %}
+   <script src="{% static 'js/Code_en_plus copy_index.js' %}"></script>
 {% endblock %}

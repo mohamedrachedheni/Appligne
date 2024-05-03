@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Coordonnées parent{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Mes coordonnées</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_eleve.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Vos données de parent</h6>
+                        <h1 class="mb-5">Ajoutez vos coordonnées de parent</h1>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'ajout_coordonnee_parent' %}"  >
+                <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
+                {% csrf_token %}
+                <div class="container-xxl py-5 " id="identite">
+                    <div class="container ">
+                        <div class="container bg-light  p-5">
+                            <div class="row g-4">
+                                <!-- Si le user n'est pas connecté -->
+                                {% if  request.user.is_authenticated %}
+                                <div class="col-md-4 position-relative">
+                                    <label for="civilite_id" class="form-label">Civilité</label>
+                                    <select class="form-select" id="civilite_id" required name="civilite" >
+                                        <option value="Homme" {% if civilite == 'Homme' %}selected{% endif %}>Monsieur</option>
+                                        <option value="Femme" {% if civilite == 'Femme' %}selected{% endif %}>Madame</option>
+                                        <option value="Autre" {% if civilite == 'Autre' %}selected{% endif %}>Autre</option>  
+                                    </select>
+                                    <div class="invalid-tooltip">
+                                        SVP sélectionnez un état valide.
+                                    </div>
+                                </div>
+                                <div class="col-md-4 position-relative">
+                                    <label for="prenom_parent_id" class="form-label">Prénom</label>
+                                    <input type="text" class="form-control" id="prenom_parent_id" value="{{prenom_parent}}" required name="prenom_parent" >
+                                    <div class="valid-tooltip">
+                                        Looks good!
+                                    </div>
+                                </div>
+                                <div class="col-md-4 position-relative">
+                                    <label for="nom_parent_id" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="nom_parent_id" value="{{nom_parent}}" required name="nom_parent" >
+                                    <div class="valid-tooltip">
+                                        Looks good!
+                                    </div>
+                                </div>
+                                <div class="col-md-6 position-relative">
+                                    <label for="email_parent_id" class="form-label">Email </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
+                                        <input type="text" class="form-control" id="email_parent_id" value="{{email_parent}}" name="email_parent"
+                                            aria-describedby="validationTooltipUsernamePrepend" required>
+                                        <div class="invalid-tooltip">
+                                            Please choose a unique and valid Email.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 position-relative">
+                                    <label  class="form-label" for="phoneInput">Numéro de téléphone :</label>
+                                    <input type="text"  class="form-control" id="phone_id" name="telephone_parent" pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00"  value="{{telephone_parent}}">
+                                    <div class="invalid-tooltip">
+                                        Please provide a valid zip.
+                                    </div>
+                                </div>
+                                <div class="row justify-content-end g-2 p-3 ">
+                                    <div class="col-lg-1 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning" name="btn_enr">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+{% block javascript %}
+<script src="{% static 'js/Code_en_plus_ajout_coordonnee_parent copy.js' %}"></script>
+{% endblock %}

@@ -20,22 +20,48 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto p-4 p-lg-0">
-                <a href="{% url 'index' %}" class="nav-item nav-link active" onclick="return false;" >Cours à domicile</a>
+                <a href="{% url 'demande_cours_recu' %}" class="nav-item nav-link active" >Cours à domicile</a>
                 <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Cours en ligne</a>
                 <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Stage en ligne</a>
                 <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Présentiel en groupe</a>
+                
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Autres</a>
+                    
                     <div class="dropdown-menu fade-down m-0">
-                        <a href="{% url 'index' %}" class="dropdown-item" onclick="return false;" >Notre équipe</a>
-                        <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient" ><a  class="dropdown-item">Compte élève</a></div>
-                        <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteProf" ><a  class="dropdown-item">Compte prof</a></div>
+                                    {% if request.user.is_authenticated %}
+                                    <a href="{% url 'votre_compte' %}" class="dropdown-item"  >Votre compte</a>
+                                    <a href="{% url 'logout' %}" class="dropdown-item"  >Se déconnecter</a>
+                                    {% else %}
+                                    <a href="{% url 'signin' %}" class="dropdown-item"  >Se connecter</a>
+                                    <a href="{% url 'nouveau_compte_prof' %}" class="dropdown-item"  >Nouveau compte pro</a>
+                                    <a href="{% url 'nouveau_compte_eleve' %}" class="dropdown-item"  >Nouveau compte élève</a>
+                                    {% endif %}
+                                    <!-- <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient" ><a  class="dropdown-item">Compte élève</a></div>
+                                    <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteProf" ><a  class="dropdown-item" >Compte prof</a></div> -->
                     </div>
                 </div>
-                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Contact</a>
+                <a href="{% url 'compte_eleve' %}" class="nav-item nav-link"  >compte_eleve</a>
             </div>
-            <a href="#" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block" >Votre compte<i
-                    class="fa fa-arrow-right ms-3"></i></a>
+            {% if request.user.is_authenticated %}
+                {% if request.user.professeur %}
+                    <a href="{% url 'votre_compte' %}" class="btn btn-primary d-none d-lg-block">
+                        {{ request.user.first_name }}  
+                        {% if request.user.professeur.photo %}
+                            <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ request.user.professeur.photo.url }}" style="width: 55px; height: 55px;" alt="">
+                        {% endif %}
+                    </a>
+                {% elif request.user.eleve %}
+                    <a href="{% url 'votre_compte' %}" class="btn btn-primary d-none d-lg-block">
+                        {{ request.user.first_name }} 
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="#" class="btn btn-primary d-none d-lg-block">
+                    Non connecté  
+                </a>
+            {% endif %}
+
         </div>
     </nav>
     <!-- Navbar fin -->

@@ -6,6 +6,14 @@
 
 <!-- formulaire créer compte prof début -->
 
+<form>
+{% if messages %}
+    {% for mgs in messages %}
+        <div style="border: 2px solide #000; margin: 10px; ">
+            {{mgs}}
+        </div>
+    {% endfor %}
+{% endif %}
 <!-- mon compte début -->
 <!-- identité et coordonnees debut -->
 <div class="container-xxl py-5 " id="identite">
@@ -21,7 +29,7 @@
 
                 <div class="col-md-4 position-relative">
                     <label for="validationTooltipCivil" class="form-label">Civilité</label>
-                    <select class="form-select" id="validationTooltipCivil" required>
+                    <select class="form-select" id="validationTooltipCivil" name="civilite" required>
                         <option>Monsieur</option>
                         <option>Madame</option>
                         <option>Autre</option>
@@ -30,23 +38,23 @@
                 </div>
                 <div class="col-md-4 position-relative">
                     <label for="validationTooltipPrenom" class="form-label">Prénom</label>
-                    <input type="text" class="form-control" id="validationTooltipPrenom" value="" required>
+                    <input type="text" class="form-control" id="validationTooltipPrenom" name="prenom" required>
                 </div>
                 <div class="col-md-4 position-relative">
                     <label for="validationTooltipNom" class="form-label">Nom</label>
-                    <input type="text" class="form-control" id="validationTooltipNom" value="" required>
+                    <input type="text" class="form-control" id="validationTooltipNom" name="nom" required>
                 </div>
 
                 <div class=" col-md-6   position-relative">
                     <label for="validationTooltipAdr" class="form-label">Addresse</label>
-                    <input type="text" class="form-control" id="validationTooltipAdr" required>
+                    <input type="text" class="form-control" id="validationTooltipAdr" name="addresse" required>
                 </div>
                 <div class="col-md-6 position-relative">
                     <label for="validationTooltipUsername" class="form-label">Email </label>
                     <div class="input-group has-validation">
                         <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
                         <input type="text" class="form-control" id="validationTooltipUsername"
-                            aria-describedby="validationTooltipUsernamePrepend" required>
+                            aria-describedby="validationTooltipUsernamePrepend" name="email" required>
                     </div>
                 </div>
                 <div class="col-md-3 position-relative">
@@ -57,8 +65,8 @@
 
                 <div class="col-lg-3 col-md-4 col-sm-4 position-relative">
                     <label for="dateInput" class="form-label">Date de naissance</label>
-                    <input type="text" class="form-control" id="dateInput" placeholder="Sélectionnez une date" readonly
-                        required>
+                    <input type="text" class="form-control" id="dateInput" placeholder="Sélectionnez une date" 
+                        name="date_naiss" required>
                 </div>
                 <div class="row justify-content-end g-2 p-3 ">
                     <div class="col-lg-1 col-md-4 col-sm-6">
@@ -278,6 +286,7 @@
     </div>
 </div>
 <!-- Les formats de vos course fin -->
+
 <!-- Les détailles des matières debut -->
 <div class="container-xxl py-5" id="matieres">
     <div class="container">
@@ -964,7 +973,7 @@
                 </div>
             </div>
             <div class="text-center">
-                <button type="button" class="btn btn-warning">
+                <button type="submit" class="btn btn-warning" >
                     Envoyer ma candidature
                 </button>
             </div>
@@ -984,5 +993,9 @@
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+</form>
+{% endblock %}
 
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus.js' %}"></script>
 {% endblock %}

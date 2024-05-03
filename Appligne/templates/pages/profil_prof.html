@@ -20,7 +20,7 @@
                             </div>
                         </div>
                         <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
-                            <h5 class="mb-0">{{user.first_name}}</h5>
+                            <h5 class="mb-0">{{user.first_name}} / {{ pro_fichier.video_youtube_url }}</h5>
                             <!-- la class grid pour aligner les matières sur une meme ligne -->
                             <div class="grid  ">
                                 <!-- à introduire le code dans un fichier css -->
@@ -65,7 +65,7 @@
     <div class="container py-4">
 
         <h4>{{ user.pro_fichier.titre_fiche }}</h4>
-        <a href="#" class="btn btn-lg btn-primary onclick=" return false;" ">
+        <a href="{% url 'demande_cours_envoie' id_prof=user.id %}" class="btn btn-lg btn-primary" >
         <h5>Contacter <strong>{{user.first_name}}</strong></h5>
     </a>
 
@@ -75,10 +75,8 @@
             <div class="row g-5">
                 <h5>Présentation</h5>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
-
                     <span><textarea class="form-control profil bg-light" id="validationTooltip02" rows="" required
-                            style="border:transparent;">{{ user.pro_fichier.description_cours }}</textarea></span>
-
+                            style="border:transparent;">{{ user.pro_fichier.parcours }}</textarea></span>
                 </div>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
                     <div class="row g-5">
@@ -136,15 +134,17 @@
                             <div class="service-item text-center pt-3">
                                 <div class="p-4">
                                     <i class="fa fa-3x fa-home text-primary mb-4"></i>
-                                    <h5 class="mb-3">Lieu</h5>
-
-                                    <!-- first: car il y a plusieur communes liées a leurs département bien que le département est unique -->
-                                    <p><strong><b>{{ user.prof_zone_set.first.commune.departement.departement }}</strong></p>
+                                    <h5 class="mb-3">Lieux</h5>
+                    
+                                    <!-- Utilisation d'une boucle pour afficher les départements distincts -->
+                                    {% for departement in departements_distincts %}
+                                    <p><strong><b>{{ departement.departement }}</strong></p>
+                                    {% endfor %}
                                     
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div>                    
                 </div>
             </div>
         </div>
@@ -153,17 +153,18 @@
     <div class="container py-2">
         <div class="row g-5">
             <h5> Parcours académique</h5>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
+            <div class="col-lg-6 col-md-6 justify-content-start">
                 <ul class="list-group bg-light">
                     {% for diplome in user.diplome_set.all %}
                     <li class="list-group-item bg-light" style="border:transparent;">
                         <i class="fa fa-arrow-right text-primary me-2"></i>
                         <!-- pour afficher le date abrégée 00/00/0000 -->
-                        {{ diplome.obtenu|date:"d/m/Y" }} | {{ diplome.diplome }} - {{ diplome.intitule }}
+                        {{ diplome.obtenu|date:"d/m/Y" }} | {{ diplome.diplome_cathegorie }} - {{ diplome.intitule }}
                     </li>
                     {% endfor %}
                 </ul>
             </div>
+            
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <div class="row g-5">
                     <div class="col-lg-12 col-md-12 justify-content-start">
@@ -208,25 +209,42 @@
                                     <div class=" p-4 ">
                                         <h5 class=" mb-3">Cadre des cours</h5>
                                 <div class="row align-items-start py-3">
-
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not user.format_cour.a_domicile %} display: none; {% endif %}"
-                                        disabled>
+                                    {% if  user.format_cour.a_domicile %}
+                                    <div class="col btn-info p-2" style="margin: 3px">
                                         Cours à domicile
                                     </div>
+                                    {% endif %}
+                                    <div class="col btn-info p-2" style="margin: 3px;  display: none " >
+                                        Cours à domicile
+                                    </div>
+                                    {% if user.format_cour.webcam %}
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not user.format_cour.webcam %} display: none; {% endif %}"
-                                        disabled>
+                                        style="margin: 3px ">
                                         Cours à distance
                                     </div>
+                                    {% endif %}
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not user.format_cour.stage %} display: none; {% endif %}"
-                                        disabled>
+                                        style="margin: 3px;  display: none ">
+                                        Cours à distance
+                                    </div>
+                                    {% if user.format_cour.stage %}
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px">
                                         Cours en petit groupe
                                     </div>
+                                    {% endif %}
                                     <div class="col btn-info p-2"
-                                        style="margin: 3px; {% if not user.format_cour.stage_webcam %} display: none; {% endif %}"
-                                        disabled>
+                                        style="margin: 3px;  display: none ">
+                                        Cours en petit groupe
+                                    </div>
+                                    {% if user.format_cour.stage_webcam %}
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px">
+                                        Webcam en groupe
+                                    </div>
+                                    {% endif %}
+                                    <div class="col btn-info p-2"
+                                        style="margin: 3px;  display: none ">
                                         Webcam en groupe
                                     </div>
                                 </div>
@@ -390,7 +408,6 @@
             </div>
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <div class="row g-5">
-
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 200px;">
                         <div class="position-relative h-100">
                             <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg'%}"
@@ -421,9 +438,43 @@
 
             </div>
         </div>
-
-
         <!-- Testimonial fin -->
+
+                <!-- video début -->
+                {% if user.pro_fichier.video_youtube_url  %}
+                <div class="container py-5 " id="Video">
+                    <div class="container">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h6 class="section-title bg-white text-center text-primary px-3">Vidéo de présentation</h6>
+                            <h1 class="mb-5">Pour une perspective plus vivante</h1>
+                        </div>
+                        <div class="container bg-light">
+                            <div class="row g-2 p-3">
+                                <div class="col-12 ">
+                                    <label for="video_id" class="form-label">Url de la vidéo</label>
+                                </div>
+                                <div class="col-12 ">
+                                    <input type="text" class="form-control" id="video_id"
+                                       name="video_youtube_url" value= {{user.pro_fichier.video_youtube_url}} readonly >
+                                </div>
+                                <div class="col-12 position-relative d-flex justify-content-center align-items-center">
+    
+    
+                                    <div class="embed-responsive embed-responsive-16by9">
+                                        <iframe class="embed-responsive-item"
+                                            src={{user.pro_fichier.video_youtube_url}}
+                                            title="YouTube video player" frameborder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>                    
+            {% endif %}
+        <!-- vidéo fin -->
 
         <!-- Liste profs début -->
         <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
@@ -565,10 +616,15 @@
 
     </div>
     <!-- Testimonial fin -->
+
     <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary  back-to-top" onclick="return false;">
+    <a href="{% url 'demande_cours_envoie' id_prof=user.id %}" class="btn btn-lg btn-primary  back-to-top" >
         <h5>Contacter <strong>{{user.first_name}}</strong></h5>
     </a>
 
 </form>
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
 {% endblock %}

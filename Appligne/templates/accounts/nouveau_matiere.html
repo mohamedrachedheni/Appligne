@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte professeur{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+<div class="container-xxl py-1" >
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Ajoutez à votre profil</h6>
+            <h1 class="mb-5">Les détailles des matières que vous enseignez</h1>
+        </div>
+        <div class="col-md-12">
+            {% include 'partials/_alerts.html' %}
+        </div>
+    </div>
+</div>
+<form method="POST" enctype="multipart/form-data" id="formNouvelleMatiere" action="{% url 'nouveau_matiere' %}" >
+    {% csrf_token %}
+    
+    <!-- Les détailles des matières debut -->
+    <div class="container-xxl py-5" >
+           <div class="container">
+            <div class="container bg-light  p-5">
+                <div class="row g-2 ajout-matiere" id="supprimerDivMatiere-1">
+                    <div class="col-md-1  position-relative">
+    
+                        <label class="form-label" >Principal</label>
+                        <input class="form-check-input" type="checkbox"  id="principal_id_1" name="principal_1">
+                    </div>
+                    <div class=" col-lg-9  position-relative">
+                        <label class="form-label">Matières</label>
+                        <select class="form-select select-matiere" id="matiere_id_1" required name="matiere_1">
+                            
+                            <optgroup label="Enseignements scientifiques">
+                                <option class="option-matiere" id="opt_mat_div_1_id_110" selected disabled>Sélectionnez une matière</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_111" >Chimie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_112" >Dessin industriel</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_113" >Electronique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_114" >Informatique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_115" >Logique maths</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_116" >Maths</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_117" >NSI</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_118" >Physique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_119" >Physique-chimie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_1110" >Sciences de l'ingénieurs</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_1111" >Statistique</option>
+                            </optgroup>
+    
+                            <optgroup label="Lettres">
+                                <option class="option-matiere" id="opt_mat_div_1_id_121" >Français</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_122" >Grec</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_123" >Latin</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_124" >Orthographe</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_125" >Synthèse de document</option>
+                            </optgroup>
+    
+                            <optgroup label="Langues vivantes">
+                                <option class="option-matiere" id="opt_mat_div_1_id_131" >Allemand</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_132" >Anglais</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_133" >Arabe</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_134" >Chinois</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_135" >Coréen</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_136" >Espagnol</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_137" >FLE</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_138" >Italien</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_139" >Japonais</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_1310" >Portugais</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_1311" >Russe</option>
+                            </optgroup>
+                            <optgroup label="Sciences humaines">
+                                <option class="option-matiere" id="opt_mat_div_1_id_141" >Culture générale</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_142" >Education civique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_143" >ESH</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_144" >Géopolitique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_145" >Histoire - Géographie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_146" >Humanites litérature philosophie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_147" >Management</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_148" >Philosophie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_149" >Sciences politiques</option>
+                            </optgroup>
+                            <optgroup label="Economie">
+                                <option class="option-matiere" id="opt_mat_div_1_id_151" >Comptabilité</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_152" >Control de gestion</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_153" >Droit</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_154" >Economie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_155" >Fiscalité</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_156" >Gestion financière</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_157" >Macroéconomie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_158" >Marketing</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_159" >Microéconomie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_1510" >SES</option>
+                            </optgroup>
+                            <optgroup label="Sciences naturelles">
+                                <option class="option-matiere" id="opt_mat_div_1_id_161" >Anatomie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_162" >Biologie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_163" >Biologie - Ecologie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_164" >Biochimie</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_165" >Biophysique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_166" >Biostatique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_167" >SVT</option>
+                            </optgroup>
+                            <optgroup label="Préparation orale">
+                                <option class="option-matiere" id="opt_mat_div_1_id_171" >Coaching scolaire</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_172" >Entretien de motivation</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_173" >Grand oral du bac</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_174" >Orientation scolaire</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_175" >TIPE</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_176" >TPE</option>
+                            </optgroup>
+                            <optgroup label="Enseignements artistiques">
+                                <option class="option-matiere" id="opt_mat_div_1_id_181" >Art du cirque</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_182" >Arts plastiques</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_183" >Cinéma audiovisuel</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_184" >Danse</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_185" >Histoire des arts</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_186" >Musique</option>
+                                <option class="option-matiere" id="opt_mat_div_1_id_187" >Théatre</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 position-relative p-2 g-4">
+                        <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivMatiere-1')">
+                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                <path
+                                    d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class=" col-md-6  position-relative">
+                        <label for="validationTooltipNiv1" class="form-label">Niveaux (Sélectionnez un ou plusieurs
+                            niveaux)</label>
+                            <select class="form-select select-niveau" id="niveau_id_1"  multiple>
+                            <optgroup label="Collège" >
+                                <option   id="opt_div_1_id_112">6ème</option>
+                                <option   id="opt_div_1_id_113">5ème</option>
+                                <option   id="opt_div_1_id_114">4ème</option>
+                                <option   id="opt_div_1_id_115">3ème</option>
+                            </optgroup>
+                            <optgroup label="Lycée" >
+                                <option   id="opt_div_1_id_122">Seconde</option>
+                                <option   id="opt_div_1_id_123">Première STMGL</option>
+                                <option   id="opt_div_1_id_124">Première STL</option>
+                                <option   id="opt_div_1_id_125">Première Générale</option>
+                                <option   id="opt_div_1_id_126">Première STI2D</option>
+                                <option   id="opt_div_1_id_127">Terminale STMG</option>
+                                <option   id="opt_div_1_id_128">Terminale STI2D</option>
+                                <option   id="opt_div_1_id_129">Terminale Générale</option>
+                                <option   id="opt_div_1_id_1210">Terminale STL</option>
+                            </optgroup>
+                            <optgroup label="Concours et prépa"  >
+                                <option   id="opt_div_1_id_131">Prépa Concours Geipi Polytech</option>
+                                <option   id="opt_div_1_id_132">Avenir-Puissance Alpha-Advance-Geipi</option>
+                                <option   id="opt_div_1_id_133">Acces-Sésame</option>
+                                <option   id="opt_div_1_id_134">Prépa Concours Avenir</option>
+                                <option   id="opt_div_1_id_135">Prépa Sciences Po</option>
+                                <option   id="opt_div_1_id_136">Prépa Concours ESA</option>
+                                <option   id="opt_div_1_id_137">Prépa Concours Advance</option>
+                                <option   id="opt_div_1_id_138">Prépa Concours Acces</option>
+                                <option   id="opt_div_1_id_139">Prépa Concours CRPE</option>
+                                <option   id="opt_div_1_id_1310">Pass BBA</option>
+                                <option   id="opt_div_1_id_1311 ">Prépa Concours Puissance Alpha</option>
+                                <option   id="opt_div_1_id_1312">Prépa Concours Sésame</option>
+                                <option   id="opt_div_1_id_1313">Prépa intégrée 1ère année</option>
+                            </optgroup>
+                            <optgroup label="Autres">
+                                <option   id="opt_div_1_id_141">MP2I</option>
+                                <option   id="opt_div_1_id_142">MPSI</option>
+                                <option   id="opt_div_1_id_143">TSI</option>
+                                <option   id="opt_div_1_id_144">TB</option>
+                                <option   id="opt_div_1_id_145">TBC</option>
+                                <option   id="opt_div_1_id_146">ATS</option>
+                                <option   id="opt_div_1_id_147">PTSI</option>
+                                <option   id="opt_div_1_id_148">BBPST 1</option>
+                                <option   id="opt_div_1_id_149">PCSI</option>
+                                <option   id="opt_div_1_id_1410">Math Sup</option>
+                                <option   id="opt_div_1_id_1411">MP</option>
+                                <option   id="opt_div_1_id_1412">PSI</option>
+                                <option   id="opt_div_1_id_1413">PC</option>
+                                <option   id="opt_div_1_id_1414">Prépa intégré 2ème année</option>
+                                <option   id="opt_div_1_id_1415">TSI 2</option>
+                                <option   id="opt_div_1_id_1416">MPI</option>
+                                <option   id="opt_div_1_id_1417">PT</option>
+                                <option   id="opt_div_1_id_1418">BCPST 2</option>
+                                <option   id="opt_div_1_id_1419">Maths Spé</option>
+                                <option   id="opt_div_1_id_1420">ECG 1</option>
+                                <option   id="opt_div_1_id_1421">D1 ENS Cachan</option>
+                                <option   id="opt_div_1_id_1422">Hypokhâgne ALL</option>
+                                <option   id="opt_div_1_id_1423">Khâgne AL</option>
+                                <option   id="opt_div_1_id_1424">Khâgne BL</option>
+                                <option   id="opt_div_1_id_1425">Gei Univ</option>
+                                <option   id="opt_div_1_id_1426">CAST Ing</option>
+                                <option   id="opt_div_1_id_1427">TOEIC</option>
+                                <option   id="opt_div_1_id_1428">Tage Mage</option>
+                                <option   id="opt_div_1_id_1429">GMAT</option>
+                                <option   id="opt_div_1_id_1430">Score IAE Message</option>
+                                <option   id="opt_div_1_id_1431">TOEFL</option>
+                                <option   id="opt_div_1_id_1432">Architechture</option>
+                                <option   id="opt_div_1_id_1433">Infirmier</option>
+                                <option   id="opt_div_1_id_1434">Capes</option>
+                                <option   id="opt_div_1_id_1435">Tage 2</option>
+                                <option   id="opt_div_1_id_1436">IELTS</option>
+                                <option   id="opt_div_1_id_1437">DCG</option>
+                                <option   id="opt_div_1_id_1438">DSCG</option>
+                                <option   id="opt_div_1_id_1439">Agrégation</option>
+                                <option   id="opt_div_1_id_1440">BUT</option>
+                                <option   id="opt_div_1_id_1441">BTS</option>
+                                <option   id="opt_div_1_id_1442">Licence 1</option>
+                                <option   id="opt_div_1_id_1443">Licence 2</option>
+                                <option   id="opt_div_1_id_1444">Licence 3</option>
+                                <option   id="opt_div_1_id_1445">Master 1</option>
+                                <option   id="opt_div_1_id_1446">Master 2</option>
+                                <option   id="opt_div_1_id_1447">Adultes</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class=" col-md-6  position-relative">
+                        <label class="form-label">Les niveaux que vous enseignez pour la matière choisie</label>
+                        <select class="form-select select-chx" id="niveau_chx_id_1" multiple  name="niveau_chx_1">
+    
+                        </select>
+                    </div>
+                    <div class=" col-md-6  position-relative">
+                        <div class="btn  btn-sup btn-ajouter_1" id="btn-ajouter_1">
+                            <svg class="svg-inline--fa fa-arrow-right" aria-labelledby="svg-inline--fa-title-ajx18rtJBjSu" data-prefix="fa-solid" data-icon="arrow-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><title >Submit My Tax Return</title><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg>
+                        </div>
+                    </div>
+                    <div class=" col-md-6  position-relative">
+                        <div class="btn btn-sup btn-enlever_1" id="btn-enlever_1" >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2 p-3 " >
+                    <div class="col-12">
+                        <div class="btn btn-secondary" onclick="ajouterMatiere('row g-2 ajout-matiere', 'matiere_id_')" id="boutonAjouterMatiere" >Ajouter une matière</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-between g-2 p-3 ">
+                <div class="col-lg-2 col-md-4 col-sm-6"">
+                    <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+                </div>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <a class="btn btn-primary" href="{% url 'nouveau_zone' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
+                </div>
+                <div class="col-lg-1 col-md-4 col-sm-6">
+                    <button type="submit" class="btn btn-warning" name="btn_enr"   >
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Les détailles des matières fin -->
+    
+</form>
+            <!-- fin page -->
+        </div>
+    </div>
+</div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_nouveau_matiere.js' %}"></script> 
+{% endblock %}

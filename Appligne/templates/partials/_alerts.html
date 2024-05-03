@@ -1,0 +1,20 @@
+{% if messages %}
+<!-- messages provient de views.py -->
+{% for msg in messages %}
+    <!-- msg.tags est le type de message: info, danger, ... -->
+    <div class="alert alert-{{msg.tags}} alert-dismissible fade show" role="alert">
+      <strong>
+        <!-- si msg.tags est danger ecrinez Erreur -->
+        {% if msg.tags == 'danger' %}
+        Erreur
+        {% else %}
+        <!-- le | désigne un filtre de django () faire une recherche sur les différents types de filtre de django sur google -->
+        <!-- titre est un type de filtre que met en magiscule la première lettre de chaque mot -->
+        {{msg.tags|title}}
+        {% endif %}
+        :</strong>
+       {{msg}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
+{% endif %}

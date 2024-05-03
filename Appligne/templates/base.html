@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Appligne {% block title %}{% endblock title %} </title>
@@ -20,7 +21,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap"
         rel="stylesheet">
-    
+
 
     <!-- Icon Font Stylesheet -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
@@ -45,19 +46,20 @@
     <!-- Inclure le fichier jQuery (nécessaire pour inputmask) -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- Inclure inputmask -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script> 
-    
-     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+
 </head>
+
 <body>
     {% include 'partials/_navbar.html' %}
     {% block content %}
 
     {% endblock content %}
-    
+
     {% include 'partials/_footer.html' %}
-    
-    
+
+
     <!-- JavaScript Libraries -->
     <script src="{% static 'lib/wow/wow.min.js' %}"></script>
     <script src="{% static 'lib/easing/easing.min.js' %}"></script>
@@ -66,9 +68,11 @@
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
 
-    <!-- Template Javascript debut ajout-->
-    <script src="{% static 'js/Code_en_plus.js' %}"></script>
-    <!-- Template Javascript fin ajout -->
-    
+
+    {% block javascript %}
+    <!-- Inclure d'autres scripts JavaScript si nécessaire -->
+    {% endblock %}
+
 </body>
+
 </html>

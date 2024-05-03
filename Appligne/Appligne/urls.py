@@ -20,10 +20,15 @@ from django.urls import path , include
 from django.conf import settings
 from django.conf.urls.static import static
 from decouple import config
+from accounts.views import get_departments, get_regions, get_communes
 
 
 urlpatterns = [
     path(config("ADMIN_ROUTE", default='admin/'), admin.site.urls),
     path( ''         , include('pages.urls') ),
     path( 'accounts/' , include('accounts.urls') ),
+    path( 'eleves/' , include('eleves.urls') ),
+    path('get_departments/', get_departments, name='get_departments'),
+    path('get_regions/', get_regions, name='get_regions'),
+    path('get_communes/', get_communes, name='get_communes'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -6,11 +6,23 @@
 
 from django import forms
 from django.db import models
-from datetime import date
-from django.contrib.auth.models import User 
+from datetime import date, datetime
+from django.contrib.auth.models import User
+from django.db.models import UniqueConstraint
 
 
 
+
+class Pays(models.Model):
+    nom_pays = models.CharField(max_length=100, unique=True)
+    drapeau = models.ImageField(upload_to='photos/%y/%m/%d/')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.nom_pays}"
+    
+    class Meta:
+        ordering = ['nom_pays']
 
 class Professeur(models.Model):
     CIVILITE_CHOICES = [
@@ -24,57 +36,76 @@ class Professeur(models.Model):
     numero_telephone = models.CharField(max_length=15, blank=True, null=True)
     date_naissance = models.DateField(null=True)
     adresse = models.CharField(max_length=255, null=False)
-    photo = models.ImageField(upload_to='photos/%y/%m/%d/', null=True)
-    is_active = models.BooleanField(default=False)
+    photo = models.ImageField(upload_to='photos/%y/%m/%d/', blank=True, null=True)
+    
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
     
-    
+    def set_date_naissance_from_str(self, date_naissance_str):
+        if date_naissance_str:
+            self.date_naissance = datetime.strptime(date_naissance_str, '%d/%m/%Y').date()
+
+
 
 
 class Diplome_cathegorie(models.Model):
-    dip_cathegorie  = models.CharField(max_length=100, unique=True)
-    dip_ordre = models.IntegerField()
+    nom_pays = models.ForeignKey(Pays, on_delete=models.CASCADE)
+    dip_cathegorie  = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.dip_cathegorie}"
     
     class Meta:
-        ordering = ['dip_ordre']
+        ordering = ['dip_cathegorie']
+    
+    class Meta:
+        ordering = ['nom_pays']
+        constraints = [
+            models.UniqueConstraint(fields=['nom_pays', 'dip_cathegorie'], name='unique_pays_diplome')
+        ]
 
 class Diplome(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    diplome = models.CharField(max_length=100, null=True, blank=True)
+    diplome_cathegorie = models.ForeignKey(Diplome_cathegorie, on_delete=models.CASCADE)  # Ajout de la clé étrangère vers Diplome_cathegorie
     obtenu = models.DateField()
     intitule = models.CharField(max_length=255, null=True, blank=True)
     principal = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.first_name} - {self.diplome}"
+        return f"{self.user.first_name} - {self.intitule}"  # Mise à jour de la méthode __str__
+
+    def set_date_obtenu_from_str(self, date_obtenu_str):
+        if date_obtenu_str:
+            self.obtenu = datetime.strptime(date_obtenu_str, '%d/%m/%Y').date()
 
     class Meta:
         ordering = ['-principal', '-obtenu']
-    
-    class Meta:
-        ordering = ['user']
         constraints = [
-            models.UniqueConstraint(fields=['user', 'diplome','intitule'], name='unique_user_diplome_intitule')
+            models.UniqueConstraint(fields=['user', 'diplome_cathegorie','intitule'], name='unique_user_diplome_intitule')  # Mise à jour de la contrainte d'unicité
         ]
+    
 
 
 
 
 
 class Experience_cathegorie(models.Model):
-    exp_cathegorie  = models.CharField(max_length=100, unique=True)
-    exp_ordre = models.IntegerField()
+    nom_pays = models.ForeignKey(Pays, on_delete=models.CASCADE)
+    exp_cathegorie  = models.CharField(max_length=100)
+
 
     def __str__(self):
         return f"{self.exp_cathegorie}"
     
     class Meta:
-        ordering = ['exp_ordre']
+        ordering = ['nom_pays','exp_cathegorie']
+    
+    class Meta:
+        ordering = ['nom_pays']
+        constraints = [
+            models.UniqueConstraint(fields=['nom_pays', 'exp_cathegorie'], name='unique_pays_experience')
+        ]
 
 class Experience(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -87,6 +118,14 @@ class Experience(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} - {self.type}"
+    
+    def set_date_debut_from_str(self, date_debut_str):
+        if date_debut_str:
+            self.debut = datetime.strptime(date_debut_str, '%d/%m/%Y').date()
+    
+    def set_date_fin_from_str(self, date_fin_str):
+        if date_fin_str:
+            self.fin = datetime.strptime(date_fin_str, '%d/%m/%Y').date()
 
     class Meta:
         ordering = ['user','-principal', '-debut']
@@ -94,7 +133,7 @@ class Experience(models.Model):
     class Meta:
         ordering = ['user']
         constraints = [
-            models.UniqueConstraint(fields=['user', 'type'], name='unique_user_type')
+            models.UniqueConstraint(fields=['user', 'type', 'commentaire'], name='unique_user_type_commentaire')
         ]
 
 
@@ -113,16 +152,7 @@ class Format_cour(models.Model):
     class Meta:
         ordering = ['user','-a_domicile', '-webcam']
 
-class Pays(models.Model):
-    nom_pays = models.CharField(max_length=100, unique=True)
-    drapeau = models.ImageField(upload_to='photos/%y/%m/%d/')
-    is_active = models.BooleanField(default=True)
 
-    def __str__(self):
-        return f"{self.nom_pays}"
-    
-    class Meta:
-        ordering = ['nom_pays']
 
 class Region(models.Model):
     nom_pays = models.ForeignKey(Pays, on_delete=models.CASCADE)
@@ -159,7 +189,8 @@ class Departement(models.Model):
 
 class Commune(models.Model):
     departement = models.ForeignKey(Departement, on_delete=models.CASCADE)
-    commune = models.CharField(max_length=100, unique=True)
+    commune = models.CharField(max_length=100)
+    code_postal = models.CharField(max_length=100,null=True, blank=True)
 
     def __str__(self):
         return f"{self.commune}"
@@ -170,7 +201,7 @@ class Commune(models.Model):
     class Meta:
         ordering = ['departement']
         constraints = [
-            models.UniqueConstraint(fields=['departement', 'commune'], name='unique_departement_commune')
+            models.UniqueConstraint(fields=['departement', 'commune', 'code_postal'], name='unique_departement_commune_postal)')
         ]
 
 
@@ -210,13 +241,13 @@ class Matiere(models.Model):
 
 class Niveau_cathegorie(models.Model):
     niv_cathegorie  = models.CharField(max_length=100, unique=True)
-    niv_ordre = models.IntegerField()
+    niv_cat_ordre = models.IntegerField()
 
     def __str__(self):
         return f"{self.niv_cathegorie}"
     
     class Meta:
-        ordering = ['niv_ordre']
+        ordering = ['niv_cat_ordre']
     
 class Niveau(models.Model):
     niv_cathegorie = models.ForeignKey(Niveau_cathegorie, on_delete=models.CASCADE)
@@ -251,7 +282,7 @@ class Pro_fichier(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     date_modif = models.DateField(default=date.today, null=True, blank=True)
     titre_fiche = models.CharField(max_length=255)
-    description_cours = models.TextField(null=True, blank=True)
+    parcours = models.TextField(null=True, blank=True)
     pedagogie = models.TextField(null=True, blank=True)
     video_youtube_url = models.CharField(max_length=255, null=True, blank=True)
 
@@ -264,11 +295,49 @@ class Pro_fichier(models.Model):
 class Prof_doc_telecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_telechargement = models.DateField(default=date.today)
-    doc_telecharge = models.ImageField(upload_to='photos/%y/%m/%d/')
+    doc_telecharge = models.ImageField(upload_to='photos/%y/%m/')
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.date_telechargement}"
 
     class Meta:
         ordering = ['-date_telechargement']
+
+class Email_telecharge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date_telechargement = models.DateField(default=date.today)
+    email_telecharge = models.CharField(max_length=255, null=True, blank=True) # l'adresse email de l'envoyeur
+    sujet = models.CharField(max_length=255, null=True, blank=True)
+    text_email = models.TextField(null=True, blank=True)
+    user_destinataire = models.IntegerField() # champ obligatoire du destinataire de l'email
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} - {self.date_telechargement}"
+
+    class Meta:
+        ordering = ['-date_telechargement']
+
+class Email_detaille(models.Model):
+    email = models.OneToOneField(Email_telecharge, on_delete=models.CASCADE)
+    user_nom = models.CharField(max_length=255, null=True, blank=True) 
+    matiere = models.CharField(max_length=255, null=True, blank=True) 
+    niveau = models.CharField(max_length=255, null=True, blank=True) 
+    format_cours =models.CharField(max_length=255, null=True, blank=True) 
+
+
+class Email_suivi(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    email = models.ForeignKey(Email_telecharge, on_delete=models.CASCADE)  # id de l'email envoyé par le user
+    SUIVI_CHOICES = [
+        ('Ignorer', 'Ignorer'),
+        ('Réception confirmée', 'Réception confirmée'),
+        ('Répondre', 'Répondre'),
+    ]
+    suivi = models.CharField(max_length=25, choices=SUIVI_CHOICES, null=True)
+    date_suivi = models.DateField(default=date.today)
+    reponse_email_id = models.IntegerField(null=True) # id de email reçu par le user et au quel il a répondu par défaut = null
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} - {self.date_suivi}"
+
 

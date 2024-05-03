@@ -436,3 +436,11 @@
     padding-right: 0;
     border-right: none;
 }
+.container-fluid {
+    margin-bottom: 3rem; /* Réduire la marge inférieure */
+}
+
+.container-fluid {
+    padding-bottom: 3rem; /* Réduire la hauteur du padding en bas */
+}
+

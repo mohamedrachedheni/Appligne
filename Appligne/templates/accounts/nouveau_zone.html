@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte professeur{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Ajoutez à votre profil</h6>
+                        <h1 class="mb-5">Les zones de votre activité</h1>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data"  id="formNouvelleZone" action="{% url 'nouveau_zone' %}"  >
+                {% csrf_token %}
+                
+                <!-- Zone d'activité debut -->
+                <div class="container-xxl py-5" id="zone">
+                    <div class="container">
+                        <div class="container bg-light  p-5">
+                            <div class="row g-2 ajout-zone" id="supprimerDivZone-1">
+                                <div class=" col-md-6  position-relative">
+                                    <label  class="form-label">Régions</label>
+                                    <select class="form-select" id="reg_id" >
+                
+                                    </select>
+                                </div>
+                                <div class=" col-md-6  position-relative">
+                                    <label  class="form-label">Département</label>
+                                    <select class="form-select" id="dep_id" >
+                
+                                    </select>
+                                </div>
+                                <div class=" col-md-6  position-relative">
+                                    <label  class="form-label">Communes (Sélectionnez une ou plusieurs
+                                        Communes)</label>
+                                    <select class="form-select" id="com_id"  multiple size="8" name="communes">
+                
+                                    </select>
+                                </div>
+                                <div class=" col-md-6  position-relative">
+                                    <label  class="form-label">Zone d'activité (Sélectionnez une ou plusieurs
+                                        Communes)</label>
+                                    <select class="form-select" id="com_chx_id"  multiple size="8" name="communes_chx" >
+                
+                                    </select>
+                                </div>
+                                <div class=" col-md-6  position-relative">
+                                    <div class="btn  btn-sup btn-ajouter" id="btn-ajouter">
+                                        <svg class="svg-inline--fa fa-arrow-right" aria-labelledby="svg-inline--fa-title-ajx18rtJBjSu" data-prefix="fa-solid" data-icon="arrow-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><title >Submit My Tax Return</title><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg>
+                                    </div>
+                                </div>
+                                <div class=" col-md-6  position-relative">
+                                    <div class="btn btn-sup btn-enlever" id="btn-enlever" >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row justify-content-between g-2 p-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6"">
+                                <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+                            </div>
+                            <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a class="btn btn-primary" href="{% url 'nouveau_description' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-warning" name="btn_enr"   >
+                                    {{btn_text }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Zone d'activité fin -->
+                
+            </form>
+            <!-- fin page -->
+        </div>
+    </div>
+</div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_nouveau_zone.js' %}"></script>
+{% endblock %}

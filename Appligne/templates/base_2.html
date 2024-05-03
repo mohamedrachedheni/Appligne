@@ -66,9 +66,11 @@
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
 
-    <!-- Template Javascript debut ajout-->
-    <script src="{% static 'js/Code_en_plus.js' %}"></script>
-    <!-- Template Javascript fin ajout -->
+
     
+    {% block javascript %}
+    <!-- Inclure d'autres scripts JavaScript si nécessaire -->
+    {% endblock %}
+
 </body>
 </html>

@@ -4,6 +4,69 @@
 
 {% block content %}
 
-
-
+<!-- formulaire créer compte prof début -->
+<!-- method="POST" pour sécuriser les données -->
+<div class="container-xxl py-5 " id="identite">
+    <div class="container ">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            {% if request.user.is_authenticated %}
+            <h4 class="alert alert-info text-center" >
+              Bien venu {{request.user.username}} , Vous êtes  maintenant connecté(e) à votre compte{% if request.user.professeur %}<a class="text-dark" href="{% url 'compte_prof' %}">en tant que professeur</a>  {% else %} <a class="text-dark" href="{% url 'compte_eleve' %}">en tant que élève/a> {% endif %}.
+            </h4>
+            <h5 class="alert alert-warning text-center" ><a class="text-dark" href="{% url 'logout' %}">Se déconnecter</a></h5>
+            {% endif %}
+            {% if not request.user.is_authenticated %}
+            <h6 class="section-title bg-white text-center text-primary px-3">Se connecter à votre compte</h6>
+            <h1 class="mb-5">Introduire vos coordonnées</h1>
+        </div>
+        <div class="col-md-12">
+            {% include 'partials/_alerts.html' %}
+        </div>
+        <div class="col-md-12">
+            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_eleve' %}">Creer un compte élève</a></h5></h4>
+        </div>
+        <div class="col-md-12">
+            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_prof' %}">Creer un compte professeur</a></h5></h4>
+        </div>
+    </div>
+</div>
+<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'signin' %}"  >
+    {% csrf_token %}
+    <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
+    <!-- mon compte début -->
+    <!-- identité et coordonnees debut -->
+    <div class="container-xxl py-5 " id="identite">
+        <div class="container ">
+            <div class="container bg-light  p-5">
+                  <div class="row g-4">
+                    <div class="col-md-12 position-relative">
+                        <label for="user_nom_id" class="form-label">Nom de l'utilisateur </label>
+                        <!-- autocomplete="off" ne marche pas ?? -->
+                        <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
+                            title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{user_nom}}" autocomplete="off" >
+                    </div>
+                    <div class="col-md-12 position-relative">
+                        <label for="mot_pass_id" class="form-label">Mot de passe</label>
+                        <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" required value="{{mot_pass}}" autocomplete="off" >
+                    </div>
+                    <div class="col-md-12  position-relative">
+                        <label class="form-label" for="souviens_toi_id">Souviens-toi de moi</label>
+                        <input class="form-check-input" type="checkbox" id="souviens_toi_id" name="souviens_toi">
+                    </div>
+                    
+                    <div class="row justify-content-end g-2 p-3 ">
+                        <div class="col-lg-1 col-md-4 col-sm-6">
+                            <button type="submit" class="btn btn-warning" name="btn_enr">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- identité et coordonnees Fin -->
+</form>
+{% endif %}
 {% endblock %}

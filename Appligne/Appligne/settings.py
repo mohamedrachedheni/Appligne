@@ -14,6 +14,8 @@ from pathlib import Path
 from decouple import config
 
 
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,12 +37,15 @@ ALLOWED_HOSTS = [config('ALLOWED_HOST1', "localhost")]
 INSTALLED_APPS = [
     'pages.apps.PagesConfig',
     'accounts',
+    'eleves',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_seed',
+    'mathfilters',
 ]
 
 MIDDLEWARE = [
@@ -148,3 +153,26 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom Messages
+# https://docs.djangoproject.com/fr/5.0/ref/contrib/messages/
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    # changer le tag du message de error à danger car Bootstdap ignore le tag error
+    messages.ERROR: "danger",
+    #50: "critical",
+}
+
+
+
+# Récupération du mot de passe email depuis le fichier .env
+PASSWORD_EMAIL = config('PASSWORD_EMAIL')
+
+# Paramètres SMTP pour l'envoi d'emails
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587  # Port SMTP pour TLS
+EMAIL_HOST_USER = 'prosib25@gmail.com'  # Votre adresse Gmail
+EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
+EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
+
