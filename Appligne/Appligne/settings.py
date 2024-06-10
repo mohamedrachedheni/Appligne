@@ -168,10 +168,20 @@ MESSAGE_TAGS = {
 # Récupération du mot de passe email depuis le fichier .env
 PASSWORD_EMAIL = config('PASSWORD_EMAIL')
 
+# # Paramètres SMTP pour l'envoi d'emails
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp-mail.outlook.com'
+# EMAIL_PORT = 587  # Port SMTP pour TLS
+# EMAIL_HOST_USER = 'appligne@outlook.com'  # Votre adresse Gmail
+# EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
+# EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
+
+# EMAIL_HOST_USER = 'prosib25@gmail.com'  # Votre adresse Gmail
+# EMAIL_HOST_USER = 'appligne@outlook.com'  # Votre adresse Gmail
+
 # Paramètres SMTP pour l'envoi d'emails
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587  # Port SMTP pour TLS
 EMAIL_HOST_USER = 'prosib25@gmail.com'  # Votre adresse Gmail
 EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
 EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
-

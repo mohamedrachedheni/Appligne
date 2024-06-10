@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte professeur{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+<div class="container-xxl py-1" >
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Fixez vos prix par heure</h6>
+            <h3 class="px-3">Selon la matière, le niveau et le format du cours </h3>
+            <h6 class="px-3">Le prix heures inférieurs à 10 €/h sont ignorés </h6>
+        </div>
+        <div class="col-md-12">
+            {% include 'partials/_alerts.html' %}
+        </div>
+    </div>
+</div>
+
+
+<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_prix_heure' %}">
+{% csrf_token %}
+
+<!-- parcours scolaire debut -->
+<div class="container-xxl py-5" >
+    <!--<input type="hidden" value="{{user_id}}" name="user_id">-->
+    <div class="container">
+        {% for format in liste_format %} <!-- les format cours du user dans la table Format_cour -->
+            <div class="container bg-light p-5" name="diplome">
+                <div class="row ajout-dipl p3">
+                    <div class="col-lg-12 position-relative">
+                        <label class="form-label " style="font-weight: bold;" >
+                            {% if format == 'a_domicile' %}
+                                Cours à domicile
+                            {% elif format == 'webcam' %}
+                                Cours par webcam
+                            {% elif format == 'stage' %}
+                                Stage pendant les vacances
+                            {% elif format == 'stage_webcam' %}
+                                Stage par webcam
+                            {% else %}
+                                Cours en groupe par webcam
+                            {% endif %}
+                        </label>                        
+                    </div>
+                    {% for id, matiere, niveau, prix_heure, format_key in liste_enregistrements %}
+                        {% if format == format_key  %} <!-- Pour sélectionner seulement les cas du meme format dans liste_enregistrements  -->
+                            <div class="col-lg-6 position-relative">
+                                {% if forloop.counter == 1 %} <!--  pour empécher l'afichage de la balise plus qu'une foi-->
+                                    <label for="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="form-label">Matière</label>
+                                {% endif %}
+                                <input type="text" class="form-control form-control-intitule" id="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" name="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ matiere }}" readonly disabled>
+                            </div>
+                            <div class="col-lg-4 position-relative">
+                                {% if forloop.counter == 1 %}
+                                <label for="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="form-label">Niveau</label>
+                                {% endif %}
+                                <input type="text" class="form-control form-control-intitule" id="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" name="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ niveau }}" readonly disabled>
+                            </div>
+                            <div class="col-lg-2 position-relative">
+                                {% if forloop.counter == 1 %}
+                                <label for="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="form-label">Prix par heure:   &euro;/h</label>
+                                {% endif %}
+                                <input type="text" class="form-control form-control-intitule prix-heure text-center " id="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" name="prix_heure-{{id}}__{{ format }}" value="{{prix_heure}}" >
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+
+
+        <div class="row justify-content-between g-2 p-3 ">
+            <div class="col-lg-2 col-md-4 col-sm-6"">
+                <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+            </div>
+            <div class="col-lg-1 col-md-4 col-sm-6">
+                <button type="submit" class="btn btn-warning" name="btn_enr">
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- parcours scolaire fin -->
+
+</form>
+            <!-- fin page -->
+        </div>
+    </div>
+</div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_nouveau_diplome.js' %}"></script>
+    <script>
+        $(document).ready(function(){
+            $('.prix-heure').inputmask({
+                alias: 'numeric',
+                groupSeparator: '',
+                digits: 2,
+                digitsOptional: false,
+                placeholder: '0',
+                rightAlign: false,
+                autoUnmask: true,
+                integerDigits: 3, // Allow up to 3 digits before the decimal point
+                max: 999.99,
+                allowMinus: false,
+                suffix: ' €/h' // Add the euro per hour unit
+            });
+        });
+    </script>
+    
+
+
+{% endblock %}

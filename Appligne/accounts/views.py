@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie, Email_telecharge, Email_suivi, Email_detaille
+from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie, Email_telecharge, Email_suivi, Email_detaille, Prix_heure
 import re
 from django.contrib import auth
 # from django.shortcuts import get_object_or_404 #dans le cas ou l' id du professeur ne correspond pas à un enregistrement
@@ -20,6 +20,8 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 import locale
 from django.utils import formats
+from django.contrib.auth.hashers import make_password, check_password
+from decimal import Decimal, InvalidOperation
 
 
 
@@ -425,74 +427,12 @@ def nouveau_experience(request):
                         # il vaut mieux ignorer l'enregistrement avec un message d'information
                         # messages.warning(request, f"Vous n'avez pas défini d'expérience,dans ce cas l'enregistrement est ignoré")
                         continue
-                return redirect('nouveau_format_cours')
+                return redirect('modifier_format_cours')
         else:
             messages.error(request, "Il n'y a pas d'utilisateur connecté à son compte.")
             return redirect('nouveau_experience')
     return render(request, 'accounts/nouveau_experience.html')
 
-def nouveau_format_cours(request):
-    # Récupérer l'utilisateur actuel
-    user = request.user
-    photo = None
-    first_name = "xxx"
-    
-    if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_format_cours.html', context)
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        # Récupérer l'ID de l'utilisateur actuellement connecté
-        user_id = request.user.id
-        # s'il y a un utilisateur connecté à son compte
-        if user_id is not None:
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                messages.error(request, "Utilisateur non trouvé.")
-                return redirect('nouveau_format_cours')
-            a_domecile = False
-            webcam = False
-            stage = False
-            stage_webcam = False
-            # si tous les formats ne sont pas cochés
-            if not request.POST.get('chk_a_domecile') and  not request.POST.get('chk_webcam') and not request.POST.get('chk_stage') and not request.POST.get('chk_stage_webcam'):
-                messages.error(request, "Il faut au moins cocher une case d'un format de cours")
-                return redirect('nouveau_format_cours')
-            # il faut ajouter un teste pour voire s'il y a un enregistrement existant
-            if not Format_cour.objects.filter(user=user).exists():
-                if request.POST.get('chk_a_domecile'): a_domecile = True
-                if request.POST.get('chk_webcam'): webcam = True
-                if request.POST.get('chk_stage'): stage = True
-                if request.POST.get('chk_stage_webcam'): stage_webcam = True
-                format = Format_cour(user=user, a_domicile=a_domecile, webcam=webcam, stage=stage, stage_webcam=stage_webcam)
-                format.save()
-                messages.success(request, "Les formats des cours sont enregistrés")
-                return redirect('nouveau_matiere')
-            else:
-                # supprimer l'ancien enregistrement
-                ancien_enregistrement = Format_cour.objects.get(user=user)
-                ancien_enregistrement.delete()
-                if request.POST.get('chk_a_domecile'): a_domecile = True
-                if request.POST.get('chk_webcam'): webcam = True
-                if request.POST.get('chk_stage'): stage = True
-                if request.POST.get('chk_stage_webcam'): stage_webcam = True
-                format = Format_cour(user=user, a_domicile=a_domecile, webcam=webcam, stage=stage, stage_webcam=stage_webcam)
-                format.save()
-                messages.success(request, "Les formats des cours sont enregistrés, et l'ancien enregistrement est supprimé")
-                return redirect('nouveau_matiere')
-    else:
-        return render(request, 'accounts/nouveau_format_cours.html')
 
 
 def nouveau_matiere(request):
@@ -735,11 +675,13 @@ def signin(request):
         user = auth.authenticate(username=user_nom, password=mot_pass)
         #print(user_nom,mot_pass,user,"*************************") pour tester le résultat dans la console
         if user is not None:
-            # si la case souvients_toi est cochée
+            # si la case souvients_toi n'est pas cochée
             if 'souviens_toi' not in request.POST:
                 # par défaut request.session.set_expiry(1)
                 # au prochain chargement de la page signin le user n'est pas logged in
                 request.session.set_expiry(0)
+            else:
+                request.session.set_expiry(1209600)  # 2 semaines
             # au prochain chargement de la page signin le user est logged in
             # le user est connecté
             auth.login(request, user)
@@ -913,7 +855,6 @@ def nouveau_fichier(request):
                 if extension_fichier in extensions_images:
                     prof_doc_telecharge = Prof_doc_telecharge(user=user, doc_telecharge=fichier)
                     prof_doc_telecharge.save()
-                    # messages.success(request, f"Le fichier '{nom_fichier}' est enregistré avec succès.")
                 else:
                     messages.error(request, f"Le fichier '{nom_fichier}' n'est pas une image valide et n'a pas été enregistré.")
                     messages.error(request, "Les extensions des fichiers acceptés sont: .jpg, .jpeg, .png, .bmp, .webp, .raw, .psd, .ai,.exif, .jfif, .jpe, .heif, .heic ")
@@ -937,27 +878,23 @@ def nouveau_fichier(request):
             # messages.error(request, f"Teste 02 sujet= {sujet} ")
             # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
             destinations = ['prosib25@gmail.com']
-            try:
-                send_mail(
-                    sujet,
-                    text_email,
-                    email_prof,
-                    destinations,
-                    fail_silently=False,
-                )
+            # L'envoie de l'email n'est pas obligatoire
+            # try:
+            #     send_mail(
+            #         sujet,
+            #         text_email,
+            #         email_prof,
+            #         destinations,
+            #         fail_silently=False,
+            #     )
                 
-                # ajouter un teste pour voir si tous les enregistrement relatifs au professeur sous achevés
-            except Exception as e:
-                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
-            
-            messages.success(request, "L'email a été envoyé avec succès. ")
+            #     # ajouter un teste pour voir si tous les enregistrement relatifs au professeur sous achevés
+            # except Exception as e:
+            #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
+            # messages.success(request, "L'email a été envoyé avec succès. ")
             email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire_id, sujet=sujet)
-            # messages.error(request, "Teste 04 ")
             email_telecharge.save()
-            # messages.error(request, "Teste 05 ")
-            # messages.success(request, f"Le contenu de l'email est enregistré.")
-
-
+            messages.success(request, "Email enregistré")
     return render(request, 'accounts/nouveau_fichier.html', {'email_user': email_user})
 
 
@@ -987,32 +924,18 @@ def votre_compte(request):
 def compte_prof(request):
     # Récupérer l'utilisateur actuel
     user = request.user
-    photo = None
-    first_name = "xxx"
-    if user.is_authenticated:
-        # messages.success(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-    context = {'photo': photo, 'first_name':first_name}
-    return render(request, 'accounts/compte_prof.html', context)
-
-
-
+    if user.is_authenticated and hasattr(user, 'professeur'):
+        return render(request, 'accounts/compte_prof.html')
+    return redirect('index')
 
 def logout(request):
     if request.user.is_authenticated:
         auth.logout(request)
-        messages.success(request, 'Vous etes déconnecté(e) de votre compte')
+        # messages.success(request, 'Vous etes déconnecté(e) de votre compte')
     return redirect('index')
 
-def compte_prof_copy(request):
-    return render(request, 'accounts/compte_prof_copy.html')
+# def compte_prof_copy(request):
+#     return render(request, 'accounts/compte_prof_copy.html')
 
 
 def modifier_compte_prof(request):
@@ -1143,51 +1066,83 @@ def modifier_compte_prof(request):
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
 
+
 def modifier_format_cours(request):
-    if request.user.is_authenticated:
-        user = request.user
-        try:
-            format_cour = Format_cour.objects.get(user=user)
-            a_domicile = format_cour.a_domicile
-            webcam = format_cour.webcam
-            stage = format_cour.stage
-            stage_webcam = format_cour.stage_webcam
-            
-            context = {
-                'a_domicile': a_domicile,
-                'webcam': webcam,
-                'stage': stage,
-                'stage_webcam': stage_webcam,
-            }
-            
-            if not (request.method == 'POST' and 'btn_enr' in request.POST):
-                return render(request, 'accounts/modifier_format_cours.html', context)
-            if request.method == 'POST' and 'btn_enr' in request.POST:
-                if not request.POST.get('chk_a_domicile') and  not request.POST.get('chk_webcam') and not request.POST.get('chk_stage') and not request.POST.get('chk_stage_webcam'):
-                    messages.error(request, "Il faut au moins cocher une case d'un format de cours")
-                    return redirect('modifier_format_cours')
-                a_domicile = False
-                webcam = False
-                stage = False
-                stage_webcam = False
-                if request.POST.get('chk_a_domicile'): a_domicile = True
-                if request.POST.get('chk_webcam'): webcam = True
-                if request.POST.get('chk_stage'): stage = True
-                if request.POST.get('chk_stage_webcam'): stage_webcam = True
-                format_cour.a_domicile = a_domicile
-                format_cour.webcam = webcam
-                format_cour.stage = stage
-                format_cour.stage_webcam = stage_webcam
-                format_cour.save()
-                messages.success(request, "Les nouveaux formats des cours sont enregistrés")
-                return redirect('votre_compte')
-        except Format_cour.DoesNotExist:
-            messages.error(request, "Les données du format de cours n'existent pas pour cet utilisateur. vous devez ajouter vos formats avant")
-            return redirect('nouveau_format_cours')
-    else:
+    # Vérification si l'utilisateur est authentifié
+    if not request.user.is_authenticated:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
-    return render(request, 'accounts/modifier_format_cours.html')
+    
+    user = request.user
+    try:
+        # Essayer de récupérer l'objet Format_cour de l'utilisateur
+        format_cour = Format_cour.objects.get(user=user)
+        # Préparer les données initiales pour le contexte
+        initial_data = {
+            'a_domicile': format_cour.a_domicile,
+            'webcam': format_cour.webcam,
+            'stage': format_cour.stage,
+            'stage_webcam': format_cour.stage_webcam,
+        }
+    except Format_cour.DoesNotExist:
+        # Si aucun Format_cour n'existe pour l'utilisateur, préparer les données initiales par défaut
+        format_cour = None
+        initial_data = {
+            'a_domicile': False,
+            'webcam': False,
+            'stage': False,
+            'stage_webcam': False,
+        }
+
+    # Vérifier si la requête est POST et si le bouton 'btn_enr' est soumis
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # Liste des formats possibles
+        formats = ['chk_a_domicile', 'chk_webcam', 'chk_stage', 'chk_stage_webcam']
+        # Création d'un dictionnaire pour vérifier les formats cochés
+        format_states = {format: request.POST.get(format) is not None for format in formats}
+
+        # Vérifier qu'au moins un format est coché
+        if not any(format_states.values()):
+            messages.error(request, "Il faut au moins cocher une case d'un format de cours.")
+            return render(request, 'accounts/modifier_format_cours.html', initial_data)
+
+        # Mise à jour des formats si l'objet existe déjà
+        if format_cour:
+            format_cour.a_domicile = format_states['chk_a_domicile']
+            format_cour.webcam = format_states['chk_webcam']
+            format_cour.stage = format_states['chk_stage']
+            format_cour.stage_webcam = format_states['chk_stage_webcam']
+            format_cour.save()
+        else:
+            # Création d'un nouveau Format_cour si aucun n'existe
+            format_cour = Format_cour(
+                user=user,
+                a_domicile=format_states['chk_a_domicile'],
+                webcam=format_states['chk_webcam'],
+                stage=format_states['chk_stage'],
+                stage_webcam=format_states['chk_stage_webcam']
+            )
+            format_cour.save()
+
+        # Suppression des enregistrements Prix_heure non utilisés
+        if not format_cour.a_domicile:
+            Prix_heure.objects.filter(user=user, format="Cours à domicile").delete()
+        if not format_cour.webcam:
+            Prix_heure.objects.filter(user=user, format="Cours par webcam").delete()
+        if not format_cour.stage:
+            Prix_heure.objects.filter(user=user, format="Stage pendant les vacances").delete()
+        if not format_cour.stage_webcam:
+            Prix_heure.objects.filter(user=user, format="Stage par webcam").delete()
+
+        # Message de succès et redirection vers la page du compte utilisateur
+        messages.success(request, "Les nouveaux formats des cours sont enregistrés. Vous devez réviser vos prix par heure pour chaque enregistrement nouveau.")
+        return redirect('votre_compte')
+
+    # Rendre la page avec les données initiales
+    return render(request, 'accounts/modifier_format_cours.html', initial_data)
+
+
+
 
 def modifier_description(request):
     if request.user.is_authenticated:
@@ -1431,10 +1386,18 @@ def modifier_matiere(request):
     niveaus = Niveau.objects.all()
     user = request.user
     prof_mat_nivs = Prof_mat_niv.objects.filter(user=user)
+    
+    liste_mat_niv_anciens = []
+    
 
     # Si l'utilisateur a déjà des matières enregistrées
     if prof_mat_nivs.exists():
-        # messages.info(request, f"Nombre de matières : {len(prof_mat_nivs)}")
+        for prof_mat_niv in prof_mat_nivs: # creer la liste des anciens enregistrement
+            matiere_ancien = prof_mat_niv.matiere.matiere
+            niveau_ancien = prof_mat_niv.niveau.niveau
+            principal_ancien = prof_mat_niv.principal
+            coupe = (matiere_ancien, niveau_ancien, principal_ancien)
+            liste_mat_niv_anciens.append(coupe)
 
         # Préparation du contexte pour le rendu du template
         context = {
@@ -1448,13 +1411,11 @@ def modifier_matiere(request):
             # Liste des matières dans le template
             matiere_keys = [key for key in request.POST.keys() if key.startswith('matiere_')]
             if not matiere_keys:
-                messages.error(request, "Vous devez sélectionner au moins une matière.")
+                messages.error(request, "Vous devez garder au moins une matière.")
                 return render(request, 'accounts/modifier_matiere.html', context)
-
-            # Paramètre pour tester s'il y a eu un enregistrement au moins
-            premier_nouveau_enregistrement = False
-            # Boucle sur les matières soumises via le formulaire
+            liste_mat_niv_modifs = [] # pour reconstruire les enregistrements modifier des prof_mat_niv
             for matiere_key in matiere_keys:
+                # pour extraire du request les données des enregistrements
                 i = int(matiere_key.split('_')[1])
                 principal_key = f'principal_{i}'
                 matiere_key = f'matiere_{i}'
@@ -1464,27 +1425,58 @@ def modifier_matiere(request):
                 matiere_name = request.POST.get(matiere_key, None)
                 niveau_name = request.POST.get(niveau_key, None)
 
-                principal = True if principal == "on" else False
+                principal_modif = True if principal == "on" else False
 
                 # Récupération des objets Matiere et Niveau correspondants
-                matiere_obj = Matiere.objects.get(matiere=matiere_name)
-                niveau_obj = Niveau.objects.get(niveau=niveau_name)
-
-                if not premier_nouveau_enregistrement:
-                    # messages.warning(request, "Début enregistrement")
-                    prof_mat_nivs.delete()
-                    premier_nouveau_enregistrement = True
-
-                # Vérification de l'existence de la relation Prof_mat_niv
-                if Prof_mat_niv.objects.filter(user=user, matiere=matiere_obj, niveau=niveau_obj).exists():
-                    # messages.warning(request, f"La matière '{matiere_name}' pour le niveau '{niveau_name}' existe déjà pour cet utilisateur.")
-                    continue
-
-                # Création de la relation Prof_mat_niv
-                Prof_mat_niv.objects.create(user=user, matiere=matiere_obj, niveau=niveau_obj, principal=principal)
-                # messages.success(request, f"L'enregistrement de la matière '{matiere_name}' a réussi.")
-
-            # Redirection vers la page du compte après l'enregistrement
+                matiere_modif = Matiere.objects.get(matiere=matiere_name).matiere
+                niveau_modif = Niveau.objects.get(niveau=niveau_name).niveau
+                coupe = (matiere_modif, niveau_modif, principal_modif)
+                liste_mat_niv_modifs.append(coupe)
+            # Supprimer les anciens enregistrements de prof_mat_niv qui ne figurent pas dans les enregistrement modifiers
+            liste_mat_niv_sup = []
+            for matiere_ancien, niveau_ancien, principal_ancien in liste_mat_niv_anciens:
+                existe = 0
+                for matiere_modif, niveau_modif, principal_modif in liste_mat_niv_modifs:
+                    if matiere_ancien == matiere_modif and niveau_ancien == niveau_modif:
+                        # mettre à jour les anciens enregistrement de Prof_mat_niv
+                        matiere_principal = Matiere.objects.get(matiere=matiere_ancien)
+                        niveau_principal = Niveau.objects.get(niveau=niveau_ancien)
+                        prof_mat_niv_principal = Prof_mat_niv.objects.filter(user=user, matiere=matiere_principal, niveau=niveau_principal)
+                        prof_mat_niv_principal.update(principal=principal_modif)
+                        existe = 1
+                        break
+                if  existe == 0:
+                    matiere_sup = Matiere.objects.get(matiere=matiere_ancien)
+                    niveau_sup = Niveau.objects.get(niveau=niveau_ancien)
+                    couple = (matiere_sup, niveau_sup)
+                    liste_mat_niv_sup.append(couple)
+            for matiere_sup, niveau_sup in liste_mat_niv_sup:
+                prof_mat_niv_sups = Prof_mat_niv.objects.filter(user=user, matiere=matiere_sup, niveau=niveau_sup)
+                if prof_mat_niv_sups.exists():
+                    for prof_mat_niv_sup in prof_mat_niv_sups:
+                        # Supprimer les enregistrements de Prix_heure s'ils existent
+                        Prix_heure.objects.filter(prof_mat_niv=prof_mat_niv_sup.id).delete()
+                        # Supprimer les enregistrements de Prof_mat_niv
+                        prof_mat_niv_sup.delete()
+            
+            # Ajouter les nouveau enregistrements de Prof_mat_niv
+            # Ajouter les nouveau enregistrements de Prof_mat_niv
+            j = 0 # conte nouveaux enregistrement
+            for matiere_modif, niveau_modif, principal_modif in liste_mat_niv_modifs:
+                exist = 0
+                for matiere_ancien, niveau_ancien, principal_ancien in liste_mat_niv_anciens:
+                    if matiere_ancien == matiere_modif and niveau_ancien == niveau_modif: 
+                        exist = 1
+                        break
+                if exist == 1: continue # ne rien faire car l'enregistrement est déjà mis à jour
+                else: # ajouter l'enregistrement
+                    j = j +1
+                    matiere_ajout = Matiere.objects.get(matiere=matiere_modif)
+                    niveau_ajout = Niveau.objects.get(niveau=niveau_modif)
+                    prof_mat_niv = Prof_mat_niv(user=user, matiere=matiere_ajout, niveau=niveau_ajout, principal=principal_modif)
+                    prof_mat_niv.save()
+            if j > 0:messages.info(request, f"Il y a {j} nouveau(x) enregistrement(s), vous devez réviser vos prix par heur pour chaque enregistrement")
+            messages.success(request, "L'enregistrement est achevé avec succé. ")
             return redirect('votre_compte')
 
         # Rendu de la page de modification de matières avec le contexte
@@ -1561,8 +1553,8 @@ def modifier_zone(request):
     messages.error(request, "Les données des zones d'activités n'existent pas pour cet utilisateur. Vous devez ajouter vos zones avant.")
     return redirect('nouveau_zone')
 
-def creer_compte_client(request):
-    return render(request, 'accounts/creer_compte_client.html')
+# def creer_compte_client(request):
+#     return render(request, 'accounts/creer_compte_client.html')
 
 
 
@@ -1577,7 +1569,7 @@ def demande_cours_recu(request):
     emails = Email_telecharge.objects.filter(user_destinataire=user_id)
     
     if not emails:
-        messages.error(request, "Il n'y a pas d'Email envoyé.")
+        messages.info(request, "Il n'y a pas d'Email envoyé.")
         return redirect('votre_compte')
     
     email_detailles = Email_detaille.objects.filter(email__in=emails)
@@ -1614,7 +1606,7 @@ def demande_cours_recu_eleve(request, email_id):
         }
 
     if not email:
-        messages.error(request, "Il n'y a pas d'email envoyé.")
+        messages.info(request, "Il n'y a pas d'email envoyé.")
         return redirect('demande_cours_recu')
 
     if request.method != 'POST':
@@ -1642,24 +1634,23 @@ Contenu de l'émail:
         eleve_id = email.user.id
         # messages.success(request, f"L'email_eleve: {email_eleve}.")
         destinations = ['prosib25@gmail.com', email_eleve]  # Change it to actual destinations
-        try:
-            send_mail(
-                sujet,
-                text_email,
-                email_prof,
-                destinations,
-                fail_silently=False,
-            )  
-        except Exception as e:
-            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-
-        messages.success(request, "L'email a été envoyé avec succès.")
+        # L'envoie de l'email n'est pas obligatoire
+        # try:
+        #     send_mail(
+        #         sujet,
+        #         text_email,
+        #         email_prof,
+        #         destinations,
+        #         fail_silently=False,
+        #     )  
+        # except Exception as e:
+        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        # messages.success(request, "L'email a été envoyé avec succès.")
         email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=eleve_id, sujet=sujet )
         # messages.error(request, "Teste 04 ")
         email_telecharge.save()
         Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Réception confirmée", reponse_email_id=email_id)
-        # Ajoutez ici le code pour gérer les enregistrements liés au professeur, si nécessaire.
-        # messages.success(request, "L'email est enregistré en tant que réception confirmée et un email de confirmation a été envoyé.")
+        messages.success(request, "Email enregistré")
         return redirect('compte_prof')
     if 'btn_repondre' in request.POST:
         # messages.success(request, "Teste 04.")
@@ -1706,31 +1697,236 @@ def reponse_email(request, email_id): # email_id est envoyé par le template dem
         email_eleve = email.email_telecharge
         # messages.success(request, f"L'email_eleve: {email_eleve}.")
         destinations = ['prosib25@gmail.com', email_eleve]  # Change it to actual destinations
-        try:
-            send_mail(
-                sujet,
-                text_email,
-                email_prof,
-                destinations,
-                fail_silently=False,
-            )
-            
-        except Exception as e:
-            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-        
-        messages.success(request, "La réponse à l'email est envoyée avec succé.")
+        # L'envoie de l'email n'est pas obligatoire
+        # try:
+        #     send_mail(
+        #         sujet,
+        #         text_email,
+        #         email_prof,
+        #         destinations,
+        #         fail_silently=False,
+        #     )
+        # except Exception as e:
+        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        # messages.success(request, "La réponse à l'email est envoyée avec succé.")
+
         email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire, sujet=sujet )
         # messages.error(request, "Teste 04 ")
-        email_telecharge.save()
-        # reponse_email_id = email_telecharge.id
-        # messages.error(request, "Teste 05 ")
-        # messages.success(request, f"Le contenu de l'email est enregistré dans la table Email_telecharge")
-        # enregistrer du code email dans la table de gestion des email à revoire
-        
+        email_telecharge.save()        
         Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Répondre", reponse_email_id=email_id)
-        # messages.success(request, "La réponse à l'email est enregistrée dans la table Email_suivi.")
-        # Ajoutez ici le code pour gérer les enregistrements liés au professeur, si nécessaire.
-        
+        messages.success(request, "Email enregistré")
         return redirect('compte_prof')
-
     return redirect('reponse_email')
+
+def email_recu_prof(request):
+    # messages.error(request, "Test 01")
+    # Vérification si l'utilisateur est connecté
+    if not request.user.is_authenticated:
+        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
+        return redirect('signin')
+    
+    user_id = request.user.id
+    # recupérer les email destinés au user
+    emails = Email_telecharge.objects.filter(user_destinataire=user_id)
+    
+    if not emails:
+        messages.info(request, "Il n'y a pas d'Email envoyé à votre compte.")
+        return redirect('votre_compte')
+    
+    
+    context = {
+        
+        'emails': emails
+    }
+    
+    return render(request, 'accounts/email_recu_prof.html', context)
+
+
+def modifier_mot_pass(request):
+    # Initialize the context dictionary with empty values
+    context = {
+        'user_nom': "",
+        'mot_pass': "",
+        'nouveau_user_nom': "",
+        'nouveau_mot_pass': "",
+        'confirmer_mot_pass': "",
+    }
+
+    # Check if the request method is POST and the save button was clicked
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # Retrieve form data from the POST request
+        user_nom = request.POST['user_nom']
+        mot_pass = request.POST['mot_pass']
+        nouveau_user_nom = request.POST['nouveau_user_nom']
+        nouveau_mot_pass = request.POST['nouveau_mot_pass']
+        confirmer_mot_pass = request.POST['confirmer_mot_pass']
+
+        # Update the context with the retrieved form data
+        context.update({
+            'user_nom': user_nom,
+            'mot_pass': mot_pass,
+            'nouveau_user_nom': nouveau_user_nom,
+            'nouveau_mot_pass': nouveau_mot_pass,
+            'confirmer_mot_pass': confirmer_mot_pass,
+        })
+
+        # Authenticate the user with the provided username and password
+        user = auth.authenticate(username=user_nom, password=mot_pass)
+        
+        # If user authentication is successful
+        if user is not None:
+            # Check if all new credential fields are filled
+            if nouveau_user_nom and nouveau_mot_pass and confirmer_mot_pass:
+                # Check if the new username is already taken by another user
+                if User.objects.filter(username=nouveau_user_nom).exists() and nouveau_user_nom != user_nom:
+                    messages.error(request, "Le nom de l'utilisateur est déjà utilisé, donnez un autre nom.")
+                # Check if the new password is at least 8 characters long
+                elif len(nouveau_mot_pass) < 8:
+                    messages.error(request, "Le nouveau mot de passe doit contenir au moins 8 caractères.")
+                # Check if the new password has been compromised in a data breach
+                elif is_password_compromised(nouveau_mot_pass):
+                    messages.error(request, "Le nouveau mot de passe a été compromis lors d'une violation de données. Veuillez choisir un autre mot de passe.")
+                # Check if the new password matches the confirmation password
+                elif nouveau_mot_pass != confirmer_mot_pass:
+                    messages.error(request, "La confirmation du mot de passe n'est pas valide.")
+                else:
+                    # Update the user's username and password
+                    user.username = nouveau_user_nom
+                    user.password = make_password(nouveau_mot_pass)
+                    user.save()
+                    
+                    # Log the user out after the password change
+                    auth.logout(request)
+                    
+                    # Inform the user that the password has been successfully changed
+                    messages.success(request, "Votre mot de passe a été changé avec succès. Veuillez vous reconnecter.")
+                    
+                    # Redirect the user to the sign-in page
+                    return redirect('signin')
+            else:
+                # If not all required fields are filled, show an error message
+                messages.error(request, "Tous les champs obligatoires doivent être remplis.")
+        else:
+            # If user authentication fails, show an error message
+            messages.error(request, "Le nom de l'utilisateur ou le mot de passe est invalide.")
+
+    # Render the password modification page with the current context
+    return render(request, 'accounts/modifier_mot_pass.html', context)
+
+
+def nouveau_prix_heure(request):
+    user = request.user
+    
+    try:
+        format_cour = Format_cour.objects.get(user=user)
+    except Format_cour.DoesNotExist:
+        messages.error(request, "Vous n'avez pas encore défini de format pour vos cours.")
+        return redirect('compte_prof')
+    
+    
+    prof_mat_niv = Prof_mat_niv.objects.filter(user=user) # les choix prés défini des matières et des niveaux
+    if not prof_mat_niv:
+        messages.error(request, "Vous n'avez pas encore défini de matière pour vos cours.")
+        return redirect('compte_prof')
+    
+    liste_format = [] # utilisé dans la difinition des key des name des balises input des prix avec id des prof_mat_niv et la sélection des prix dans le template
+    liste_format_text = [] # utilisé dans la fonction prix_heure_instance
+
+    if format_cour.a_domicile:
+        liste_format.append('a_domicile')
+        liste_format_text.append('Cours à domicile')
+    if format_cour.webcam:
+        liste_format.append('webcam')
+        liste_format_text.append('Cours par webcam')
+    if format_cour.stage:
+        liste_format.append('stage')
+        liste_format_text.append('Stage pendant les vacances')
+    if format_cour.stage_webcam:
+        liste_format.append('stage_webcam')
+        liste_format_text.append('Stage par webcam')
+    
+    prix_heure_qs = Prix_heure.objects.filter(user=user) # anciens enregistrement des prix_heure
+    
+    liste_enregistrements = [] # pour charger les matière, les niveaux, les format cours et les prix s'ils existent et définir les keys des name
+    
+    for format_item in liste_format_text:
+        for prof_mat_niveau in prof_mat_niv:
+            id = prof_mat_niveau.id
+            matiere = prof_mat_niveau.matiere
+            niveau = prof_mat_niveau.niveau
+            prix_heure = ""
+            prix_heure_instance = prix_heure_qs.filter(prof_mat_niv=id, format=format_item).first() # car format=format_item teste le texte du champ liste de choix format
+            if prix_heure_instance: # si le prix_heure est déjà défini
+                prix_heure = str(prix_heure_instance.prix_heure)
+            #format_key utilisé pour la sélection par format des couples dans le boucle des prix dans le template 
+            if format_item=="Cours à domicile": format_key="a_domicile"
+            elif format_item=="Cours par webcam": format_key="webcam"
+            elif format_item=="Stage pendant les vacances": format_key="stage"
+            else: format_key="stage_webcam"
+            
+            couple = (id, matiere, niveau, prix_heure, format_key) # un couple pour chaque cas dans le template
+            liste_enregistrements.append(couple)
+    
+    context = {
+        'liste_format': liste_format,
+        'liste_enregistrements': liste_enregistrements,
+    }
+
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # name="prix_heure-{{id}}__{{ format }}" avec format=format_key et le id pour individualiser name
+        prix_keys = [key for key in request.POST.keys() if key.startswith('prix_heure-')]
+        liste_prix_mat_niv_for = []
+        
+        for prix_key in prix_keys:
+            prix = request.POST[prix_key]
+            if not prix:
+                continue
+            prix_str = prix[:-4] # car le prix a pour masque 99,99 E/h
+            try:
+                prix_dec = Decimal(prix_str).quantize(Decimal('0.00'))
+            except (InvalidOperation, ValueError):
+                messages.error(request, f"Erreur lors de la conversion du prix '{prix_str}' en décimal, voir le programmeur")
+                return render(request, 'accounts/nouveau_prix_heure.html', context)
+            if prix_dec < 10:
+                messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés")
+                continue
+
+            mat_niv_id_str = prix_key.split('-')[1].split('__')[0] # extraire id du prix_key entre (- et __)
+            try:
+                mat_niv_id = int(mat_niv_id_str)
+            except ValueError:
+                messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier, voir le programmeur")
+                return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+            format = prix_key.split('__')[1] # pour extraire le format du prix_key après (__)
+            
+            if format == "a_domicile":
+                format_cour = "Cours à domicile"
+            elif format == "webcam":
+                format_cour = "Cours par webcam"
+            elif format == "stage":
+                format_cour = "Stage pendant les vacances"
+            else:
+                format_cour = "Stage par webcam"
+            
+            # stoquer les données reçues du POST das une liste de triplés
+            prix_mat_niv_for = (mat_niv_id, format_cour, prix_dec)
+            liste_prix_mat_niv_for.append(prix_mat_niv_for)
+
+        if not liste_prix_mat_niv_for:
+            messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.")
+            messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés")
+            return render(request, 'accounts/nouveau_prix_heure.html', context)
+        
+        Prix_heure.objects.filter(user=user).delete() # supprimer les anciens enregistrement
+        
+        for mat_niv_id, format_cour, prix_dec in liste_prix_mat_niv_for: # enregistrer les nouvaux enregistrements
+            nouveau_enregistrement = Prix_heure(user=user, prof_mat_niv_id=mat_niv_id, format=format_cour, prix_heure=prix_dec)
+            nouveau_enregistrement.save()
+        
+        messages.success(request, "Enregistrement achevé")
+        return redirect('nouveau_prix_heure')
+    
+    return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+

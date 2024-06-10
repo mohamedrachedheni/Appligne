@@ -20,28 +20,16 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto p-4 p-lg-0">
-                <a href="{% url 'demande_cours_recu' %}" class="nav-item nav-link active" >Cours à domicile</a>
-                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Cours en ligne</a>
-                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Stage en ligne</a>
-                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Présentiel en groupe</a>
-                
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Autres</a>
-                    
-                    <div class="dropdown-menu fade-down m-0">
-                                    {% if request.user.is_authenticated %}
-                                    <a href="{% url 'votre_compte' %}" class="dropdown-item"  >Votre compte</a>
-                                    <a href="{% url 'logout' %}" class="dropdown-item"  >Se déconnecter</a>
-                                    {% else %}
-                                    <a href="{% url 'signin' %}" class="dropdown-item"  >Se connecter</a>
-                                    <a href="{% url 'nouveau_compte_prof' %}" class="dropdown-item"  >Nouveau compte pro</a>
-                                    <a href="{% url 'nouveau_compte_eleve' %}" class="dropdown-item"  >Nouveau compte élève</a>
-                                    {% endif %}
-                                    <!-- <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient" ><a  class="dropdown-item">Compte élève</a></div>
-                                    <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteProf" ><a  class="dropdown-item" >Compte prof</a></div> -->
-                    </div>
-                </div>
-                <a href="{% url 'compte_eleve' %}" class="nav-item nav-link"  >compte_eleve</a>
+                <a href="{% url 'liste_prof' %}" class="nav-item nav-link " >Tous les professeurs</a>
+                <a href="{% url 'index' %}" class="nav-item nav-link" onclick="return false;" >Qui sommes nous?</a>
+                <a href="{% url 'nous_contacter' %}" class="nav-item nav-link" >Nous contacter</a>
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="nav-item nav-link" >Se déconnecter</a>
+                {% else %}
+                <a href="{% url 'signin' %}" class="nav-item nav-link "  >Se connecter</a>
+                <a href="{% url 'nouveau_compte_prof' %}" class="nav-item nav-link "  >Nouveau compte prof</a>
+                <a href="{% url 'nouveau_compte_eleve' %}" class="nav-item nav-link " >Nouveau compte élève</a>
+                {% endif %}
             </div>
             {% if request.user.is_authenticated %}
                 {% if request.user.professeur %}

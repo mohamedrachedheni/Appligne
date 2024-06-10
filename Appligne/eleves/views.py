@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404 #dans le cas ou l' id du user ne 
 from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import Eleve, Parent
-from accounts.models import Matiere, Niveau, Region, Departement, Email_telecharge, Email_detaille, Email_suivi
+from accounts.models import Matiere, Niveau, Region, Departement, Email_telecharge, Email_detaille, Email_suivi, Prix_heure
 import re
 from django.contrib import auth
 from accounts.models import Professeur
@@ -11,7 +11,11 @@ from datetime import date, datetime
 from django.utils import formats
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
-from django.shortcuts import render, redirect
+from django.db.models import OuterRef, Subquery, DecimalField
+from django import forms
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 
@@ -206,102 +210,62 @@ def modifier_coordonnee_eleve(request):
     return redirect('signin')
 
 
-
-
-def ajout_coordonnee_parent(request):
-    user = request.user
-    # messages.info(request, "Teste : 1")
+# Formulaire pour les coordonnées du parent
+class ParentForm(forms.ModelForm):
+    class Meta:
+        model = Parent
+        fields = ['prenom_parent', 'nom_parent', 'civilite', 'telephone_parent', 'email_parent']
     
-    if user.is_authenticated and not hasattr(user, 'parent'):
-        if request.method == 'POST' and 'btn_enr' in request.POST:
-            prenom_parent = request.POST['prenom_parent']
-            nom_parent = request.POST['nom_parent']
-            civilite = request.POST['civilite']
-            telephone_parent = request.POST['telephone_parent']
-            email_parent = request.POST['email_parent']
-            
-            patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
-            if re.match(patt, email_parent):
-                # Création de l'objet Parent
-                parent = Parent.objects.create(
-                    user=user,
-                    prenom_parent=prenom_parent,
-                    nom_parent=nom_parent,
-                    civilite=civilite,
-                    telephone_parent=telephone_parent,
-                    email_parent=email_parent
-                )
-                messages.success(request, "Vos informations ont été mises à jour avec succès.")
-                return redirect('compte_eleve')
-            else:
-                messages.error(request, "L'adresse e-mail n'est pas valide.")
-                context = {
-                    'prenom_parent': prenom_parent,
-                    'nom_parent': nom_parent,
-                    'email_parent': email_parent,
-                    'civilite': civilite,
-                    'telephone_parent': telephone_parent,
-                }
-                return render(request, 'eleves/ajout_coordonnee_parent.html', context)
-    messages.warning(request, "Vos coordonnées en tant que parent existent déjà. vous pouvez les modifier")
-    return render(request, 'eleves/modifier_coordonnee_parent.html')
+    def clean_email_parent(self):
+        # Validation personnalisée pour l'adresse e-mail
+        email = self.cleaned_data.get('email_parent')
+        patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
+        if not re.match(patt, email):
+            # Si le format de l'email est incorrect, une erreur de validation est levée
+            raise forms.ValidationError("L'adresse e-mail n'est pas valide.")
+        return email
 
+@login_required  # Assure que l'utilisateur est connecté avant d'accéder à cette vue
 def modifier_coordonnee_parent(request):
-    patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
-    user = request.user
-    # messages.info(request, "Teste : 1")
-    
-    if user.is_authenticated and  hasattr(user, 'parent'):
-        # messages.info(request, "Teste : 2")
-        parent = user.parent
-        prenom_parent = parent.prenom_parent
-        nom_parent = parent.nom_parent
-        civilite = parent.civilite
-        telephone_parent = parent.telephone_parent
-        email_parent = parent.email_parent
-        context = {
-            'prenom_parent': prenom_parent,
-            'nom_parent': nom_parent,
-            'email_parent': email_parent,
-            'civilite': civilite,
-            'telephone_parent': telephone_parent,
-        }
-        if not (request.method == 'POST' and 'btn_enr' in request.POST):
-            return render(request, 'eleves/modifier_coordonnee_parent.html', context)
-        prenom_parent = request.POST['prenom_parent']
-        nom_parent = request.POST['nom_parent']
-        civilite = request.POST['civilite']
-        telephone_parent = request.POST['telephone_parent']
-        email_parent = request.POST['email_parent']
-        context = {
-            'prenom_parent': prenom_parent,
-            'nom_parent': nom_parent,
-            'email_parent': email_parent,
-            'civilite': civilite,
-            'telephone_parent': telephone_parent,
-        }
-        if User.objects.filter(email=email_parent).exists() and email_parent != user.email:
-            messages.error(request, "L'email est déjà utilisé, donnez un autre email")
-            return render(request, 'eleves/modifier_coordonnee_parent.html', context)
-        if not prenom_parent.strip() or not nom_parent.strip():
-            messages.error(request, "Le prénom, le nom et le nom de l'utilisateur ne peuvent pas être vide ou contenir uniquement des espaces.")
-            return render(request, 'eleves/modifier_coordonnee_parent.html', context)
-        if  (re.match(patt, email_parent)) or not email_parent.strip() :
-            # Création de l'objet Parent
-            # Mise à jour de l'objet Parent existant
-            parent.prenom_parent = prenom_parent
-            parent.nom_parent = nom_parent
-            parent.civilite = civilite
-            parent.telephone_parent = telephone_parent
-            parent.email_parent = email_parent
-            parent.save()
-            messages.success(request, "Les informations du parent ont été mises à jour avec succès.")
-            return redirect('compte_eleve')
-        messages.error(request, "L'adresse e-mail n'est pas valide.")
-        return render(request, 'eleves/modifier_coordonnee_parent.html', context)   
-    messages.error(request, "Il faut créer vos données de parent avant.")
-    # messages.info(request, "Teste : 3")
-    return render(request, 'eleves/ajout_coordonnee_parent.html')
+    user = request.user  # Obtient l'utilisateur actuellement connecté
+
+    try:
+        parent = user.parent  # Tente de récupérer l'objet Parent lié à l'utilisateur
+    except ObjectDoesNotExist:
+        parent = None  # Si l'objet Parent n'existe pas, on initialise à None
+
+    if request.method == 'POST':  # Si la méthode est POST, on traite le formulaire
+        form = ParentForm(request.POST, instance=parent)  # Instancie le formulaire avec les données POST et l'instance Parent
+        if form.is_valid():  # Vérifie si le formulaire est valide
+            if Parent.objects.filter(email_parent=form.cleaned_data['email_parent']).exclude(user=user).exists():
+                # Vérifie si l'email est déjà utilisé par un autre utilisateur
+                messages.error(request, "L'email est déjà utilisé, donnez un autre email.")
+            else:
+                form.instance.user = user  # Associe l'utilisateur courant à l'objet Parent
+                form.save()  # Sauvegarde l'objet Parent
+                messages.success(request, "Les informations du parent ont été mises à jour avec succès.")
+                return redirect('compte_eleve')  # Redirige vers la page du compte élève après succès
+        else:
+            messages.error(request, "Veuillez corriger les erreurs ci-dessous.")  # Affiche un message d'erreur si le formulaire est invalide
+    else:
+        form = ParentForm(instance=parent)  # Instancie le formulaire avec l'objet Parent existant pour un GET
+
+    # Contexte à passer au template
+    context = {
+        'form': form,
+        'prenom_parent': form['prenom_parent'].value() if form['prenom_parent'].value() is not None else '',
+        'nom_parent': form['nom_parent'].value() if form['nom_parent'].value() is not None else '',
+        'civilite': form['civilite'].value() if form['civilite'].value() is not None else '',
+        'telephone_parent': form['telephone_parent'].value() if form['telephone_parent'].value() is not None else '',
+        'email_parent': form['email_parent'].value() if form['email_parent'].value() is not None else '',
+    }
+    return render(request, 'eleves/modifier_coordonnee_parent.html', context)  # Affiche le template avec le formulaire
+
+
+
+
+
+
 
 
 def demande_cours_eleve(request):
@@ -311,10 +275,47 @@ def demande_cours_eleve(request):
     region_ancien = request.session.get('region_ancien', 'PARIS')
     focus_departement = False
     matiere_defaut = "Maths"
-    niveau_defaut = "6ème"
+    niveau_defaut = "Terminale Générale"
     region_defaut = "ILE-DE-FRANCE"
     departement_defaut = "PARIS"
     radio_name = "a_domicile"
+    radio_name_text = "Cours à domicile"
+    # Dans Django ORM, une sous-requête est souvent utilisée pour effectuer des requêtes complexes 
+    # qui impliquent des relations entre différents modèles. Ici, prix_heure_subquery est utilisée 
+    # pour récupérer le prix par heure (prix_heure) des professeurs (utilisateurs) qui correspondent à 
+    # certains critères de recherche (matière, niveau et format de cours).
+    # La sous-requête prix_heure_subquery est ensuite utilisée dans une requête principale pour 
+    # annoter chaque professeur avec leur prix par heure pour les critères spécifiés.
+    # pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.
+    prix_heure_subquery = Prix_heure.objects.filter( 
+        user=OuterRef('pk'),
+        prof_mat_niv__matiere__matiere=matiere_defaut,
+        prof_mat_niv__niveau__niveau=niveau_defaut,
+        format=radio_name_text
+    ).values('prix_heure')
+
+    # Utilisez filter au lieu de all pour exclure les utilisateurs sans enregistrement dans Professeur
+    # Récupère les professeurs filtrés en fonction des paramètres par défaut
+    # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
+    professeurs = User.objects.filter(
+        professeur__isnull=False,
+        prof_mat_niv__matiere__matiere=matiere_defaut,
+        prof_mat_niv__niveau__niveau=niveau_defaut,
+        prof_zone__commune__departement__departement=departement_defaut,
+        **{f'format_cour__{radio_name}': True}, # Utilisation de **f'string'__{} pour construire dynamiquement le nom du paramètre
+    ).annotate(
+        annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField()) 
+        # La méthode annotate est utilisée pour ajouter une annotation prix_heure au QuerySet des professeurs.
+        # Cette annotation inclut la première valeur correspondante de prix_heure pour chaque professeur.
+        # Cette modification permet d'inclure les valeurs prix_heure dans le QuerySet des professeurs 
+        # et les rend accessibles dans le contexte passé au template.
+    ).prefetch_related(
+        'experience_set',
+        'prof_mat_niv_set',
+        'diplome_set',
+        'professeur',
+        'pro_fichier'
+    ).distinct().order_by('id')
     
     # Vérifie si la méthode de la requête est POST
     if request.method == 'POST':
@@ -333,30 +334,55 @@ def demande_cours_eleve(request):
             focus_departement = True
                    
         # Vérifie quel type de cours a été sélectionné (à domicile, en ligne, stage, etc.)
-        if request.POST.get('a_domicile', None): 
+        if request.POST.get('a_domicile', None):
+            radio_name_text = "Cours à domicile" # pour le filtre de Prix_heure
             radio_name = "a_domicile"
-        if request.POST.get('webcam', None): 
+        if request.POST.get('webcam', None):
             radio_name = "webcam"
-        if request.POST.get('stage', None): 
+            radio_name_text = "Cours par webcam"
+        if request.POST.get('stage', None):
             radio_name = "stage"
-        if request.POST.get('stage_webcam', None): 
+            radio_name_text = "Stage pendant les vacances"
+        if request.POST.get('stage_webcam', None):
             radio_name = "stage_webcam"
+            radio_name_text = "Stage par webcam"
     
-    # Récupère les professeurs filtrés en fonction des paramètres par défaut
-    # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
-    professeurs = User.objects.filter(
-        professeur__isnull=False, 
-        prof_mat_niv__matiere__matiere=matiere_defaut, 
-        prof_mat_niv__niveau__niveau=niveau_defaut, 
-        prof_zone__commune__departement__departement=departement_defaut, 
-        **{f'format_cour__{radio_name}': True},  # Utilisation de f-string pour construire dynamiquement le nom du paramètre
-    ).prefetch_related(
-        'experience_set',
-        'prof_mat_niv_set',
-        'diplome_set',
-        'professeur',
-        'pro_fichier'
-    ).distinct().order_by('id')
+    # Dans Django ORM, une sous-requête est souvent utilisée pour effectuer des requêtes complexes 
+        # qui impliquent des relations entre différents modèles. Ici, prix_heure_subquery est utilisée 
+        # pour récupérer le prix par heure (prix_heure) des professeurs (utilisateurs) qui correspondent à 
+        # certains critères de recherche (matière, niveau et format de cours).
+        # La sous-requête prix_heure_subquery est ensuite utilisée dans une requête principale pour 
+        # annoter chaque professeur avec leur prix par heure pour les critères spécifiés.
+        # pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.
+        prix_heure_subquery = Prix_heure.objects.filter( 
+            user=OuterRef('pk'),
+            prof_mat_niv__matiere__matiere=matiere_defaut,
+            prof_mat_niv__niveau__niveau=niveau_defaut,
+            format=radio_name_text
+        ).values('prix_heure')
+
+        # Utilisez filter au lieu de all pour exclure les utilisateurs sans enregistrement dans Professeur
+        # Récupère les professeurs filtrés en fonction des paramètres par défaut
+        # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
+        professeurs = User.objects.filter(
+            professeur__isnull=False,
+            prof_mat_niv__matiere__matiere=matiere_defaut,
+            prof_mat_niv__niveau__niveau=niveau_defaut,
+            prof_zone__commune__departement__departement=departement_defaut,
+            **{f'format_cour__{radio_name}': True}, # Utilisation de **f'string'__{} pour construire dynamiquement le nom du paramètre
+        ).annotate(
+            annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField()) 
+            # La méthode annotate est utilisée pour ajouter une annotation prix_heure au QuerySet des professeurs.
+            # Cette annotation inclut la première valeur correspondante de prix_heure pour chaque professeur.
+            # Cette modification permet d'inclure les valeurs prix_heure dans le QuerySet des professeurs 
+            # et les rend accessibles dans le contexte passé au template.
+        ).prefetch_related(
+            'experience_set',
+            'prof_mat_niv_set',
+            'diplome_set',
+            'professeur',
+            'pro_fichier'
+        ).distinct().order_by('id')
 
     # Définit le nombre d'éléments par page pour la pagination
     elements_par_page = 4
@@ -398,7 +424,6 @@ def demande_cours_eleve(request):
     }
     # Rendu du modèle HTML avec le contexte
     return render(request, 'eleves/demande_cours_eleve.html', context)
-
 
 
 def demande_cours_envoie(request, id_prof):
@@ -478,31 +503,31 @@ Cordialement,
             # si le sujet de l'email n'est pas défini dans le GET alors sujet='Demande de cours
             sujet = request.POST.get('sujet', '').strip()
             if not sujet: sujet = "Demande de cours"
+            # messages.success(request, f"Sujet de email= {sujet}.")
             # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
             destinations = ['prosib25@gmail.com']
-            try:
-                send_mail(
-                    sujet,
-                    text_email,
-                    email_prof,
-                    destinations,
-                    fail_silently=False,
-                )
-                messages.success(request, "L'email a été envoyé avec succès.")
-                email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire )
-                # messages.error(request, "Teste 04 ")
-                email_telecharge.save()
-                # messages.error(request, "Teste 05 ")
-                # messages.success(request, f"Le contenu de l'email est enregistré dans la table Email_telecharge")
-                # Enregistrement dans la table détaille email
-                email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
-                email_detaille.save()
-                # messages.success(request, f"Le contenu du détaille de l'email est enregistré dans la table Email_detaille")
-
-                # enregistrer du code email dans la table de gestion des email à revoire
-                return redirect('compte_eleve')
-            except Exception as e:
-                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
+            
+            # L'envoie de l'email n'est pas obligatoire
+            # try:
+            #     send_mail(
+            #         sujet,
+            #         text_email,
+            #         email_prof,
+            #         destinations,
+            #         fail_silently=False,
+            #     )
+            # except Exception as e:
+            #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
+            #     return render(request, 'eleves/demande_cours_envoie.html', context)
+            # messages.success(request, "L'email a été envoyé avec succès.")
+            email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, sujet=sujet, text_email=text_email, user_destinataire=user_destinataire )
+            email_telecharge.save()
+            # Enregistrement dans la table détaille email
+            email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
+            email_detaille.save()
+            messages.success(request, "Email enregistré")
+            return redirect('compte_eleve')
+            
         messages.error(request, "Il faut définir le contenu de l'Email")
         return render(request, 'eleves/demande_cours_envoie.html', context)
     messages.error(request, "Vous devez être connecté pour effectuer cette action.")
@@ -560,26 +585,25 @@ Contenu de l'émail:
         email_prof = user.email
         email_eleve = email.email_telecharge
         eleve_id = email.user.id
-        messages.success(request, f"L'email_eleve: {email_eleve}.")
         destinations = ['prosib25@gmail.com', email_eleve]  # Change it to actual destinations
-        try:
-            send_mail(
-                sujet,
-                text_email,
-                email_prof,
-                destinations,
-                fail_silently=False,
-            )  
-        except Exception as e:
-            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        # L'envoie de l'email n'est pas obligatoire
+        # try:
+        #     send_mail(
+        #         sujet,
+        #         text_email,
+        #         email_prof,
+        #         destinations,
+        #         fail_silently=False,
+        #     )  
+        # except Exception as e:
+        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
 
-        messages.success(request, "L'email a été envoyé avec succès.")
+        # messages.success(request, "L'email a été envoyé avec succès.")
         email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=eleve_id, sujet=sujet )
         # messages.error(request, "Teste 04 ")
         email_telecharge.save()
         Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Réception confirmée", reponse_email_id=email_id)
-        # Ajoutez ici le code pour gérer les enregistrements liés au professeur, si nécessaire.
-        # messages.success(request, "L'email est enregistré en tant que réception confirmée et un email de confirmation a été envoyé.")
+        messages.success(request, "Email enregistré")
         return redirect('compte_eleve')
     if 'btn_repondre' in request.POST:
         # messages.success(request, "Teste 04.")
@@ -623,31 +647,24 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
         text_email =  request.POST['text_email']
         user_destinataire = email.user.id
         destinations = ['prosib25@gmail.com', email_prof]  # Change it to actual destinations
-        try:
-            send_mail(
-                sujet,
-                text_email,
-                email_eleve,
-                destinations,
-                fail_silently=False,
-            )
+        # L'envoie de l'email n'est pas obligatoire
+        # try:
+        #     send_mail(
+        #         sujet,
+        #         text_email,
+        #         email_eleve,
+        #         destinations,
+        #         fail_silently=False,
+        #     )
             
-        except Exception as e:
-            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-        
-        messages.success(request, "La réponse à l'email est envoyée avec succé.")
+        # except Exception as e:
+        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        # messages.success(request, "La réponse à l'email est envoyée avec succé.")
         email_telecharge = Email_telecharge(user=user, email_telecharge=email_eleve, text_email=text_email, user_destinataire=user_destinataire, sujet=sujet )
         # messages.error(request, "Teste 04 ")
         email_telecharge.save()
-        # reponse_email_id = email_telecharge.id
-        # messages.error(request, "Teste 05 ")
-        # messages.success(request, f"Le contenu de l'email est enregistré dans la table Email_telecharge")
-        # enregistrer du code email dans la table de gestion des email à revoire
-        
         Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Répondre", reponse_email_id=email_id)
-        # success(request, "La réponse à l'email est enregistrée dans la table Email_suivi.")
-        # Ajoutez ici le code pour gérer les enregistrements liés au professeur, si nécessaire.
-        
+        messages.success(request, "Email enregistré")
         return redirect('compte_eleve')
 
     return redirect('reponse_email_eleve')

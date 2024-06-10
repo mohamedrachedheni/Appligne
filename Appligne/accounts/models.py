@@ -9,6 +9,8 @@ from django.db import models
 from datetime import date, datetime
 from django.contrib.auth.models import User
 from django.db.models import UniqueConstraint
+from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 
 
@@ -304,15 +306,15 @@ class Prof_doc_telecharge(models.Model):
         ordering = ['-date_telechargement']
 
 class Email_telecharge(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     date_telechargement = models.DateField(default=date.today)
-    email_telecharge = models.CharField(max_length=255, null=True, blank=True) # l'adresse email de l'envoyeur
+    email_telecharge = models.CharField(max_length=255, null=True, blank=True)  # l'adresse email de l'envoyeur
     sujet = models.CharField(max_length=255, null=True, blank=True)
     text_email = models.TextField(null=True, blank=True)
-    user_destinataire = models.IntegerField() # champ obligatoire du destinataire de l'email
+    user_destinataire = models.IntegerField()  # champ obligatoire du destinataire de l'email
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - {self.date_telechargement}"
+        return f"{self.user.first_name if self.user else 'No User'} {self.user.last_name if self.user else ''} - {self.date_telechargement}"
 
     class Meta:
         ordering = ['-date_telechargement']
@@ -340,4 +342,27 @@ class Email_suivi(models.Model):
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.date_suivi}"
 
+
+class Prix_heure(models.Model):
+    FORMAT_COUR = [
+        ('a_domicile', 'Cours à domicile'),
+        ('webcam', 'Cours par webcam'),
+        ('stage', 'Stage pendant les vacances'),
+        ('stage_webcam', 'Stage par webcam'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    prof_mat_niv = models.ForeignKey(Prof_mat_niv, on_delete=models.CASCADE)
+    format = models.CharField(max_length=30, choices=FORMAT_COUR, null=True)
+    prix_heure = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )
+    class Meta:
+        ordering = ['user', 'prof_mat_niv']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'prof_mat_niv', 'format'], name='prof_mat_niv_format')
+        ]
 

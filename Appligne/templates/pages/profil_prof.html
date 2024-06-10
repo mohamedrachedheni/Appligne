@@ -67,7 +67,7 @@
         <h4>{{ user.pro_fichier.titre_fiche }}</h4>
         <a href="{% url 'demande_cours_envoie' id_prof=user.id %}" class="btn btn-lg btn-primary" >
         <h5>Contacter <strong>{{user.first_name}}</strong></h5>
-    </a>
+        </a>
 
     </div>
 
@@ -86,7 +86,13 @@
                                     <div class="p-4">
                                         <i class="fa fa-3x fa-graduation-cap text-primary mb-4"></i>
                                         <h5 class="mb-3">Tarif</h5>
-                                        <p><strong><b class="prix_par_heure">A partir de 25</b>&nbsp;€/h</strong></p>
+                                        <p><strong><b class="prix_par_heure">
+                                            {% if prix_heure is not none and prix_heure != "N/A" %}
+                                            {{prix_heure}}&nbsp;€/h
+                                            {% else %}
+                                                <strong>Le prix de l'heure n'est pas défini</strong>
+                                            {% endif %}
+                                        </b></strong></p>
                                     </div>
                                 </div>
                             </div>
@@ -618,8 +624,8 @@
     <!-- Testimonial fin -->
 
     <!-- Back to Top -->
-    <a href="{% url 'demande_cours_envoie' id_prof=user.id %}" class="btn btn-lg btn-primary  back-to-top" >
-        <h5>Contacter <strong>{{user.first_name}}</strong></h5>
+    <a href="#" class="btn btn-lg btn-primary  back-to-top" >
+        <h5>Vers le haut</h5>
     </a>
 
 </form>

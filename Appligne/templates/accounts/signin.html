@@ -11,10 +11,17 @@
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
             style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
             {% if request.user.is_authenticated %}
-            <h4 class="alert alert-info text-center" >
-              Bien venu {{request.user.username}} , Vous êtes  maintenant connecté(e) à votre compte{% if request.user.professeur %}<a class="text-dark" href="{% url 'compte_prof' %}">en tant que professeur</a>  {% else %} <a class="text-dark" href="{% url 'compte_eleve' %}">en tant que élève/a> {% endif %}.
+            <h4 class="alert alert-info text-center">
+                Bienvenu {{ request.user.username }} , Vous êtes maintenant connecté(e) à votre compte
+                {% if request.user.professeur %}
+                    <a class="text-primary" href="{% url 'compte_prof' %}"> en tant que professeur</a>
+                {% elif request.user.eleve %}
+                    <a class="text-primary" href="{% url 'compte_eleve' %}"> en tant qu'élève</a>
+                {% else %}
+                    <a class="text-primary" href="#"> en tant qu'administrateur</a>
+                {% endif %}
             </h4>
-            <h5 class="alert alert-warning text-center" ><a class="text-dark" href="{% url 'logout' %}">Se déconnecter</a></h5>
+            <h5 class="alert alert-warning text-center" ><a class="text-primary" href="{% url 'logout' %}">Se déconnecter</a></h5>
             {% endif %}
             {% if not request.user.is_authenticated %}
             <h6 class="section-title bg-white text-center text-primary px-3">Se connecter à votre compte</h6>
@@ -46,9 +53,20 @@
                         <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
                             title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{user_nom}}" autocomplete="off" >
                     </div>
-                    <div class="col-md-12 position-relative">
+                    <!--<div class="col-md-12 position-relative">
                         <label for="mot_pass_id" class="form-label">Mot de passe</label>
                         <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" required value="{{mot_pass}}" autocomplete="off" >
+                    </div>-->
+                    <div class="form-group col-md-12 position-relative">
+                        <label for="mot_pass_id">Mot de passe</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" placeholder="Entrez votre mot de passe" required value="{{mot_pass}}">
+                            <div class="input-group-append">
+                                <span class="input-group-text password-toggle " onclick="togglePassword('mot_pass_id')">
+                                    <i class="fas fa-eye input-group-text"></i>
+                                </span>
+                            </div>
+                        </div>         
                     </div>
                     <div class="col-md-12  position-relative">
                         <label class="form-label" for="souviens_toi_id">Souviens-toi de moi</label>
@@ -69,4 +87,21 @@
     <!-- identité et coordonnees Fin -->
 </form>
 {% endif %}
+{% endblock %}
+{% block javascript %}
+<script>
+    function togglePassword(fieldId) {
+        var field = document.getElementById(fieldId);
+        var icon = field.nextElementSibling.querySelector('i');
+        if (field.type === "password") {
+            field.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 {% endblock %}

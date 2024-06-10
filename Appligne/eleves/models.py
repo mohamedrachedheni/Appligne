@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from datetime import datetime, date
 from django.contrib.auth.hashers import make_password # pour crypter des champs
 
+
 # Create your models here.
 
 class Eleve(models.Model):
@@ -25,8 +26,7 @@ class Eleve(models.Model):
         if date_naissance_str:
             self.date_naissance = datetime.strptime(date_naissance_str, '%d/%m/%Y').date()
 
-from django.db import models
-from django.contrib.auth.hashers import make_password
+
 
 class Parent(models.Model):
     CIVILITE_CHOICES = [

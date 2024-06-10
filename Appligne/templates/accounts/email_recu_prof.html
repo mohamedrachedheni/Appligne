@@ -37,39 +37,40 @@
                         {% include 'partials/_alerts.html' %}
                     </div>
                     <div class="container bg-light  ">
-                        <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'demande_cours_recu' %}">
+                        <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu_prof' %}">
                             {% csrf_token %}
                             
                             <!-- parcours scolaire debut -->
                             <div class="container-xxl py-5 " >
                                 <div class="container">
                                     <div class="container bg-light ">
-                                        {% for email_detaille in email_detailles %}
-                                            <div class="row  ajout-dipl p3"  >
-                                                <div class="col-lg-3 position-relative">
-                                                    <label for="eleve_id_{{ forloop.counter }}" class="form-label">Élève</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="eleve_id_{{ forloop.counter }}"  value="{{email_detaille.user_nom}}" >
+                                        <div class="container bg-light ">
+                                        {% for email in emails %}
+                                            <div class="row  ajout-dipl p3 py-3"  >
+                                                <div class="col-lg-2 position-relative ">
+                                                    <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" >
                                                 </div>
-                                                <div class="col-lg-3 position-relative">
-                                                    <label for="intitule_id_{{ forloop.counter }}" class="form-label">Matière</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.matiere}}" >
+                                                <div class="col-lg-6 position-relative">
+                                                    <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" >
                                                 </div>
-                                                <div class="col-lg-3 position-relative">
-                                                    <label for="intitule_id_{{ forloop.counter }}" class="form-label">Niveau</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.niveau}}" >
-                                                </div>
-                                                <div class="col-lg-3 position-relative">
-                                                    <div class="row ajout-dipl p3">
-                                                        <label for="intitule_id_{{ forloop.counter }}" class="form-label">Format cours</label>
-                                                        <div class="col-lg-9 position-relative"> 
-                                                            <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}" value="{{email_detaille.format_cours}}" >
+                                                <div class="col-lg-4 position-relative">
+                                                    <div class="row  ajout-dipl p3">
+                                                        <label for="first_name_id_{{ forloop.counter }}" class="form-label">Elève</label>
+                                                        <div class="col-lg-8 position-relative">
+                                                
+                                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
+                                                                value="{{email.user.first_name}}  {{email.user.last_name}}">
                                                         </div>
-                                                        <div class="col-lg-3 position-relative"><a class="btn btn-primary" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
-                                                                    style="color: white;">
-                                                            Détaille</span></a>
+                                                        <div class="col-lg-4 position-relative">
+                                                            <a class="btn btn-primary" name="btn_détaille_{{ email.id }}"
+                                                                href="{% url 'demande_cours_recu_eleve' email_id=email.id %}"><span
+                                                                    style="color: white;">Détaille <!--{{email.id }}--></span></a>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                
                                             </div>
                                         {% endfor %}
                                     </div>

@@ -18,6 +18,8 @@ from .models import Prof_mat_niv
 from .models import Pro_fichier
 from .models import Prof_doc_telecharge
 from .models import Email_telecharge
+from .models import Email_detaille
+from .models import Email_suivi
 
 
     
@@ -43,4 +45,6 @@ admin.site.register(Prof_mat_niv)
 admin.site.register(Pro_fichier)
 admin.site.register(Prof_doc_telecharge)
 admin.site.register(Email_telecharge)
+admin.site.register(Email_detaille)
+admin.site.register(Email_suivi)
 

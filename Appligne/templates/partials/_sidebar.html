@@ -1,83 +1,79 @@
 {% load static %}
 <!-- début sidebar -->
-<nav class="sidebar" style="width: 250px; height: 800px; overflow-y: auto; overflow-x: auto;">
-    <div tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-        <div class="offcanvas-body ">
-            <ul class="navbar-nav">
-                <h5>Mon compte</h5>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Ajouter</a>
-                    <div class="dropdown-menu fade-down m-0">
-                        <a href="{% url 'nouveau_diplome' %}" class="dropdown-item"  >Diplome</a>
-                        <a href="{% url 'nouveau_experience' %}" class="dropdown-item"  >Expérience</a>
-                        <a href="{% url 'nouveau_format_cours' %}" class="dropdown-item"  >Format cours</a>
-                        <a href="{% url 'nouveau_matiere' %}" class="dropdown-item"  >Matière</a>
-                        <a href="{% url 'nouveau_zone' %}" class="dropdown-item"  >Zone d'activité</a>
-                        <a href="{% url 'nouveau_description' %}" class="dropdown-item"  >Description détaillée</a>
-                        <a href="{% url 'nouveau_fichier' %}" class="dropdown-item"  >Autre fichier</a>
-                        <a href="{% url 'demande_cours_recu' %}" class="dropdown-item"  >Demandes de cours</a>
-                    </div>
-                </div>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Modifier/Supprimer</a>
-                    <div class="dropdown-menu fade-down m-0">
-                        <a href="#" class="dropdown-item"  >Modifier votre lognin</a>
+<nav id="sidebar">
+    <div class="p-4 pt-5">
+        <ul class="list-unstyled components mb-5">
+            <li >
+                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Ajouter</strong></a>
+                <ul class="collapse list-unstyled" id="homeSubmenu">
+                <li>
+                    <a href="{% url 'nouveau_diplome' %}" class="dropdown-item"  >Diplome</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_experience' %}" class="dropdown-item"  >Expérience</a>
+                </li>
+                <li>
+                    <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Format cours</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_matiere' %}" class="dropdown-item"  >Matière</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_zone' %}" class="dropdown-item"  >Zone d'activité</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_description' %}" class="dropdown-item"  >Description détaillée</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_fichier' %}" class="dropdown-item"  >Autre fichier</a>
+                </li>
+                <li>
+                    <a href="{% url 'nouveau_prix_heure' %}" class="dropdown-item"  >Prix par heure</a>
+                </li>
+                <li>
+                    <a href="{% url 'demande_cours_recu' %}" class="dropdown-item"  >Demandes de cours</a>
+                </li>
+                <li>
+                    <a href="{% url 'email_recu_prof' %}" class="dropdown-item"  >Emails reçus</a>
+                </li>
+                </ul>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'profil_prof' id_user=user.id %}"><strong>Mon profil</strong></a>
+            </li>
+            <li>
+                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Modifier/Supprimer</strong></a>
+                <ul class="collapse list-unstyled" id="pageSubmenu">
+                    <li>
+                        <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre mot de passe</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_compte_prof' %}" class="dropdown-item"  >Modifier vos coordonnées</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_diplome' %}" class="dropdown-item"  >Modifier vos diplomes</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_experience' %}" class="dropdown-item"  >Modifier vos expériences</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Modifier formats cours</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_description' %}" class="dropdown-item"  >Modifier vos descriptions</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_matiere' %}" class="dropdown-item"  >Modifier des matières</a>
+                    </li>
+                    <li>
                         <a href="{% url 'modifier_zone' %}" class="dropdown-item"  >Supprimer des zones</a>
-                    </div>
-                </div>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'profil_prof' id_user=user.id %}""">
-                        <small class="flex-fill text-center  py-2">
-                             Mon profil
-                        </small>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'logout' %}""">
-                        <small class="flex-fill text-center  py-2">
-                            Déconnection
-                        </small>
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <h5>Mes élèves</h5>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <small class="flex-fill text-center  py-2">
-                            <i class="fa fa-landmark p-2 "></i>Mes cours
-                        </small>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <small class="flex-fill text-center  py-2">
-                            <i class="fa fa-users p-2"></i>Gestion des élèves
-                        </small>
-                    </a>                                
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <small class="flex-fill text-center  py-2">
-                            <i class="fa fa-hand-holding-dollar p-2 "></i>Paiement
-                        </small>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <small class="flex-fill text-center  py-2">
-                            <i class="fa fa-hands-holding-child p-2"></i>Mes demande de cours
-                        </small>
-                    </a>
-                </li>
-            </ul>
-        </div>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'logout' %}"><strong>Déconnection</strong></a>
+            </li>
+        </ul>
     </div>
 </nav>
 <!-- fin sidebar -->

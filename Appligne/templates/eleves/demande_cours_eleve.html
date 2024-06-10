@@ -27,7 +27,7 @@
             {% include 'partials/_sidebar_eleve.html' %}
             <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+        <div class=" col-sm-12 col-md-8 col-lg-10   ">
             <div class="container-xxl py-1" >
                 <div class="container">
                     <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
@@ -221,7 +221,14 @@
                                     </div>
                                     <div class="col-sm-12">
                                         <!-- les prix ne sont pas encore integres dans la base -->
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong></p>
+                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong>
+                                            <b class="prix_par_heure">
+                                                {% if prof.annotated_prix_heure is not none %}
+                                                {{ prof.annotated_prix_heure }} &nbsp;€/h <!--pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.-->
+                                                {% else %}
+                                                    <strong>Le prix de l'heure n'est pas défini</strong>
+                                                {% endif %}
+                                        </b></strong></p>
                                     </div>
                                     <div class="col-sm-12">
                                         <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'profil_prof' id_user=prof.id  %}">Voir profil</a>
@@ -259,12 +266,12 @@
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_demande_cours_eleve.js' %}"></script>
 
-{% if focus_departement %}
+<!-- {% if focus_departement %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('departement_id').focus();
     });
 </script>
-{% endif %}
+{% endif %} -->
 
 {% endblock %}
