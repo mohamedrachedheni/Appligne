@@ -258,6 +258,7 @@ def profil_prof(request, id_user):
 def index(request):
     # les paramètres par défaut pour les champs de recherche prof
     radio_name = "a_domicile"
+    radio_name_text = "Cours à domicile" # pour le filtre de Prix_heure
     matiere_defaut = "Maths"
     niveau_defaut = "Terminale Générale"
     region_defaut = "ILE-DE-FRANCE"
