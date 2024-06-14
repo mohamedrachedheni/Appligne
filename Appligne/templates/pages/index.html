@@ -40,17 +40,16 @@
 <!-- Carousel fin -->
 
 <!-- Cherchez votre prof début -->
-<form class="position-absolute bottom-0 start-50 translate-middle container-recherche" method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'index' %}" id="index_id" style="z-index: 10;">
+<form class="position-absolute bottom-0 start-50 translate-middle container-recherche  " method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'index' %}" id="index_id" style="z-index: 10;">
     {% csrf_token %}
-    {% csrf_token %}
-    <div class="container-fluid p-0 mb-5">
+    <div class="container-fluid p-0 mb-5  ">
         <div class="container   " >
             <div class="col-md-12">
                 {% include 'partials/_alerts.html' %}
             </div>
-            <div class="container shadow-sm rounded mb-4 p-4">
+            <div class="container shadow-sm rounded mb-4 p-2">
                 <div class="container">
-                    <div class="row g-1">
+                    <div class="row g-1 ">
                         <!-- format cours -->
                         <div class="col-md-4 position-relative">
                             <div class="form-check">
