@@ -5,10 +5,42 @@
 {% block content %}
 
 <!-- Carousel début -->
-
+<div class="container-fluid p-0 mb-5">
+    <div class="owl-carousel header-carousel position-relative" style="z-index: 1;">
+        <div class="owl-carousel-item position-relative">
+            <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24, 29, 56, .7);">
+                <div class="container">
+                    <div class="row justify-content-start">
+                        <div class="col-sm-10 col-lg-8">
+                            <h5 class="text-primary text-uppercase mb-3 animated slideInDown">Cours particulier pour tous les niveaux</h5>
+                            <h4 class="display-5 text-white animated slideInDown">La transparence d'une plateforme pour un contrôle total</h4>
+                            <p class="fs-5 text-white mb-4 pb-2">Nos professeurs particuliers, recrutés et certifiés, vous accompagnent au quotidien, partout, vers la réussite et l’excellence.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="owl-carousel-item position-relative">
+            <img class="img-fluid" src="{% static 'img/carousel-2.jpg' %}" alt="">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24, 29, 56, .7);">
+                <div class="container">
+                    <div class="row justify-content-start">
+                        <div class="col-sm-10 col-lg-8">
+                            <h5 class="text-primary text-uppercase mb-3 animated slideInDown">À VOS CÔTÉS POUR RÉUSSIR</h5>
+                            <h4 class="display-5 text-white animated slideInDown">Nos solutions selon vos objectifs</h4>
+                            <p class="fs-5 text-white mb-4 pb-2">Nos enseignants créent un environnement bienveillant et encourageant où chaque élève est valorisé et reprend confiance.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Carousel fin -->
 
 <!-- Cherchez votre prof début -->
+ 
 <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'index' %}" id="index_id">
     {% csrf_token %}
     <div class="container-fluid p-0 mb-5">
@@ -121,36 +153,6 @@
                             </div>
                         </div>
                     </div>                        
-                </div>
-            </div>
-        </div>
-        <div class="owl-carousel header-carousel position-relative" style="z-index: 1;">
-            <div class="owl-carousel-item position-relative">
-                <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24, 29, 56, .7);">
-                    <div class="container">
-                        <div class="row justify-content-start">
-                            <div class="col-sm-10 col-lg-8">
-                                <h5 class="text-primary text-uppercase mb-3 animated slideInDown">Cours particulier pour tous les niveaux</h5>
-                                <h4 class="display-5 text-white animated slideInDown">La transparence d'une plateforme pour un contrôle total</h4>
-                                <p class="fs-5 text-white mb-4 pb-2">Nos professeurs particuliers, recrutés et certifiés, vous accompagnent au quotidien, partout, vers la réussite et l’excellence.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="owl-carousel-item position-relative">
-                <img class="img-fluid" src="{% static 'img/carousel-2.jpg' %}" alt="">
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24, 29, 56, .7);">
-                    <div class="container">
-                        <div class="row justify-content-start">
-                            <div class="col-sm-10 col-lg-8">
-                                <h5 class="text-primary text-uppercase mb-3 animated slideInDown">À VOS CÔTÉS POUR RÉUSSIR</h5>
-                                <h4 class="display-5 text-white animated slideInDown">Nos solutions selon vos objectifs</h4>
-                                <p class="fs-5 text-white mb-4 pb-2">Nos enseignants créent un environnement bienveillant et encourageant où chaque élève est valorisé et reprend confiance.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
