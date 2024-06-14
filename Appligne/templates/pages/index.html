@@ -10,10 +10,9 @@
 
 <!-- Cherchez votre prof début -->
 <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'index' %}" id="index_id">
-    <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
     {% csrf_token %}
     <div class="container-fluid p-0 mb-5">
-        <div class="container container-recherche position-absolute top-1 bottom-0 start-50 translate-middle-x">
+        <div class="container container-recherche position-absolute top-1 bottom-0 start-50 translate-middle-x" style="z-index: 10;">
             <div class="col-md-12">
                 {% include 'partials/_alerts.html' %}
             </div>
@@ -125,7 +124,7 @@
                 </div>
             </div>
         </div>
-        <div class="owl-carousel header-carousel position-relative">
+        <div class="owl-carousel header-carousel position-relative" style="z-index: 1;">
             <div class="owl-carousel-item position-relative">
                 <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
                 <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(24, 29, 56, .7);">
@@ -157,6 +156,7 @@
         </div>
     </div>
 </form>
+
 <!--Cherchez votre prof fin -->
 <!-- Service début -->
 <div class="container-xxl py-5">
