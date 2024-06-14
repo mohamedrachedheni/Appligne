@@ -154,10 +154,10 @@
 
 
 /*** Header carousel ***/
-@media (max-width: 768px) {
+@media (max-width: 968px) {
     .header-carousel .owl-carousel-item {
         position: relative;
-        min-height: 500px;
+        min-height: 800px;
     }
     
     .header-carousel .owl-carousel-item img {
