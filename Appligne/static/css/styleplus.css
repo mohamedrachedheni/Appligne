@@ -46,5 +46,21 @@
 /* changer height: auto à 500px  */
 .owl-carousel.header-carousel img {
     width: 100%; /* Assure que les images remplissent entièrement le conteneur */
-    height: 500px;; /* Pour préserver les proportions auto */
+    height: 720px;; /* Pour préserver les proportions auto */
+}
+
+
+/* arrière plan*/
+.owl-carousel {
+    position: relative;
+    z-index: 1 !important;
+}
+
+/* .container-recherche {
+    position: relative;
+    z-index: 2 !important;
+} */
+
+.container-recherche {
+    background-color: rgba(159, 237, 232, 0.2); /* Couleur blanche avec 50% de transparence */
 }
