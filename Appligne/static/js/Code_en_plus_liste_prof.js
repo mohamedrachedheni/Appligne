@@ -94,8 +94,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Ajoute un événement 'change' et 'touchstart' à chaque case à cocher
+        // Ajoute un événement 'change', 'click', et 'touchstart' à chaque case à cocher
         checkbox.addEventListener('change', handleCheckboxChange);
+        checkbox.addEventListener('click', handleCheckboxChange);
         checkbox.addEventListener('touchstart', handleCheckboxChange);
     });
 });
