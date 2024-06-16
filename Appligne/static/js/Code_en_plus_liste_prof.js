@@ -85,12 +85,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Sélectionne toutes les cases à cocher avec la classe 'form-check-input'
     const checkboxes = document.querySelectorAll('.form-check-input');
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function(event) {
+        // Fonction pour gérer le changement de case à cocher
+        function handleCheckboxChange(event) {
             checkboxes.forEach(input => {
                 if (input !== checkbox) {
                     input.checked = false;
                 }
             });
-        });
+        }
+
+        // Ajoute un événement 'change' et 'touchstart' à chaque case à cocher
+        checkbox.addEventListener('change', handleCheckboxChange);
+        checkbox.addEventListener('touchstart', handleCheckboxChange);
     });
 });
