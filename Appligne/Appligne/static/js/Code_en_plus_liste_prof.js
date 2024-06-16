@@ -1,4 +1,4 @@
-/*********************** http://localhost:8000/liste_prof début **************************** */
+/*********************** http://localhost:8000/liste_prof  début **************************** */
 
 // Fonction pour modifier le texte en fonction de la réduction d'impôts
 function toggleText() {
@@ -20,7 +20,7 @@ function toggleText() {
     }
 }
 
-/*********************** http://localhost:8000/liste_prof fin **************************** */
+/*********************** http://localhost:8000/liste_prof  fin **************************** */
 
 // Fonction pour mettre à jour la valeur de l'input lorsque l'utilisateur sélectionne un élément dans la liste déroulante
 function updateInputValue(event) {
@@ -42,12 +42,6 @@ document.addEventListener('DOMContentLoaded', function () {
             dropdown.style.display = 'block';
             event.stopPropagation();
         });
-
-        input.addEventListener('touchstart', function(event) {
-            const dropdown = input.parentElement.querySelector('.dropdown-menu');
-            dropdown.style.display = 'block';
-            event.stopPropagation();
-        });
     });
 
     // Mettre à jour l'input lorsqu'un élément de la liste déroulante est cliqué
@@ -57,24 +51,10 @@ document.addEventListener('DOMContentLoaded', function () {
             updateInputValue(event);
             event.preventDefault();
         });
-
-        item.addEventListener('touchstart', function(event) {
-            updateInputValue(event);
-            event.preventDefault();
-        });
     });
 
     // Masquer le menu déroulant lorsqu'on clique en dehors
     document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('.dropdown-menu');
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-    });
-
-    document.addEventListener('touchstart', function(event) {
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
             if (!dropdown.contains(event.target)) {
@@ -92,25 +72,10 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("liste_prof_id").submit(); 
     });
 
-    dropdownRegion.addEventListener("touchstart", function(event) {
-        event.preventDefault(); 
-        const selectedRegion = event.target.getAttribute("data-value");
-        document.getElementById("region_id").value = selectedRegion; 
-        document.getElementById("liste_prof_id").submit(); 
-    });
-
     // Actualiser le formulaire lorsqu'une case est cochée
     const checkboxes = document.querySelectorAll('.form-check-input');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function(event) {
-            checkboxes.forEach(input => {
-                if (input !== checkbox) {
-                    input.checked = false;
-                }
-            });
-        });
-
-        checkbox.addEventListener('touchstart', function(event) {
             checkboxes.forEach(input => {
                 if (input !== checkbox) {
                     input.checked = false;
