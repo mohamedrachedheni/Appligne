@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     inputs.forEach(input => {
         // Ajoute un événement 'click' et 'touchstart' à chaque input
         input.addEventListener('click', toggleDropdown);
-        input.addEventListener('touchstart', toggleDropdown);
+        // input.addEventListener('touchstart', toggleDropdown);
     });
 
     // Sélectionne tous les éléments de la liste déroulante
@@ -31,10 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
             updateInputValue(event);
             event.preventDefault();
         });
-        item.addEventListener('touchstart', function(event) {
-            updateInputValue(event);
-            event.preventDefault();
-        });
+        // item.addEventListener('touchstart', function(event) {
+        //     updateInputValue(event);
+        //     event.preventDefault();
+        // });
     });
 
     // Ajoute un événement 'click' au document pour masquer les menus déroulants lorsque l'utilisateur clique en dehors
@@ -48,14 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Ajoute un événement 'touchstart' au document pour masquer les menus déroulants lorsque l'utilisateur touche en dehors
-    document.addEventListener('touchstart', function(event) {
-        const dropdowns = document.querySelectorAll('.dropdown-menu');
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-    });
+    // document.addEventListener('touchstart', function(event) {
+    //     const dropdowns = document.querySelectorAll('.dropdown-menu');
+    //     dropdowns.forEach(dropdown => {
+    //         if (!dropdown.contains(event.target)) {
+    //             dropdown.style.display = 'none';
+    //         }
+    //     });
+    // });
 
     // Sélectionne le menu déroulant de la région
     const dropdownRegion = document.getElementById("dropdownMenu_region_id");
@@ -81,6 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Ajoute un événement 'change', 'click', et 'touchstart' à chaque case à cocher
         checkbox.addEventListener('change', handleCheckboxChange);
         checkbox.addEventListener('click', handleCheckboxChange);
-        checkbox.addEventListener('touchstart', handleCheckboxChange);
+        // checkbox.addEventListener('touchstart', handleCheckboxChange);
     });
 });
