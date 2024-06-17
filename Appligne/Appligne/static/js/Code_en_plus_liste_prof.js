@@ -37,15 +37,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Ajoute un événement 'click' au document pour masquer les menus déroulants lorsque l'utilisateur clique en dehors
-    document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('.dropdown-menu');
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-    });
+    // // Ajoute un événement 'click' au document pour masquer les menus déroulants lorsque l'utilisateur clique en dehors
+    // document.addEventListener('click', function(event) {
+    //     const dropdowns = document.querySelectorAll('.dropdown-menu');
+    //     dropdowns.forEach(dropdown => {
+    //         if (!dropdown.contains(event.target)) {
+    //             dropdown.style.display = 'none';
+    //         }
+    //     });
+    // });
 
     // Sélectionne le menu déroulant de la région
     const dropdownRegion = document.getElementById("dropdownMenu_region_id");
