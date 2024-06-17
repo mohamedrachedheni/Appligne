@@ -15,17 +15,6 @@ document.addEventListener('DOMContentLoaded', function () {
         event.stopPropagation();
     }
 
-    // Fonction pour mettre à jour la valeur de l'input lorsqu'un élément dans la liste déroulante est sélectionné
-    function updateInputValue(event) {
-        const input = event.target.closest('.dropdown').querySelector('input[type="text"]');
-        const selectedValue = event.target.getAttribute('data-value');
-        input.value = selectedValue;
-        
-        // Masque le menu déroulant après la sélection
-        const dropdown = event.target.closest('.dropdown-menu');
-        dropdown.style.display = 'none';
-    }
-
     // Sélectionne tous les inputs de type "text"
     const inputs = document.querySelectorAll('input[type="text"]');
     inputs.forEach(input => {
