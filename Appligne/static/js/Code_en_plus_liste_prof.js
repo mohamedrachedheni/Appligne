@@ -1,43 +1,59 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Fonction pour afficher ou masquer le menu déroulant
-    function toggleDropdown(event) {
-        const dropdown = event.currentTarget.parentElement.querySelector('.dropdown-menu');
-        const isDropdownVisible = dropdown.style.display === 'block';
-        
-        // Masque tous les autres menus déroulants
-        const dropdowns = document.querySelectorAll('.dropdown-menu');
-        dropdowns.forEach(d => {
-            d.style.display = 'none';
-        });
+/*********************** http://localhost:8000/liste_prof  début **************************** */
 
-        // Affiche ou masque le menu déroulant actuel en fonction de son état
-        dropdown.style.display = isDropdownVisible ? 'none' : 'block';
-        event.stopPropagation();
+// Fonction pour modifier le texte en fonction de la réduction d'impôts
+function toggleText() {
+    const priceText = document.getElementById("priceText");
+    const prixParHeureElements = document.querySelectorAll(".prix_par_heure");
+
+    for (let i = 0; i < prixParHeureElements.length; i++) {
+        const prixActuel = parseFloat(prixParHeureElements[i].innerHTML);
+        const nouveauPrix01 = prixActuel * 0.5;
+        const nouveauPrix02 = prixActuel * 2;
+
+        if (document.getElementById("flexSwitchCheckChecked").checked) {
+            priceText.innerHTML = "Prix <b>après</b> réduction d'impôts";
+            prixParHeureElements[i].innerHTML = nouveauPrix01.toFixed(2);
+        } else {
+            priceText.innerHTML = "Prix <b>avant</b> réduction d'impôts";
+            prixParHeureElements[i].innerHTML = nouveauPrix02.toFixed(2);
+        }
     }
+}
 
-    // Sélectionne tous les inputs de type "text"
+/*********************** http://localhost:8000/liste_prof  fin **************************** */
+
+// Fonction pour mettre à jour la valeur de l'input lorsque l'utilisateur sélectionne un élément dans la liste déroulante
+function updateInputValue(event) {
+    const inputId = event.target.closest('.dropdown').querySelector('input[type="text"]').id;
+    const selectedValue = event.target.getAttribute('data-value');
+    document.getElementById(inputId).value = selectedValue;
+    const dropdown = event.target.closest('.dropdown-menu');
+    dropdown.style.display = 'none';
+}
+
+// Gestion des événements
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Afficher le menu déroulant lorsqu'un input est cliqué
     const inputs = document.querySelectorAll('input[type="text"]');
     inputs.forEach(input => {
-        // Ajoute un événement 'click' et 'touchstart' à chaque input
-        input.addEventListener('click', toggleDropdown);
-        // input.addEventListener('touchstart', toggleDropdown);
+        input.addEventListener('click', function(event) {
+            const dropdown = input.parentElement.querySelector('.dropdown-menu');
+            dropdown.style.display = 'block';
+            event.stopPropagation();
+        });
     });
 
-    // Sélectionne tous les éléments de la liste déroulante
+    // Mettre à jour l'input lorsqu'un élément de la liste déroulante est cliqué
     const dropdownItems = document.querySelectorAll('ul.dropdown-menu a.dropdown-item');
     dropdownItems.forEach(item => {
-        // Ajoute un événement 'click' et 'touchstart' à chaque élément de la liste déroulante
         item.addEventListener('click', function(event) {
             updateInputValue(event);
             event.preventDefault();
         });
-        // item.addEventListener('touchstart', function(event) {
-        //     updateInputValue(event);
-        //     event.preventDefault();
-        // });
     });
 
-    // Ajoute un événement 'click' au document pour masquer les menus déroulants lorsque l'utilisateur clique en dehors
+    // Masquer le menu déroulant lorsqu'on clique en dehors
     document.addEventListener('click', function(event) {
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
@@ -47,17 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Ajoute un événement 'touchstart' au document pour masquer les menus déroulants lorsque l'utilisateur touche en dehors
-    // document.addEventListener('touchstart', function(event) {
-    //     const dropdowns = document.querySelectorAll('.dropdown-menu');
-    //     dropdowns.forEach(dropdown => {
-    //         if (!dropdown.contains(event.target)) {
-    //             dropdown.style.display = 'none';
-    //         }
-    //     });
-    // });
-
-    // Sélectionne le menu déroulant de la région
+    // Soumettre le formulaire lorsqu'un élément de la liste déroulante est cliqué
     const dropdownRegion = document.getElementById("dropdownMenu_region_id");
     dropdownRegion.addEventListener("click", function(event) {
         event.preventDefault(); 
@@ -66,21 +72,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("liste_prof_id").submit(); 
     });
 
-    // Sélectionne toutes les cases à cocher avec la classe 'form-check-input'
+    // Actualiser le formulaire lorsqu'une case est cochée
     const checkboxes = document.querySelectorAll('.form-check-input');
     checkboxes.forEach(checkbox => {
-        // Fonction pour gérer le changement de case à cocher
-        function handleCheckboxChange(event) {
+        checkbox.addEventListener('change', function(event) {
             checkboxes.forEach(input => {
                 if (input !== checkbox) {
                     input.checked = false;
                 }
             });
-        }
-
-        // Ajoute un événement 'change', 'click', et 'touchstart' à chaque case à cocher
-        checkbox.addEventListener('change', handleCheckboxChange);
-        checkbox.addEventListener('click', handleCheckboxChange);
-        // checkbox.addEventListener('touchstart', handleCheckboxChange);
+        });
     });
 });
