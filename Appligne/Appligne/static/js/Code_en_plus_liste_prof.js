@@ -1,43 +1,17 @@
-/*********************** http://localhost:8000/liste_prof  début **************************** */
-
-// Fonction pour modifier le texte et les prix en fonction de la réduction d'impôts
-function toggleText() {
-    const priceText = document.getElementById("priceText");
-    const prixParHeureElements = document.querySelectorAll(".prix_par_heure");
-
-    for (let i = 0; i < prixParHeureElements.length; i++) {
-        const prixActuel = parseFloat(prixParHeureElements[i].innerHTML);
-        const nouveauPrix01 = prixActuel * 0.5;
-        const nouveauPrix02 = prixActuel * 2;
-
-        if (document.getElementById("flexSwitchCheckChecked").checked) {
-            priceText.innerHTML = "Prix <b>après</b> réduction d'impôts";
-            prixParHeureElements[i].innerHTML = nouveauPrix01.toFixed(2);
-        } else {
-            priceText.innerHTML = "Prix <b>avant</b> réduction d'impôts";
-            prixParHeureElements[i].innerHTML = nouveauPrix02.toFixed(2);
-        }
-    }
-}
-
-/*********************** http://localhost:8000/liste_prof  fin **************************** */
-
-// Fonction pour mettre à jour la valeur de l'input lorsqu'un élément dans la liste déroulante est sélectionné
-function updateInputValue(event) {
-    const inputId = event.target.closest('.dropdown').querySelector('input[type="text"]').id;
-    const selectedValue = event.target.getAttribute('data-value');
-    document.getElementById(inputId).value = selectedValue;
-    const dropdown = event.target.closest('.dropdown-menu');
-    dropdown.style.display = 'none';
-}
-
-// Gestion des événements
-
 document.addEventListener('DOMContentLoaded', function () {
-    // Fonction pour afficher le menu déroulant
-    function showDropdown(event) {
+    // Fonction pour afficher ou masquer le menu déroulant
+    function toggleDropdown(event) {
         const dropdown = event.currentTarget.parentElement.querySelector('.dropdown-menu');
-        dropdown.style.display = 'block';
+        const isDropdownVisible = dropdown.style.display === 'block';
+        
+        // Masque tous les autres menus déroulants
+        const dropdowns = document.querySelectorAll('.dropdown-menu');
+        dropdowns.forEach(d => {
+            d.style.display = 'none';
+        });
+
+        // Affiche ou masque le menu déroulant actuel en fonction de son état
+        dropdown.style.display = isDropdownVisible ? 'none' : 'block';
         event.stopPropagation();
     }
 
@@ -45,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputs = document.querySelectorAll('input[type="text"]');
     inputs.forEach(input => {
         // Ajoute un événement 'click' et 'touchstart' à chaque input
-        input.addEventListener('click', showDropdown);
-        input.addEventListener('touchstart', showDropdown);
+        input.addEventListener('click', toggleDropdown);
+        input.addEventListener('touchstart', toggleDropdown);
     });
 
     // Sélectionne tous les éléments de la liste déroulante
