@@ -36,13 +36,13 @@
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
-                    <div class="container bg-light  ">
+                    <!-- <div class="container bg-light  "> -->
                         <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu_prof' %}">
                             {% csrf_token %}
                             
                             <!-- parcours scolaire debut -->
-                            <div class="container-xxl py-5 " >
-                                <div class="container bg-light ">
+                            <div class="container-xxl py-5 bg-light " >
+                                <!-- <div class="container bg-light "> -->
                                     <!-- <div class="container bg-light "> -->
                                         <!-- <div class="container bg-light "> -->
                                         {% for email in emails %}
@@ -74,10 +74,10 @@
                                             </div>
                                         {% endfor %}
                                     <!-- </div> -->
-                                </div>
+                                <!-- </div> -->
                             </div>
                         </form>
-                    </div>
+                    <!-- </div> -->
                 </div>
             </div> 
         </div>
