@@ -46,7 +46,7 @@
                                     <!-- <div class="container bg-light "> -->
                                         <!-- <div class="container bg-light "> -->
                                         {% for email in emails %}
-                                            <div class="row  "  >
+                                            <div class="row  " style="margin-bottom: 30px;">
                                                 <div class="col-md-2 col-sm-12 position-relative ">
                                                     <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
                                                     <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" >

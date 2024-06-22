@@ -45,7 +45,7 @@
                                 <div class="container bg-light">
                                     <!-- <div class="container bg-light "> -->
                                         {% for email_detaille in email_detailles %}
-                                            <div class="row  "  >
+                                            <div class="row  " style="margin-bottom: 30px;" >
                                                 <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="eleve_id_{{ forloop.counter }}" class="form-label">Élève</label>
                                                     <input type="text" class="form-control form-control-intitule" id="eleve_id_{{ forloop.counter }}"  value="{{email_detaille.user_nom}}" >
