@@ -42,28 +42,28 @@
                             
                             <!-- parcours scolaire debut -->
                             <div class="container-xxl py-5 " >
-                                <div class="container">
-                                    <div class="container bg-light ">
-                                        <div class="container bg-light ">
+                                <div class="container bg-light">
+                                    <!-- <div class="container bg-light "> -->
+                                        <!-- <div class="container bg-light "> -->
                                         {% for email in emails %}
-                                            <div class="row  ajout-dipl p3 py-3"  >
-                                                <div class="col-lg-2 position-relative ">
+                                            <div class="row  ajout-dipl p3 "  >
+                                                <div class="col-md-2 col-sm-12 position-relative ">
                                                     <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
                                                     <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" >
                                                 </div>
-                                                <div class="col-lg-6 position-relative">
+                                                <div class="col-md-6 col-sm-12 position-relative">
                                                     <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
                                                     <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" >
                                                 </div>
-                                                <div class="col-lg-4 position-relative">
+                                                <div class="col-md-4 col-sm-12 position-relative">
                                                     <div class="row  ajout-dipl p3">
                                                         <label for="first_name_id_{{ forloop.counter }}" class="form-label">Elève</label>
-                                                        <div class="col-lg-8 position-relative">
+                                                        <div class="col-md-8 col-sm-12 position-relative">
                                                 
                                                             <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
                                                                 value="{{email.user.first_name}}  {{email.user.last_name}}">
                                                         </div>
-                                                        <div class="col-lg-4 position-relative">
+                                                        <div class="col-md-4 col-sm-12 position-relative">
                                                             <a class="btn btn-primary" name="btn_détaille_{{ email.id }}"
                                                                 href="{% url 'demande_cours_recu_eleve' email_id=email.id %}"><span
                                                                     style="color: white;">Détaille <!--{{email.id }}--></span></a>
@@ -73,7 +73,7 @@
                                                 
                                             </div>
                                         {% endfor %}
-                                    </div>
+                                    <!-- </div> -->
                                 </div>
                             </div>                        
                         </form>

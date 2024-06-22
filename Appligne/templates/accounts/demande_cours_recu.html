@@ -42,29 +42,29 @@
                             
                             <!-- parcours scolaire debut -->
                             <div class="container-xxl py-5 " >
-                                <div class="container">
-                                    <div class="container bg-light ">
+                                <div class="container bg-light">
+                                    <!-- <div class="container bg-light "> -->
                                         {% for email_detaille in email_detailles %}
                                             <div class="row  ajout-dipl p3"  >
-                                                <div class="col-lg-3 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="eleve_id_{{ forloop.counter }}" class="form-label">Élève</label>
                                                     <input type="text" class="form-control form-control-intitule" id="eleve_id_{{ forloop.counter }}"  value="{{email_detaille.user_nom}}" >
                                                 </div>
-                                                <div class="col-lg-3 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="intitule_id_{{ forloop.counter }}" class="form-label">Matière</label>
                                                     <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.matiere}}" >
                                                 </div>
-                                                <div class="col-lg-3 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="intitule_id_{{ forloop.counter }}" class="form-label">Niveau</label>
                                                     <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.niveau}}" >
                                                 </div>
-                                                <div class="col-lg-3 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <div class="row ajout-dipl p3">
                                                         <label for="intitule_id_{{ forloop.counter }}" class="form-label">Format cours</label>
-                                                        <div class="col-lg-9 position-relative"> 
+                                                        <div class="col-md-9 col-sm-12 position-relative"> 
                                                             <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}" value="{{email_detaille.format_cours}}" >
                                                         </div>
-                                                        <div class="col-lg-3 position-relative"><a class="btn btn-primary" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
+                                                        <div class="col-md-3 col-sm-12 position-relative"><a class="btn btn-primary" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
                                                                     style="color: white;">
                                                             Détaille</span></a>
                                                         </div>
@@ -72,7 +72,7 @@
                                                 </div>
                                             </div>
                                         {% endfor %}
-                                    </div>
+                                    <!-- </div> -->
                                 </div>
                             </div>                        
                         </form>
