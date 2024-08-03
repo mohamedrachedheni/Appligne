@@ -64,3 +64,39 @@
 .container-recherche {
     background-color: rgba(159, 237, 232, 0.2); /* Couleur blanche avec 50% de transparence */
 }
+
+
+/* css Oussama begin*/
+
+
+.star {
+    display: inline-block;
+    position: relative;
+    width: 24px;
+    height: 24px;
+}
+
+.star:before {
+    content: '\f005'; /* FontAwesome star */
+    font-family: 'FontAwesome';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: lightgray;
+}
+
+.star:after {
+    content: '\f005'; /* FontAwesome star */
+    font-family: 'FontAwesome';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--star-fill) * 100%);
+    height: 100%;
+    overflow: hidden;
+    color: #37d8f4e7;
+    z-index: 1;
+}
+/*css Oussema end */

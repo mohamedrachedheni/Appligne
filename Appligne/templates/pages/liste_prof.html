@@ -234,7 +234,23 @@
                             </div>    
                             <div class="col-lg-3 wow fadeInUp" data-wow-delay="0.3s">
                                 <div class="row gy-2 gx-4 mb-4">
-                                    <div class="col-sm-12  ">
+                                    <div class="col-sm-12">
+                                        <div class="mb-3">
+                                            <div class="stars" id="stars">
+                                                <div class="star"><small class="fa fa-star"></small></div>
+                                                <div class="star"><small class="fa fa-star"></small></div>
+                                                <div class="star"><small class="fa fa-star"></small></div>
+                                                <div class="star"><small class="fa fa-star"></small></div>
+                                                <div class="star"><small class="fa fa-star"></small></div>
+                                            </div>
+                                            <small id="review-count">(3 avis)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <input type="number" step="0.01" min="0" max="1" class="form-control" id="percentage_id" name="percentage">
+                                        <button class="btn btn-primary" type="button" onclick="updateStars()">Pourcentage</button>
+                                    </div>
+                                    <!-- <div class="col-sm-12  ">
                                         <div class="mb-3">
                                             <small class="fa fa-star text-primary"></small>
                                             <small class="fa fa-star text-primary"></small>
@@ -245,8 +261,9 @@
                                         </div>
                                     </div>
                                     <div class="col-sm-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>157 heures dispensées</p>
-                                    </div>
+                                        <input type="text"  class="form-control" id="pourcentatge_id" name="pourcentatge" >
+                                        <button class="btn btn-primary " type="submit" name="btn_pourcentage">Pourcentage</button>
+                                    </div> -->
                                     <div class="col-sm-12">
                                         <!-- les prix ne sont pas encore integres dans la base -->
                                         <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Tarif: <strong>
@@ -297,5 +314,19 @@
 {% block javascript %}
     <script src="{% static 'js/Code_en_plus_liste_prof.js' %}"></script>
     
-    
+    <!-- JS Oussama -->
+    <script>
+         function updateStars() {
+            var percentage = document.getElementById('percentage_id').value;
+            var stars = document.querySelectorAll('#stars .star');
+            var totalStars = 5;
+            var filledStars = percentage * totalStars;
+
+            stars.forEach((star, index) => {
+                var starFill = Math.min(Math.max(filledStars - index, 0), 1);
+                star.style.setProperty('--star-fill', starFill);
+            });
+        }
+    </script>
+
 {% endblock %}
