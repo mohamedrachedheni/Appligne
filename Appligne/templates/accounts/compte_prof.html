@@ -9,46 +9,126 @@
         <div class="container py-5">
             <div class="row justify-content-center">
                 <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
+                    <!-- Header Start -->
+                    <div class="container">
                         <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h4 class="text-center text-white">Gérer mon compte</h4>
                             <h2 class="text-center text-white">Consulter mes élèves</h2>
                         </div>
                     </div>
-                    <!-- header end -->
+                    <!-- Header End -->
                 </div>
             </div>
         </div>
     </div>
     <!-- Header End -->
 
-    <!-- mon compte début -->
+    <!-- Mon compte début -->
     <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- Début sidebar -->
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
+            <!-- Fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-5 p-5">
-                <div class="container p-5">
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                    <div class="container bg-light  p-5">
-                        <form class="row g-3 needs-validation" novalidate>
-
-                        </form>
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="container">
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+                <!-- Services début -->
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="row g-4">
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'liste_seance_cours' %}">
+                                            <img src="{% static 'icon/horloge-murale.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Cours en attentes">
+                                            <h5 class="mb-3">Cours en attentes</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'demande_cours_recu' %}">
+                                            <img src="{% static 'icon/etudier.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Nouvelles demandes">
+                                            <h5 class="mb-3">Nouvelles demandes</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'email_recu_prof' %}">
+                                            <img src="{% static 'icon/publicite-par-e-mail.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Nouveaux émails">
+                                            <h5 class="mb-3">Nouveaux émails</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'liste_declaration_cours' %}">
+                                            <img src="{% static 'icon/money-management.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Cours déclarés">
+                                            <h5 class="mb-3">Cours déclarés</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'liste_mes_eleve' %}">
+                                            <img src="{% static 'icon/presentation.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Liste de mes élèves">
+                                            <h5 class="mb-3">Liste de mes élèves</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'ajouter_cours' %}">
+                                            <img src="{% static 'icon/ajouter_cours.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Ajouter un cours">
+                                            <h5 class="mb-3">Ajouter un cours</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'temoignage_mes_eleves' %}">
+                                            <img src="{% static 'icon/evaluation.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Les témoignages">
+                                            <h5 class="mb-3">Les témoignages</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'profil_prof' id_user=user.id %}">
+                                            <img src="{% static 'icon/utilisateur.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Mon profil">
+                                            <h5 class="mb-3">Mon profil</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div> 
+                <!-- Services fin -->
+            </div>
         </div>
     </div>
-</div>
-    <!-- mon compte fin -->
+    <!-- Mon compte fin -->
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 
 {% endblock %}

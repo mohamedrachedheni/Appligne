@@ -1,24 +1,6 @@
 /*********************** http://localhost:8000/liste_prof  début **************************** */
 
-// Fonction pour modifier le texte en fonction de la réduction d'impôts
-function toggleText() {
-    const priceText = document.getElementById("priceText");
-    const prixParHeureElements = document.querySelectorAll(".prix_par_heure");
 
-    for (let i = 0; i < prixParHeureElements.length; i++) {
-        const prixActuel = parseFloat(prixParHeureElements[i].innerHTML);
-        const nouveauPrix01 = prixActuel * 0.5;
-        const nouveauPrix02 = prixActuel * 2;
-
-        if (document.getElementById("flexSwitchCheckChecked").checked) {
-            priceText.innerHTML = "Prix <b>après</b> réduction d'impôts";
-            prixParHeureElements[i].innerHTML = nouveauPrix01.toFixed(2);
-        } else {
-            priceText.innerHTML = "Prix <b>avant</b> réduction d'impôts";
-            prixParHeureElements[i].innerHTML = nouveauPrix02.toFixed(2);
-        }
-    }
-}
 
 /*********************** http://localhost:8000/liste_prof  fin **************************** */
 
@@ -84,3 +66,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+

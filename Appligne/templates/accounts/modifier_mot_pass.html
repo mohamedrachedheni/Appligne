@@ -1,123 +1,107 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Home{% endblock %}
+{% block title %} | Modifier mot de pass{% endblock %}
 
 {% block content %}
-
-<!-- formulaire créer compte prof début -->
-<!-- method="POST" pour sécuriser les données -->
-<!--<div class="container-xxl py-5 " id="identite">
-    <div class="container ">-->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2 p-5 ">
-            <!-- début sidebar -->
-            {% if request.user.eleve %}
+<div class="row justify-content-center">
+    <div class="col-md-4 col-lg-2 p-5">
+        <!-- Sidebar inclusion based on user role -->
+        {% if request.user.eleve %}
             {% include 'partials/_sidebar_eleve.html' %}
-            {% endif %}
-            {% if request.user.professeur %}
+        {% elif request.user.professeur %}
             {% include 'partials/_sidebar.html' %}
-            {% endif %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- <div class="container-xxl py-1" > -->
-                <div class="container  p-5">
-                    <div class=" text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Modifier vos paramètres de connection</h6>
-                        <h1 class="mb-5">Introduire vos nouveaux coordonnées</h1>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                
-                    <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'modifier_mot_pass' %}"  >
-                        {% csrf_token %}
-                        <div class="container-xxl py-5 " id="identite">
-                            <div class="container ">
-                                <div class="container bg-light  p-5">
-                                    <div class="row g-4">
-                                        <div class="col-md-12 position-relative">
-                                            <label for="user_nom_id" class="form-label">Nom de l'utilisateur </label>
-                                            <!-- autocomplete="off" ne marche pas ?? -->
-                                            <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
-                                            placeholder="Entrez votre ancien nom d'utilisateur ici pour vous identifier" value="{{user_nom}}" autocomplete="new-password">
+        {% endif %}
+    </div>
 
-                                        </div>
-                                        <div class="form-group col-md-12 position-relative">
-                                            <label for="mot_pass_id">Mot de passe</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" placeholder="Entrez votre ancien mot de passe" required value="{{mot_pass}}">
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text password-toggle " onclick="togglePassword('mot_pass_id')">
-                                                        <i class="fas fa-eye input-group-text"></i>
-                                                    </span>
-                                                </div>
-                                            </div>         
-                                        </div>
-                                        <div class="col-md-12 position-relative">
-                                            <label for="nouveau_user_nom_id" class="form-label">Nouveau nom de l'utilisateur </label>
-                                            <!-- autocomplete="off" ne marche pas ?? -->
-                                            <input type="text" class="form-control" id="nouveau_user_nom_id" name="nouveau_user_nom" required
-                                            placeholder="Entrez votre nouveau nom d'utilisateur ici" value="{{nouveau_user_nom}}" autocomplete="off" >
-                                        </div>
-                                        <div class="form-group ol-md-12 position-relative">
-                                            <label for="nouveau_mot_pass_id">Nouveau mot de passe</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="nouveau_mot_pass_id" name="nouveau_mot_pass" placeholder="Entrez votre nouveau mot de passe" required value="{{nouveau_mot_pass}}" >
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text password-toggle " onclick="togglePassword('nouveau_mot_pass_id')">
-                                                        <i class="fas fa-eye input-group-text"></i>
-                                                    </span>
-                                                </div>
-                                            </div>         
-                                        </div>
-                                        <div class="form-group ol-md-12 position-relative">
-                                            <label for="confirmer_mot_pass_id">Confirmez nouveau mot de passe</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="confirmer_mot_pass_id" name="confirmer_mot_pass" placeholder="Confirmez votre nouveau mot de passe" required value="{{confirmer_mot_pass}}" >
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text password-toggle " onclick="togglePassword('confirmer_mot_pass_id')">
-                                                        <i class="fas fa-eye input-group-text"></i>
-                                                    </span>
-                                                </div>
-                                            </div>         
-                                        </div>
-                                        
-                                        <div class="row justify-content-end g-2 p-3 ">
-                                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                                <button type="submit" class="btn btn-warning" name="btn_enr">
-                                                    Enregistrer
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+    <div class="col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container p-5">
+            <!-- Page header -->
+            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="section-title bg-white text-primary px-3">Modifier vos paramètres de connexion</h6>
+                <h1 class="mb-5">Introduire vos nouveaux coordonnées</h1>
+            </div>
+
+            <!-- Alerts inclusion -->
+            <div class="col-md-12">
+                {% include 'partials/_alerts.html' %}
+            </div>
+
+            <!-- Form for modifying login credentials -->
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'modifier_mot_pass' %}">
+                {% csrf_token %}
+                <div class="container bg-light p-5">
+                    <div class="row g-4">
+                        <!-- Username input -->
+                        <div class="col-md-12 position-relative">
+                            <label for="user_nom_id" class="form-label">Nom de l'utilisateur</label>
+                            <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
+                                placeholder="Entrez votre ancien nom d'utilisateur ici pour vous identifier"
+                                value="{{ user_nom }}" autocomplete="new-password">
+                        </div>
+
+                        <!-- Password input with toggle -->
+                        <div class="form-group col-md-12 position-relative">
+                            <label for="mot_pass_id">Mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="mot_pass_id" name="mot_pass"
+                                    placeholder="Entrez votre ancien mot de passe" required value="{{ mot_pass }}">
+                                <div class="input-group-append">
+                                    <span class="input-group-text password-toggle" onclick="togglePassword('mot_pass_id')">
+                                        <i class="fas fa-eye input-group-text"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </form>
+
+                        <!-- New Username input -->
+                        <div class="col-md-12 position-relative">
+                            <label for="nouveau_user_nom_id" class="form-label">Nouveau nom de l'utilisateur</label>
+                            <input type="text" class="form-control" id="nouveau_user_nom_id" name="nouveau_user_nom" required
+                                placeholder="Entrez votre nouveau nom d'utilisateur ici" value="{{ nouveau_user_nom }}" autocomplete="off">
+                        </div>
+
+                        <!-- New Password input with toggle -->
+                        <div class="form-group col-md-12 position-relative">
+                            <label for="nouveau_mot_pass_id">Nouveau mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="nouveau_mot_pass_id" name="nouveau_mot_pass"
+                                    placeholder="Entrez votre nouveau mot de passe" required value="{{ nouveau_mot_pass }}">
+                                <div class="input-group-append">
+                                    <span class="input-group-text password-toggle" onclick="togglePassword('nouveau_mot_pass_id')">
+                                        <i class="fas fa-eye input-group-text"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confirm New Password input with toggle -->
+                        <div class="form-group col-md-12 position-relative">
+                            <label for="confirmer_mot_pass_id">Confirmez le nouveau mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmer_mot_pass_id" name="confirmer_mot_pass"
+                                    placeholder="Confirmez votre nouveau mot de passe" required value="{{ confirmer_mot_pass }}">
+                                <div class="input-group-append">
+                                    <span class="input-group-text password-toggle" onclick="togglePassword('confirmer_mot_pass_id')">
+                                        <i class="fas fa-eye input-group-text"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit button -->
+                        <div class="row justify-content-end g-2 p-3">
+                            <div class="col-lg-1 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-warning" name="btn_enr">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            <!-- </div> -->
+            </form>
         </div>
     </div>
+</div>
 {% endblock %}
+
 {% block javascript %}
-<!--<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
-<script>
-    function togglePassword(fieldId) {
-        var field = document.getElementById(fieldId);
-        var icon = field.nextElementSibling.querySelector('i');
-        if (field.type === "password") {
-            field.type = "text";
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            field.type = "password";
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-</script>
+<script src="{% static 'js/Code_en_plus_modifier_mot_pass.js' %}"></script>
 {% endblock %}

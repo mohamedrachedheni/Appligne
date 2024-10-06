@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import datetime
 
 
 
@@ -185,3 +186,10 @@ EMAIL_PORT = 587  # Port SMTP pour TLS
 EMAIL_HOST_USER = 'prosib25@gmail.com'  # Votre adresse Gmail
 EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
 EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
+
+# Configurer les paramètres JWT
+import datetime
+PASSWORD_JWT = config('PASSWORD_JWT') # Récupération du mot de passe PASSWORD_JWT depuis le fichier .env
+JWT_SECRET = PASSWORD_JWT # your_secret_key
+JWT_ALGORITHM = 'HS256'
+JWT_EXP_DELTA_SECONDS = 3600  # Token expiration time (e.g., 1 hour)

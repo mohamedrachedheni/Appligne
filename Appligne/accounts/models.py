@@ -4,15 +4,14 @@
 # Remarque: l'ordre des class est très important
 ####################################################
 
-from django import forms
 from django.db import models
-from datetime import date, datetime
 from django.contrib.auth.models import User
 from django.db.models import UniqueConstraint
 from django.core.validators import MinValueValidator
 from decimal import Decimal
-
-
+from eleves.models import Eleve
+from datetime import date, datetime
+# from datetime import timedelta
 
 
 class Pays(models.Model):
@@ -33,8 +32,8 @@ class Professeur(models.Model):
         ('Autre', 'Autre'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
     civilite = models.CharField(max_length=10, choices=CIVILITE_CHOICES, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     numero_telephone = models.CharField(max_length=15, blank=True, null=True)
     date_naissance = models.DateField(null=True)
     adresse = models.CharField(max_length=255, null=False)
@@ -306,12 +305,21 @@ class Prof_doc_telecharge(models.Model):
         ordering = ['-date_telechargement']
 
 class Email_telecharge(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    date_telechargement = models.DateField(default=date.today)
-    email_telecharge = models.CharField(max_length=255, null=True, blank=True)  # l'adresse email de l'envoyeur
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # ID de l'expéditeur 
+    date_telechargement = models.DateTimeField(default=date.today)
+    email_telecharge = models.CharField(max_length=255, null=True, blank=True)  # l'adresse email de l'expéditeur
     sujet = models.CharField(max_length=255, null=True, blank=True)
     text_email = models.TextField(null=True, blank=True)
-    user_destinataire = models.IntegerField()  # champ obligatoire du destinataire de l'email
+    user_destinataire = models.IntegerField()  # champ obligatoire du destinataire de l'email 
+    SUIVI_CHOICES = [
+        ('Mis à côté', 'Mis à côté'),
+        ('Réception confirmée', 'Réception confirmée'),
+        ('Répondu', 'Répondu'),
+    ]
+    suivi = models.CharField(max_length=25, choices=SUIVI_CHOICES, null=True)
+    date_suivi = models.DateTimeField(default=date.today)
+    reponse_email_id = models.IntegerField(null=True) # id de email reçu par le user et au quel il a répondu par défaut = null
+    
 
     def __str__(self):
         return f"{self.user.first_name if self.user else 'No User'} {self.user.last_name if self.user else ''} - {self.date_telechargement}"
@@ -326,21 +334,6 @@ class Email_detaille(models.Model):
     niveau = models.CharField(max_length=255, null=True, blank=True) 
     format_cours =models.CharField(max_length=255, null=True, blank=True) 
 
-
-class Email_suivi(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    email = models.ForeignKey(Email_telecharge, on_delete=models.CASCADE)  # id de l'email envoyé par le user
-    SUIVI_CHOICES = [
-        ('Ignorer', 'Ignorer'),
-        ('Réception confirmée', 'Réception confirmée'),
-        ('Répondre', 'Répondre'),
-    ]
-    suivi = models.CharField(max_length=25, choices=SUIVI_CHOICES, null=True)
-    date_suivi = models.DateField(default=date.today)
-    reponse_email_id = models.IntegerField(null=True) # id de email reçu par le user et au quel il a répondu par défaut = null
-
-    def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - {self.date_suivi}"
 
 
 class Prix_heure(models.Model):
@@ -366,3 +359,165 @@ class Prix_heure(models.Model):
             models.UniqueConstraint(fields=['user', 'prof_mat_niv', 'format'], name='prof_mat_niv_format')
         ]
 
+
+class Mes_eleves(models.Model):  # Mes élèves 
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # ID user professeur
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE)  # Relation un à plusieurs avec les élèves
+    is_active = models.BooleanField(default=True)  # Prise en charge en cours
+    remarque = models.CharField(max_length=255, null=True, blank=True)  # Remarque
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'enregistrement
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+
+    def date_modification_formatee(self):
+        return self.date_modification.strftime('%d%m%y')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'eleve'], name='unique_user_eleve')
+        ]
+
+
+
+
+class Cours(models.Model):  # Les cours planifiés par le prof pour l'élève
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
+    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.CASCADE)  # ID de l'élève inscrit dans la table Mes_eleve
+    format_cours = models.CharField(max_length=255, null=True, blank=True)  # Format du cours selon les valeurs près définies ou personalisées
+    matiere = models.CharField(max_length=255, null=True, blank=True)  # matière dans la table matiere ou personalisé
+    niveau = models.CharField(max_length=255, null=True, blank=True)  # niveau dans la table niveau ou personalisé
+    prix_heure = models.FloatField()  # Prix par heure du cours
+    is_active = models.BooleanField(default=True) #  en cours / achevé
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création du cours planifié
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+    def date_modification_formatee(self):
+        return self.date_modification.strftime('%d%m%y')
+
+
+
+class Horaire(models.Model):  # Les horaires des séances du cours planifié par le prof pour l'élève
+    # Définition des différents statuts de la séance du cours
+    EN_ATTENTE = 'en_attente'
+    REALISER = 'realiser'
+    ANNULER = 'annuler'
+
+    # Choix de statuts de la séance
+    STATUS_CHOICES = [
+        (EN_ATTENTE, 'En attente'),
+        (REALISER, 'Réaliser'),
+        (ANNULER, 'Annuler'),
+    ]
+    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
+    date_cours = models.DateField(null=True)  # Date du cours
+    heure_debut = models.TimeField(null=True)  # Heure de début du cours
+    heure_fin = models.TimeField(null=True)  # Heure de fin du cours
+    duree = models.FloatField(null=True, default=1)  # Durée de la séance
+    contenu = models.CharField(max_length=255)  # Contenu du cours
+    statut_cours = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la séance
+    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
+    demande_paiement_id = models.IntegerField(null=True)  # ID du modèle Demande_paiement, si null pas de demande de paiement en cours
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+
+    def set_date_obtenu_from_str(self, date_obtenu_str):
+        if date_obtenu_str:
+            self.date_cours = datetime.strptime(date_obtenu_str, '%d/%m/%Y').date()
+    def set_heure_debut_from_str(self, heure_debut_str):
+        if heure_debut_str:
+            self.heure_debut = datetime.strptime(heure_debut_str, '%H:%M').time()
+
+    def set_heure_fin_from_str(self, heure_fin_str):
+        if heure_fin_str:
+            self.heure_fin = datetime.strptime(heure_fin_str, '%H:%M').time()
+    def __str__(self): # Cette méthode __str__ garantit que, chaque fois que l'objet Horaire est converti en chaîne de caractères, seul l'ID est renvoyé.
+        return str(self.id)
+    def calculer_duree(self):
+        if self.heure_debut and self.heure_fin:
+            # Convertir les heures en datetime pour pouvoir les soustraire
+            datetime_debut = datetime.combine(datetime.today(), self.heure_debut)
+            datetime_fin = datetime.combine(datetime.today(), self.heure_fin)
+            duree = datetime_fin - datetime_debut
+            # Convertir la durée en heures et arrondir à 2 décimales
+            self.duree = round(duree.total_seconds() / 3600, 2)
+        else:
+            self.duree = 1  # valeur par défaut si les heures ne sont pas définies
+
+class Demande_paiement(models.Model):  # Demande de paiement par le prof
+    # Définition des différents statuts de la séance du cours
+    EN_ATTENTE = 'En attente'
+    EN_COURS = 'En cours'
+    REALISER = 'Réaliser'
+    CONTESTER = 'Contester'
+    ANNULER = 'Annuler'
+
+    # Choix de statuts de la demande de paiement
+    STATUS_CHOICES = [
+        (EN_ATTENTE, 'En attente'),
+        (EN_COURS, 'En cours'),
+        (REALISER, 'Réaliser'),
+        (CONTESTER, 'Contester'),
+        (ANNULER, 'Annuler'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
+    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
+    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Eleve
+    montant = models.FloatField()  # Montant à régler
+    email = models.IntegerField(null=True)  # ID de l'email lié à la demande de paiement
+    vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
+    email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
+    statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
+    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+
+
+class Detail_demande_paiement(models.Model):  # Demande de paiement
+    demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
+    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
+    prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
+    horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
+
+class Payment(models.Model):
+    # Définition des différents statuts de paiement
+    EN_ATTENTE = 'pending'
+    APPROUVE = 'approved'
+    ANNULE = 'canceled'
+    INVALIDE = 'invalid'
+
+    # Choix de statuts de paiement
+    STATUS_CHOICES = [
+        (EN_ATTENTE, 'En attente'),
+        (APPROUVE, 'Approuvé'),
+        (ANNULE, 'Annulé'),
+        (INVALIDE, 'Invalide'),
+    ]
+
+    # Champs du modèle Payment
+    model = models.CharField(max_length=255)  # Nom du modèle associé (Table: demande_paiement)
+    model_id = models.IntegerField()  # ID du modèle associé
+    slug = models.CharField(max_length=255)  # Identifiant unique pour le type de paiement envoyé à la passerelle de paiement
+    reference = models.CharField(max_length=255)  # Référence du paiement, identifiant interne de la demande de paiement
+    payment_try = models.IntegerField(default=1)  # Nombre de tentatives de paiement
+    expiration_date = models.DateTimeField()  # Date d'expiration du paiement
+    amount = models.FloatField()  # Montant du paiement
+    currency = models.CharField(max_length=10)  # Devise du paiement
+    source = models.CharField(max_length=255, default='desktop')  # Source du paiement (web / mobile)
+    language = models.CharField(max_length=10)  # Langue utilisée pour le paiement
+    membership_number = models.CharField(max_length=255, null=True, blank=True)  # Numéro d'adhésion, si applicable
+    payment_register_data = models.JSONField(null=True, blank=True)  # Données d'enregistrement du paiement
+    order_id = models.CharField(max_length=255, null=True, blank=True)  # ID de la commande associée
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut du paiement
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date du paiement
+    payment_body = models.JSONField(null=True, blank=True)  # Statut du paiement et autres données après confirmation du client
+
+class Historique_prof(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    date_premier_cours = models.DateField(null=True, blank=True)  # Date de règlement du premier cours
+    date_dernier_cours = models.DateField(null=True, blank=True)  # Date de règlement du dernier cours
+    nb_eleve_inscrit = models.IntegerField(default=0)  # Nombre d'élèves qui ont payé leur cours
+    nb_heure_declare = models.IntegerField(default=0)  # Nombre d'heures de cours payées
+    nb_evaluation = models.IntegerField(default=0)  # Nombre d'évaluations des élèves inscrits
+    total_point_cumule = models.IntegerField(default=0)  # Cumul des points d'évaluation [1, 5]
+    moyenne_point_cumule = models.IntegerField(default=0)  # Moyenne des cumuls des points d'évaluation
+    nb_reponse_demande_cours = models.IntegerField(default=0)  # Cumul des réponses aux demandes de cours (seule les demande de cours aux quelles le prof à répondu son prises en compte)
+    total_cumul_temps_reponse = models.IntegerField(default=0)  # Cumul du temps en secondes écoulé entre la demande de cours et sa réponse
+    moyenne_temps_reponse = models.IntegerField(null=True, blank=True)  # Moyenne des cumuls des points d'évaluation

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Déclaration cours{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <h4 class="text-center text-white">Gérer mon compte</h4>
+                        <h2 class="text-center text-white">Consulter mes élèves</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Mon compte début -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Début sidebar -->
+        {% include 'partials/_sidebar.html' %}
+        <!-- Fin sidebar -->
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">
+                        Etat par élève des déclarations des cours pour règlement
+                    </h6>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+            <div class="container-xxl py-5">
+                <div class="container bg-light p-5">
+                    <div class="row g-1">
+                        {% if request.user.is_authenticated %}
+                            <!-- Liste des cours déclarés -->
+                            {% for enr in cours_declares %}
+                                <div class="col-lg-10 position-relative mb-3">
+                                    <input type="text" class="form-control" id="demande_{{ enr.id }}" 
+                                           name="demande_{{ enr.id }}"
+                                           value="le: {{ enr.date_modification }} -- Elève: {{ enr.mon_eleve.eleve.user.last_name }} {{ enr.mon_eleve.eleve.user.first_name }} -- Montant total: {{ enr.montant|floatformat:2 }} &euro; -- Demande: {{ enr.statut_demande }} -- {% if enr.vue_le %} Vue le: {{enr.vue_le}} {% if enr.email_eleve %}voir email reçu{% else %}Pas d'email reçu{% endif %} {% else %}Non vue{% endif %}"
+                                           readonly>
+                                </div>
+                                <div class="col-lg-2 position-relative mb-3">
+                                    <button type="submit" class="btn btn-warning w-100" name="btn_detaille_{{ enr.id }}">
+                                        Détail
+                                    </button>
+                                </div>
+                                <hr>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+
+{% endblock %}

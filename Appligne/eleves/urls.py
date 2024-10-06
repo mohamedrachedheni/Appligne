@@ -11,4 +11,7 @@ urlpatterns = [
     path('email_recu', views.email_recu, name='email_recu'),
     path('email_detaille/<int:email_id>/', views.email_detaille, name='email_detaille'),
     path('reponse_email_eleve/<int:email_id>/', views.reponse_email_eleve, name='reponse_email_eleve'),
+    path('demande_paiement_recu', views.demande_paiement_recu, name='demande_paiement_recu'),
+    path('detaille_demande_paiement_recu/<int:demande_paiement_id>/', views.detaille_demande_paiement_recu, name='detaille_demande_paiement_recu'),
+    path('temoignage_eleve', views.temoignage_eleve, name='temoignage_eleve'),
 ]

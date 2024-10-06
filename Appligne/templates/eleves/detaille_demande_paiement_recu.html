@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Détaille demande de règlement reçue{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes cours</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Détaille de l'état de demande de règlement</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off">
+                {% csrf_token %}
+                
+                <!-- mon compte début -->
+                <!-- identité et coordonnees debut -->
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="container bg-light p-5">
+                            <div class="row g-1">
+                                {% if request.user.is_authenticated %}
+    <div class="col-md-12 position-relative">
+        <input type="text" class="form-control" id="parent_id" name="parent" readonly
+               value="Professeur: {{ demande_paiement.user.last_name }} {{ demande_paiement.user.first_name }} -- Téléphone: {{ demande_paiement.user.professeur.numero_telephone}} -- Email: {{ demande_paiement.user.email }} -- Montant total demandé: {{ demande_paiement.montant}} €" style="font-weight: bold;" >
+    </div>
+    <div class="col-md-12 position-relative">
+        <input type="text" class="form-control" id="demande_id" name="demande" readonly
+               value="Vue le: {% if demande_paiement.vue_le %} {{ demande_paiement.vue_le}} {% else %} Pas encore {% endif %}; -- Demande : {{ demande_paiement.statut_demande}}; -- Réglement: {% if demande_paiement.payment_id %} Effectué {% else %} Non effectué {% endif %}; -- Date céation de la demande: {{demande_paiement.date_creation}} " style="font-weight: bold;" >
+    </div>
+
+    <!-- Cours déclaré -->
+    
+    {% for enr_cours in cours_declares %}
+
+    <div class="col-md-12 position-relative">
+        <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}" name="cours_{{ forloop.counter }}" readonly
+        value="{{ enr_cours.cours.format_cours }} -- {{ enr_cours.cours.matiere }} -- Niveau: {{ enr_cours.cours.niveau }}" style="font-weight: bold;"  >
+    </div>
+    {% for enr_detaille in detaille_declares %}
+    
+        {% if enr_cours.cours.id == enr_detaille.enr.cours.id %}
+        <div class="col-lg-12 position-relative">
+            <input type="text" class="form-control" id="matiere_id_{{ forloop.counter }}" name="date_debut_{{ enr_cours.cours.id }}" 
+                   value="Le: {{ enr_detaille.enr.horaire.date_cours }} -- Début: {{ enr_detaille.enr.horaire.heure_debut }} -- Fin: {{ enr_detaille.enr.horaire.heure_fin }} -- Durée: {{ enr_detaille.enr.horaire.duree }} -- Prix/H: {{ enr_detaille.enr.prix_heure }} € -- Cours: {{ enr_detaille.enr.horaire.statut_cours }} -- Montant de la séance: {{enr_detaille.montant}} €" readonly>
+        </div>
+        <hr>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+        <div class="col-md-12 position-relative">
+            <label for="sujet_id" class="form-label"><strong>Objet du message envoyé par le professeur</strong></label>
+            <input type="text" class="form-control " id="sujet_id" name="sujet" value="{{ email.sujet }}" readonly>
+        </div>
+        <div class="col-lg-12 col-md-6 justify-content-start ">
+            <label for="text_email_id" class="form-label "><strong>Message joint à la demande de règlement</strong></label>
+            <span><textarea class="form-control profil" id="text_email_id"  name="text_email" style="border:transparent;"
+                   readonly >{{email.text_email}}</textarea></span>
+        </div>
+    
+    
+    <div class="col-md-12 position-relative">
+        <label for="sujet_contestation_id" class="form-label"><strong>Objet de la réponse envoyée par l'élève</strong></label>
+        <input type="text" class="form-control " id="sujet_contestation_id" name="sujet_contestation" value="" >
+    </div>
+    <div class="col-lg-12 col-md-6 justify-content-start ">
+        <label for="text_email_contestation_id" class="form-label "><strong>Réponse de l'élève jointe à la demande de règlement</strong></label>
+        <span><textarea class="form-control profil" id="text_email_contestation_id"  name="text_email_contestation" style="border:transparent;"
+                ></textarea></span>
+    </div>
+    <div class="row justify-content-between g-2 p-3 ">
+        <div class="col-lg-7 position-relative">
+            <button type="submit" class="btn btn-warning" name="btn_contester">
+                Envoyer un émail de contestation
+            </button>
+        </div>
+        <div class="col-lg-5 position-relative">
+            <button type="submit" class="btn btn-warning" name="btn_reglement">
+                Passer au règlement de la demande de paiement
+            </button>
+        </div>
+    </div>
+    
+{% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- identité et coordonnees Fin -->
+            </form>
+            <!-- fin page -->
+        </div>
+    </div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+
+{% endblock %}

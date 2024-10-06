@@ -31,10 +31,10 @@
             {% include 'partials/_alerts.html' %}
         </div>
         <div class="col-md-12">
-            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_eleve' %}">Creer un compte élève</a></h5></h4>
+            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_eleve' %}">Créer un compte élève</a></h5></h4>
         </div>
         <div class="col-md-12">
-            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_prof' %}">Creer un compte professeur</a></h5></h4>
+            <h4 class="alert alert-info text-center" ><a class="text-dark" href="{% url 'nouveau_compte_prof' %}">Créer un compte professeur</a></h5></h4>
         </div>
     </div>
 </div>
@@ -69,8 +69,9 @@
                         </div>         
                     </div>
                     <div class="col-md-12  position-relative">
-                        <label class="form-label" for="souviens_toi_id">Souviens-toi de moi</label>
+                        
                         <input class="form-check-input" type="checkbox" id="souviens_toi_id" name="souviens_toi">
+                        <label class="form-label" for="souviens_toi_id">Souviens-toi de moi</label>
                     </div>
                     
                     <div class="row justify-content-end g-2 p-3 ">
@@ -103,5 +104,10 @@
             icon.classList.add('fa-eye');
         }
     }
+</script>
+<script>
+    window.onload = function() {
+        document.getElementById("user_nom_id").focus();
+    };
 </script>
 {% endblock %}

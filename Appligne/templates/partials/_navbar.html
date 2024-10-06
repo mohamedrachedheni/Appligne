@@ -46,7 +46,7 @@
                     </a>
                 {% elif request.user.eleve %}
                     <a href="{% url 'votre_compte' %}" class="btn btn-primary d-none d-lg-block">
-                        {{ request.user.first_name }} 
+                        {{ request.user.username }} 
                     </a>
                 {% endif %}
             {% else %}

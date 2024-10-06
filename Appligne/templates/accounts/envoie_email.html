@@ -1,0 +1,107 @@
+<!-- achevé le 25/08/2024 -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Envoi d'un email{% endblock %}
+
+{% block content %}
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- Header Start -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h4 class="text-center text-white">Gérer mon compte</h4>
+                    <h2 class="text-center text-white">Consulter mes élèves</h2>
+                </div>
+                <!-- Header End -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Mon compte début -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Début sidebar -->
+        {% include 'partials/_sidebar.html' %}
+        <!-- Fin sidebar -->
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Envoyez une demande de cours</h6>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+        <!-- Début Form-->
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Fichiers prof début -->
+            <div class="container-xxl py-5" id="identite">
+                <div class="container">
+                    <div class="container bg-light p-5">
+                        <div class="row g-4">
+                            <div class="col-12 position-relative">
+                                <label for="email_adresse_id" class="form-label">Votre adresse email</label>
+                                <input type="email" class="form-control" id="email_adresse_id" name="email_adresse"
+                                    value="{{ email_prof }}">
+                            </div>
+                            <div class="col-12 position-relative">
+                                <label for="sujet_id" class="form-label">Sujet de l'email</label>
+                                <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{ sujet }}">
+                            </div>
+                            <div class="col-12 position-relative">
+                                <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
+                                <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" style="height: 400px;">{{ text_email }}</textarea>
+                            </div>
+                            <div class="row justify-content-between g-2 p-3">
+                                <div class="col-lg-2 col-md-4 col-sm-6">
+                                    <a class="btn btn-primary" href="{% url 'compte_prof' %}"><span style="color: white;">Votre compte</span></a>
+                                </div>
+                                <div class="col-lg-1 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-warning" name="btn_enr">
+                                        Envoyer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Fichiers prof Fin -->
+        </form>
+        <!-- Fin Form -->
+    </div>
+</div>
+<!-- Mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+{% endblock %}

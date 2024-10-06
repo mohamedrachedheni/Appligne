@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Modifier compte professeur{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <h4 class="text-center text-white">Gérer mon compte</h4>
+                        <h2 class="text-center text-white">Consulter mes élèves</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Main Content Start -->
+<div class="row justify-content-center">
+    <!-- Sidebar -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">
+                        Les horaires du cours de mon élève
+                    </h6>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Start -->
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Course Details -->
+            <div class="container-xxl py-5">
+                <div class="container bg-light p-5">
+                    <div class="row g-1">
+                        {% if request.user.is_authenticated %}
+                            <!-- Student Information -->
+                            <div class="col-md-12 position-relative">
+                                <p><strong>{{ mon_eleve.eleve.user.last_name }}</strong> <strong>{{ mon_eleve.eleve.user.first_name }}</strong></p>
+                                <input type="text" class="form-control" id="eleve_id_{{ forloop.counter }}"
+                                    name="eleve_{{ forloop.counter }}" readonly
+                                    value="[Màj le: {{ mon_eleve.date_modification }}] -- Téléphone: {{ mon_eleve.eleve.numero_telephone }} -- Adresse: {{ mon_eleve.eleve.adresse }}">
+                            </div>
+
+                            <!-- Course Information -->
+                            <div class="col-md-7 position-relative">
+                                <input type="text" class="form-control" id="mon_cours_id" name="mon_cours" readonly
+                                    value="{{ mon_cours.format_cours }} -- {{ mon_cours.matiere }} -- Niveau: {{ mon_cours.niveau }}  -- Prix de l'heure: {{ mon_cours.prix_heure }} €">
+                            </div>
+
+                            <div class="col-lg-3 position-relative">
+                                <button type="submit" class="btn btn-warning" name="btn_prix">
+                                    Modifier prix de l'heure en € =>
+                                </button>
+                            </div>
+
+                            <div class="col-md-2 position-relative">
+                                <input type="text" class="form-control prix-heure" id="prix_heure_id" name="prix_heure"
+                                    value="">
+                            </div>
+
+                            <!-- Class Schedules -->
+                            {% for enr_horaire in enr_horaires %}
+                                <div class="col-lg-2 position-relative">
+                                    <label class="form-label" for="date_id_{{ forloop.counter }}_enr">Date</label>
+                                    <input type="text" class="form-control form-control-date"
+                                        id="date_id_{{ forloop.counter }}" name="date_{{ enr_horaire.id }}"
+                                        value="{{ enr_horaire.date }}">
+                                </div>
+                                <div class="col-md-1 position-relative">
+                                    <label for="debut_enr{{ forloop.counter }}_id" class="form-label">Début</label>
+                                    <input type="text" class="form-control form-control-heure"
+                                        id="debut_{{ forloop.counter }}_id" name="debut_{{ enr_horaire.id }}"
+                                        value="{{ enr_horaire.debut }}" placeholder="00:00">
+                                </div>
+                                <div class="col-md-1 position-relative">
+                                    <label for="fin_enr{{ forloop.counter }}_id" class="form-label">Fin</label>
+                                    <input type="text" class="form-control form-control-heure"
+                                        id="fin_{{ forloop.counter }}_id" name="fin_{{ enr_horaire.id }}"
+                                        value="{{ enr_horaire.fin }}" placeholder="00:00">
+                                </div>
+                                <div class="col-md-4 position-relative">
+                                    <label for="contenu_enr{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
+                                    <input type="text" class="form-control" id="contenu_enr{{ forloop.counter }}_id"
+                                        name="contenu_{{ enr_horaire.id }}" value="{{ enr_horaire.contenu }}">
+                                </div>
+                                <div class="col-lg-4 position-relative">
+                                    <div class="row">
+                                        <label class="form-label" for="statut_enr{{ forloop.counter }}_id">Statut</label>
+                                        <div class="col-lg-6 position-relative">
+                                            <select class="form-select" id="statut_enr{{ forloop.counter }}_id"
+                                                name="statut_{{ enr_horaire.id }}">
+                                                <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
+                                                <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
+                                                <option value="Annuler" {% if enr_horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-3 position-relative">
+                                            <button type="submit" class="btn btn-danger" name="btn_sup_{{ enr_horaire.id }}">
+                                                Sup
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-3 position-relative">
+                                            <button type="submit" class="btn btn-warning" name="btn_modif_{{ enr_horaire.id }}">
+                                                Modif
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                            {% endfor %}
+
+                            <!-- Add More Sessions Button -->
+                            <div class="row justify-content-end g-2 p-3">
+                                <div class="col-lg-4 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-success" name="btn_ajout">
+                                        Ajouter d'autres séances de cours
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Course Details End -->
+        </form>
+        <!-- Form End -->
+    </div>
+</div>
+<!-- Main Content End -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</a>
+
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/Code_en_plus_horaire_cours_mon_eleve.js' %}"></script>
+{% endblock %}

@@ -229,20 +229,22 @@
                     </a>
                 </div>
                 <div class="col-lg-4 col-sm-12">
-                    <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <h5 class="mb-3">Créez votre compte</h5>
-                                <p>Remplissez vos infos de compte en 2 minutes.</p>
+                    <a href="{% url 'nouveau_compte_eleve' %}"">
+                        <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient">
+                            <div class="service-item text-center pt-3">
+                                <div class="p-4">
+                                    <h5 class="mb-3">Créez votre compte</h5>
+                                    <p>Remplissez vos infos de compte en 2 minutes.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 <div class="col-lg-4 col-sm-12">
                     <div class="service-item text-center pt-3">
                         <div class="p-4">
                             <h5 class="mb-3">Réservez votre cours</h5>
-                            <p>Les cours démarreront dans les meilleurs délais et vous permettront d'atteindre vos objectifs.</p>
+                            <p>Envoyez votre demande de cours et démarrez rapidement, afin de progresser vers vos objectifs dans les meilleurs délais.</p>
                         </div>
                     </div>
                 </div>
@@ -288,7 +290,7 @@
                     </div>
                 </div>
                 <div class="btn" data-bs-target="#creerCompteProf" data-bs-toggle="modal">
-                    <a class="btn btn-primary py-3 px-5 mt-2">S’inscrire en tant que prof</a>
+                    <a href="{% url 'nouveau_compte_prof' %}" class="btn btn-primary py-3 px-5 mt-2">S'inscrire en tant que prof</a>
                 </div>
             </div>
         </div>
@@ -304,30 +306,34 @@
             <h1 class="mb-5">La parole de nos élèves mieux que nos propres mots.</h1>
         </div>
         <div class="owl-carousel testimonial-carousel position-relative">
+            {% for temoignage in temoignage_tris %}
             <div class="testimonial-item text-center">
-                <h5 class="mb-0">Stéphanie</h5>
+                <h5 class="mb-0">{{temoignage.user_eleve.username}}</h5>
                 <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0">Professeur très compétent et pédagogue. Enseignant réactif et sérieux. Je le recommande vivement.</p>
+                    <p class="mb-0" style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; ">
+                        {{temoignage.text_eleve|slice:":300" }}
+                    </p>
                 </div>
             </div>
-            <div class="testimonial-item text-center">
+            {% endfor %}
+            <!-- <div class="testimonial-item text-center">
                 <h5 class="mb-0">Kenza</h5>
                 <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0">Actuellement élève en PC, les cours proposés par son prof sont le moyen pour moi d'appliquer et d'approfondir les notions étudiées en cours par le biais d'exercices bien choisis.</p>
+                    <p class="mb-0 temoignage-text">Actuellement élève en PC, les cours proposés par son prof sont le moyen pour moi d'appliquer et d'approfondir les notions étudiées en cours par le biais d'exercices bien choisis.</p>
                 </div>
             </div>
             <div class="testimonial-item text-center">
-                <h5 class="mb-0">Amalia</h5>
+                <h5 class="mb-0 temoignage-text">Amalia</h5>
                 <div class="testimonial-text bg-light text-center p-4">
                     <p class="mb-0">Il est très investi dans son travail et dans la réussite de ses élèves. Il est très pédagogue et à l'écoute. C'est un vrai plaisir de suivre ses méthodes et de progresser à ses côtés !</p>
                 </div>
             </div>
             <div class="testimonial-item text-center">
-                <h5 class="mb-0">Vincent</h5>
+                <h5 class="mb-0 temoignage-text">Vincent</h5>
                 <div class="testimonial-text bg-light text-center p-4">
                     <p class="mb-0">Notre fils est élève de prépa PC. Il rencontrait des difficultés en maths lors de sa première année. L'aide de son prof pendant les vacances d'été et depuis le début de l'année a déjà porté ses fruits. Il se sent plus confiant et a le sentiment d'avoir renforcé sa méthode de travail.</p>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>
@@ -339,4 +345,5 @@
 {% endblock %}
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_liste_prof.js' %}"></script>
+
 {% endblock %}

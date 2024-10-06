@@ -444,3 +444,6 @@
     padding-bottom: 3rem; /* Réduire la hauteur du padding en bas */
 }
 
+.spaced {
+    margin-right: 10px; /* Ajustez cette valeur selon l'espacement désiré */
+}

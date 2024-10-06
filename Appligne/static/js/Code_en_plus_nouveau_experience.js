@@ -141,8 +141,9 @@ function configurerPikaday(indice) {
         var nouveauDiplomeHTML = `
         <div class="${className} p-3" id="supprimer_div_${indice+1}">
                     <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
-                        <label class="form-label" >Principal</label>
+                        
                         <input class="form-check-input check-pricipal" type="checkbox"  id="principal_${indice+1}" name="principal_${indice+1}" >
+                        <label class="form-label" >Principal</label>
                     </div>
                     <div class="col-lg-3 col-md-10 col-sm-10 position-relative">
                         <label class="form-label">Type</label>

@@ -124,7 +124,7 @@
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="parcours_id" class="form-label">Description</label>
-                                    <textarea class="form-control" id="parcours_id" rows="4"
+                                    <textarea class="form-control profil" id="parcours_id" rows="4"
                                         name="parcours">Découvrez davantage sur mon parcours éducatif pour établir une connexion transparente avant toute demande de cours :</textarea>
                                 </div>
                             </div>
@@ -240,7 +240,7 @@
                                 <div class="col-12 position-relative">
                                     <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
                                         pédagogie</label>
-                                    <textarea class="form-control" id="pedagogie_id" rows="4"
+                                    <textarea class="form-control profil " id="pedagogie_id" rows="4"
                                         name="pedagogie">Explorez ma pédagogique et découvrez comment je façonne une expérience d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.</textarea>
                                 </div>
                             </div>
@@ -426,5 +426,21 @@
 
 {% endblock %}
 {% block javascript %}
-    <script src="{% static 'js/Code_en_plus_nouveau_description.js' %}"></script>
+    <script>
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+    <script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    </script>
 {% endblock %}

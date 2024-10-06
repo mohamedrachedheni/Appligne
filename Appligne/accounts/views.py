@@ -1,31 +1,39 @@
-from django.shortcuts import render, redirect
-from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
+from django.contrib import messages, auth
 from django.contrib.auth.models import User
-from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie, Email_telecharge, Email_suivi, Email_detaille, Prix_heure
-import re
-from django.contrib import auth
-# from django.shortcuts import get_object_or_404 #dans le cas ou l' id du professeur ne correspond pas à un enregistrement
-import json
-# from django.urls import reverse
-from django.shortcuts import HttpResponseRedirect
+from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie
+from .models import Email_telecharge, Email_detaille, Prix_heure, Mes_eleves, Cours, Eleve, Horaire, Demande_paiement, Detail_demande_paiement, Historique_prof, Payment
 from datetime import date, datetime
-# from django.utils.timezone import now
+# from datetime import timedelta
 from django.http import JsonResponse
 from django.core.mail import send_mail
+from django.core.validators import validate_email, EmailValidator
+from django.core.files.base import ContentFile
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.conf import settings
+from django.utils import timezone
+# from django.utils import formats
+from django.contrib.auth.hashers import make_password
+# from django.contrib.auth.hashers import  check_password
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from django.urls import reverse
+from googleapiclient.discovery import build
+from decouple import config
+from eleves.models import Eleve, Parent, Temoignage
+from django.db.models import F, Value, CharField
+from django.db.models import F, Value, CharField
+from django.db.models import Func
+from django.db.models import Sum, F, ExpressionWrapper, DurationField, FloatField, fields, DecimalField
+from django.db.models.functions import Concat
+
+
+
+import re
 import os
 import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe)
 import hashlib # convertir le suffixe en une chaîne d'octets
-# image par défaut
-from django.conf import settings
-from django.core.files.base import ContentFile
-import locale
-from django.utils import formats
-from django.contrib.auth.hashers import make_password, check_password
-from decimal import Decimal, InvalidOperation
-
-
-
-
+# import json
+# import locale
 
 
 def is_password_compromised(password):
@@ -48,10 +56,6 @@ def is_password_compromised(password):
                 return True
     # Si le suffixe n'est pas trouvé, le mot de passe n'est pas compromis
     return False
-
-# Test de la fonction is_password_compromised
-# password_test = "password12345"
-# print(is_password_compromised(password_test), "zzzzzzzzzzzzzzzzzzzzzzzzzzz")
 
 
 
@@ -368,13 +372,13 @@ def nouveau_experience(request):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 messages.error(request, "Utilisateur non trouvé.")
-                return redirect('nouveau_experience')
+                return render(request, 'accounts/nouveau_experience.html')
             
             # Liste des expériences dans le request dont le nom commence par: type_
             type_keys = [key for key in request.POST.keys() if key.startswith('type_')]
             if not type_keys: # s'il n'y a pas d'expérience sélectionnée
                 messages.error(request, "Il faut donner au moins une expérience, sinon sélectionnez Débutant(e)")
-                return redirect('nouveau_experience')
+                return render(request, 'accounts/nouveau_experience.html')
             else: # s'il y a au mois une expérience sélectionnée
                 # messages.success(request, f"Nombre d expérience : {len(type_keys)}")
                 # recupérer les données de chaque expérience et les enregistrer
@@ -418,7 +422,7 @@ def nouveau_experience(request):
                                 experience_instance.save()
                                 # messages.success(request, f"L'enregistrement de l'éxpérence {type} : {commentaire} est réussi. {i}")
                                 # messages.error(request, f"Erreur liée à la date du début de l'éxpériencr {type} : {commentaire} ")
-                                return redirect('nouveau_experience')
+                                return render(request, 'accounts/nouveau_experience.html')
                         else: 
                             # on passe au type d'expérience suivant s'il y en a
                             # messages.warning(request, f"Le type d'expérience '{type}' : '{commentaire}' , existe déjà pour cet utilisateur.")
@@ -430,7 +434,7 @@ def nouveau_experience(request):
                 return redirect('modifier_format_cours')
         else:
             messages.error(request, "Il n'y a pas d'utilisateur connecté à son compte.")
-            return redirect('nouveau_experience')
+            return render(request, 'accounts/nouveau_experience.html')
     return render(request, 'accounts/nouveau_experience.html')
 
 
@@ -465,7 +469,7 @@ def nouveau_matiere(request):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 messages.error(request, "Utilisateur non trouvé.")
-                return redirect('nouveau_matiere')
+                return render(request, 'accounts/nouveau_matiere.html')
 
             # Récupérer les listes de matières et de niveaux sélectionnés dans le formulaire
             liste_matieres = [key for key in request.POST.keys() if key.startswith('matiere_')]
@@ -474,7 +478,7 @@ def nouveau_matiere(request):
             # Vérifier si au moins une matière et ses niveaux correspondants ont été sélectionnés
             if not liste_matieres or not liste_niveaux:
                 messages.error(request, "Il faut sélectionner au moins une matière à enseigner et les niveaux correspondants")
-                return redirect('nouveau_matiere')
+                return render(request, 'accounts/nouveau_matiere.html')
 
             # Parcourir chaque matière sélectionnée
             for matiere_key in liste_matieres:
@@ -489,7 +493,7 @@ def nouveau_matiere(request):
                 # Vérifier si la matière existe dans la base de données
                 if not matiere_obj:
                     messages.error(request, f"Matière = '{matiere}' non trouvée. Contactez l'administrateur du site")
-                    return redirect('nouveau_matiere')
+                    return render(request, 'accounts/nouveau_matiere.html')
                 
                 matiere_id = matiere_obj.id
                 # Vérifier si la case à cocher 'principal' est cochée
@@ -515,7 +519,7 @@ def nouveau_matiere(request):
                         niveaux_id.append(niveau_obj.id)
                     except Niveau.DoesNotExist:
                         messages.error(request, f"Niveau = '{niveau_name}' non trouvé. Contactez l'administrateur du site")
-                        return redirect('nouveau_matiere')
+                        return render(request, 'accounts/nouveau_matiere.html')
                 
                 # Sauvegarder les enregistrements Prof_mat_niv pour chaque niveau sélectionné
                 for niveau_id in niveaux_id:
@@ -537,7 +541,7 @@ def nouveau_matiere(request):
         # Si aucun utilisateur connecté n'est trouvé
         else:
             messages.error(request, "Vous devez être connecté pour effectuer cette action.")
-            return redirect('nouveau_matiere')
+            return render(request, 'accounts/nouveau_matiere.html')
 
     # Si la méthode HTTP n'est pas POST
     else:
@@ -574,12 +578,12 @@ def nouveau_zone(request):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 messages.error(request, "Utilisateur non trouvé.")
-                return redirect('nouveau_zone')
+                return render(request, 'accounts/nouveau_zone.html')
             # Récupérer les listes des communes du GET sélectionnées dans le deuxième select name="communes_chx"
             liste_communes = request.POST.getlist('communes_chx')
             if not liste_communes:
                 messages.error(request, "Pas de commune")
-                return redirect('nouveau_zone')
+                return render(request, 'accounts/nouveau_zone.html')
             for commune in liste_communes:
                 # il faut extraire les ID à par et les commune à par car value= id_commune
                 # Extraction de l'id de la commune et du texte de la commune
@@ -673,7 +677,6 @@ def signin(request):
         user_nom = request.POST['user_nom']
         mot_pass = request.POST['mot_pass']
         user = auth.authenticate(username=user_nom, password=mot_pass)
-        #print(user_nom,mot_pass,user,"*************************") pour tester le résultat dans la console
         if user is not None:
             # si la case souvients_toi n'est pas cochée
             if 'souviens_toi' not in request.POST:
@@ -693,8 +696,7 @@ def signin(request):
 
 # *********************** à réviser début  ******************************************
 # ******************************************************************************
-from googleapiclient.discovery import build
-from decouple import config
+
 
 # Importation de la fonction config de decouple pour récupérer les variables d'environnement depuis un fichier .env
 
@@ -772,13 +774,13 @@ def nouveau_description(request):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 messages.error(request, "Utilisateur non trouvé.")
-                return redirect('nouveau_description')
+                return render(request, 'accounts/nouveau_description.html')
             #messages.info(request, "info 1")
             titre  = request.POST.get('titre')
             # teste sur la longueur du titre
             if len(titre)>255:
                 messages.error(request, "Le titre de votre fichier ne doit pas dépasser 255 caractaires.")
-                return redirect('nouveau_description')  # Rediriger si le titre n'est pas valide
+                return render(request, 'accounts/nouveau_description.html')  # Rediriger si le titre n'est pas valide
             #messages.info(request, "info 2")
             parcours  = request.POST.get('parcours')
             pedagogie  = request.POST.get('pedagogie')
@@ -786,7 +788,7 @@ def nouveau_description(request):
             # Vérifier si l'URL est une vidéo YouTube
             if video and not est_url_youtube(video):
                 messages.error(request, "L'URL de la vidéo n'est pas valide.")
-                return redirect('nouveau_description')
+                return render(request, 'accounts/nouveau_description.html')
             #messages.info(request, "info 3")
             if not Pro_fichier.objects.filter(user=user).exists():
                 
@@ -806,7 +808,7 @@ def nouveau_description(request):
                 pro_fichier = Pro_fichier(user=user, titre_fiche=titre, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video)
                 pro_fichier.save()
                 #messages.info(request, "info 4")
-                messages.success(request, "Enregistrement de la description détaillée est modifié avec succé.")
+                messages.success(request, "Enregistrement de la description détaillée est modifié avec succés.")
                 return redirect('nouveau_fichier')  # Rediriger vers l'étape suivante
     #messages.info(request, "info 5")
     return render(request, 'accounts/nouveau_description.html')
@@ -1265,7 +1267,7 @@ def modifier_diplome(request):
                 return redirect('votre_compte')
         except Diplome.DoesNotExist:
             messages.error(request, "Les données des diplômes n'existent pas pour cet utilisateur. Vous devez ajouter vos diplômes avant")
-            return redirect('nouveau_diplome')
+            return render(request, 'accounts/modifier_diplome.html', context)
     else:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
@@ -1476,7 +1478,7 @@ def modifier_matiere(request):
                     prof_mat_niv = Prof_mat_niv(user=user, matiere=matiere_ajout, niveau=niveau_ajout, principal=principal_modif)
                     prof_mat_niv.save()
             if j > 0:messages.info(request, f"Il y a {j} nouveau(x) enregistrement(s), vous devez réviser vos prix par heur pour chaque enregistrement")
-            messages.success(request, "L'enregistrement est achevé avec succé. ")
+            messages.success(request, "L'enregistrement est achevé avec succés. ")
             return redirect('votre_compte')
 
         # Rendu de la page de modification de matières avec le contexte
@@ -1553,10 +1555,6 @@ def modifier_zone(request):
     messages.error(request, "Les données des zones d'activités n'existent pas pour cet utilisateur. Vous devez ajouter vos zones avant.")
     return redirect('nouveau_zone')
 
-# def creer_compte_client(request):
-#     return render(request, 'accounts/creer_compte_client.html')
-
-
 
 def demande_cours_recu(request):
     # Vérification si l'utilisateur est connecté
@@ -1564,186 +1562,253 @@ def demande_cours_recu(request):
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
     
-    user_id = request.user.id
+    user_id = request.user.id # ID prof
     
-    emails = Email_telecharge.objects.filter(user_destinataire=user_id)
+    emails = Email_telecharge.objects.filter(user_destinataire=user_id, suivi__isnull = True) # email destinés aux prof sans réponse
     
-    if not emails:
-        messages.info(request, "Il n'y a pas d'Email envoyé.")
+    if emails.count() == 0:
+        messages.info(request, "Il n'y a pas d'Email nouvellement envoyé.")
         return redirect('votre_compte')
-    
-    email_detailles = Email_detaille.objects.filter(email__in=emails)
-    
-    context = {
-        
-        'email_detailles': email_detailles
-    }
+    # tri enregistrements par ordre décroissant des date_telechargement
+    email_detailles = Email_detaille.objects.filter(email__in=emails).order_by('-email__date_telechargement')
+    context = {'email_detailles': email_detailles}
     
     return render(request, 'accounts/demande_cours_recu.html', context)
     
-    # # Liste des diplômes dans le request dont le nom commence par:'btn_detaiile_' 
-    # btn_detaiile_keys = [key for key in request.POST.keys() if key.startswith('btn_detaiile_')]
-
-
-
-
-
 
 def demande_cours_recu_eleve(request, email_id):
-    user = request.user
-    user_id = user.id
-    # messages.success(request, f"Teste 01. user_id= {user_id}")
-
-    if not user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
-
     email = Email_telecharge.objects.filter(id=email_id).first()
-    
-    context = {
-            'email': email,
-            'email_id': email_id,
-        }
+    context = {'email': email, 'email_id': email_id}
+    user = request.user
 
-    if not email:
+    if not user.is_authenticated: # teste ne nécessaire
+        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
+        return redirect('signin') # Rediriger vers authentification
+
+    if not email: # teste ne nécessaire
         messages.info(request, "Il n'y a pas d'email envoyé.")
-        return redirect('demande_cours_recu')
+        return redirect('demande_cours_recu') # Rediriger vers la page précédente
 
-    if request.method != 'POST':
-        
-        return render(request, 'accounts/demande_cours_recu_eleve.html', context)
-    # messages.success(request, "Teste 01.")
-    if 'btn_ignorer' in request.POST:
-        # messages.success(request, "Teste 02.")
-        Email_suivi.objects.create(user=user, email=email, suivi="Ignorer")
+    # Initialiser le validateur d'email
+    email_validator = EmailValidator()
+
+    if 'btn_ignorer' in request.POST: # bouton Ignorer activé
+        email.suivi = 'Mis à côté'
+        email.date_suivi = date.today()
+        email.save() 
         messages.success(request, "L'email est enregistré en tant qu'email ignoré.")
-        return redirect('compte_prof')
+        return redirect('compte_prof') # Rediriger vers compte professeur
 
-    if 'btn_confirmer' in request.POST:
-        # messages.success(request, "Teste 03.")
-        sujet = "Confirmation de réception"
-        text_email =  f"""
-J'ai bien reçu votre email
-Date de réception:{email.date_telechargement}
-Sujet de l'émail: {email.sujet}
-Contenu de l'émail:
-{email.text_email}
-"""
+    if 'btn_confirmer' in request.POST: # bouton confirmer activé
         email_prof = user.email
         email_eleve = email.email_telecharge
-        eleve_id = email.user.id
-        # messages.success(request, f"L'email_eleve: {email_eleve}.")
-        destinations = ['prosib25@gmail.com', email_eleve]  # Change it to actual destinations
-        # L'envoie de l'email n'est pas obligatoire
-        # try:
-        #     send_mail(
-        #         sujet,
-        #         text_email,
-        #         email_prof,
-        #         destinations,
-        #         fail_silently=False,
-        #     )  
-        # except Exception as e:
-        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-        # messages.success(request, "L'email a été envoyé avec succès.")
-        email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=eleve_id, sujet=sujet )
-        # messages.error(request, "Teste 04 ")
+        sujet = "Confirmation de réception"
+        text_email = f"""
+        J'ai bien reçu votre email
+        Date de réception : {email.date_telechargement}
+        Sujet de l'email : {email.sujet}
+        Contenu de l'email :
+        {email.text_email}
+        """
+        destinations = ['prosib25@gmail.com', email_eleve]
+
+        # Validation de l'email_prof
+        try:
+            email_validator(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse email du professeur est invalide.")
+            return render(request, 'accounts/demande_cours_recu_eleve.html', context)
+
+        # Validation des emails dans destinations
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                return render(request, 'accounts/demande_cours_recu_eleve.html', context)
+
+        try:
+            send_mail(sujet, text_email, email_prof, destinations, fail_silently=False)
+            messages.success(request, "L'email a été envoyé avec succès.")
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+
+        email_telecharge = Email_telecharge(
+            user=user,
+            email_telecharge=email_prof,
+            text_email=text_email,
+            user_destinataire=email.user.id,
+            sujet=sujet
+        )
         email_telecharge.save()
-        Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Réception confirmée", reponse_email_id=email_id)
+
+        email.suivi = 'Réception confirmée'
+        email.date_suivi = date.today()
+        email.reponse_email_id = email_telecharge.id
+        email.save() 
+
         messages.success(request, "Email enregistré")
         return redirect('compte_prof')
+
     if 'btn_repondre' in request.POST:
-        # messages.success(request, "Teste 04.")
-        email_prof = user.email
-        sujet = "Suite à votre email"
-        text_email =  f"""
-Suite à votre email:
-Date de réception:{email.date_telechargement}
-Sujet de l'émail: {email.sujet}
-Contenu de l'émail:
-{email.text_email}
----------------------------
-En réponse à votre email, je vous adresse ce qui suit.
-"""
-        context={
-            'text_email':text_email,
-            'sujet':sujet, 
-            'email_prof':email_prof, 
-            'email_id': email_id }
-        return render(request, 'accounts/reponse_email.html'  , context)
+        return redirect('reponse_email', email_id=email_id) # Redirigze ver page  email_id est transmis à reponse_email
+    
+    if 'btn_historique' in request.POST: # bouton historique activé
+        if not email.reponse_email_id:
+            messages.info(request, "Il n'y a pas de réponse à cet email")
+            return render(request, 'accounts/demande_cours_recu_eleve.html', context) # rediriger vers la même page
+        # rediriger vers la même page mais en changeant l'argument
+        # il faut élaborer une page spéciale pour afficher l'historique des emails
+        return redirect(reverse('demande_cours_recu_eleve', args=[email.reponse_email_id])) # -	ça marche très bien
+    
+    if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
+        return redirect('ajouter_mes_eleve', eleve_id=email.user.id) # Rediriger vers autre page
 
-
-    # Si aucun des cas ci-dessus n'est satisfait, il est recommandé de renvoyer une réponse HTTP par défaut.
-    return redirect('compte_prof')
+    return render(request, 'accounts/demande_cours_recu_eleve.html', context) # Revenir à la même page, le context est nécessaire pout le template
 
 
 
-def reponse_email(request, email_id): # email_id est envoyé par le template demande_cours_recu_eleve.html
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        user = request.user
-        email = Email_telecharge.objects.filter(id=email_id).first()
-        # messages.success(request, "Teste 03.")
+def reponse_email(request, email_id): 
+    email = Email_telecharge.objects.filter(id=email_id).first() # envoyé par l'élève
+    user = request.user
+    text_email = f"""
+        Suite à votre email :
+        Date de réception : {email.date_telechargement}
+        Sujet de l'email : {email.sujet}
+        Contenu de l'email :
+        {email.text_email}
+        ---------------------------
+        En réponse à votre email, je vous adresse ce qui suit.
+        """
+    sujet = "Suite à votre email"
+    email_prof = user.email
+    context={'text_email': text_email, 'sujet': sujet, 'email_prof': email_prof}
+    if 'btn_enr' in request.POST:
+        
+        text_email = request.POST.get('text_email', '').strip()
+        sujet = request.POST.get('sujet', '').strip()
+        email_prof = request.POST.get('email_adresse', '').strip() # la priorité est à l'email reçu du POST
+        if not email_prof: # si l'email du POST est null ou vide
+            email_prof = user.email 
 
-        email_prof = request.POST.get('email_adresse', '').strip()
-        if not email_prof: email_prof = user.email
+        # Validation de l'email_prof
+        email_validator = EmailValidator() #inicialisation de l'objet EmailValidator
+        try:
+            email_validator(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse email du professeur est invalide.")
+            context={'text_email': text_email, 'sujet': sujet, 'email_prof': email_prof}
+            return render(request, 'accounts/reponse_email.html', context) # revenir à la même page
 
-        # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
-        sujet = request.POST.get('sujet', '').strip()  # Obtient la valeur de 'sujet' ou une chaîne vide
-        if not sujet:  # Vérifie si sujet est nul ou une chaîne d'espaces après le strip
+        sujet = request.POST.get('sujet', '').strip() 
+        if not sujet:  
             sujet = "Suite à votre email"
         
         text_email =  request.POST['text_email']
         user_destinataire = email.user.id
         email_eleve = email.email_telecharge
-        # messages.success(request, f"L'email_eleve: {email_eleve}.")
-        destinations = ['prosib25@gmail.com', email_eleve]  # Change it to actual destinations
-        # L'envoie de l'email n'est pas obligatoire
-        # try:
-        #     send_mail(
-        #         sujet,
-        #         text_email,
-        #         email_prof,
-        #         destinations,
-        #         fail_silently=False,
-        #     )
-        # except Exception as e:
-        #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-        # messages.success(request, "La réponse à l'email est envoyée avec succé.")
+        destinations = ['prosib25@gmail.com', email_eleve]  
 
-        email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire, sujet=sujet )
-        # messages.error(request, "Teste 04 ")
-        email_telecharge.save()        
-        Email_suivi.objects.create(user=user, email=email_telecharge, suivi="Répondre", reponse_email_id=email_id)
+        # Validation des emails dans destinations
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
+
+        try:
+            send_mail(
+                sujet,
+                text_email,
+                email_prof,
+                destinations,
+                fail_silently=False,
+            )
+            messages.success(request, "La réponse à l'email a été envoyée avec succès.")
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        
+        # enregistrement de l'email
+        email_telecharge = Email_telecharge(
+            user=user, 
+            email_telecharge=email_prof, 
+            text_email=text_email, 
+            user_destinataire=user_destinataire, 
+            sujet=sujet
+        )
+        email_telecharge.save()
+        # mise à jour de l'enregistrement de l'email envoyé par l'élève
+        email_reponse_id = email_telecharge.id  
+        email.suivi = 'Répondu'
+        email.date_suivi = timezone.now()
+        email.reponse_email_id = email_reponse_id
+        email.save()  
         messages.success(request, "Email enregistré")
-        return redirect('compte_prof')
-    return redirect('reponse_email')
+
+        # passer à historique_prof pour mettre à jour temps moyen de réponse en secondes
+        date_email_eleve_telecharger = email.date_telechargement
+        date_email_prof_reponse = email.date_suivi
+        temps = (date_email_prof_reponse - date_email_eleve_telecharger).total_seconds()
+        historique_prof , created = Historique_prof.objects.get_or_create(user=user)
+
+        historique_prof.total_cumul_temps_reponse += temps
+        historique_prof.nb_reponse_demande_cours += 1
+        historique_prof.save()
+        if historique_prof.total_cumul_temps_reponse and historique_prof.nb_reponse_demande_cours and historique_prof.nb_reponse_demande_cours>0:
+            historique_prof.moyenne_temps_reponse = int(historique_prof.total_cumul_temps_reponse/historique_prof.nb_reponse_demande_cours)
+            historique_prof.save()
+        return redirect('compte_prof') # Rediriger vers compte_prof
+    
+    return render(request, 'accounts/reponse_email.html', context) # revenir sur la même page
+
 
 def email_recu_prof(request):
-    # messages.error(request, "Test 01")
     # Vérification si l'utilisateur est connecté
     if not request.user.is_authenticated:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
     
     user_id = request.user.id
-    # recupérer les email destinés au user
-    emails = Email_telecharge.objects.filter(user_destinataire=user_id)
-    
-    if not emails:
-        messages.info(request, "Il n'y a pas d'Email envoyé à votre compte.")
-        return redirect('votre_compte')
-    
-    
+
+    # Fonction interne pour récupérer les emails en fonction des critères de filtrage
+    def get_emails(filter_criteria):
+        emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
+        if not emails:
+            messages.info(request, "Il n'y a pas d'Email correspondant à votre filtre.")
+        return emails
+
+    # Filtrage par défaut pour les nouveaux emails (emails avec suivi = null)
+    emails = get_emails({'suivi__isnull': True})
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if request.method == 'POST':
+        if 'btn_tous' in request.POST:
+            # Filtrer pour tous les emails
+            emails = get_emails({})
+        elif 'btn_nouveau' in request.POST:
+            # Filtrer pour les nouveaux emails (suivi = null)
+            emails = get_emails({'suivi__isnull': True})
+        elif 'btn_attente' in request.POST:
+            # Filtrer pour les emails en attente (suivi = 'Réception confirmée')
+            emails = get_emails({'suivi': 'Réception confirmée'})
+        elif 'btn_repondu' in request.POST:
+            # Filtrer pour les emails répondus (suivi = 'Répondu')
+            emails = get_emails({'suivi': 'Répondu'})
+        elif 'btn_ignore' in request.POST:
+            # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
+            emails = get_emails({'suivi': 'Mis à côté'})
+
+    # Contexte à passer au template
     context = {
-        
         'emails': emails
     }
     
+    # Rendu de la page avec les emails filtrés
     return render(request, 'accounts/email_recu_prof.html', context)
 
-
 def modifier_mot_pass(request):
-    # Initialize the context dictionary with empty values
+    # Initialiser le dictionnaire de contexte avec des valeurs vides
     context = {
         'user_nom': "",
         'mot_pass': "",
@@ -1752,16 +1817,16 @@ def modifier_mot_pass(request):
         'confirmer_mot_pass': "",
     }
 
-    # Check if the request method is POST and the save button was clicked
+    # Vérifier si la méthode de la requête est POST et si le bouton d'enregistrement a été cliqué
     if request.method == 'POST' and 'btn_enr' in request.POST:
-        # Retrieve form data from the POST request
+        # Récupérer les données du formulaire depuis la requête POST
         user_nom = request.POST['user_nom']
         mot_pass = request.POST['mot_pass']
         nouveau_user_nom = request.POST['nouveau_user_nom']
         nouveau_mot_pass = request.POST['nouveau_mot_pass']
         confirmer_mot_pass = request.POST['confirmer_mot_pass']
 
-        # Update the context with the retrieved form data
+        # Mettre à jour le contexte avec les données du formulaire
         context.update({
             'user_nom': user_nom,
             'mot_pass': mot_pass,
@@ -1770,163 +1835,1206 @@ def modifier_mot_pass(request):
             'confirmer_mot_pass': confirmer_mot_pass,
         })
 
-        # Authenticate the user with the provided username and password
+        # Authentifier l'utilisateur avec le nom d'utilisateur et le mot de passe fournis
         user = auth.authenticate(username=user_nom, password=mot_pass)
         
-        # If user authentication is successful
-        if user is not None:
-            # Check if all new credential fields are filled
-            if nouveau_user_nom and nouveau_mot_pass and confirmer_mot_pass:
-                # Check if the new username is already taken by another user
+        if user is not None:  # Si l'authentification de l'utilisateur réussit
+            # Vérifier que tous les champs nécessaires pour la modification sont remplis
+            if all([nouveau_user_nom, nouveau_mot_pass, confirmer_mot_pass]):
+                # Vérifier si le nouveau nom d'utilisateur est déjà pris
                 if User.objects.filter(username=nouveau_user_nom).exists() and nouveau_user_nom != user_nom:
                     messages.error(request, "Le nom de l'utilisateur est déjà utilisé, donnez un autre nom.")
-                # Check if the new password is at least 8 characters long
+                # Vérifier que le nouveau mot de passe contient au moins 8 caractères
                 elif len(nouveau_mot_pass) < 8:
                     messages.error(request, "Le nouveau mot de passe doit contenir au moins 8 caractères.")
-                # Check if the new password has been compromised in a data breach
+                # Vérifier que le mot de passe n'a pas été compromis dans une violation de données
                 elif is_password_compromised(nouveau_mot_pass):
                     messages.error(request, "Le nouveau mot de passe a été compromis lors d'une violation de données. Veuillez choisir un autre mot de passe.")
-                # Check if the new password matches the confirmation password
+                # Vérifier que le mot de passe confirmé correspond au nouveau mot de passe
                 elif nouveau_mot_pass != confirmer_mot_pass:
                     messages.error(request, "La confirmation du mot de passe n'est pas valide.")
                 else:
-                    # Update the user's username and password
+                    # Mettre à jour le nom d'utilisateur et le mot de passe de l'utilisateur
                     user.username = nouveau_user_nom
                     user.password = make_password(nouveau_mot_pass)
                     user.save()
                     
-                    # Log the user out after the password change
+                    # Déconnecter l'utilisateur après la modification du mot de passe
                     auth.logout(request)
                     
-                    # Inform the user that the password has been successfully changed
+                    # Informer l'utilisateur que la modification du mot de passe a réussi
                     messages.success(request, "Votre mot de passe a été changé avec succès. Veuillez vous reconnecter.")
                     
-                    # Redirect the user to the sign-in page
+                    # Rediriger l'utilisateur vers la page de connexion
                     return redirect('signin')
             else:
-                # If not all required fields are filled, show an error message
                 messages.error(request, "Tous les champs obligatoires doivent être remplis.")
         else:
-            # If user authentication fails, show an error message
             messages.error(request, "Le nom de l'utilisateur ou le mot de passe est invalide.")
 
-    # Render the password modification page with the current context
+    # Rendre la page de modification du mot de passe avec le contexte actuel
     return render(request, 'accounts/modifier_mot_pass.html', context)
+
 
 
 def nouveau_prix_heure(request):
     user = request.user
-    
+
+    # Vérifie si l'utilisateur a défini un format de cours
     try:
         format_cour = Format_cour.objects.get(user=user)
     except Format_cour.DoesNotExist:
         messages.error(request, "Vous n'avez pas encore défini de format pour vos cours.")
         return redirect('compte_prof')
-    
-    
-    prof_mat_niv = Prof_mat_niv.objects.filter(user=user) # les choix prés défini des matières et des niveaux
+
+    # Vérifie si l'utilisateur a défini des matières et niveaux
+    prof_mat_niv = Prof_mat_niv.objects.filter(user=user)
     if not prof_mat_niv:
         messages.error(request, "Vous n'avez pas encore défini de matière pour vos cours.")
         return redirect('compte_prof')
-    
-    liste_format = [] # utilisé dans la difinition des key des name des balises input des prix avec id des prof_mat_niv et la sélection des prix dans le template
-    liste_format_text = [] # utilisé dans la fonction prix_heure_instance
 
-    if format_cour.a_domicile:
-        liste_format.append('a_domicile')
-        liste_format_text.append('Cours à domicile')
-    if format_cour.webcam:
-        liste_format.append('webcam')
-        liste_format_text.append('Cours par webcam')
-    if format_cour.stage:
-        liste_format.append('stage')
-        liste_format_text.append('Stage pendant les vacances')
-    if format_cour.stage_webcam:
-        liste_format.append('stage_webcam')
-        liste_format_text.append('Stage par webcam')
-    
-    prix_heure_qs = Prix_heure.objects.filter(user=user) # anciens enregistrement des prix_heure
-    
-    liste_enregistrements = [] # pour charger les matière, les niveaux, les format cours et les prix s'ils existent et définir les keys des name
-    
-    for format_item in liste_format_text:
+    # Prépare les formats de cours en fonction des choix de l'utilisateur
+    formats = {
+        'a_domicile': 'Cours à domicile',
+        'webcam': 'Cours par webcam',
+        'stage': 'Stage pendant les vacances',
+        'stage_webcam': 'Stage par webcam'
+    }
+    selected_formats = {key: value for key, value in formats.items() if getattr(format_cour, key)}
+
+    # Récupère les prix horaires existants
+    prix_heure_qs = Prix_heure.objects.filter(user=user)
+    liste_enregistrements = []
+
+    # Prépare la liste des enregistrements pour le template
+    for format_key, format_label in selected_formats.items():
         for prof_mat_niveau in prof_mat_niv:
-            id = prof_mat_niveau.id
-            matiere = prof_mat_niveau.matiere
-            niveau = prof_mat_niveau.niveau
-            prix_heure = ""
-            prix_heure_instance = prix_heure_qs.filter(prof_mat_niv=id, format=format_item).first() # car format=format_item teste le texte du champ liste de choix format
-            if prix_heure_instance: # si le prix_heure est déjà défini
-                prix_heure = str(prix_heure_instance.prix_heure)
-            #format_key utilisé pour la sélection par format des couples dans le boucle des prix dans le template 
-            if format_item=="Cours à domicile": format_key="a_domicile"
-            elif format_item=="Cours par webcam": format_key="webcam"
-            elif format_item=="Stage pendant les vacances": format_key="stage"
-            else: format_key="stage_webcam"
-            
-            couple = (id, matiere, niveau, prix_heure, format_key) # un couple pour chaque cas dans le template
-            liste_enregistrements.append(couple)
-    
+            prix_heure = prix_heure_qs.filter(
+                prof_mat_niv=prof_mat_niveau.id, format=format_label).first()
+            prix_heure_value = str(prix_heure.prix_heure) if prix_heure else ""
+            liste_enregistrements.append(
+                (prof_mat_niveau.id, prof_mat_niveau.matiere, prof_mat_niveau.niveau, prix_heure_value, format_key)
+            )
+
     context = {
-        'liste_format': liste_format,
+        'liste_format': list(selected_formats.keys()),
         'liste_enregistrements': liste_enregistrements,
     }
 
+    # Gère la soumission du formulaire pour enregistrer les prix horaires
     if request.method == 'POST' and 'btn_enr' in request.POST:
-        # name="prix_heure-{{id}}__{{ format }}" avec format=format_key et le id pour individualiser name
-        prix_keys = [key for key in request.POST.keys() if key.startswith('prix_heure-')]
         liste_prix_mat_niv_for = []
-        
-        for prix_key in prix_keys:
-            prix = request.POST[prix_key]
-            if not prix:
-                continue
-            prix_str = prix[:-4] # car le prix a pour masque 99,99 E/h
-            try:
-                prix_dec = Decimal(prix_str).quantize(Decimal('0.00'))
-            except (InvalidOperation, ValueError):
-                messages.error(request, f"Erreur lors de la conversion du prix '{prix_str}' en décimal, voir le programmeur")
-                return render(request, 'accounts/nouveau_prix_heure.html', context)
-            if prix_dec < 10:
-                messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés")
-                continue
 
-            mat_niv_id_str = prix_key.split('-')[1].split('__')[0] # extraire id du prix_key entre (- et __)
-            try:
-                mat_niv_id = int(mat_niv_id_str)
-            except ValueError:
-                messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier, voir le programmeur")
-                return render(request, 'accounts/nouveau_prix_heure.html', context)
+        for prix_key, prix in request.POST.items():
+            if prix_key.startswith('prix_heure-') and prix:
+                try:
+                    prix_dec = Decimal(prix[:-4]).quantize(Decimal('0.00'))
+                except (InvalidOperation, ValueError):
+                    messages.error(request, f"Erreur lors de la conversion du prix '{prix[:-4]}' en décimal.")
+                    return render(request, 'accounts/nouveau_prix_heure.html', context)
 
-            format = prix_key.split('__')[1] # pour extraire le format du prix_key après (__)
-            
-            if format == "a_domicile":
-                format_cour = "Cours à domicile"
-            elif format == "webcam":
-                format_cour = "Cours par webcam"
-            elif format == "stage":
-                format_cour = "Stage pendant les vacances"
-            else:
-                format_cour = "Stage par webcam"
-            
-            # stoquer les données reçues du POST das une liste de triplés
-            prix_mat_niv_for = (mat_niv_id, format_cour, prix_dec)
-            liste_prix_mat_niv_for.append(prix_mat_niv_for)
+                if prix_dec < 10:
+                    messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés.")
+                    continue
+
+                mat_niv_id_str, format_key = prix_key.split('-')[1].split('__')
+                try:
+                    mat_niv_id = int(mat_niv_id_str)
+                except ValueError:
+                    messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier.")
+                    return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+                liste_prix_mat_niv_for.append((mat_niv_id, selected_formats[format_key], prix_dec))
 
         if not liste_prix_mat_niv_for:
             messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.")
-            messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés")
             return render(request, 'accounts/nouveau_prix_heure.html', context)
-        
-        Prix_heure.objects.filter(user=user).delete() # supprimer les anciens enregistrement
-        
-        for mat_niv_id, format_cour, prix_dec in liste_prix_mat_niv_for: # enregistrer les nouvaux enregistrements
-            nouveau_enregistrement = Prix_heure(user=user, prof_mat_niv_id=mat_niv_id, format=format_cour, prix_heure=prix_dec)
-            nouveau_enregistrement.save()
-        
-        messages.success(request, "Enregistrement achevé")
-        return redirect('nouveau_prix_heure')
-    
+
+        # Remplace les anciens prix horaires par les nouveaux
+        Prix_heure.objects.filter(user=user).delete()
+        Prix_heure.objects.bulk_create([
+            Prix_heure(user=user, prof_mat_niv_id=mat_niv_id, format=format_label, prix_heure=prix_dec)
+            for mat_niv_id, format_label, prix_dec in liste_prix_mat_niv_for
+        ])
+
+        messages.success(request, "Enregistrement achevé.")
+        return redirect('nouveau_prix_heure') # ça marche très bien
+
     return render(request, 'accounts/nouveau_prix_heure.html', context)
 
 
+def ajouter_mes_eleve(request, eleve_id):
+    user = request.user
+    # Récupérer l'élève et le parent correspondant à l'ID spécifié
+    eleve = get_object_or_404(Eleve, user_id=eleve_id)
+    parent = get_object_or_404(Parent, user_id=eleve_id)
+
+    # Vérifier si l'élève existe déjà dans la table Mes_eleves
+    if Mes_eleves.objects.filter(eleve=eleve, user=user).exists():
+        messages.error(request, "L'élève est déjà dans la liste des élèves inscrits")
+        return redirect('compte_prof')
+
+    # Préparer le contexte pour la vue
+    context = {
+        'eleve': eleve,
+        'parent': parent,
+        'date_actuelle': timezone.now().date(),  # Obtenir la date actuelle
+    }
+
+    # Vérifier si le bouton d'enregistrement est cliqué
+    # Vérifier si le bouton d'enregistrement est cliqué
+    if 'btn_enr' in request.POST:
+        # Ajouter l'élève à la liste des élèves inscrits
+        remarque = request.POST.get('remarque', None)
+        Mes_eleves.objects.create(user=request.user, eleve=eleve, is_active=True, remarque=remarque)
+        messages.success(request, "L'élève est ajouté à la liste des élèves inscrits")
+        
+        # Rediriger vers la vue `ajouter_cours` avec l'ID de l'élève
+        return redirect('ajouter_cours')
+
+    # Rendre le template pour ajouter un élève
+    return render(request, 'accounts/ajouter_mes_eleve.html', context)
+
+def modifier_mes_eleve(request, mon_eleve_id):
+    user = request.user
+    # Récupérer l'élève et le parent correspondant à l'ID spécifié
+    mon_eleve = Mes_eleves.objects.filter(id=mon_eleve_id).first()
+    # Vérifier si l'élève existe déjà dans la table Mes_eleves
+    if not mon_eleve:
+        messages.error(request, "L'élève n'est pas dans la liste des élèves inscrits")
+        return redirect('compte_prof')
+    eleve = get_object_or_404(Eleve, id=mon_eleve.eleve_id) # en d'erreur un message systhème est généré
+    # parent = get_object_or_404(Parent, user_id=eleve.user.id) # à éviter car l'enregistrement n'est pas obligatoire
+    parent = Parent.objects.filter(user_id=eleve.user.id).first() # car il peut ne pas y avoire de parent
+    
+    # Préparer le contexte pour la vue
+    context = {
+        'eleve': eleve,
+        'parent': parent,
+        'date_actuelle': timezone.now().date(),  # Obtenir la date actuelle
+        'mon_eleve': mon_eleve,
+    }
+
+    # Vérifier si le bouton d'enregistrement est cliqué
+    if 'btn_enr' in request.POST:
+        # pour désactiver mon_eleve il faut qu'il n'a pas 
+        #  une demande de règlement en attente ou en cours ou contester
+        if mon_eleve.is_active and not 'is_active' in request.POST:
+            demande_paiements = Demande_paiement.objects.filter(user=user, mon_eleve=mon_eleve)
+            for demande_paiement in demande_paiements:
+                if demande_paiement.statut_demande in ['En attente','En cours','Contester']:
+                    messages.error(request, "L'élève ne peut ëtre désactivé, car il a au moins une demande de paiement En attente ou En cours ou Contester")
+                    return render(request, 'accounts/modifier_mes_eleve.html', context)
+            # Désactiver l'élève
+            mon_eleve.is_active = 'is_active' in request.POST
+            mon_eleve.remarque = request.POST.get('remarque', None)
+            mon_eleve.save()
+
+            # on passe à la désactivation de tous les cours liés à mon_eleve
+            cours_mon_eleves = Cours.objects.filter(user=user, mon_eleve=mon_eleve)
+            for cours_mon_eleve in cours_mon_eleves:
+                cours_mon_eleve.is_active = False
+                cours_mon_eleve.save()
+            messages.success(request, "L'enregistrement de mon élève est mis à jour avec désactivation de tous les cours liés")
+            return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id )
+                
+        else:  # sauvegarder l'enregistrement mon_eleve sans exception
+            mon_eleve.is_active = 'is_active' in request.POST
+            mon_eleve.remarque = remarque = request.POST.get('remarque', None)
+            mon_eleve.save()
+            messages.success(request, "L'enregistrement de mon élève est mis à jour.")
+            return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id )
+        
+    return render(request, 'accounts/modifier_mes_eleve.html', context)
+
+
+
+def ajouter_cours(request):
+    user = request.user
+    
+    # Récupération des matières et niveaux pour le formulaire
+    matieres = Matiere.objects.all()
+    niveaux = Niveau.objects.all()
+
+    # Obtenir les élèves actifs de l'utilisateur actuel
+    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=True).select_related('user', 'eleve').annotate(
+        eleve_nom=Concat(
+            Value('['), F('id'), Value('] '), 
+            F('eleve__user__last_name'), Value(' '), 
+            F('eleve__user__first_name'), 
+            Value(', Téléphone: '), F('eleve__numero_telephone'),
+            Value(', adresse: '), F('eleve__adresse'),
+            output_field=CharField()
+        )
+    ).values_list('eleve_nom', flat=True)
+
+    # Contexte de la page à renvoyer au template
+    context = {
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'mes_eleves': mes_eleves,
+    }
+
+    # Vérification si la requête est un POST avec le bouton 'Enregistrer' cliqué
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        eleve = request.POST.get('eleve')
+        format = request.POST.get('format')
+        matiere = request.POST.get('matiere')
+        niveau = request.POST.get('niveau')
+        prix_heure = request.POST.get('prix_heure')
+
+        # Mise à jour du contexte avec les valeurs soumises
+        context.update({
+            'eleve': eleve,
+            'format': format,
+            'matiere': matiere,
+            'niveau': niveau,
+            'prix_heure': prix_heure,
+        })
+
+        # Vérification que tous les champs requis sont remplis
+        if not all([eleve, format, matiere, niveau, prix_heure]):
+            messages.error(request, "Il faut remplir tous les champs")
+            return render(request, 'accounts/ajouter_cours.html', context)
+        
+        # Extraction de l'ID de l'élève à partir de la chaîne sélectionnée
+        match = re.match(r'\[(\d+)\]', eleve)
+        if not match:
+            messages.error(request, "Format d'élève invalide.")
+            return render(request, 'accounts/ajouter_cours.html', context)
+
+        eleve_id = int(match.group(1))
+        try:
+            # Vérification de l'existence de l'élève
+            mon_eleve = Mes_eleves.objects.get(pk=eleve_id, user=user, is_active=True)
+        except ObjectDoesNotExist:
+            messages.error(request, f'Élève non valide sélectionné. eleve_id= {eleve_id}')
+            return render(request, 'accounts/ajouter_cours.html', context)
+
+        # Extraction et conversion du prix en décimal
+        try:
+            prix_dec = Decimal(prix_heure[:-4]).quantize(Decimal('0.00'))
+        except (InvalidOperation, ValueError):
+            messages.error(request, f"Erreur lors de la conversion du prix '{prix_heure[:-4]}' en décimal. Contactez le programmeur.")
+            return render(request, 'accounts/ajouter_cours.html', context)
+        
+        is_active = 'is_active' in request.POST
+        
+        # Création et enregistrement du cours
+        cours = Cours(
+            user=user,
+            mon_eleve=mon_eleve,
+            format_cours=format,
+            matiere=matiere,
+            niveau=niveau,
+            prix_heure=prix_dec,
+            is_active=is_active
+        )
+        cours.save()
+
+        messages.success(request, "L'enregistrement du cours est effectué.")
+        return redirect('ajouter_horaire', cours_id=cours.id)
+    
+    # Affichage du formulaire
+    return render(request, 'accounts/ajouter_cours.html', context)
+
+from django.utils.dateparse import parse_date
+from datetime import datetime
+
+def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près défini
+    user = request.user
+
+    # Récupérer le cours actif associé à l'ID fourni
+    mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
+    mon_eleve_id = mon_cours.mon_eleve.eleve.id
+
+    # Récupérer l'élève associé au cours pour le professeur actuel
+    mon_eleve = Mes_eleves.objects.filter(
+        user=user, is_active=True, eleve_id=mon_eleve_id
+    ).select_related('eleve').first()
+
+    # Vérifier que l'élève existe
+    if not mon_eleve:
+        messages.error(request, "Aucun élève trouvé pour ce cours.")
+        return redirect('compte_prof')
+
+    # Formatage des dates de modification
+    maj_eleve_format = mon_eleve.date_modification.strftime('%d/%m/%y')
+    maj_cours_format = mon_cours.date_modification.strftime('%d/%m/%y')
+
+    # Annoter l'élève avec les détails de contact formatés
+    mon_eleve = Mes_eleves.objects.filter(id=mon_eleve.id).annotate(
+        eleve_nom=Concat(
+            Value(f'[Màj le: {maj_eleve_format}], '),
+            F('eleve__user__last_name'), Value(' '), F('eleve__user__first_name'),
+            Value(', Téléphone: '), F('eleve__numero_telephone'),
+            Value(', Adresse: '), F('eleve__adresse'),
+            output_field=CharField()
+        )
+    ).first()
+
+    # Annoter le cours avec les détails formatés
+    detaille_cours = Cours.objects.filter(id=cours_id).annotate(
+        eleve_cours=Concat(
+            Value(f'[Màj le: {maj_cours_format}], '),
+            Value('Format du cours: '), F('format_cours'), 
+            Value(', Matière: '), F('matiere'),
+            Value(', Niveau: '), F('niveau'),
+            Value(", Prix de l'heure: "), F('prix_heure'), Value(" €"),
+            output_field=CharField()
+        )
+    ).first()
+
+    # Vérifier que les détails du cours existent
+    if not detaille_cours:
+        messages.error(request, "Aucun détail de cours trouvé.")
+        return redirect('compte_prof')
+
+    # Initialiser les horaires par défaut
+    horaires = [{'date': '', 'debut': '', 'fin': '', 'contenu': '', 'statut': 'En attente'} for _ in range(4)]
+
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        valid_entries = 0
+        valide_heure = True
+
+        # Parcourir les 4 horaires possibles pour validation et ajout
+        horaires_recup=[]
+        for i in range(1, 5):
+            date = request.POST.get(f'date{i}', '')
+            debut = request.POST.get(f'debut{i}', '')
+            fin = request.POST.get(f'fin{i}', '')
+            contenu = request.POST.get(f'contenu{i}', '')
+            statut = request.POST.get(f'statut{i}', 'En attente')
+            horaires_recup.append({'date': date, 'debut': debut, 'fin': fin, 'contenu': contenu, 'statut': statut})
+
+            # testes de validation
+            if date and debut and fin:
+                valid_entries += 1
+                if datetime.strptime(debut, '%H:%M') >= datetime.strptime(fin, '%H:%M')  : valide_heure = False
+
+        horaires = horaires_recup # pour remaitre au template les anciens données si l'enregistrement n'zst pas réuci
+        # Si aucun horaire n'est valide, afficher un message d'erreur
+        if valid_entries == 0:
+            messages.error(request, "Veuillez remplir au moins les champs date, début, fin, et statut pour une ligne.")
+        if not valide_heure :
+            messages.error(request, "L'heure de début doit être inférieur à l'heure de fin.")
+        
+            
+        else:
+            # Enregistrer les horaires valides
+            for horaire in horaires:
+                if horaire['date'] and horaire['debut'] and horaire['fin']: #éviter les lignes vide
+                    seance = Horaire(
+                        cours=mon_cours,
+                        contenu=horaire['contenu'],
+                        statut_cours=horaire['statut'],
+                    )
+                    seance.set_date_obtenu_from_str(horaire['date'])
+                    seance.set_heure_debut_from_str(horaire['debut'])
+                    seance.set_heure_fin_from_str(horaire['fin'])
+                    seance.calculer_duree()
+                    seance.save()
+
+            messages.success(request, "Enregistrement réussi.")
+            # Réinitialiser les horaires par défaut pour efacer les ancien données puisque l'enregistrement est réuci
+            horaires = [{'date': '', 'debut': '', 'fin': '', 'contenu': '', 'statut': 'En attente'} for _ in range(4)]
+
+    # Gestion de la suppression d'un horaire
+    sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
+    if sup_enr_keys:
+        horaire_id = int(sup_enr_keys[0].split('btn_sup_')[1])
+        try:
+            horaire_to_delete = Horaire.objects.get(id=horaire_id)
+            horaire_to_delete.delete()
+            messages.success(request, f"Horaire avec ID {horaire_id} supprimé avec succès.")
+        except Horaire.DoesNotExist:
+            messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+
+    # Récupérer les horaires enregistrés pour ce cours
+    enr_horaires = [
+        {
+            'date': enr.date_cours.strftime('%d/%m/%Y'),
+            'debut': enr.heure_debut,
+            'fin': enr.heure_fin,
+            'contenu': enr.contenu,
+            'statut': enr.statut_cours,
+            'id': enr.id
+        }
+        for enr in Horaire.objects.filter(cours=mon_cours)
+    ]
+
+    # Contexte pour le rendu du template
+    context = {
+        'mon_eleve': mon_eleve,
+        'detaille_cours': detaille_cours,
+        'horaires': horaires,
+        'enr_horaires': enr_horaires,
+    }
+    return render(request, 'accounts/ajouter_horaire.html', context)
+
+def modifier_cours(request, cours_id):
+    user = request.user
+    mon_cours = Cours.objects.get(id=cours_id)
+    is_activ_first = mon_cours.is_active
+    prix_heure = str(mon_cours.prix_heure)  # pour que le masque de saisie puisse l'interpréter correctement
+    eleve = mon_cours.mon_eleve.eleve
+    
+    
+    # Récupération des matières et niveaux pour le formulaire
+    matieres = Matiere.objects.all()
+    niveaux = Niveau.objects.all()
+
+    # Contexte de la page à renvoyer au template
+    context = {
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'mon_cours': mon_cours,
+        'eleve': eleve,
+        'prix_heure': prix_heure,
+    }
+
+    # Vérification si la requête est un POST avec le bouton 'Enregistrer' cliqué
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        format = request.POST.get('format')
+        matiere = request.POST.get('matiere')
+        niveau = request.POST.get('niveau')
+        prix_heure = request.POST.get('prix_heure')
+        prix_dec = Decimal(prix_heure[:-4]).quantize(Decimal('0.00'))
+        mon_cours.prix_heure = prix_dec
+        mon_cours.format_cours = format
+        mon_cours.matiere = matiere
+        mon_cours.niveau = niveau
+        is_activ_last = 'is_active' in request.POST
+
+        if is_activ_first and not is_activ_last:
+            # Récupérer tous les statuts des demandes de paiement liés au cours
+            details_demande_paiement = Detail_demande_paiement.objects.filter(cours=mon_cours)
+            Statut_demandes = [
+                detail.demande_paiement.statut_demande 
+                for detail in details_demande_paiement
+            ]
+
+            # Vérification des statuts
+            for statut in Statut_demandes:
+                if statut not in ['Annuler', 'Réaliser']:
+                    messages.error(request, "Au moins une demande de paiement liée à ce cours est en attente ou en cours, ce qui empêche sa désactivation.")
+                    return render(request, 'accounts/modifier_cours.html', context)
+
+            # Si tous les statuts sont valides, désactiver le cours
+            mon_cours.is_active = is_activ_last
+            mon_cours.save()
+            return redirect('modifier_cours', cours_id=cours_id)
+
+        if not is_activ_first and is_activ_last:
+            mes_eleves = Mes_eleves.objects.get(eleve=eleve, user=user)
+            if not mes_eleves.is_active:
+                messages.error(request, "L'élève lié au cours est inactif, donc le cours ne peut être activé.")
+                return render(request, 'accounts/modifier_cours.html', context)
+
+        mon_cours.is_active = is_activ_last
+        mon_cours.save()
+        return redirect('modifier_cours', cours_id=cours_id)
+
+    # Affichage du formulaire
+    return render(request, 'accounts/modifier_cours.html', context)
+
+
+
+def liste_mes_eleve(request):
+    user = request.user
+    # Récupérer les informations des élèves actifs associés à l'utilisateur connecté
+    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=True)
+
+    # Si aucun élève n'est trouvé, renvoyer un message d'erreur
+    if not mes_eleves.exists():
+        messages.error(request, "Aucun élève trouvé pour ce cours.")
+        return redirect('compte_prof')  # Redirection vers la vue de compte du professeur
+
+    # Si la requête est de type POST, traiter les actions des boutons
+    if request.method == 'POST':
+        # Recherche des clés commençant par 'btn_cours_' dans les données POST
+        cours_keys = [key for key in request.POST.keys() if key.startswith('btn_cours_')]
+        if cours_keys:
+            # Prendre le premier bouton cliqué correspondant à un cours
+            btn_key = cours_keys[0]
+            # Extraire l'ID de l'élève à partir de la clé du bouton
+            mon_eleve_id = int(btn_key.split('btn_cours_')[1])
+
+            try:
+                # Récupérer l'élève en utilisant l'ID extrait
+                mon_eleve = Mes_eleves.objects.get(id=mon_eleve_id)
+                
+                # Filtrer les cours associés à cet élève
+                cours = Cours.objects.filter(mon_eleve=mon_eleve)
+                
+                if not cours.exists():
+                    messages.error(request, f"Il n'y a pas de cours pour l'élève {mon_eleve.eleve.user.last_name}.")
+                    return redirect('compte_prof')  # Redirection si aucun cours n'est trouvé
+
+                # Redirection vers la vue 'cours_mon_eleve' avec l'ID de l'élève
+                return redirect('cours_mon_eleve', eleve_id=mon_eleve_id)
+
+            except Mes_eleves.DoesNotExist:
+                # Message d'erreur si l'élève n'est pas trouvé
+                messages.error(request, "Élève non trouvé.")
+                return redirect('compte_prof')
+
+        # Recherche des clés commençant par 'btn_plus_' pour gérer une autre action
+        reglement_keys = [key for key in request.POST.keys() if key.startswith('btn_reglement_')]
+        if reglement_keys:
+            # Prendre le premier bouton cliqué correspondant à une demande de règlement
+            btn_key = reglement_keys[0]
+            # Extraire l'ID de l'élève
+            mon_eleve_id = int(btn_key.split('btn_reglement_')[1])
+            # Redirection vers la vue 'demande_reglement' avec l'ID de l'élève
+            return redirect('demande_reglement', eleve_id=mon_eleve_id)
+        # Recherche des clés commençant par 'btn_eleve_' pour gérer une autre action
+        mon_eleve_keys = [key for key in request.POST.keys() if key.startswith('btn_eleve_')]
+        if mon_eleve_keys:
+            # Prendre le premier bouton cliqué correspondant à une demande de règlement
+            btn_key = mon_eleve_keys[0]
+            # Extraire l'ID de l'élève
+            mon_eleve_id = int(btn_key.split('btn_eleve_')[1])
+            # Redirection vers la vue 'demande_reglement' avec l'ID de l'élève
+            return redirect('modifier_mes_eleve', eleve_id=mon_eleve_id)
+
+    # Passer les informations des élèves au contexte du template
+    context = {
+        'mes_eleves': mes_eleves,
+    }
+    return render(request, 'accounts/liste_mes_eleve.html', context)
+
+
+def cours_mon_eleve(request, eleve_id):
+    """
+    Affiche les cours associés à un élève spécifique et gère la redirection vers les horaires du cours.
+    """
+
+    # Récupère l'utilisateur actuel
+    user = request.user
+    
+    # Récupère l'élève correspondant à l'ID fourni. Si l'élève n'existe pas ou n'est pas actif, renvoie une erreur 404.
+    mon_eleve = get_object_or_404(Mes_eleves, id=eleve_id, is_active=True)
+    
+    # Récupère tous les cours actifs associés à cet élève
+    mes_cours = Cours.objects.filter(mon_eleve=mon_eleve, is_active=True)
+
+    # Si aucun cours n'est trouvé pour cet élève, affiche un message d'erreur et redirige vers la page 'compte_prof'
+    if not mes_cours.exists():
+        messages.error(request, "Aucun cours trouvé pour cet élève.")
+        return redirect('compte_prof')
+    
+    # Gestion des soumissions du formulaire
+    if request.method == 'POST':
+        # Récupère toutes les clés du formulaire POST qui commencent par 'btn_horaire_'
+        mon_cours_keys = [key for key in request.POST.keys() if key.startswith('btn_horaire_')]
+        
+        if mon_cours_keys:
+            # On prend la première clé trouvée
+            btn_key = mon_cours_keys[0]
+            # Extrait l'ID du cours de la clé
+            cours_id = int(btn_key.split('btn_horaire_')[1])
+            
+            try:
+                # Récupère le cours correspondant à l'ID fourni
+                mon_cours = Cours.objects.get(id=cours_id, is_active=True)
+                
+                # Redirige vers la vue 'horaire_cours_mon_eleve' en passant l'ID du cours
+                return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
+            
+            except Cours.DoesNotExist:
+                # Si le cours n'existe pas, affiche un message d'erreur et redirige vers la page 'compte_prof'
+                messages.error(request, "Cours non trouvé.")
+                return redirect('compte_prof')  # Remplacez 'compte_prof' par la vue de redirection appropriée
+
+    # Prépare le contexte avec les cours de l'élève et les informations de l'élève
+    context = {
+        'mes_cours': mes_cours,
+        'mon_eleve': mon_eleve,
+    }
+    
+    # Rend le template 'cours_mon_eleve' avec le contexte préparé
+    return render(request, 'accounts/cours_mon_eleve.html', context)
+
+
+
+def horaire_cours_mon_eleve(request, cours_id):
+    """
+    Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
+    """
+
+    # Initialiser les variables nécessaires
+    mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
+    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
+    # Récupère tous les horaires associés au cours
+    enr_horaires = []
+    enrs = Horaire.objects.filter(cours=mon_cours)
+    for enr in enrs:
+        enr_horaires.append({
+            'date': enr.date_cours.strftime('%d/%m/%Y'),  # Formatage de la date
+            'debut': enr.heure_debut,                      # Heure de début
+            'fin': enr.heure_fin,                          # Heure de fin
+            'contenu': enr.contenu,                        # Contenu du cours
+            'statut': enr.statut_cours,                    # Statut du cours
+            'id': enr.id                                   # ID de l'horaire
+        })
+    
+    if request.method == 'POST':
+        # Gestion de l'ajout d'un horaire
+        if 'btn_ajout' in request.POST:
+            return redirect('ajouter_horaire', cours_id=cours_id)
+        
+        # Gestion de la modification du prix de l'heure
+        if 'btn_prix' in request.POST:
+            prix_heure = request.POST.get('prix_heure', None)
+            prix_str = prix_heure[:-4] if prix_heure else None
+            if prix_str and prix_str != '0':
+                prix_heure_dec = Decimal(prix_str).quantize(Decimal('0.00'))
+            else:
+                prix_heure_dec = mon_cours.prix_heure
+            mon_cours.prix_heure = prix_heure_dec
+            mon_cours.save()
+            messages.success(request, "Le prix de l'heure est modifié avec succès.")
+        
+        # Gestion de la suppression d'un horaire
+        sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
+        if sup_enr_keys:
+            btn_key = sup_enr_keys[0]
+            horaire_id = int(btn_key.split('btn_sup_')[1])
+            try:
+                horaire_to_delete = Horaire.objects.get(id=horaire_id)
+                horaire_to_delete.delete()
+                messages.success(request, f"Horaire avec ID {horaire_id} supprimé avec succès.")
+            except Horaire.DoesNotExist:
+                messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+        
+        # Gestion de la modification d'un horaire
+        modif_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_modif_')]
+        if modif_enr_keys:
+            btn_key = modif_enr_keys[0]
+            horaire_id = int(btn_key.split('btn_modif_')[1])
+            try:
+                horaire_enr = Horaire.objects.get(id=horaire_id)
+                date_cours = request.POST.get(f'date_{horaire_id}', horaire_enr.date_cours.strftime('%d/%m/%Y'))
+                heure_debut = request.POST.get(f'debut_{horaire_id}', horaire_enr.heure_debut)
+                heure_fin = request.POST.get(f'fin_{horaire_id}', horaire_enr.heure_fin)
+                contenu = request.POST.get(f'contenu_{horaire_id}', horaire_enr.contenu)
+                statut_cours = request.POST.get(f'statut_{horaire_id}', horaire_enr.statut_cours)
+                
+                # Validation des heures
+                if date_cours and heure_debut and heure_fin:
+                    heure_debut_conv = datetime.strptime(heure_debut, '%H:%M')
+                    heure_fin_conv = datetime.strptime(heure_fin, '%H:%M')
+                    if heure_debut_conv >= heure_fin_conv:
+                        messages.error(request, f"Début de la séance {heure_debut} doit être inférieur à fin de la séance {heure_fin}.")
+                        return render(request, 'accounts/horaire_cours_mon_eleve.html', {
+                            'mon_cours': mon_cours,
+                            'mon_eleve': mon_eleve,
+                            'enr_horaires': enr_horaires,
+                        })
+                
+                # Mise à jour de l'horaire
+                horaire_enr.set_date_obtenu_from_str(date_cours)
+                horaire_enr.set_heure_debut_from_str(heure_debut)
+                horaire_enr.set_heure_fin_from_str(heure_fin)
+                horaire_enr.contenu = contenu
+                horaire_enr.statut_cours = statut_cours
+                horaire_enr.calculer_duree()
+                horaire_enr.save()
+                messages.success(request, f"Horaire avec ID {horaire_id} modifié avec succès.")
+                
+            except Horaire.DoesNotExist:
+                messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+    
+    
+    
+    # Prépare le contexte pour le rendu de la vue
+    context = {
+        'mon_cours': mon_cours,
+        'mon_eleve': mon_eleve,
+        'enr_horaires': enr_horaires,
+    }
+    
+    # Renvoie le template avec le contexte préparé
+    return render(request, 'accounts/horaire_cours_mon_eleve.html', context)
+
+
+
+
+def liste_seance_cours(request):
+    """
+    Affiche la liste des séances de cours en attente pour l'utilisateur actuel
+    et gère la redirection vers la page de détail d'une séance spécifique si demandé.
+    """
+    user = request.user  # Récupère l'utilisateur actuel
+
+    # Filtre les horaires en attente associés aux cours actifs pour l'utilisateur actuel
+    liste_horaires = Horaire.objects.filter(
+        statut_cours="En attente",
+        cours__is_active=True,
+        cours__mon_eleve__is_active=True,
+        cours__user=user  # Assure que les cours appartiennent à l'utilisateur (professeur) actuel
+    ).order_by('date_cours', 'heure_debut')
+
+    # Vérifie si un bouton de détail a été activé
+    detaille_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_detaille_')]
+    if detaille_enr_keys:
+        btn_key = detaille_enr_keys[0]  # Récupère la clé du bouton activé
+        horaire_id = int(btn_key.split('btn_detaille_')[1])  # Extrait l'ID de l'horaire de la clé
+        try:
+            # Récupère l'horaire correspondant à l'ID
+            horaire_enr = Horaire.objects.get(id=horaire_id)
+            cours_id = horaire_enr.cours_id  # Récupère l'ID du cours associé à l'horaire
+            # Redirige vers la page de détail de l'horaire
+            return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
+        except Horaire.DoesNotExist:
+            # Affiche un message d'erreur si l'horaire n'existe pas
+            messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+
+    # Rende la vue avec la liste des horaires en attente
+    return render(request, 'accounts/liste_seance_cours.html', {'liste_horaires': liste_horaires})
+
+
+
+def demande_reglement(request, eleve_id):
+    user = request.user
+    
+    # Récupérer l'élève actif pour l'utilisateur actuel
+    mon_eleve = get_object_or_404(Mes_eleves, id=eleve_id, user=user, is_active=True)
+    
+    # Récupérer tous les cours actifs associés à cet élève
+    mes_cours = Cours.objects.filter(mon_eleve_id=eleve_id, is_active=True)
+    
+    # Préparer la liste des horaires pour chaque cours
+    enr_horaires = [
+        {
+            'cours_id': mon_cours.id,
+            'date': enr.date_cours.strftime('%d/%m/%Y'),
+            'debut': enr.heure_debut,
+            'fin': enr.heure_fin,
+            'contenu': enr.contenu,
+            'statut': enr.statut_cours,
+            'id': enr.id,
+            'payment_id': enr.payment_id,
+            'demande_paiement_id': enr.demande_paiement_id,
+        }
+        for mon_cours in mes_cours
+        for enr in Horaire.objects.filter(cours=mon_cours)
+    ]
+
+    # Contexte pour le rendu du template
+    context = {
+        'mon_eleve': mon_eleve,
+        'mes_cours': mes_cours,
+        'enr_horaires': enr_horaires,
+    }
+
+    # Gestion du formulaire de demande de règlement
+    if request.method == 'POST' and 'btn_reglement' in request.POST:
+        # Récupérer les horaires sélectionnés à partir des cases cochées
+        chk_keys = [key for key in request.POST.keys() if key.startswith('chk_')]
+        if chk_keys:
+            # Extraire les IDs des horaires sélectionnés
+            selected_horaires = [int(chk_key.split('chk_')[1]) for chk_key in chk_keys]
+            request.session['selected_horaires'] = selected_horaires
+            # for id in selected_horaires:
+            #     messages.info(request, f"id= {id} ")
+            return redirect('declaration_cours', eleve_id=eleve_id)
+        else:
+            messages.error(request, "Pour déclarer un cours et demander le paiement, vous devez cocher au moins une case active")
+
+    # Rendre le template avec le contexte
+    return render(request, 'accounts/demande_reglement.html', context)
+
+
+
+
+def declaration_cours(request, eleve_id):
+    user = request.user
+    professeur = Professeur(user=user)
+    
+    # Récupérer l'élève actif associé à l'utilisateur
+    mon_eleve = get_object_or_404(Mes_eleves, id=eleve_id, user=user, is_active=True) # de la table Mes_eleves
+    eleve = get_object_or_404(Eleve, id=mon_eleve.eleve.id) # de la table eleve
+    
+    # Récupérer le parent de l'élève, s'il existe
+    parent = getattr(eleve.user, 'parent', None)
+
+    # Récupérer tous les cours actifs associés à cet élève
+    cours_actifs = Cours.objects.filter(mon_eleve=mon_eleve, is_active=True)
+    
+    # Obtenir les horaires sélectionnés depuis la session
+    selected_horaires = request.session.get('selected_horaires', [])
+    # for id in selected_horaires:
+    #     messages.info(request, f"id= {id} ")
+    
+    montant_total = Decimal('0.00')  # Initialiser le montant total
+
+    if selected_horaires:
+        # Récupérer les horaires associés aux cours actifs et calculer le montant pour chaque horaire
+        horaires_groupes = Horaire.objects.filter(id__in=selected_horaires, cours__in=cours_actifs)\
+            .values('date_cours', 'heure_debut', 'heure_fin', 'cours__matiere', 'duree', 'cours__prix_heure', 'statut_cours', 'contenu', 'id')\
+            .annotate(
+                montant=ExpressionWrapper(
+                    F('duree') * F('cours__prix_heure'),
+                    output_field=fields.DecimalField(decimal_places=2, max_digits=10)
+                )
+            )\
+            .order_by('date_cours')
+        # for hor in horaires_groupes:
+        #     messages.info(request, f"hor.id = {hor['id']}")
+        # Calculer la somme des montants
+        montant_total = horaires_groupes.aggregate(
+            total_montant=Sum('montant')
+        )['total_montant'] or Decimal('0.00')
+
+        # Arrondir le montant total à deux chiffres après la virgule
+        montant_total = montant_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # Passer les informations au contexte
+        context = {
+            'mon_eleve': mon_eleve,
+            'cours_actifs': cours_actifs,
+            'horaires_groupes': horaires_groupes,
+            'montant_total': montant_total,
+            'parent': parent,
+            'professeur': professeur,
+        }
+        if request.method == 'POST' and 'btn_declaration' in request.POST:
+            # Validation des données
+            if not montant_total or montant_total <= 0:
+                messages.error(request, "Une erreur s'est produite lors du calcul du montant total à régler. Veuillez contacter le programmeur.")
+                return render(request, 'accounts/declaration_cours.html', context)
+            
+            # pas besion car les données, les données existent déjà dans la session, et dans horaires_groupes, en plus le code est faux car il ne tient compte que d'un seule enregistrement
+            # Vérification de l'existance des enregistrements horaires (pas besion)
+            matiere_keys = [key for key in request.POST if key.startswith('matiere_')]
+            for matiere_key in matiere_keys:
+                try:
+                    horaire_id = int(matiere_key.split('matiere_')[1])
+                    horaire = Horaire.objects.get(id=horaire_id)
+                except (ValueError, Horaire.DoesNotExist):
+                    messages.error(request, "Une erreur s'est produite lors de la récupération des enregistrements horaires. Veuillez contacter le programmeur.")
+                    return render(request, 'accounts/declaration_cours.html', context)
+            
+            # Envoi de l'email si nécessaire
+            sujet = request.POST.get('sujet', 'Demande de règlement de cours')
+            text_email = request.POST.get('text_email', None)
+            if sujet or text_email:
+                email_prof = professeur.user.email
+                destinations = ['prosib25@gmail.com', eleve.user.email]
+                if parent and parent.email_parent:
+                    destinations.append(parent.email_parent)
+
+                # Validation des emails dans destinations
+                email_validator = EmailValidator() # Initialiser le validateur d'email
+                for destination in destinations:
+                    try:
+                        email_validator(destination)
+                    except ValidationError:
+                        messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")    
+
+                try:
+                    send_mail(
+                        sujet,
+                        text_email,
+                        email_prof,
+                        destinations,
+                        fail_silently=False,
+                    )
+                    messages.success(request, "L'email de la demande de règlement a été envoyé avec succès.")
+                except Exception as e:
+                    messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+                
+                # Enregistrement de l'email envoyé
+                email_telecharge = Email_telecharge(
+                    user=user, email_telecharge=email_prof, text_email=text_email,
+                    user_destinataire=eleve.user.id, sujet=sujet
+                )
+                email_telecharge.save()
+
+            # Enregistrement de la demande de paiement
+            demande_paiement = Demande_paiement(
+                user=user, mon_eleve=mon_eleve, eleve=eleve, montant=montant_total, email=email_telecharge.id if email_telecharge else None
+            )
+            demande_paiement.save()
+
+            # Enregistrement des détails de la demande de paiement
+            for matiere_key in matiere_keys: # pas besion car les enregistrements existent dans la session et dans horaires_groupes
+                horaire_id = int(matiere_key.split('matiere_')[1])
+                # messages.info(request, f"horaire_id = {horaire_id} ")
+                horaire = Horaire.objects.get(id=horaire_id)
+                detail_demande_paiement = Detail_demande_paiement(
+                    demande_paiement=demande_paiement, cours=horaire.cours, 
+                    prix_heure=horaire.cours.prix_heure, horaire=horaire
+                )
+                detail_demande_paiement.save()
+
+                # Mettre à jour l'état de l'horaire avec l'ID de la demande de paiement
+                horaire.demande_paiement_id = demande_paiement.id
+                horaire.save()
+
+            messages.success(request, "La demande de règlement et ses détails ont été enregistrés avec succès.")
+            
+            # Nettoyage de la session
+            request.session.pop('selected_horaires', None)
+            return redirect('compte_prof')
+    
+    else:
+        messages.error(request, 'Le cours est déjà déclaré')
+        return redirect('compte_prof')
+    
+
+    # Passer les informations au contexte
+    context = {
+        'mon_eleve': mon_eleve,
+        'cours_actifs': cours_actifs,
+        'horaires_groupes': horaires_groupes,
+        'montant_total': montant_total,
+        'parent': parent,
+        'professeur': professeur,
+    }
+    
+    return render(request, 'accounts/declaration_cours.html', context)
+
+
+
+def liste_declaration_cours(request):
+    # Obtenir l'utilisateur actuel
+    user = request.user
+    
+    # Filtrer les demandes de paiement associées à l'utilisateur, en excluant celles qui sont annulées
+    demande_paiements = Demande_paiement.objects.filter(user=user).exclude(statut_demande='Annuler')
+
+    # Construire la liste des cours déclarés avec les détails nécessaires
+    cours_declares = [
+        {
+            'id': enr.id,
+            'date_modification': enr.date_modification.strftime('%d/%m/%Y'),
+            'mon_eleve': enr.mon_eleve,
+            'montant': enr.montant,
+            'statut_demande': enr.statut_demande,
+            'vue_le': enr.vue_le,
+            'email_eleve': enr.email_eleve,
+        }
+        for enr in demande_paiements
+    ]
+
+    # Gérer les soumissions POST, en particulier pour le bouton "détaille"
+    if request.method == 'POST':
+        # Rechercher la clé correspondant à l'un des boutons de détail soumis
+        detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
+        if detaille_enr_key:
+            # Extraire l'ID de la demande de paiement à partir de la clé
+            demande_paiement_id = int(detaille_enr_key.split('btn_detaille_')[1])
+            try:
+                # Récupérer la demande de paiement correspondante
+                demande_enr = Demande_paiement.objects.get(id=demande_paiement_id)
+                # Rediriger vers la vue détaillée de la demande de règlement
+                return redirect('detaille_demande_reglement', demande_paiement_id=demande_enr.id)
+            except Demande_paiement.DoesNotExist:
+                # Afficher un message d'erreur si la demande n'existe pas
+                messages.error(request, f"La demande de paiement avec l'ID={demande_paiement_id} n'a pas été trouvée.")
+
+    # Passer les cours déclarés au template pour l'affichage
+    context = {'cours_declares': cours_declares}
+    return render(request, 'accounts/liste_declaration_cours.html', context)
+
+
+def detaille_demande_reglement(request, demande_paiement_id):
+    # Récupérer la demande de paiement et les objets associés
+    demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
+    eleve = demande_paiement.eleve
+    parent = getattr(eleve.user, 'parent', None)
+
+    # Récupérer les détails de la demande de paiement et les cours déclarés
+    detail_demande_paiements = Detail_demande_paiement.objects.filter(demande_paiement=demande_paiement)
+    cours_declares = {enr.cours for enr in detail_demande_paiements}
+
+    # Récupérer les emails
+    email = Email_telecharge.objects.filter(id=demande_paiement.email).first()
+    email_eleve = Email_telecharge.objects.filter(id=demande_paiement.email_eleve).first()
+
+    # Préparer le contexte pour le rendu du template
+    context = {
+        'demande_paiement': demande_paiement,
+        'eleve': eleve,
+        'parent': parent,
+        'cours_declares': [{'cours': cours} for cours in cours_declares],
+        'detaille_declares': [{'enr': enr} for enr in detail_demande_paiements],
+        'email': email,
+        'email_eleve': email_eleve,
+    }
+
+    # Gestion de l'envoi d'un email de rappel
+    if request.method == 'POST' and 'btn_rappelle' in request.POST:
+        if email:  # Vérifier si l'email existe
+            request.session['email_telecharge_id'] = email.id
+            return redirect('envoie_email', destinataire_id=eleve.user.id)
+
+    # Gestion de l'annulation de la demande de paiement
+    if request.method == 'POST' and 'btn_annuler' in request.POST:
+        if demande_paiement.statut_demande in ['En attente', 'Contester'] and not demande_paiement.payment_id:
+            # # Vérification des horaires pour annulation
+            # for enr in detail_demande_paiements:
+            #     horaire = Horaire.objects.filter(id=enr.horaire.id).first()
+            #     if  horaire.payment_id:
+            #         messages.error(
+            #             request,
+            #             f"L'annulation ne peut pas être effectuée : un horaire ne satisfait pas les conditions.<br>"
+            #             f" Horaire_demande paiement : {horaire.payment_id}"
+            #         )
+            #         return render(request, 'accounts/detaille_demande_reglement.html', context)
+
+            # Annuler la demande de paiement et les horaires associés
+            demande_paiement.statut_demande = Demande_paiement.ANNULER
+            demande_paiement.save()
+
+            for enr in detail_demande_paiements:
+                horaire = Horaire.objects.filter(id=enr.horaire.id).first()
+                horaire.statut_cours = Horaire.ANNULER
+                horaire.save()
+
+            messages.success(request, 'La demande de paiement a été annulée.')
+        else:
+            messages.error(request, "La demande de paiement est déjà réglée ou ne peut être annulée.")
+
+        return render(request, 'accounts/detaille_demande_reglement.html', context)
+
+    # Affichage du template
+    return render(request, 'accounts/detaille_demande_reglement.html', context)
+
+
+
+def envoie_email(request, destinataire_id):
+    user = request.user
+    # Récupère le destinataire en utilisant l'ID fourni, renvoie une erreur 404 s'il n'existe pas
+    destinataire = get_object_or_404(User, id=destinataire_id)
+    
+    # Récupère l'ID de l'email à partir de la session
+    email_id = request.session.get('email_telecharge_id')
+    email = Email_telecharge.objects.filter(id=email_id).first()
+
+    # Si un email est trouvé, initialise le sujet et le texte de l'email, sinon utilise des valeurs par défaut
+    if email:
+        sujet = email.sujet or "Email de rappel"
+        text_email = email.text_email
+    else:
+        sujet, text_email = "Email de rappel", ""
+
+    # Récupère l'adresse email du professeur depuis le formulaire ou utilise celle de l'utilisateur connecté
+    email_prof = request.POST.get('email_adresse', user.email).strip()
+
+    # Vérifie si la méthode est POST et que le bouton d'enregistrement a été cliqué
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # Met à jour le sujet de l'email ou utilise une valeur par défaut
+        sujet = request.POST.get('sujet', sujet).strip() or "Email de rappel"
+        # Met à jour le texte de l'email
+        text_email = request.POST.get('text_email', text_email).strip()
+
+        # Récupère l'adresse email de l'élève
+        email_eleve = destinataire.email
+        # Récupère l'adresse email du parent s'il existe
+        email_parent = Parent.objects.filter(user=destinataire).first()
+        
+        # Initialise la liste des destinataires avec l'email de l'élève et un email par défaut
+        destinations = [email_eleve, 'prosib25@gmail.com']
+        if email_parent:
+            # Ajoute l'email du parent à la liste des destinataires si disponible
+            destinations.append(email_parent.email_parent)
+            
+        # Valider l'adresse e-mail du professeur
+        try:
+            validate_email(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse e-mail du professeur n'est pas valide.")
+            return render(request, 'accounts/envoie_email.html', {
+                'email_prof': email_prof,
+                'sujet': sujet,
+                'text_email': text_email,
+            })
+
+        # Valider les adresses e-mail des destinataires
+        for email in destinations:
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, f"L'adresse e-mail du destinataire {email} n'est pas valide.")
+                return render(request, 'accounts/envoie_email.html', {
+                    'email_prof': email_prof,
+                    'sujet': sujet,
+                    'text_email': text_email,
+                })
+
+        try:
+            # Envoie l'email à tous les destinataires
+            send_mail(sujet, text_email, email_prof, destinations, fail_silently=False)
+            # Message de succès si l'email a été envoyé
+            messages.success(request, "L'email a été envoyé avec succès.")
+        except Exception as e:
+            # Message d'erreur si l'envoi échoue
+            messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
+
+        # Enregistre l'email dans la base de données
+        Email_telecharge.objects.create(
+            user=user,
+            email_telecharge=email_prof,
+            text_email=text_email,
+            user_destinataire=destinataire.id,
+            sujet=sujet
+        )
+        messages.success(request, "Email enregistré")
+        # Pour supprimer uniquement 'email_telecharge_id' de la session 
+        request.session.pop('email_telecharge_id', None)
+        # Redirige l'utilisateur vers la page du compte professeur
+        return redirect('compte_prof')
+
+    # Passe les données au template pour affichage
+    context = {
+        'email_prof': email_prof,
+        'sujet': sujet,
+        'text_email': text_email,
+    }
+    return render(request, 'accounts/envoie_email.html', context)
+
+
+def temoignage_mes_eleves(request):
+    # Récupération de l'utilisateur connecté (professeur)
+    user_prof = request.user
+    # Filtrer les témoignages liés au professeur connecté
+    temoignages = Temoignage.objects.filter(user_prof=user_prof)
+    # Récupérer les élèves associés à ces témoignages
+    user_eleves = [temoignage.user_eleve for temoignage in temoignages]
+    if request.method == 'POST':
+        # Rechercher la clé correspondant à l'un des boutons de détail soumis
+        detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
+        if detaille_enr_key:
+            # Extraire l'ID de l'élève à partir de la clé
+            eleve_id = int(detaille_enr_key.split('btn_detaille_')[1])
+            # Trouver un témoignage associé à cet élève et au professeur connecté
+            temoignage_enr = Temoignage.objects.filter(user_eleve__id=eleve_id, user_prof=user_prof).first()
+            if temoignage_enr:
+                # Rediriger vers la vue temoignage_detaille
+                return redirect('temoignage_detaille', temoignage_id=temoignage_enr.id)
+            else:
+                # Afficher un message d'erreur si le témoignage n'existe pas
+                messages.error(request, f"Le témoignage pour l'élève avec l'ID={eleve_id} n'a pas été trouvé.")
+
+    return render(request, 'accounts/temoignage_mes_eleves.html', {'user_eleves': user_eleves})
+
+
+def temoignage_detaille(request, temoignage_id):
+    # Récupération de l'utilisateur connecté (professeur)
+    user_prof = request.user
+
+    # Récupérer le témoignage spécifique ou renvoyer une erreur 404 si non trouvé
+    temoignage = get_object_or_404(Temoignage, id=temoignage_id, user_prof=user_prof)
+    
+    if request.method == 'POST':
+        if 'btn_enr' in request.POST:
+            # Mettre à jour le texte du professeur à partir du POST
+            temoignage.text_prof = request.POST.get('text_prof', '')
+            temoignage.save()
+            messages.success(request, "Le témoignage a été mis à jour.")
+            return redirect('temoignage_mes_eleves')
+    
+    return render(request, 'accounts/temoignage_detaille.html', {'temoignage': temoignage})

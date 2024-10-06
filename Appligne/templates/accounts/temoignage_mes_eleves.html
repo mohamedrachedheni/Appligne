@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Liste des témoignages de mes élèves{% endblock %}
+
+{% block content %}
+
+<!-- Section d'en-tête -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- Texte d'introduction -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h4 class="text-white">Gérer mon compte</h4>
+                    <h2 class="text-white">Consulter mes élèves</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section principale -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Inclusion de la barre latérale -->
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Contenu principal de la page -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <!-- Titre de la section -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-primary px-3">Liste des témoignages</h6>
+                </div>
+                <!-- Inclusion des alertes -->
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+        <!-- Formulaire pour gérer les élèves -->
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Liste des élèves -->
+            <div class="container-xxl py-5">
+                <div class="container">
+                    <div class="container bg-light p-5">
+                        <div class="row g-1">
+                            <!-- Vérifie si l'utilisateur est authentifié -->
+                            {% if request.user.is_authenticated %}
+                                <!-- Boucle sur chaque élève associé au professeur -->
+                                {% for user in user_eleves %}
+                                    <p><strong>{{ user.last_name }}</strong> <strong>{{ user.first_name }}</strong></p>
+                                    <div class="col-md-10">
+                                        <!-- Informations sur l'élève -->
+                                        <input type="text" class="form-control" id="eleve_id_{{ forloop.counter }}" 
+                                            name="eleve_{{ forloop.counter }}" readonly
+                                            value="{% for temoignage in user.temoignages_eleve.all %}{% if temoignage.user_prof == request.user and temoignage.user_eleve == user %} Evaluation : {{ temoignage.get_evaluation_eleve_display }} -- Témoignage: {{ temoignage.text_eleve}} {% endif %}{% endfor %}">
+                                    </div>
+
+                                    <!-- Bouton pour voir les détailles -->
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-warning" name="btn_detaille_{{ user.id }}">
+                                            Détaille
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bouton retour en haut -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+
+{% endblock %}

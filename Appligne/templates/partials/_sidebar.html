@@ -4,45 +4,40 @@
     <div class="p-4 pt-5">
         <ul class="list-unstyled components mb-5">
             <li >
-                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Ajouter</strong></a>
+                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Ajouter à mon profil </strong></a>
                 <ul class="collapse list-unstyled" id="homeSubmenu">
-                <li>
-                    <a href="{% url 'nouveau_diplome' %}" class="dropdown-item"  >Diplome</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_experience' %}" class="dropdown-item"  >Expérience</a>
-                </li>
-                <li>
-                    <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Format cours</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_matiere' %}" class="dropdown-item"  >Matière</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_zone' %}" class="dropdown-item"  >Zone d'activité</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_description' %}" class="dropdown-item"  >Description détaillée</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_fichier' %}" class="dropdown-item"  >Autre fichier</a>
-                </li>
-                <li>
-                    <a href="{% url 'nouveau_prix_heure' %}" class="dropdown-item"  >Prix par heure</a>
-                </li>
-                <li>
-                    <a href="{% url 'demande_cours_recu' %}" class="dropdown-item"  >Demandes de cours</a>
-                </li>
-                <li>
-                    <a href="{% url 'email_recu_prof' %}" class="dropdown-item"  >Emails reçus</a>
-                </li>
+                    <li>
+                        <a class="nav-link" href="{% url 'profil_prof' id_user=user.id %}"><strong>Voire mon profil</strong></a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_diplome' %}" class="dropdown-item"  >Diplome</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_experience' %}" class="dropdown-item"  >Expérience</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Format cours</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_matiere' %}" class="dropdown-item"  >Matière</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_zone' %}" class="dropdown-item"  >Zone d'activité</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_description' %}" class="dropdown-item"  >Description détaillée</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_fichier' %}" class="dropdown-item"  >Autres fichiers</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'nouveau_prix_heure' %}" class="dropdown-item"  >Prix par heure</a>
+                    </li>
+                    
                 </ul>
             </li>
             <li>
-                <a class="nav-link" href="{% url 'profil_prof' id_user=user.id %}"><strong>Mon profil</strong></a>
-            </li>
-            <li>
-                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Modifier/Supprimer</strong></a>
+                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Modifier mon profil</strong></a>
                 <ul class="collapse list-unstyled" id="pageSubmenu">
                     <li>
                         <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre mot de passe</a>
@@ -71,7 +66,30 @@
                 </ul>
             </li>
             <li>
-                <a class="nav-link" href="{% url 'logout' %}"><strong>Déconnection</strong></a>
+                <a href="#pageSubmenu_eleve" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Gérer mes élèves</strong></a>
+                <ul class="collapse list-unstyled" id="pageSubmenu_eleve">
+                    <li>
+                        <a href="{% url 'liste_seance_cours' %}" class="dropdown-item"  >Liste de mes cours en attentes</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'demande_cours_recu' %}" class="dropdown-item"  >Nouvelles demandes de cours</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'email_recu_prof' %}" class="dropdown-item"  >Nouveaux émails reçus</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'liste_declaration_cours' %}" class="dropdown-item"  >Liste de mes cours déclarés</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'liste_mes_eleve' %}" class="dropdown-item"  >Liste de mes élèves</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'ajouter_cours' %}" class="dropdown-item"  >Ajouter un cours</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'temoignage_mes_eleves' %}" class="dropdown-item"  >Liste des témoignages</a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>

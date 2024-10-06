@@ -56,9 +56,10 @@
     <div class="container">
         <div class="container bg-light  p-5" name="diplome">
             <div class="row  ajout-dipl p3" id="supprimerDivDiplome_1" >
-                <div class="col-md-1 col-sm-12  position-relative">
-                    <label class="form-label" >Principal</label>
+                <div class="col-md-1 col-sm-12  position-relative" for="principal_id_1">
+                    
                     <input class="form-check-input" type="checkbox" id="principal_id_1" name="principal_1">
+                    <label class="form-label" >Principal</label>
                 </div>
                 <div class="col-md-3 col-sm-12 position-relative">
                     <label  class="form-label">Diplôme</label>
@@ -100,7 +101,7 @@
                 <div class="col-12">
                     <!--data-options: pour stocker les options, puis en les récupérant dans la fonction JavaScript -->
                     <!-- voire: ajouterDiplome_01 -->
-                    <button class="btn btn-secondary" onclick="ajouterDiplome_01('row g-2 ajout-dipl')" id="boutonAjouterDiplome" data-options='{% for cathegorie in diplome_cathegories %}<option value="{{ cathegorie.dip_cathegorie }}">{{ cathegorie.dip_cathegorie }}</option>{% endfor %}'>Ajouter un diplôme</button>
+                    <button class="btn btn-secondary" onclick="ajouterDiplome_01('row  ajout-dipl p3')" id="boutonAjouterDiplome" data-options='{% for cathegorie in diplome_cathegories %}<option value="{{ cathegorie.dip_cathegorie }}">{{ cathegorie.dip_cathegorie }}</option>{% endfor %}'>Ajouter un diplôme</button>
                 </div>
             </div>
         </div>

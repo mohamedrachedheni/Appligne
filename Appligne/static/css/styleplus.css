@@ -64,3 +64,22 @@
 .container-recherche {
     background-color: rgba(159, 237, 232, 0.2); /* Couleur blanche avec 50% de transparence */
 }
+
+/* ajouté au code original */
+.nav-item {
+    white-space: nowrap; /* le texte reste sur une seule ligne.  */
+    overflow: hidden; /* masquera tout texte qui dépasse les limites de son conteneur */
+    text-overflow: ellipsis; /* ajoutera des points de suspension si le texte est trop long pour tenir dans l'espace disponible. */
+}
+
+.error-message {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.temoignage-text {
+    word-wrap: break-word !important;  /* Forcer le retour à la ligne au besoin */
+    overflow: hidden !important;       /* Empêche le débordement en cas de texte trop long */
+    text-overflow: ellipsis !important; /* Ajoute des points de suspension si le texte est tronqué */
+    white-space: normal !important;    /* Permet d'avoir des retours à la ligne normaux */
+}

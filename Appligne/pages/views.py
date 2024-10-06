@@ -1,48 +1,174 @@
-from django.shortcuts import render
-from accounts.models import Professeur, Prof_zone, Departement, Matiere, Niveau, Region
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404 #dans le cas ou l' id du professeur ne correspond pas à un enregistrement
-from django.contrib.auth.models import User
-from accounts.models import Pro_fichier, Prof_doc_telecharge, Email_telecharge, Prix_heure, Prof_mat_niv
+
+from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region
+from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof
+from eleves.models import Temoignage
 from django.contrib import messages
-# La fonction render renvoie une instance de HttpResponse contenant le contenu 
-#HTML rendu du template spécifié, donc vous n'avez pas besoin de gérer HttpResponse 
-#explicitement dans ce cas.
-# Cependant, si vous avez besoin de créer une réponse HTTP personna
-# lisée pour une raison quelconque (par exemple, pour envoyer une réponse JSON brute), 
-# alors vous devez importer HttpResponse ou toute autre classe de réponse appropriée depuis django.http.
-from django.http import HttpResponse
-from accounts.models import Professeur
-import os
-from django.core.mail import send_mail
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import OuterRef, Subquery, DecimalField
+from django.core.validators import  EmailValidator
+from django.core.exceptions import  ValidationError
+from django.core.paginator import Paginator
+from django.core.mail import send_mail
 
 # Create your views here.
 
 
 
-def liste_prof(request):
-
-    radio_name = "a_domicile" # valeur par défaut des paramètres de recherches si la page est activée par son url
-    radio_name_text = "Cours à domicile"
+def index(request):
+    # les paramètres par défaut pour les champs de recherche prof
+    radio_name = "a_domicile"
     matiere_defaut = "Maths"
     niveau_defaut = "Terminale Générale"
     region_defaut = "ILE-DE-FRANCE"
     departement_defaut = "PARIS"
 
-    # Récupère toutes les matières, niveaux, régions et départements pour les champs liste de valeurs
+    # Récupère toutes les matières, niveaux, régions et départements pour les listes déroulentes
     matieres = Matiere.objects.all()
     niveaux = Niveau.objects.all()
     regions = Region.objects.filter(nom_pays__nom_pays='France')
     departements = Departement.objects.filter(region__region=region_defaut)
+
+    # Gérer la pagination des témoignages avec les 4 meilleurs témoignages (Très bien, Excellent)
+    temoignage_tris = []
+    eleve_temoignage = set()
+    prof_temoignage = set()
+
+    # Récupérer les témoignages avec une évaluation égale ou supérieure à 4 (Très bien, Excellent)
+    temoignages = Temoignage.objects.filter(evaluation_eleve__gte=4)
+
+    # Boucle pour filtrer les témoignages uniques par élève et professeur, et limiter à 4 résultats
+    for temoignage in temoignages:
+        if temoignage.user_eleve not in eleve_temoignage and temoignage.user_prof not in prof_temoignage:
+            eleve_temoignage.add(temoignage.user_eleve)
+            prof_temoignage.add(temoignage.user_prof)
+            temoignage_tris.append(temoignage)
+            if len(temoignage_tris) >3:
+                break
+
+
+    context = {
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'regions': regions,
+        'departements': departements,
+        'radio_name': radio_name,
+        'matiere_defaut': matiere_defaut,
+        'niveau_defaut': niveau_defaut,
+        'region_defaut': region_defaut,
+        'departement_defaut': departement_defaut,
+        'temoignage_tris': temoignage_tris,
+    }
+
+    if 'region' in request.POST: # si la page et actiée par input name='region'
+        # celà se produit lorsque  JS  actualiser laliste deroulente Région suite au changement de l'option 
+        # sélectionnéée dans la liste déroulente département
+        # récupérer matiere_defaut, niveau_defaut, region_defaut
+        matiere_defaut = request.POST['matiere'] # les derniers paramètres sélectionnés
+        niveau_defaut = request.POST['niveau']
+        region_defaut = request.POST['region']
+
+        # récupérer format cours
+        if request.POST.get('a_domicile', None):
+            radio_name = "a_domicile"
+        if request.POST.get('webcam', None):
+            radio_name = "webcam"
+        if request.POST.get('stage', None):
+            radio_name = "stage"
+        if request.POST.get('stage_webcam', None):
+            radio_name = "stage_webcam"
+
+        # actualiser la liste des départements selon la région sélectionnée
+        # est définir par défaut le premier département de la liste comme: departement_defaut
+        departements = Departement.objects.filter(region__region=region_defaut) # la nouvelle liste des départements pour la liste déroulente département
+        departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input
+        
+        context.update({ # pour metre à jour les éléments susseptibles d'etre modifiés
+            'departements': departements, # liste data
+            'radio_name': radio_name,
+            'matiere_defaut': matiere_defaut,
+            'niveau_defaut': niveau_defaut,
+            'region_defaut': region_defaut,
+            'departement_defaut': departement_defaut, # paramètre du champ input
+            'temoignages': temoignages,
+        })
+        
+    if request.method == 'POST' and 'btn_rechercher' in request.POST: # bouton recherche activé
+        # annuler les données précédentes dans la session
+        # Supprimer les données spécifiques de la session
+        if 'radio_name' in request.session:
+            del request.session['radio_name']
+        if 'radio_name_text' in request.session:
+            del request.session['radio_name_text']
+        if 'matiere_defaut' in request.session:
+            del request.session['matiere_defaut']
+        if 'niveau_defaut' in request.session:
+            del request.session['niveau_defaut']
+        if 'region_defaut' in request.session:
+            del request.session['region_defaut']
+        if 'departement_defaut' in request.session:
+            del request.session['departement_defaut']
+        # mettre à jour les données de la session pour une nouvelle recherche    
+        if request.POST.get('a_domicile', None):
+            request.session['radio_name'] = "a_domicile"
+            request.session['radio_name_text'] = "Cours à domicile" # pour le filtre de Prix_heure
+        if request.POST.get('webcam', None):
+            request.session['radio_name'] = "webcam"
+            request.session['radio_name_text'] = "Cours par webcam"
+        if request.POST.get('stage', None):
+            request.session['radio_name'] = "stage"
+            request.session['radio_name_text'] = "Stage pendant les vacances"
+        if request.POST.get('stage_webcam', None):
+            request.session['radio_name'] = "stage_webcam"
+            request.session['radio_name_text'] = "Stage par webcam"
+
+        # Stocker les filtres dans la session pour persistance
+        request.session['matiere_defaut'] = request.POST['matiere']
+        request.session['niveau_defaut'] = request.POST['niveau']
+        request.session['region_defaut'] = request.POST['region']
+        request.session['departement_defaut'] = request.POST['departement']
+        return redirect('liste_prof')
+
+    return render(request, 'pages/index.html', context)
+
+def liste_prof(request):
+     # Récupérer ou définir les valeurs par défaut des filtres de recherche à partir de POST ou de la session
+    # donner la priorité au request puis à la session puis à la valeur par défaut
+    radio_name = request.POST.get('radio_name', request.session.get('radio_name', "a_domicile"))
+    radio_name_text = request.POST.get('radio_name_text', request.session.get('radio_name_text', "Cours à domicile"))
+    matiere_defaut = request.POST.get('matiere', request.session.get('matiere_defaut', "Maths"))
+    niveau_defaut = request.POST.get('niveau', request.session.get('niveau_defaut', "Terminale Générale"))
+    region_defaut = request.POST.get('region', request.session.get('region_defaut', "ILE-DE-FRANCE"))
+    departement_defaut = request.POST.get('departement', request.session.get('departement_defaut', "PARIS"))
+    tri = 'evaluation_decroissante'
+
+    # Récupérer les filtres possibles pour les matières, niveaux, régions et départements
+    matieres = Matiere.objects.all()
+    niveaux = Niveau.objects.all()
+    regions = Region.objects.filter(nom_pays__nom_pays='France')
+    departements = Departement.objects.filter(region__region=region_defaut)
+
+    if 'region' in request.POST and not 'btn_rechercher' in request.POST: # si la page et actiée par input name='region' seulement sans recherche
+        departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input*
+    messages.info(request, f"departement_defaut = {departement_defaut} ") # jusque là c'est bien
     
-    # Dans Django ORM, une sous-requête est souvent utilisée pour effectuer des requêtes complexes 
-    # qui impliquent des relations entre différents modèles. Ici, prix_heure_subquery est utilisée 
-    # pour récupérer le prix par heure (prix_heure) des professeurs (utilisateurs) qui correspondent à 
-    # certains critères de recherche (matière, niveau et format de cours).
-    # La sous-requête prix_heure_subquery est ensuite utilisée dans une requête principale pour 
-    # annoter chaque professeur avec leur prix par heure pour les critères spécifiés.
-    # pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.
+
+    # Gérer les formats de cours sélectionnés dans le cas request.POST avec ou sans recherche
+    # ces testes sont obligatoire si non erreur de résultat, c'est la valeur session qui passe
+    if request.POST.get('a_domicile'):
+        radio_name = "a_domicile"
+        radio_name_text = "Cours à domicile"
+    elif request.POST.get('webcam'):
+        radio_name = "webcam"
+        radio_name_text = "Cours par webcam"
+    elif request.POST.get('stage'):
+        radio_name = "stage"
+        radio_name_text = "Stage pendant les vacances"
+    elif request.POST.get('stage_webcam'): # si on utilise else dans le dernier cas le résultat est faux, c'est la valeut "stage_webcam" qui passe dans le cas not request.POST
+        radio_name = "stage_webcam"
+        radio_name_text = "Stage par webcam"
+
+    # Sous-requête pour récupérer le prix par heure en fonction des filtres
     prix_heure_subquery = Prix_heure.objects.filter(
         user=OuterRef('pk'),
         prof_mat_niv__matiere__matiere=matiere_defaut,
@@ -50,43 +176,43 @@ def liste_prof(request):
         format=radio_name_text
     ).values('prix_heure')
 
-    # Utilisez filter au lieu de all pour exclure les utilisateurs sans enregistrement dans Professeur
-    # Récupère les professeurs filtrés en fonction des paramètres par défaut
-    # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
-    professeurs = User.objects.filter(
-        professeur__isnull=False,
-        prof_mat_niv__matiere__matiere=matiere_defaut,
-        prof_mat_niv__niveau__niveau=niveau_defaut,
-        prof_zone__commune__departement__departement=departement_defaut,
-        **{f'format_cour__{radio_name}': True}, # Utilisation de **f'string'__{} pour construire dynamiquement le nom du paramètre
-    ).annotate(
-        annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField()) 
-        # La méthode annotate est utilisée pour ajouter une annotation prix_heure au QuerySet des professeurs.
-        # Cette annotation inclut la première valeur correspondante de prix_heure pour chaque professeur.
-        # Cette modification permet d'inclure les valeurs prix_heure dans le QuerySet des professeurs 
-        # et les rend accessibles dans le contexte passé au template.
-    ).prefetch_related(
-        'experience_set',
-        'prof_mat_niv_set',
-        'diplome_set',
-        'professeur',
-        'pro_fichier'
-    ).distinct().order_by('id')
+    ordre_tri = '-historique_prof__moyenne_point_cumule' if tri == 'evaluation_decroissante' else '-annotated_prix_heure'
+    # la recherche des prof doit etre en fonction
+    # de la région qui est, elle meme, en foction du type de format du cours
+    # Rechercher les professeurs avec les nouveaux critères si format cours est:("a_domicile", "stage")
+    if radio_name=="stage" or radio_name=="a_domicile":
+        professeurs = User.objects.filter(
+            professeur__isnull=False,
+            prof_mat_niv__matiere__matiere=matiere_defaut,
+            prof_mat_niv__niveau__niveau=niveau_defaut,
+            prof_zone__commune__departement__departement=departement_defaut,
+            **{f'format_cour__{radio_name}': True}
+        ).annotate(
+            annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField())
+        ).select_related('historique_prof').prefetch_related(
+            'experience_set', 'prof_mat_niv_set', 'diplome_set', 'professeur', 'pro_fichier'
+        ).distinct().order_by(ordre_tri)
+    else: # Le crière de la région n'est pas prix en compte pour format cours est:("webcam", "stage_webcam")
+        # le critaire de la région n'a plus de sense
+        professeurs = User.objects.filter(
+            professeur__isnull=False,
+            prof_mat_niv__matiere__matiere=matiere_defaut,
+            prof_mat_niv__niveau__niveau=niveau_defaut,
+            # prof_zone__commune__departement__departement=departement_defaut,
+            **{f'format_cour__{radio_name}': True}
+        ).annotate(
+            annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField())
+        ).select_related('historique_prof').prefetch_related(
+            'experience_set', 'prof_mat_niv_set', 'diplome_set', 'professeur', 'pro_fichier'
+        ).distinct().order_by(ordre_tri)
 
-    # --------------------début Pagination-----------------------
-    # Nombre d'éléments par page
+    # Gérer la pagination avec 4 professeurs par page
     elements_par_page = 4
-
-    # Créer un objet Paginator
     paginator = Paginator(professeurs, elements_par_page)
-
-    # par défaut la page=1 est affichée
     page = request.GET.get('page', 1)
-
-    # cette ligne de code permet de paginer la liste des professeurs et de récupérer la sous-liste correspondant à la page spécifiée,
     professeurs = paginator.get_page(page)
-    # ----------------Fin pagination----------------------
 
+    # Préparer le contexte pour afficher les résultats
     context = {
         'professeurs': professeurs,
         'matieres': matieres,
@@ -98,118 +224,29 @@ def liste_prof(request):
         'niveau_defaut': niveau_defaut,
         'region_defaut': region_defaut,
         'departement_defaut': departement_defaut,
+        'tri': tri,
     }
 
-    if request.method == 'POST' and not 'btn_rechercher' in request.POST: # si la page et actiée mais la recherche non
-        # celà se produit lorsque avec JS pour actualiser laliste deroulente Région suite au changement de l'option 
-        # sélectionnéée dans la liste déroulente département
-        matiere_defaut = request.POST['matiere'] # les derniers paramètres sélectionnés
-        niveau_defaut = request.POST['niveau']
-        region_defaut = request.POST['region']
-
-        if request.POST.get('a_domicile', None):
-            radio_name = "a_domicile"
-        if request.POST.get('webcam', None):
-            radio_name = "webcam"
-        if request.POST.get('stage', None):
-            radio_name = "stage"
-        if request.POST.get('stage_webcam', None):
-            radio_name = "stage_webcam"
-
-        departements = Departement.objects.filter(region__region=region_defaut) # la nouvelle liste des départements pour la liste déroulente département
-        departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input
-        context.update({ # pour metre à jour les éléments susseptibles d'etre modifiés
-            'departements': departements, # liste data
-            'radio_name': radio_name,
-            'matiere_defaut': matiere_defaut,
-            'niveau_defaut': niveau_defaut,
-            'region_defaut': region_defaut,
-            'departement_defaut': departement_defaut, # paramètre du champ input
-        })
-
-    if request.method == 'POST' and 'btn_rechercher' in request.POST: # bouton recherche activé
-        matiere_defaut = request.POST['matiere'] # derniers paramètres sélectionnés
-        niveau_defaut = request.POST['niveau']
-        region_defaut = request.POST['region']
-        departement_defaut = request.POST['departement']
-
-        if request.POST.get('a_domicile', None):
-            radio_name_text = "Cours à domicile" # pour le filtre de Prix_heure
-            radio_name = "a_domicile"
-        if request.POST.get('webcam', None):
-            radio_name = "webcam"
-            radio_name_text = "Cours par webcam"
-        if request.POST.get('stage', None):
-            radio_name = "stage"
-            radio_name_text = "Stage pendant les vacances"
-        if request.POST.get('stage_webcam', None):
-            radio_name = "stage_webcam"
-            radio_name_text = "Stage par webcam"
-
-        request.session['matiere_defaut'] = matiere_defaut
-        request.session['niveau_defaut'] = niveau_defaut
-        request.session['departement_defaut'] = departement_defaut
-        request.session['radio_name'] = radio_name
-        request.session['radio_name_text'] = radio_name_text    
-        # Dans Django ORM, une sous-requête est souvent utilisée pour effectuer des requêtes complexes 
-        # qui impliquent des relations entre différents modèles. Ici, prix_heure_subquery est utilisée 
-        # pour récupérer le prix par heure (prix_heure) des professeurs (utilisateurs) qui correspondent à 
-        # certains critères de recherche (matière, niveau et format de cours).
-        # La sous-requête prix_heure_subquery est ensuite utilisée dans une requête principale pour 
-        # annoter chaque professeur avec leur prix par heure pour les critères spécifiés.
-        # pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.
-        prix_heure_subquery = Prix_heure.objects.filter(
-            user=OuterRef('pk'),
-            prof_mat_niv__matiere__matiere=matiere_defaut,
-            prof_mat_niv__niveau__niveau=niveau_defaut,
-            format=radio_name_text
-        ).values('prix_heure')
-
-        # Utilisez filter au lieu de all pour exclure les utilisateurs sans enregistrement dans Professeur
-        # Récupère les professeurs filtrés en fonction des paramètres par défaut
-        # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
-        professeurs = User.objects.filter(
-            professeur__isnull=False,
-            prof_mat_niv__matiere__matiere=matiere_defaut,
-            prof_mat_niv__niveau__niveau=niveau_defaut,
-            prof_zone__commune__departement__departement=departement_defaut,
-            **{f'format_cour__{radio_name}': True}, # Utilisation de **f'string'__{} pour construire dynamiquement le nom du paramètre
-        ).annotate(
-            annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField()) 
-            # La méthode annotate est utilisée pour ajouter une annotation prix_heure au QuerySet des professeurs.
-            # Cette annotation inclut la première valeur correspondante de prix_heure pour chaque professeur.
-            # Cette modification permet d'inclure les valeurs prix_heure dans le QuerySet des professeurs 
-            # et les rend accessibles dans le contexte passé au template.
-        ).prefetch_related(
-            'experience_set',
-            'prof_mat_niv_set',
-            'diplome_set',
-            'professeur',
-            'pro_fichier'
-        ).distinct().order_by('id')
-        # début pagination
-        elements_par_page = 4 # 4 enregistrement par page
-        paginator = Paginator(professeurs, elements_par_page)
-        page = request.GET.get('page', 1) # par défaut la page=1 est affichée
-        professeurs = paginator.get_page(page)
-        # fin pagination
-
-        context.update({
-            'professeurs': professeurs, # data
-            'radio_name': radio_name, # paramètres de recherche
-            'radio_name_text': radio_name_text,
-            'matiere_defaut': matiere_defaut,
-            'niveau_defaut': niveau_defaut,
-            'region_defaut': region_defaut,
-            'departement_defaut': departement_defaut,
-        })
-        return render(request, 'pages/liste_prof.html', context)
-
+    # Rendre la page avec le contexte (résultats par défaut ou après recherche)
     return render(request, 'pages/liste_prof.html', context)
+
+
 
 
 def profil_prof(request, id_user):
     user = get_object_or_404(User, id=id_user)
+
+   # Récupérer les témoignages
+    temoignages = Temoignage.objects.filter(user_prof=user).distinct()
+
+    # Pagination : diviser la liste des professeurs par pages de 4 éléments
+    elements_par_page = 2
+    paginator = Paginator(temoignages, elements_par_page)
+    page = request.GET.get('page', 1)
+    temoignages = paginator.get_page(page)
+
+    # récupérer Historique_prof
+    historique_prof = Historique_prof.objects.filter(user=user).first()
     
     # Utilisez prefetch_related avec distinct pour précharger les départements et éviter les répétitions
     prof_zones = Prof_zone.objects.filter(user=user).select_related('commune__departement')
@@ -248,147 +285,62 @@ def profil_prof(request, id_user):
     else:
         prix_heure = 'N/A'
 
+    # Liste des Prof
+     # Valeurs par défaut pour les paramètres de recherche
+    radio_name = request.session.get('radio_name', "a_domicile")  # Cours à domicile par défaut
+    radio_name_text = request.session.get('radio_name_text', "Cours à domicile")
+    matiere_defaut = request.session.get('matiere_defaut', "Maths")
+    niveau_defaut = request.session.get('niveau_defaut', "Terminale Générale")
+    region_defaut = request.session.get('region_defaut', "ILE-DE-FRANCE")
+    departement_defaut = request.session.get('departement_defaut', "PARIS")
+    tri = 'evaluation_decroissante'
+
+    # # Récupérer les listes des matières, niveaux, régions et départements pour les filtres de recherche
+    # matieres = Matiere.objects.all()
+    # niveaux = Niveau.objects.all()
+    # regions = Region.objects.filter(nom_pays__nom_pays='France')
+    # departements = Departement.objects.filter(region__region=region_defaut)
+
+    # Sous-requête pour récupérer le prix par heure selon la matière, le niveau et le format du cours
+    prix_heure_subquery = Prix_heure.objects.filter(
+        user=OuterRef('pk'),  # Lien avec le professeur
+        prof_mat_niv__matiere__matiere=matiere_defaut,
+        prof_mat_niv__niveau__niveau=niveau_defaut,
+        format=radio_name_text  # Format du cours (domicile, webcam, etc.)
+    ).values('prix_heure')
+
+    # Récupérer la liste des professeurs filtrés par les paramètres de recherche par défaut
+    professeurs = User.objects.filter(
+    professeur__isnull=False,  # Exclure les utilisateurs qui ne sont pas professeurs
+    prof_mat_niv__matiere__matiere=matiere_defaut,
+    prof_mat_niv__niveau__niveau=niveau_defaut,
+    prof_zone__commune__departement__departement=departement_defaut,
+    **{f'format_cour__{radio_name}': True}  # Dynamique selon le type de cours sélectionné
+    ).annotate(
+        # Annoter les professeurs avec leur prix par heure en fonction de la sous-requête
+        annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField())
+    ).select_related(
+        'historique_prof'  # Charger les enregistrements Historique_prof liés via OneToOne
+    ).prefetch_related(
+        'experience_set', 'prof_mat_niv_set', 'diplome_set', 'professeur', 'pro_fichier'
+    ).distinct().order_by('-historique_prof__moyenne_point_cumule')
+
+    # Pagination : diviser la liste des professeurs par pages de 4 éléments
+    elements_par_page_prof = 4
+    paginator_prof = Paginator(professeurs, elements_par_page_prof)
+    page_prof = request.GET.get('page', 1)
+    professeurs = paginator_prof.get_page(page_prof)
+
     context = {
         'user': user,
         'departements_distincts': departements_distincts,
-        'prix_heure': prix_heure
+        'prix_heure': prix_heure,
+        'historique_prof': historique_prof,
+        'temoignages': temoignages,
+        'professeurs': professeurs,
     }
     return render(request, 'pages/profil_prof.html', context)
 
-def index(request):
-    # les paramètres par défaut pour les champs de recherche prof
-    radio_name = "a_domicile"
-    radio_name_text = "Cours à domicile" # pour le filtre de Prix_heure
-    matiere_defaut = "Maths"
-    niveau_defaut = "Terminale Générale"
-    region_defaut = "ILE-DE-FRANCE"
-    departement_defaut = "PARIS"
-
-    # Récupère toutes les matières, niveaux, régions et départements pour les listes déroulentes
-    matieres = Matiere.objects.all()
-    niveaux = Niveau.objects.all()
-    regions = Region.objects.filter(nom_pays__nom_pays='France')
-    departements = Departement.objects.filter(region__region=region_defaut)
-
-    context = {
-        'matieres': matieres,
-        'niveaux': niveaux,
-        'regions': regions,
-        'departements': departements,
-        'radio_name': radio_name,
-        'matiere_defaut': matiere_defaut,
-        'niveau_defaut': niveau_defaut,
-        'region_defaut': region_defaut,
-        'departement_defaut': departement_defaut,
-    }
-
-    if request.method == 'POST' and not 'btn_rechercher' in request.POST: # si la page et actiée mais la recherche non
-        # messages.info(request, "OK")
-        # celà se produit lorsque avec JS pour actualiser laliste deroulente Région suite au changement de l'option 
-        # sélectionnéée dans la liste déroulente département
-        matiere_defaut = request.POST['matiere'] # les derniers paramètres sélectionnés
-        niveau_defaut = request.POST['niveau']
-        region_defaut = request.POST['region']
-
-        if request.POST.get('a_domicile', None):
-            radio_name = "a_domicile"
-        if request.POST.get('webcam', None):
-            radio_name = "webcam"
-        if request.POST.get('stage', None):
-            radio_name = "stage"
-        if request.POST.get('stage_webcam', None):
-            radio_name = "stage_webcam"
-
-        departements = Departement.objects.filter(region__region=region_defaut) # la nouvelle liste des départements pour la liste déroulente département
-        departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input
-        context.update({ # pour metre à jour les éléments susseptibles d'etre modifiés
-            'departements': departements, # liste data
-            'radio_name': radio_name,
-            'matiere_defaut': matiere_defaut,
-            'niveau_defaut': niveau_defaut,
-            'region_defaut': region_defaut,
-            'departement_defaut': departement_defaut, # paramètre du champ input
-        })
-        
-    if request.method == 'POST' and 'btn_rechercher' in request.POST: # bouton recherche activé
-        matiere_defaut = request.POST['matiere'] # derniers paramètres sélectionnés
-        niveau_defaut = request.POST['niveau']
-        region_defaut = request.POST['region']
-        departement_defaut = request.POST['departement']
-
-        if request.POST.get('a_domicile', None):
-            radio_name_text = "Cours à domicile" # pour le filtre de Prix_heure
-            radio_name = "a_domicile"
-        if request.POST.get('webcam', None):
-            radio_name = "webcam"
-            radio_name_text = "Cours par webcam"
-        if request.POST.get('stage', None):
-            radio_name = "stage"
-            radio_name_text = "Stage pendant les vacances"
-        if request.POST.get('stage_webcam', None):
-            radio_name = "stage_webcam"
-            radio_name_text = "Stage par webcam"
-
-        request.session['matiere_defaut'] = matiere_defaut
-        request.session['niveau_defaut'] = niveau_defaut
-        request.session['departement_defaut'] = departement_defaut
-        request.session['radio_name'] = radio_name
-        request.session['radio_name_text'] = radio_name_text
-        # Dans Django ORM, une sous-requête est souvent utilisée pour effectuer des requêtes complexes 
-        # qui impliquent des relations entre différents modèles. Ici, prix_heure_subquery est utilisée 
-        # pour récupérer le prix par heure (prix_heure) des professeurs (utilisateurs) qui correspondent à 
-        # certains critères de recherche (matière, niveau et format de cours).
-        # La sous-requête prix_heure_subquery est ensuite utilisée dans une requête principale pour 
-        # annoter chaque professeur avec leur prix par heure pour les critères spécifiés.
-        # pour correspondre au nom de l'annotation utilisée dans la vue. Cela permettra d'afficher correctement le prix par heure pour chaque professeur.
-        prix_heure_subquery = Prix_heure.objects.filter(
-            user=OuterRef('pk'),
-            prof_mat_niv__matiere__matiere=matiere_defaut,
-            prof_mat_niv__niveau__niveau=niveau_defaut,
-            format=radio_name_text
-        ).values('prix_heure')
-
-        # Utilisez filter au lieu de all pour exclure les utilisateurs sans enregistrement dans Professeur
-        # Récupère les professeurs filtrés en fonction des paramètres par défaut
-        # Utilise prefetch_related pour optimiser les requêtes SQL et éviter les requêtes multiples
-        professeurs = User.objects.filter(
-            professeur__isnull=False,
-            prof_mat_niv__matiere__matiere=matiere_defaut,
-            prof_mat_niv__niveau__niveau=niveau_defaut,
-            prof_zone__commune__departement__departement=departement_defaut,
-            **{f'format_cour__{radio_name}': True}, # Utilisation de **f'string'__{} pour construire dynamiquement le nom du paramètre
-        ).annotate(
-            annotated_prix_heure=Subquery(prix_heure_subquery[:1], output_field=DecimalField()) 
-            # La méthode annotate est utilisée pour ajouter une annotation prix_heure au QuerySet des professeurs.
-            # Cette annotation inclut la première valeur correspondante de prix_heure pour chaque professeur.
-            # Cette modification permet d'inclure les valeurs prix_heure dans le QuerySet des professeurs 
-            # et les rend accessibles dans le contexte passé au template.
-        ).prefetch_related(
-            'experience_set',
-            'prof_mat_niv_set',
-            'diplome_set',
-            'professeur',
-            'pro_fichier'
-        ).distinct().order_by('id')
-        # début pagination
-        elements_par_page = 4 # 4 enregistrement par page
-        paginator = Paginator(professeurs, elements_par_page)
-        page = request.GET.get('page', 1) # par défaut la page=1 est affichée
-        professeurs = paginator.get_page(page)
-        # fin pagination
-
-        context.update({
-            'professeurs': professeurs, # data
-            'radio_name': radio_name, # paramètres de recherche
-            'radio_name_text': radio_name_text,
-            'matiere_defaut': matiere_defaut,
-            'niveau_defaut': niveau_defaut,
-            'region_defaut': region_defaut,
-            'departement_defaut': departement_defaut,
-        })
-        return render(request, 'pages/liste_prof.html', context)
-
-    return render(request, 'pages/index.html', context)
 
 # destiné au email envoyées par les visiteur qui n'ont pas encore de compte
 def nous_contacter(request):
@@ -404,19 +356,30 @@ def nous_contacter(request):
             if not email:
                 messages.error(request, "Vous devez indiquer votre email ")
                 return render(request, 'pages/nous_contacter.html')
-            # messages.error(request, "Teste 03 ")
             # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
             user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
             user_destinataire_id = user_destinataire.id
             
             # traitement de l'envoie de l'email
+            # Validation de l'email_prof
+            email_validator = EmailValidator()
+            try:
+                email_validator(email)
+            except ValidationError:
+                messages.error(request, "L'adresse email est invalide.")
+                return render(request, 'pages/nous_contacter.html')
+            
             # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
-            sujet = request.POST.get('sujet', '').strip()  # Obtient la valeur de 'sujet' ou une chaîne vide
-            if not sujet:  # Vérifie si sujet est nul ou une chaîne d'espaces après le strip
-                sujet = "Sujet non défini"
-            # messages.error(request, f"Teste 02 sujet= {sujet} ")
+            sujet = request.POST.get('sujet', 'Sujet non défini').strip()  # Obtient la valeur de 'sujet' ou une chaîne vide
             # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
             destinations = ['prosib25@gmail.com']
+            # Validation des emails dans destinations
+            for destination in destinations:
+                try:
+                    email_validator(destination)
+                except ValidationError:
+                    messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                    return render(request, 'pages/nous_contacter.html')
             try:
                 send_mail(
                     sujet,
@@ -431,7 +394,6 @@ def nous_contacter(request):
             
             messages.success(request, "L'email a été envoyé avec succès. ")
             email_telecharge = Email_telecharge( email_telecharge=email, text_email=text_email, user_destinataire=user_destinataire_id, sujet=sujet)
-            # messages.error(request, "Teste 04 ")
             email_telecharge.save()
             messages.success(request, "Email enregistré")
     return render(request, 'pages/nous_contacter.html')

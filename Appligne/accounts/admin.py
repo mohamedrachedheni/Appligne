@@ -1,11 +1,11 @@
 from django.contrib import admin
+from .models import Pays
 from .models import Professeur
 from .models import Diplome_cathegorie
 from .models import Diplome
 from .models import Experience_cathegorie
 from .models import Experience
 from .models import Format_cour
-from .models import Pays
 from .models import Region
 from .models import Departement
 from .models import Commune
@@ -19,10 +19,25 @@ from .models import Pro_fichier
 from .models import Prof_doc_telecharge
 from .models import Email_telecharge
 from .models import Email_detaille
-from .models import Email_suivi
+from .models import Prix_heure
+from .models import Mes_eleves
+from .models import Payment
+from .models import Cours
+from .models import Horaire
+from .models import Demande_paiement
+from .models import Detail_demande_paiement
+from .models import Historique_prof
+
+
+
+
 
 
     
+
+
+
+
 
 
 # Register your models here.
@@ -46,5 +61,11 @@ admin.site.register(Pro_fichier)
 admin.site.register(Prof_doc_telecharge)
 admin.site.register(Email_telecharge)
 admin.site.register(Email_detaille)
-admin.site.register(Email_suivi)
-
+admin.site.register(Prix_heure)
+admin.site.register(Mes_eleves)
+admin.site.register(Payment)
+admin.site.register(Cours)
+admin.site.register(Horaire)
+admin.site.register(Demande_paiement)
+admin.site.register(Detail_demande_paiement)
+admin.site.register(Historique_prof)

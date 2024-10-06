@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Modifier compte professeur{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Ajouter un cours</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off">
+                {% csrf_token %}
+                
+                <!-- mon compte début -->
+                <!-- identité et coordonnees debut -->
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="container bg-light p-5">
+                            <div class="row g-4">
+                                {% if request.user.is_authenticated %}
+                                <!-- Elève inscrit -->
+                                <div class="col-md-12 position-relative">
+                                    <label class="form-label">Elève inscrit</label>
+                                    <div class="dropdown">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="eleve_id" name="eleve" readonly required value="{{ eleve }}">
+                                            <ul class="dropdown-menu" id="dropdownMenu_eleve_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_eleve_id">
+                                                {% for eleve in mes_eleves %}
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="eleve_{{ forloop.counter }}" data-value="{{ eleve }}">{{ eleve }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                            <input type="hidden" id="selected_eleve_id">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Format cours -->
+                                <div class="col-md-3 position-relative">
+                                    <label class="form-label">Format cours</label>
+                                    <div class="dropdown">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="format_id" name="format"  required value="{{ format }}">
+                                            <ul class="dropdown-menu" id="dropdownMenu_format_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_format_id">
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours à domicile">Cours à domicile</a></li>
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours en ligne">Cours en ligne</a></li>
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage pendant les vacances">Stage pendant les vacances</a></li>
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours en ligne en petit groupe">Cours en ligne en petit groupe</a></li>
+                                            </ul>
+                                            <input type="hidden" id="selected_format_id">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Matière -->
+                                <div class="col-md-3 position-relative">
+                                    <label class="form-label">Matière</label>
+                                    <div class="dropdown">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="matiere_id" name="matiere"  required value="{{ matiere }}">
+                                            <ul class="dropdown-menu" id="dropdownMenu_matiere_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_matiere_id">
+                                                {% for une_matiere in matieres %}
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="une_matiere_{{ forloop.counter }}" data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                            <input type="hidden" id="selected_matiere_id">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Niveaux -->
+                                <div class="col-md-3 position-relative">
+                                    <label class="form-label">Niveau</label>
+                                    <div class="dropdown">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="niveau_id" name="niveau"  required value="{{ niveau }}">
+                                            <ul class="dropdown-menu" id="dropdownMenu_niveau_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_niveau_id">
+                                                {% for niveau in niveaux %}
+                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="niveau_{{ forloop.counter }}" data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                            <input type="hidden" id="selected_niveau_id">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2 position-relative">
+                                    <label for="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="form-label">Prix par heure:   &euro;/h</label>
+                                    <input type="text" class="form-control form-control-intitule prix-heure text-center " id="prix_heure_id" name="prix_heure" value="{{prix_heure}}" >
+                                </div>
+                                <div class="form-check col-lg-2 position-relative ">
+                                    
+                                    <input class="form-check-input" type="checkbox" id="is_active_id" name="is_active" checked >
+                                    <label class="form-label" for="is_active_id">Est actif</label>
+                                </div>
+                                <div class="row justify-content-end g-2 p-3">
+                                    <div class="col-lg-1 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning" name="btn_enr">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- identité et coordonnees Fin -->
+            </form>
+            <!-- fin page -->
+        </div>
+    </div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_ajouter_cours.js' %}"></script>
+{% endblock %}

@@ -13,7 +13,8 @@
         {{msg.tags|title}}
         {% endif %}
         :</strong>
-       {{msg}}
+        <!-- Cela rendra le contenu HTML à l'intérieur du message correctement. -->
+       {{msg|safe}} <!-- |safe pour que le rendu des messages dans le template n'échappe pas les balises HTML tel que: (<br>: revenir à la ligne)-->
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 {% endfor %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Témoignage{% endblock %}
+
+
+{% block head %}
+    {{ block.super }}  <!-- Conserve les styles existants dans 'base.html' -->
+    <link rel="stylesheet" href="{% static 'css/styleplus_temoignage.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- Titre de la page -->
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <h4 class="text-center text-white">Gérer mon compte élève</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Début de la section principale du compte élève -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Inclusion de la sidebar du compte élève -->
+        {% include 'partials/_sidebar_eleve.html' %}
+    </div>
+    
+    <!-- Contenu principal de la page -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-1">
+            <div class="container">
+                <!-- Titre secondaire de la section témoignage et évaluation -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Témoignage et évaluation</h6>
+                </div>
+                <!-- Affichage des alertes (succès, erreurs, etc.) -->
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Début du formulaire pour soumettre un témoignage -->
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %} <!-- Token de sécurité CSRF -->
+
+            <!-- Section de sélection du professeur et soumission du témoignage -->
+            <div class="container-xxl py-5" id="identite">
+                <div class="container bg-light p-5">
+                    <div class="row g-4">
+                        <!-- Sélection du professeur à évaluer -->
+                        <div class="col-12">
+                            <label for="prof_id" class="form-label">Sélectionnez un professeur :</label>
+                            <select class="form-control" id="prof_id" name="prof">
+                                <option value="0">Sélectionner</option>
+                                <!-- Boucle pour afficher les options des professeurs disponibles -->
+                                {% for prof in list_prof %}
+                                <option value="{{ prof.id }}" {% if selected_prof == prof.id|stringformat:"s" %}selected{% endif %}>
+                                    Prof: {{ prof.last_name }} {{ prof.first_name }} -- Téléphone: {{ prof.professeur.numero_telephone }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        
+<!-- Évaluation en étoiles -->
+                        <div class="col-sm-12">
+                            <div class="mb-2">
+                                <!-- Boucle pour afficher les 5 étoiles cliquables -->
+                                <small class="fa fa-star spaced"   id="t1" onclick="rate(1)"></small>
+                                <small class="fa fa-star spaced"   id="t2" onclick="rate(2)"></small>
+                                <small class="fa fa-star spaced"   id="t3" onclick="rate(3)"></small>
+                                <small class="fa fa-star spaced"   id="t4" onclick="rate(4)"></small>
+                                <small class="fa fa-star spaced"   id="t5" onclick="rate(5)"></small>
+                                
+                                <!-- Label pour afficher la note sélectionnée -->
+                                <small>
+                                    <label class="form-label spaced" id="t6" style="font-size: large;">Témoignage</label>
+                                </small>
+                            </div>
+                            <!-- Champ caché pour stocker la note sélectionnée -->
+                            <input type="hidden" name="temoignage" id="temoignage-value" value="{{selected_temoignage}}">
+                        </div>
+                        <!-- Zone de texte pour le contenu du témoignage -->
+                        <div class="col-12 position-relative">
+                            <label for="text_email_id" class="form-label">Contenu de votre témoignage :</label>
+                            <textarea class="form-control profil" id="text_email_id" rows="4" name="text"  maxlength="300">{{ selected_text|default_if_none:'' }}</textarea>
+                        </div>
+
+                        <!-- Boutons pour retourner au compte ou soumettre le témoignage -->
+                        <div class="row justify-content-between g-2 p-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <a class="btn btn-primary" href="{% url 'compte_eleve' %}"><span style="color: white;">Votre compte</span></a>
+                            </div>
+                            <div class="col-lg-1 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-warning" name="btn_enr">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <!-- Fin du formulaire -->
+    </div>
+</div>
+<!-- Fin de la section principale du compte élève -->
+
+<!-- Bouton pour retourner en haut de la page -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+
+<!-- Chargement du fichier JavaScript pour gérer l'interaction des étoiles -->
+<script src="{% static 'js/Code_en_plus_temoignage.js' %}"></script>
+{% endblock %}

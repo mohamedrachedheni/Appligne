@@ -38,8 +38,39 @@
                     <!-- <div class="container bg-light  "> -->
                         <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu' %}">
                             {% csrf_token %}
-                            
-                            <!-- parcours scolaire debut -->
+                            <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
+                                style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                                <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
+                            </div>
+                            <div class="container-xxl " >
+                                <div class="row justify-content-between g-2 p-3 ">
+                                    <div class="col-lg-3 col-sm-12">
+                                        <button type="submit" class="btn btn-primary" name="btn_nouveau">
+                                            Nouveaux
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-12">
+                                        <button type="submit" class="btn btn-primary" name="btn_attente">
+                                            En attente
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-2 col-sm-12">
+                                        <button type="submit" class="btn btn-primary" name="btn_ignore">
+                                            Ignorés
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-2 col-sm-12">
+                                        <button type="submit" class="btn btn-primary" name="btn_repondu">
+                                            Répondus
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-2 col-sm-12">
+                                        <button type="submit" class="btn btn-primary" name="btn_tous">
+                                            Tous
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="container-xxl py-5 bg-light " >
                                 <!-- <div class="container"> -->
                                     <!-- <div class="container bg-light "> -->
@@ -48,11 +79,15 @@
                                             <div class="row  ajout-dipl "  >
                                                 <div class="col-md-2 col-sm-12 position-relative ">
                                                     <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" >
+                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" readonly>
                                                 </div>
-                                                <div class="col-md-6 col-sm-12 position-relative">
+                                                <div class="col-md-4 col-sm-12 position-relative">
                                                     <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" >
+                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" readonly>
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Réponse</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi}}" readonly>
                                                 </div>
                                                 <div class="col-md-4 col-sm-12 position-relative">
                                                     <div class="row  ajout-dipl ">
@@ -60,7 +95,7 @@
                                                         <div class="col-md-8 col-sm-12 position-relative">
                                                 
                                                             <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
-                                                                value="{{email.user.first_name}}  {{email.user.last_name}}">
+                                                                value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
                                                         </div>
                                                         <div class="col-md-4 col-sm-12 position-relative">
                                                             <a class="btn btn-primary" name="btn_détaille_{{ email.id }}"

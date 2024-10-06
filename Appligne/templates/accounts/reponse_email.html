@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Compte éléve{% endblock %}
+{% block title %} | Réponse Email{% endblock %}
 
 {% block content %}
 
@@ -40,7 +40,7 @@
                 </div>
             </div>
             <!-- Début Form-->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'reponse_email' email_id  %}"  >
+            <form method="POST" enctype="multipart/form-data" autocomplete="off"  >
                 {% csrf_token %}
             
                 <!-- fichiers prof debut -->
@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-12 position-relative">
                                     <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
-                                    <textarea class="form-control" id="text_email_id" rows="4" name="text_email" style="height: 400px;"  >
+                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" >
                                             {{text_email}}
                                         </textarea>
                                         
@@ -97,5 +97,21 @@
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 {% endblock %}
 {% block javascript %}
-<script src="{% static 'js/Code_en_plus_nouveau_coordonnee_eleve.js' %}"></script>
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
 {% endblock %}

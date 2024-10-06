@@ -51,26 +51,31 @@
                                 <div class="col-12 position-relative">
                                     <label for="sujet_id" class="form-label">Sujet de l'email</label>
                                     <input type="text" class="form-control" id="sujet_id"
-                                         name="sujet" value="{{email.sujet}}" >
+                                         name="sujet" value="{{email.sujet}}" readonly >
                                 </div>
                                 <div class="col-12 position-relative">
                                     <label for="text_email_id" class="form-label">Contenu de votre email reçu :</label>
-                                    <textarea class="form-control" id="text_email_id" rows="4" name="text_email" placeholder="Au besoin, posez vos questions" style="height: 400px;" >
+                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" placeholder="Au besoin, posez vos questions"  readonly>
                                             {{email.text_email}}
                                     </textarea>
                                 </div>
                                 <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                    <div class="col-lg-3 col-sm-12">
                                         <button type="submit" class="btn btn-warning" name="btn_ignorer">
                                             Ignorer
                                         </button>
                                     </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="col-lg-3 col-sm-12">
                                         <button type="submit" class="btn btn-success" name="btn_confirmer">
                                             Confirmer la réception
                                         </button>
                                     </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                    <div class="col-lg-3 col-sm-12">
+                                        <button type="submit" class="btn btn-success" name="btn_historique">
+                                            Voire la réponse à cet émail
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-12">
                                         <button type="submit" class="btn btn-primary" name="btn_repondre">
                                             Répondre
                                         </button>
@@ -97,5 +102,21 @@
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 {% endblock %}
 {% block javascript %}
-<script src="{% static 'js/Code_en_plus_nouveau_coordonnee_eleve.js' %}"></script>
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
 {% endblock %}

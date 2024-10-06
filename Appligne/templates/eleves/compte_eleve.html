@@ -19,42 +19,119 @@
         </div>
     </div>
     <!-- Header End -->
-
-    <!-- mon compte début -->
+    <!-- Mon compte début -->
     <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- Début sidebar -->
             {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
+            <!-- Fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Votre compte élève</h6>
-                        <h1 class="mb-5">Gérez votre compte</h1>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="container">
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+                <!-- Services début -->
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="row g-4">
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'demande_cours_eleve' %}">
+                                            <img src="{% static 'icon/ajouter_cours.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Ajouter un cours">
+                                            <h5 class="mb-3">Demande de cours</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'email_recu' %}">
+                                            <img src="{% static 'icon/publicite-par-e-mail.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Nouveaux émails">
+                                            <h5 class="mb-3">Nouveaux émails</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'demande_paiement_recu' %}">
+                                            <img src="{% static 'icon/money-management.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Cours déclarés">
+                                            <h5 class="mb-3">Demande de paiement</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'temoignage_eleve' %}">
+                                            <img src="{% static 'icon/evaluation.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Les témoignages">
+                                            <h5 class="mb-3">Témoignager</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'modifier_coordonnee_eleve' %}">
+                                            <img src="{% static 'icon/lobtention-du-diplome.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Cours en attentes">
+                                            <h5 class="mb-3">Coordonnées élève</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'modifier_coordonnee_parent' %}">
+                                            <img src="{% static 'icon/famille.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Nouvelles demandes">
+                                            <h5 class="mb-3">Coordonnées parent</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'modifier_mot_pass' %}">
+                                            <img src="{% static 'icon/cadenas.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Liste de mes élèves">
+                                            <h5 class="mb-3">Modifier mot de passe</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                                <div class="service-item text-center pt-3">
+                                    <div class="p-4">
+                                        <a href="{% url 'logout' %}">
+                                            <img src="{% static 'icon/se-deconnecter.png' %}" style="width: 75px; height: 75px; border: 2px solid transparent;" alt="Mon profil">
+                                            <h5 class="mb-3">Se déconnecter</h5>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <!-- Services fin -->
             </div>
-            <!-- Début Form-->
-
-
-
-
-
-
-            <!-- Fin Form -->
         </div>
     </div>
-    <!-- mon compte fin -->
+    <!-- Mon compte fin -->
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 {% endblock %}
 {% block javascript %}
-<script src="{% static 'js/Code_en_plus_nouveau_coordonnee_eleve.js' %}"></script>
+
 {% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Liste des cours en attente{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- Header Start -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h4 class="text-center text-white">Gérer mon compte</h4>
+                    <h2 class="text-center text-white">Consulter mes élèves</h2>
+                </div>
+                <!-- Header End -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Mon compte début -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Début Sidebar -->
+        {% include 'partials/_sidebar.html' %}
+        <!-- Fin Sidebar -->
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Début page -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Liste des cours en attente</h6>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Identité et coordonnées début -->
+            <div class="container-xxl py-5">
+                <div class="container">
+                    <div class="container bg-light p-5">
+                        <div class="row g-1">
+                            {% if request.user.is_authenticated %}
+
+                            <!-- Horaires des Cours -->
+                            {% for enr_horaire in liste_horaires %}
+                            <div class="col-lg-2 position-relative">
+                                <label class="form-label" for="date_{{ forloop.counter }}_enr">Date</label>
+                                <input type="text" class="form-control form-control-date"
+                                    id="date_{{ forloop.counter }}" name="date_{{ enr_horaire.id }}"
+                                    value="{{ enr_horaire.date_cours|date:'d/m/Y' }}" readonly>
+                            </div>
+                            <div class="col-md-1 position-relative">
+                                <label for="debut_{{ forloop.counter }}_id" class="form-label">Début</label>
+                                <input type="text" class="form-control form-control-heure"
+                                    id="debut_{{ forloop.counter }}_id" name="debut_{{ enr_horaire.id }}"
+                                    value="{{ enr_horaire.heure_debut|time:'H:i' }}" placeholder="00:00" readonly>
+                            </div>
+                            <div class="col-md-1 position-relative">
+                                <label for="fin_{{ forloop.counter }}_id" class="form-label">Fin</label>
+                                <input type="text" class="form-control form-control-heure"
+                                    id="fin_{{ forloop.counter }}_id" name="fin_{{ enr_horaire.id }}"
+                                    value="{{ enr_horaire.heure_fin|time:'H:i' }}" placeholder="00:00" readonly>
+                            </div>
+                            <div class="col-md-2 position-relative">
+                                <label for="matiere_{{ forloop.counter }}_id" class="form-label">Matière</label>
+                                <input type="text" class="form-control" id="matiere_{{ forloop.counter }}_id"
+                                    name="matiere_{{ enr_horaire.id }}" value="{{ enr_horaire.cours.matiere }}" readonly>
+                            </div>
+                            <div class="col-md-2 position-relative">
+                                <label for="niveau_{{ forloop.counter }}_id" class="form-label">Niveau</label>
+                                <input type="text" class="form-control" id="niveau_{{ forloop.counter }}_id"
+                                    name="niveau_{{ enr_horaire.id }}" value="{{ enr_horaire.cours.niveau }}" readonly>
+                            </div>
+                            <div class="col-lg-4 position-relative">
+                                <div class="row">
+                                    <label for="eleve_{{ forloop.counter }}_id" class="form-label">Nom élève</label>
+                                    <div class="col-md-8 position-relative">
+                                        <input type="text" class="form-control" id="eleve_{{ forloop.counter }}_id"
+                                            name="eleve_{{ enr_horaire.id }}"
+                                            value="{{ enr_horaire.cours.mon_eleve.eleve.user.last_name }} {{ enr_horaire.cours.mon_eleve.eleve.user.first_name }}"
+                                            readonly>
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <button type="submit" class="btn btn-warning" name="btn_detaille_{{ enr_horaire.id }}">
+                                            Détail
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Identité et coordonnées Fin -->
+        </form>
+        <!-- Fin page -->
+    </div>
+</div>
+<!-- Mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+
+{% endblock %}

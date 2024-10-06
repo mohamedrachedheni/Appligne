@@ -4,38 +4,38 @@
     <div class="p-4 pt-5">
         <ul class="list-unstyled components mb-5">
             <li >
-                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Ajouter</strong></a>
+                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Mes coordonnées</strong></a>
                 <ul class="collapse list-unstyled" id="homeSubmenu">
                 <li>
-                    <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Ajout coordonnées du parent</a>
+                    <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Ajouter coordonnées du parent</a>
                 </li>
                 <li>
-                    <a href="{% url 'demande_cours_eleve' %}" class="dropdown-item"  >Ajout demande de cours</a>
+                    <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre mot de passe</a>
                 </li>
                 <li>
-                    <a href="{% url 'email_recu' %}" class="dropdown-item"  >Emails reçus</a>
+                    <a href="{% url 'modifier_coordonnee_eleve' %}" class="dropdown-item"  >Modifier coordonnées de l' élève</a>
+                </li>
+                <li>
+                    <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Modier coordonnées du parent</a>
                 </li>
                 </ul>
             </li>
             <li>
-                <a class="nav-link" href="{% url 'compte_eleve' %}"><strong>Votre compte</strong></a>
-            </li>
-            <li>
-                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Modifier/Supprimer</strong></a>
-                <ul class="collapse list-unstyled" id="pageSubmenu">
+                <a href="#coursSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Mes Cours</strong></a>
+                <ul class="collapse list-unstyled" id="coursSubmenu">
                     <li>
-                        <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre mot de passe</a>
+                        <a href="{% url 'demande_cours_eleve' %}" class="dropdown-item"  >Ajouter une demande de cours</a>
                     </li>
                     <li>
-                        <a href="{% url 'modifier_coordonnee_eleve' %}" class="dropdown-item"  >Modifier coordonnées de l' élève</a>
+                        <a href="{% url 'email_recu' %}" class="dropdown-item"  >Nouveaux émails reçus</a>
                     </li>
                     <li>
-                        <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Modier coordonnées du parent</a>
+                        <a href="{% url 'demande_paiement_recu' %}" class="dropdown-item"  >Nouvelles demandes de paiement</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'temoignage_eleve' %}" class="dropdown-item"  >Témoignage</a>
                     </li>
                 </ul>
-            </li>
-            <li>
-                <a class="nav-link" href="{% url 'logout' %}"><strong>Déconnection</strong></a>
             </li>
         </ul>
     </div>

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Détail demande de règlement{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- header Start -->
+                <div class="wow fadeInUp" data-wow-delay="0.1s">
+                    <h4 class="text-white">Gérer mon compte</h4>
+                    <h2 class="text-white">Consulter mes élèves</h2>
+                </div>
+                <!-- header end -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- mon compte début -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- début sidebar -->
+        {% include 'partials/_sidebar.html' %}
+        <!-- fin sidebar -->
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Début page -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-primary px-3">Détail de l'état de demande de règlement</h6>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- identité et coordonnées début -->
+            <div class="container-xxl py-5">
+                <div class="container">
+                    <div class="bg-light p-5">
+                        <div class="row g-1">
+                            {% if request.user.is_authenticated %}
+                            <div class="col-md-12">
+                                <input type="text" class="form-control" id="eleve_id" name="eleve" readonly
+                                    value="Élève: {{ eleve.user.last_name }} {{ eleve.user.first_name }} -- Téléphone: {{ eleve.numero_telephone }} -- Adresse: {{ eleve.adresse }}"
+                                    style="font-weight: bold;">
+                            </div>
+                            <div class="col-md-12">
+                                <input type="text" class="form-control" id="parent_id" name="parent" readonly
+                                    value="Parent: {{ parent.prenom_parent }} {{ parent.nom_parent }} -- Téléphone: {{ parent.telephone_parent }} -- Email: {{ parent.email_parent }}"
+                                    style="font-weight: bold;">
+                            </div>
+                            <div class="col-md-12">
+                                <input type="text" class="form-control" id="demande_id" name="demande" readonly
+                                    value="Montant: {{ demande_paiement.montant }} € -- Vue le: {% if demande_paiement.vue_le %} {{ demande_paiement.vue_le }} {% else %} Pas encore {% endif %} -- Demande: {{ demande_paiement.statut_demande }} -- Règlement: {% if demande_paiement.payment_id %} Effectué {% else %} Non effectué {% endif %} -- Date de création: {{ demande_paiement.date_creation }}"
+                                    style="font-weight: bold;">
+                            </div>
+
+                            <!-- Cours déclarés -->
+                            {% for enr_cours in cours_declares %}
+                            <div class="col-md-12">
+                                <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}"
+                                    name="cours_{{ forloop.counter }}" readonly
+                                    value="{{ enr_cours.cours.format_cours }} -- {{ enr_cours.cours.matiere }} -- Niveau: {{ enr_cours.cours.niveau }}"
+                                    style="font-weight: bold;">
+                            </div>
+
+                            {% for enr_detaille in detaille_declares %}
+                            {% if enr_cours.cours.id == enr_detaille.enr.cours.id %}
+                            <div class="col-lg-12">
+                                <input type="text" class="form-control" id="matiere_id_{{ forloop.counter }}"
+                                    name="date_debut_{{ enr_cours.cours.id }}"
+                                    value="Le: {{ enr_detaille.enr.horaire.date_cours }} -- Début: {{ enr_detaille.enr.horaire.heure_debut }} -- Fin: {{ enr_detaille.enr.horaire.heure_fin }} -- Durée: {{ enr_detaille.enr.horaire.duree }} -- Prix/H: {{ enr_detaille.enr.prix_heure }} € -- Cours: {{ enr_detaille.enr.horaire.statut_cours }}"
+                                    readonly>
+                            </div>
+                            <hr>
+                            {% endif %}
+                            {% endfor %}
+                            {% endfor %}
+
+                            <!-- Messages envoyés et reçus -->
+                            <div class="col-md-12">
+                                <label for="sujet_id" class="form-label"><strong>Objet du message envoyé par le professeur</strong></label>
+                                <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{ email.sujet }}" readonly>
+                            </div>
+                            <div class="col-lg-12">
+                                <label for="text_email_id" class="form-label"><strong>Message joint à la demande de règlement</strong></label>
+                                <textarea class="form-control profil" id="text_email_id" name="text_email" readonly>{{ email.text_email }}</textarea>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="sujet_eleve_id" class="form-label"><strong>Objet de la réponse envoyée par l'élève</strong></label>
+                                <input type="text" class="form-control" id="sujet_eleve_id" name="sujet_eleve"
+                                    value="{% if email_eleve.sujet %}{{ email_eleve.sujet }}{% else %}Pas d'objet{% endif %}" readonly>
+                            </div>
+                            <div class="col-lg-12">
+                                <label for="text_email_eleve_id" class="form-label"><strong>Réponse de l'élève jointe à la demande de règlement</strong></label>
+                                <textarea class="form-control profil" id="text_email_eleve_id" name="text_email_eleve" readonly>{% if email_eleve.text_email %}{{ email_eleve.text_email }}{% else %}Pas de réponse{% endif %}</textarea>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="col-lg-3">
+                                <button type="submit" class="btn btn-warning" name="btn_rappelle">Envoyer un email de rappel</button>
+                            </div>
+                            <div class="col-lg-3">
+                                <button type="submit" class="btn btn-warning" name="btn_annuler">Annuler la déclaration</button>
+                            </div>
+                            <div class="col-lg-3">
+                                <button type="submit" class="btn btn-warning" name="btn_repondre">Répondre à l'email de l'élève</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- identité et coordonnées Fin -->
+        </form>
+        <!-- fin page -->
+    </div>
+</div>
+<!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+{% endblock %}

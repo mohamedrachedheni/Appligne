@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="col-12 position-relative">
                                     <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
-                                    <textarea class="form-control" id="text_email_id" rows="4"
+                                    <textarea class="form-control profil" id="text_email_id" rows="4"
                                         name="text_email" placeholder="Au besoin, posez vos questions" ></textarea>
                                 </div>
                                 <div class="col-md-12 position-relative">
@@ -104,5 +104,21 @@
 
 {% endblock %}
 {% block javascript %}
-    <script src="{% static 'js/nouveau_fichier.js' %}"></script>
+    <script>
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+    <script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    </script>
 {% endblock %}

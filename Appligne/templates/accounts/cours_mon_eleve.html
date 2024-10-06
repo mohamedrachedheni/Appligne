@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Les cours de mon élève{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <!-- Header content -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h4 class="text-center text-white">Gérer mon compte</h4>
+                    <h2 class="text-center text-white">Consulter mes élèves</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Main Content -->
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Sidebar -->
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Page Content -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <!-- Section Title -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Les cours de mon élève</h6>
+                </div>
+                <!-- Alerts -->
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Student Information -->
+            <div class="container-xxl py-5">
+                <div class="container">
+                    <div class="container bg-light p-5">
+                        <div class="row g-1">
+                            {% if request.user.is_authenticated %}
+                            <div class="col-md-12 position-relative">
+                                <!-- Student Details -->
+                                <p><strong>{{ mon_eleve.eleve.user.last_name }}</strong> <strong>{{ mon_eleve.eleve.user.first_name }}</strong></p>
+                                <input type="text" class="form-control" id="eleve_id_{{ forloop.counter }}"
+                                    name="eleve_{{ forloop.counter }}" readonly
+                                    value="[Màj le: {{ mon_eleve.date_modification }}] -- Téléphone: {{ mon_eleve.eleve.numero_telephone }} -- Adresse: {{ mon_eleve.eleve.adresse }}">
+                            </div>
+
+                            <!-- Courses -->
+                            {% for mon_cours in mes_cours %}
+                            <div class="col-md-8 position-relative">
+                                <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}"
+                                    name="cours_{{ forloop.counter }}" readonly
+                                    value="{{ mon_cours.format_cours }} -- {{ mon_cours.matiere }} -- Niveau: {{ mon_cours.niveau }} -- Prix de l'heure: {{ mon_cours.prix_heure }} €">
+                            </div>
+                            <div class="col-md-2 position-relative">
+                                <!-- Button to view course details -->
+                                <a class="btn btn-primary " href="{% url 'modifier_cours' cours_id=mon_cours.id %}">Modifier le cours</a>
+                            </div>
+                            <div class="col-md-2 position-relative">
+                                <!-- Button to view course details -->
+                                <button type="submit" class="btn btn-warning" name="btn_horaire_{{ mon_cours.id }}">
+                                    Détailles horaires
+                                </button>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <!-- End Page Content -->
+    </div>
+</div>
+<!-- End Main Content -->
+
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+
+{% endblock %}

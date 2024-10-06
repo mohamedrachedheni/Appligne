@@ -2,8 +2,11 @@
 {% load static %}
 {% block title %} | Home{% endblock %}
 
+
+
 {% block content %}
-<form>
+
+
 
     <!-- Header Start -->
     <div class="container-fluid bg-ciel  mb-5 ">
@@ -43,15 +46,16 @@
                                 {% endfor %}
                             </p>
                             <div class="mb-3">
-                                <small class="fa fa-star text-warning"></small>
-                                <small class="fa fa-star text-warning"></small>
-                                <small class="fa fa-star text-warning"></small>
-                                <small class="fa fa-star text-warning"></small>
-                                <small class="fa fa-star text-warning"></small>
-                                <small>(4 avis)</small>
+                                <small class="fa fa-star spaced"   id="t1" ></small>
+                                <small class="fa fa-star spaced"   id="t2" ></small>
+                                <small class="fa fa-star spaced"   id="t3" ></small>
+                                <small class="fa fa-star spaced"   id="t4" ></small>
+                                <small class="fa fa-star spaced"   id="t5" ></small>
+                                <small> {% if historique_prof.nb_evaluation %} ( {{ historique_prof.nb_evaluation }} avis) {% else %} Aucun avis {% endif %} </small>
                             </div>
-                            <p class="mb-0"><i class="fa fa-arrow-right text-warning me-2"></i>157 heures
-                                dispensées</p>
+                            <!-- Champ caché pour stocker la note sélectionnée -->
+                            <input type="hidden" name="temoignage" id="temoignage-value" value="{{ historique_prof.moyenne_point_cumule }}">
+                            <p class="mb-0"><i class="fa fa-arrow-right  me-2" style="color: blue;"></i> {% if historique_prof.nb_heure_declare  %} {{ historique_prof.nb_heure_declare }} heures dispensées {% else %} Pas d'heures dispensées {% endif %} </p>
                         </div>
                     </div>
                 </div>
@@ -59,6 +63,20 @@
         </div>
     </div>
     <!-- Header End -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-1">
+            <div class="container">
+                <!-- Titre secondaire de la section témoignage et évaluation -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Témoignage et évaluation</h6>
+                </div>
+                <!-- Affichage des alertes (succès, erreurs, etc.) -->
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Testimonial début -->
 
@@ -75,7 +93,7 @@
             <div class="row g-5">
                 <h5>Présentation</h5>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <span><textarea class="form-control profil bg-light" id="validationTooltip02" rows="" required
+                    <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip02" rows="" required
                             style="border:transparent;">{{ user.pro_fichier.parcours }}</textarea></span>
                 </div>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
@@ -90,7 +108,7 @@
                                             {% if prix_heure is not none and prix_heure != "N/A" %}
                                             {{prix_heure}}&nbsp;€/h
                                             {% else %}
-                                                <strong>Le prix de l'heure n'est pas défini</strong>
+                                                <strong>Le prix de l'heure n'est pas défini/ {{prix_heure}} </strong>
                                             {% endif %}
                                         </b></strong></p>
                                     </div>
@@ -103,7 +121,7 @@
                                     <div class="p-4">
                                         <i class="fa fa-3x fa fa-users text-primary mb-4"></i>
                                         <h5 class="mb-3">Elèves suivis </h5>
-                                        <p><strong><b>25</strong></p>
+                                        <p><strong><b> {{historique_prof.nb_eleve_inscrit}} </strong></p>
                                     </div>
                                 </div>
                             </div>
@@ -118,7 +136,7 @@
             <h5>Méthodologie</h5>
             <div class="col-lg-6 col-md-6 justify-content-start ">
 
-                <span><textarea class="form-control profil bg-light " id="validationTooltip01" required
+                <span><textarea class="form-control profil bg-light "  rows="3" id="validationTooltip01" required
                         style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
             </div>
 
@@ -130,7 +148,7 @@
                                 <div class="p-4">
                                     <i class="fa fa-3x fa-flag text-primary mb-4"></i>
                                     <h5 class="mb-3">Ancienneté</h5>
-                                    <p><strong><b>2019</b></strong></p>
+                                    <p><strong><b> {{historique_prof.date_premier_cours}} </b></strong></p>
                                 </div>
                             </div>
                         </div>
@@ -261,157 +279,106 @@
             </div>
         </div>
     </div>
-
-    <div class="container py-2">
-        <div class="row g-5">
-            <div class="input-group justify-content-start ">
-                <h5>Vos avis.&nbsp;&nbsp;</h5>
-                <div class="mb-3">
-                    <small class="fa fa-star text-primary"></small>
-                    <small class="fa fa-star text-primary"></small>
-                    <small class="fa fa-star text-primary"></small>
-                    <small class="fa fa-star text-primary"></small>
-                    <small class="fa fa-star text-primary"></small>
-                </div>
-                <small class="p-2">&nbsp;&nbsp;(3 avis)</small>
-            </div>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <div class="testimonial-item  ">
-                    <div class="testimonial-text bg-light  p-4" style="height: 200px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Nom éléve</strong></p>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Novem 2023</strong></p>
-                            </div>
-                            <div class="col-lg-12 justify-content-start">
-                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                            </div>
-                        </div>
+    {% if temoignages %}
+    {% for temoignage in temoignages %}
+    <div class="col-lg-6 col-md-6 justify-content-start">
+        <div class="testimonial-item">
+            <div class="testimonial-text {% if forloop.counter|divisibleby:2 %} bg-white {% else %} bg-light {% endif %} p-4" style="height: 200px;">
+                <div class="row gy-2 gx-4 mb-4">
+                    <div class="col-lg-4 justify-content-start">
+                        <p class="mb-0"><strong>{{ temoignage.user_eleve.last_name }} {{ temoignage.user_eleve.first_name }}</strong></p>
                     </div>
-                </div>
-                <div class="testimonial-item  ">
-                    <div class="testimonial-text  p-4" style="height: 200px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Nom éléve</strong></p>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Novem 2023</strong></p>
-                            </div>
-                            <div class="col-lg-12 justify-content-start">
-                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                            </div>
-
+                    <div class="col-lg-4 justify-content-start">
+                        <div class="mb-3">
+                            <small class="fa fa-star " id="id_{{temoignage.id}}_t1" ></small>
+                            <small class="fa fa-star " id="id_{{temoignage.id}}_t2" ></small>
+                            <small class="fa fa-star " id="id_{{temoignage.id}}_t3" ></small>
+                            <small class="fa fa-star " id="id_{{temoignage.id}}_t4" ></small>
+                            <small class="fa fa-star " id="id_{{temoignage.id}}_t5" ></small>
                         </div>
+                        <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}">
                     </div>
-                </div>
-                <div class="testimonial-item  ">
-                    <div class="testimonial-text bg-light   p-4" style="height: 200px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Nom éléve</strong></p>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Novem 2023</strong></p>
-                            </div>
-                            <div class="col-lg-12 justify-content-start">
-                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                            </div>
-
-                        </div>
+                    <div class="col-lg-4 justify-content-start">
+                        <p class="mb-0"><strong>{{ temoignage.date_modification|date:"d/m/Y" }}</strong></p>
                     </div>
-                </div>
-                <div class="testimonial-item  ">
-                    <div class="testimonial-text   p-4" style="height: 200px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Nom éléve</strong></p>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <div class="mb-3">
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                    <small class="fa fa-star text-primary"></small>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 justify-content-start">
-                                <p class="mb-0"><strong>Novem 2023</strong></p>
-                            </div>
-                            <div class="col-lg-12 justify-content-start">
-                                <p class="mb-0">Actuellement élève en PCSI, les cours avec Zakaria m'ont permis de
-                                    prendre confiance en moi et de m'améliorer en maths grâce à des exercices ciblés sur
-                                    mes difficultés et des méthodes précises pour maximiser mon potentiel. Zakaria est
-                                    également pédagogue et à l'écoute. Je le recommande en tant que professeur.</p>
-                            </div>
-                        </div>
+                    <div class="col-lg-12 justify-content-start">
+                        <p class="mb-0 "  
+                        style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; "
+                        >{{ temoignage.text_eleve|slice:":300" }}{% if temoignage.text_eleve|length > 300 %}...{% endif %}</p>
+                    </div>                    
+                    {% if temoignage.text_prof %}
+                    <div class="col-lg-12 justify-content-start">
+                        <p class="mb-0"><strong>Retour du professeur sur le témoignage : </strong>{{ temoignage.text_prof }}</p>
                     </div>
-                </div>
-                <div class="testimonial-item  ">
-                    <div class="testimonial-text   p-4">
-                        <div class="row gy-2 gx-4 mb-4 ">
-                            <div class="col-lg-12 d-flex justify-content-center ">
-                                <nav aria-label="Page navigation example ">
-                                    <ul class="pagination">
-                                        <li class="page-item">
-                                            <a class="page-link" href="#" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                        <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="#" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Pagination -->
+    <div class="col-lg-6 d-flex justify-content-center">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                {% if temoignages.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                {% endif %}
+                
+                {% for num in temoignages.paginator.page_range %}
+                    <li class="page-item {% if temoignages.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                
+                {% if temoignages.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ temoignages.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Script for focus on page link -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var savedPage = localStorage.getItem('currentPage');
+            if (savedPage) {
+                var pageLink = document.querySelector('.pagination a.page-link[href="?page=' + savedPage + '"]');
+                if (pageLink) {
+                    pageLink.focus();
+                }
+            }
+
+            var pageLinks = document.querySelectorAll('.pagination a.page-link');
+            pageLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    var pageNumber = this.getAttribute('href').split('page=')[1];
+                    localStorage.setItem('currentPage', pageNumber);
+                });
+            });
+        });
+    </script>
+
+{% else %}
+    <p>Aucun témoignage trouvé.</p>
+{% endif %}
+
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <div class="row g-5">
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 200px;">
@@ -443,7 +410,7 @@
                 </div>
 
             </div>
-        </div>
+        
         <!-- Testimonial fin -->
 
                 <!-- video début -->
@@ -488,33 +455,54 @@
                 <div class="text-center">
                     <h6 class="section-title bg-white text-center text-primary px-3">AutreA profs</h6>
                     <h4 class="mb-5">D'autres éminents enseignants.</h4>
-                    <a class="btn btn-link p-3" href="{% url 'index'%}">Voire tous les profs</a>
+                    <a class="btn btn-link p-3" href="{% url 'liste_prof'%}">Voire tous les profs</a>
                 </div>
                 <div class="owl-carousel testimonial-carousel position-relative">
+                    {% for prof in professeurs %}
                     <div class="testimonial-item text-center">
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-1.jpg'%}"
+                        <a href="{% url 'profil_prof' id_user=prof.id %}">
+                            <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
                             style="width: 80px; height: 80px;">
-                        <h5 class="mb-0">Nom</h5>
-                        <p>Matière</p>
+                        </a>
+                        <h5 class="mb-0">{{ prof.username }}</h5>
+                        
                         <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
                             <div class="row gy-2 gx-4 mb-4">
-                                <div class="col-lg-6 justify-content-start">
+                                <!-- <div class="col-lg-6 justify-content-start">
                                     <div class="mb-3">
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small>(3 avis)</small>
+                                        <small class="fa fa-star " id="profid_{{prof.id}}_t1" ></small>
+                                        <small class="fa fa-star " id="profid_{{prof.id}}_t2" ></small>
+                                        <small class="fa fa-star " id="profid_{{prof.id}}_t3" ></small>
+                                        <small class="fa fa-star " id="profid_{{prof.id}}_t4" ></small>
+                                        <small class="fa fa-star " id="profid_{{prof.id}}_t5" ></small>
+                                        <small> {% if prof.historique_prof.nb_evaluation %} ( {{ prof.historique_prof.nb_evaluation }} avis) {% else %} Aucun avis {% endif %} </small>
                                     </div>
+                                    <input type="hidden" class="temoignage" id="value_profid_{{prof.id}}" value="{{ prof.historique_prof.moyenne_point_cumule  }}">
+                                </div> -->
+                                <div class="col-lg-6 justify-content-start">
+                                    <p>
+                                        {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% for unique_matiere in unique_matiere_list %}
+                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                    {% endfor %}
+                                    </p>
                                 </div>
+                                
 
                                 <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
+                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
+                                        {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {% else %} Prix non défini {% endif %}
+                                    </b></strong>
                                     </p>
                                 </div>
                                 <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">157 h dispensées</p>
+                                    <p class="mb-0">
+                                        {% if prof.historique_prof.nb_heure_declare %}
+                                                {{ prof.historique_prof.nb_heure_declare }} heures dispensées
+                                            {% else %}
+                                                pas d'heures dispensées
+                                            {% endif %}
+                                    </p>
                                 </div>
                                 <div class="col-lg-6 justify-content-start">
                                     <p class="mb-0">Lieu: <strong>Paris</strong></p>
@@ -522,99 +510,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="testimonial-item text-center">
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-2.jpg'%}"
-                            style="width: 80px; height: 80px;">
-                        <h5 class="mb-0">Nom</h5>
-                        <p>Matière</p>
-                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                            <div class="row gy-2 gx-4 mb-4">
-                                <div class="col-lg-6 justify-content-start">
-                                    <div class="mb-3">
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small>(3 avis)</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                    </p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">157 h dispensées</p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="testimonial-item text-center">
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-3.jpg'%}"
-                            style="width: 80px; height: 80px;">
-                        <h5 class="mb-0">Nom</h5>
-                        <p>Matière</p>
-                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                            <div class="row gy-2 gx-4 mb-4">
-                                <div class="col-lg-6 justify-content-start">
-                                    <div class="mb-3">
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small>(3 avis)</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                    </p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">157 h dispensées</p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="testimonial-item text-center">
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'img/testimonial-4.jpg'%}"
-                            style="width: 80px; height: 80px;">
-                        <h5 class="mb-0">Nom</h5>
-                        <p>Matière</p>
-                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                            <div class="row gy-2 gx-4 mb-4">
-                                <div class="col-lg-6 justify-content-start">
-                                    <div class="mb-3">
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small class="fa fa-star text-primary"></small>
-                                        <small>(3 avis)</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">25</b>&nbsp;€/h</strong>
-                                    </p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">157 h dispensées</p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
+                    
                 </div>
             </div>
         </div>
@@ -632,5 +529,24 @@
 {% endblock %}
 
 {% block javascript %}
+    
     <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
+    <script>
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+    <script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    </script>
+
 {% endblock %}
