@@ -150,7 +150,6 @@ def liste_prof(request):
 
     if 'region' in request.POST and not 'btn_rechercher' in request.POST: # si la page et actiée par input name='region' seulement sans recherche
         departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input*
-    messages.info(request, f"departement_defaut = {departement_defaut} ") # jusque là c'est bien
     
 
     # Gérer les formats de cours sélectionnés dans le cas request.POST avec ou sans recherche
