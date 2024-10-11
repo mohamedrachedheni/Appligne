@@ -2212,7 +2212,7 @@ def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près dé
                 valid_entries += 1
                 if datetime.strptime(debut, '%H:%M') >= datetime.strptime(fin, '%H:%M')  : valide_heure = False
 
-        horaires = horaires_recup # pour remaitre au template les anciens données si l'enregistrement n'zst pas réuci
+        horaires = horaires_recup # pour remaitre au template les anciens données si l'enregistrement n'est pas réuci
         # Si aucun horaire n'est valide, afficher un message d'erreur
         if valid_entries == 0:
             messages.error(request, "Veuillez remplir au moins les champs date, début, fin, et statut pour une ligne.")
@@ -2250,7 +2250,7 @@ def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près dé
         except Horaire.DoesNotExist:
             messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
 
-    # Récupérer les horaires enregistrés pour ce cours
+    # Récupérer les horaires enregistrés pour ce cours avec la logique de 'statut_reglement'
     enr_horaires = [
         {
             'date': enr.date_cours.strftime('%d/%m/%Y'),
@@ -2258,10 +2258,18 @@ def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près dé
             'fin': enr.heure_fin,
             'contenu': enr.contenu,
             'statut': enr.statut_cours,
+            'payment_id': enr.payment_id,
+            'demande_paiement_id': enr.demande_paiement_id,
+            'statut_reglement': (
+                'Réglé' if enr.payment_id else
+                'Règlement en cours' if enr.demande_paiement_id else
+                'Non réglé'
+            ),
             'id': enr.id
         }
         for enr in Horaire.objects.filter(cours=mon_cours)
     ]
+
 
     # Contexte pour le rendu du template
     context = {
@@ -2456,8 +2464,6 @@ def cours_mon_eleve(request, eleve_id):
     # Rend le template 'cours_mon_eleve' avec le contexte préparé
     return render(request, 'accounts/cours_mon_eleve.html', context)
 
-
-
 def horaire_cours_mon_eleve(request, cours_id):
     """
     Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
@@ -2466,19 +2472,31 @@ def horaire_cours_mon_eleve(request, cours_id):
     # Initialiser les variables nécessaires
     mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
     mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
+    
     # Récupère tous les horaires associés au cours
     enr_horaires = []
     enrs = Horaire.objects.filter(cours=mon_cours)
     for enr in enrs:
+        # Déterminer le statut du règlement
+        if enr.payment_id:
+            statut_reglement = 'Réglé'
+        elif enr.demande_paiement_id:
+            statut_reglement = 'Règlement en cours'
+        else:
+            statut_reglement = 'Non réglé'
+        
+        # Ajouter l'horaire à la liste avec les informations et le statut de règlement
         enr_horaires.append({
             'date': enr.date_cours.strftime('%d/%m/%Y'),  # Formatage de la date
             'debut': enr.heure_debut,                      # Heure de début
             'fin': enr.heure_fin,                          # Heure de fin
             'contenu': enr.contenu,                        # Contenu du cours
             'statut': enr.statut_cours,                    # Statut du cours
-            'id': enr.id                                   # ID de l'horaire
+            'id': enr.id,                                  # ID de l'horaire
+            'statut_reglement': statut_reglement,          # Statut du règlement
         })
     
+    # Gestion des requêtes POST
     if request.method == 'POST':
         # Gestion de l'ajout d'un horaire
         if 'btn_ajout' in request.POST:
@@ -2546,8 +2564,6 @@ def horaire_cours_mon_eleve(request, cours_id):
             except Horaire.DoesNotExist:
                 messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
     
-    
-    
     # Prépare le contexte pour le rendu de la vue
     context = {
         'mon_cours': mon_cours,
@@ -2557,8 +2573,6 @@ def horaire_cours_mon_eleve(request, cours_id):
     
     # Renvoie le template avec le contexte préparé
     return render(request, 'accounts/horaire_cours_mon_eleve.html', context)
-
-
 
 
 def liste_seance_cours(request):
