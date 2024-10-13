@@ -107,7 +107,9 @@ def nouveau_compte_prof(request):
         if 'mot_pass' in request.POST: mot_pass = request.POST['mot_pass']# Vérifier la longueur du mot de passe
         else: messages.error(request, "Erreur liée au mot de passe")
         if 'conf_mot_pass' in request.POST and mot_pass == request.POST['conf_mot_pass']: conf_mot_pass = request.POST['conf_mot_pass']
-        else: messages.error(request, "Erreur liée à la confirmatio du mot de passe")
+        else: 
+            messages.error(request, "Erreur liée à la confirmatio du mot de passe")
+            conf_mot_pass = request.POST['conf_mot_pass']
         if 'civilite' in request.POST: civilite = request.POST['civilite']
         else: messages.error(request, "Erreur liée à la civilité")
         if 'prenom' in request.POST: prenom = request.POST['prenom'] 
@@ -122,9 +124,13 @@ def nouveau_compte_prof(request):
         else: messages.error(request, "Erreur liée au numéro du téléphone")
         if 'date_naiss' in request.POST: 
             date_naiss = request.POST['date_naiss']
+            try:
+                # si la convertion est réussie
+                date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y') # debut_01 juste pour le try seulement
+            except ValueError:
+                messages.error(request, f"Le format de la date de naissance est incorrecte date de naissance = {date_naiss}")
             # convertissons une chaîne de caractères en un objet de type datetime
             # pour que pickadate peut la récupérer par le context en cas d'erreur
-            date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y') 
         else: messages.error(request, "Erreur liée à la date de naissance")
         if 'photo' in request.FILES: photo = request.FILES['photo']
         else:
@@ -2534,36 +2540,7 @@ def cours_mon_eleve(request, eleve_id):
     return render(request, 'accounts/cours_mon_eleve.html', context)
 
 def horaire_cours_mon_eleve(request, cours_id):
-    """
-    Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
-    """
-
-    # Initialiser les variables nécessaires
-    mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
-    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
     
-    # Récupère tous les horaires associés au cours
-    enr_horaires = []
-    enrs = Horaire.objects.filter(cours=mon_cours)
-    for enr in enrs:
-        # Déterminer le statut du règlement
-        if enr.payment_id:
-            statut_reglement = 'Réglé'
-        elif enr.demande_paiement_id:
-            statut_reglement = 'Règlement en cours'
-        else:
-            statut_reglement = 'Non réglé'
-        
-        # Ajouter l'horaire à la liste avec les informations et le statut de règlement
-        enr_horaires.append({
-            'date': enr.date_cours.strftime('%d/%m/%Y'),  # Formatage de la date
-            'debut': enr.heure_debut,                      # Heure de début
-            'fin': enr.heure_fin,                          # Heure de fin
-            'contenu': enr.contenu,                        # Contenu du cours
-            'statut': enr.statut_cours,                    # Statut du cours
-            'id': enr.id,                                  # ID de l'horaire
-            'statut_reglement': statut_reglement,          # Statut du règlement
-        })
     
     # Gestion des requêtes POST
     if request.method == 'POST':
@@ -2632,7 +2609,36 @@ def horaire_cours_mon_eleve(request, cours_id):
                 
             except Horaire.DoesNotExist:
                 messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+    """
+    Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
+    """
+
+    # Initialiser les variables nécessaires
+    mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
+    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
     
+    # Récupère tous les horaires associés au cours
+    enr_horaires = []
+    enrs = Horaire.objects.filter(cours=mon_cours)
+    for enr in enrs:
+        # Déterminer le statut du règlement
+        if enr.payment_id:
+            statut_reglement = 'Réglé'
+        elif enr.demande_paiement_id:
+            statut_reglement = 'Règlement en cours'
+        else:
+            statut_reglement = 'Non réglé'
+        
+        # Ajouter l'horaire à la liste avec les informations et le statut de règlement
+        enr_horaires.append({
+            'date': enr.date_cours.strftime('%d/%m/%Y'),  # Formatage de la date
+            'debut': enr.heure_debut,                      # Heure de début
+            'fin': enr.heure_fin,                          # Heure de fin
+            'contenu': enr.contenu,                        # Contenu du cours
+            'statut': enr.statut_cours,                    # Statut du cours
+            'id': enr.id,                                  # ID de l'horaire
+            'statut_reglement': statut_reglement,          # Statut du règlement
+        })
     # Prépare le contexte pour le rendu de la vue
     context = {
         'mon_cours': mon_cours,

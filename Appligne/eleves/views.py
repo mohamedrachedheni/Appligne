@@ -34,16 +34,16 @@ def nouveau_compte_eleve(request):
     prenom = ""
     nom = ""
     email = ""
-    # Définir le context à envoyer au request
-    context={
-    'is_added':is_added,
-    'user_nom':user_nom,
-    'mot_pass':mot_pass,
-    'conf_mot_pass':conf_mot_pass,
-    'prenom':prenom,
-    'nom':nom,
-    'email':email
-    }
+    # # Définir le context à envoyer au request
+    # context={
+    # 'is_added':is_added,
+    # 'user_nom':user_nom,
+    # 'mot_pass':mot_pass,
+    # 'conf_mot_pass':conf_mot_pass,
+    # 'prenom':prenom,
+    # 'nom':nom,
+    # 'email':email
+    # }
     
     if request.method == 'POST' and 'btn_enr' in request.POST:
         # definir les variable pour les champs
@@ -53,7 +53,7 @@ def nouveau_compte_eleve(request):
         prenom = ""
         nom = ""
         email = ""
-        is_added = False
+        is_added = True
         
         # get valus from the form
         # si user_nom existe parmis les valeurs retournées par request.POST
@@ -62,38 +62,56 @@ def nouveau_compte_eleve(request):
         if 'user_nom' in request.POST: 
             user_nom = request.POST['user_nom']
             if not user_nom.strip():
+                is_added = False
                 messages.error(request, "Le nom de l'utilisateur ne peut pas être vide ou contenir uniquement des espaces.")
         # si non le message d'erreur est envoyé
-        else: messages.error(request, "Erreur liée au nom de l'utilisateur")
+        else: 
+            is_added = False
+            messages.error(request, "Erreur liée au nom de l'utilisateur")
         # le paramètre de redirect est url et de render est template
         if 'mot_pass' in request.POST: mot_pass = request.POST['mot_pass']# Vérifier la longueur du mot de passe
-        else: messages.error(request, "Erreur liée au mot de passe")
+        else: 
+            is_added = False
+            messages.error(request, "Erreur liée au mot de passe")
         if 'conf_mot_pass' in request.POST and mot_pass == request.POST['conf_mot_pass']: conf_mot_pass = request.POST['conf_mot_pass']
-        else: messages.error(request, "Erreur liée à la confirmatio du mot de passe")
+        else: 
+            is_added = False
+            messages.error(request, "Erreur liée à la confirmatio du mot de passe")
+            conf_mot_pass = request.POST['conf_mot_pass']
         if 'prenom' in request.POST: prenom = request.POST['prenom'] 
-        else: messages.error(request, "Erreur liée au prénom")
+        else: 
+            is_added = False
+            messages.error(request, "Erreur liée au prénom")
         if 'nom' in request.POST: nom = request.POST['nom']
-        else: messages.error(request, "Erreur liée au nom")
+        else: 
+            is_added = False
+            messages.error(request, "Erreur liée au nom")
         if 'email' in request.POST: email = request.POST['email']
-        else: messages.error(request, "Erreur liée à l'email")
+        else:
+            is_added = False 
+            messages.error(request, "Erreur liée à l'email")
 
         if user_nom and mot_pass and conf_mot_pass  and prenom and nom and email :
             if User.objects.filter(username=user_nom).exists():
+                is_added = False
                 messages.error(request, "Le nom de l'utilisateur est déjà utilisé, donnez un autre nom.")
             else:
                 if User.objects.filter(email=email).exists():
+                    is_added = False
                     messages.error(request, "L'email est déjà utilisé, donnez un autre email")
                 else:
                     if not prenom.strip() or not nom.strip()  or not user_nom.strip():
+                        is_added = False
                         messages.error(request, "Le prénom, le nom et le nom de l'utilisateur ne peuvent pas être vide ou contenir uniquement des espaces.")
                     else:
                         if len(mot_pass) < 8:
+                            is_added = False
                             messages.error(request, "Le mot de passe doit contenir au moins 8 caractères.")
                         else:
                             # définir un forma pour l'email
                             patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
                             # si le format de l'email est correcte
-                            if re.match(patt, email):
+                            if re.match(patt, email) and is_added :
                                 # ajouter le user
                                 user = User.objects.create_user(first_name=prenom, last_name=nom, email=email, username=user_nom, password=mot_pass, is_active=True)
                                 user.save()
@@ -101,19 +119,31 @@ def nouveau_compte_eleve(request):
                                 eleve = Eleve(user=user)
                                 eleve.save()
                                 auth.login(request, user)
+                                messages.success(request, "Votre identité a été enregistrée avec succès, vous êtes désormais libre de contacter les professeurs de votre préférence.")
                                 if not user.is_authenticated: 
                                     messages.error(request, "Vous devez vous connecter à votre compte pour continuer")
                                     return redirect('signin') 
-                                else:
-                                    # messages.success(request, f"Vous êtes actuellement connecté à votre compte nom de l'utilisateur = {request.user.username}")
-                                    messages.success(request, "Votre identité a été enregistrée avec succès, vous êtes désormais libre de contacter les professeurs de votre préférence.")
+                                # else:
+                                #     # messages.success(request, f"Vous êtes actuellement connecté à votre compte nom de l'utilisateur = {request.user.username}")
+                                #     messages.success(request, "Votre identité a été enregistrée avec succès, vous êtes désormais libre de contacter les professeurs de votre préférence.")
                                 return render(request, 'eleves/compte_eleve.html')
-                            else: messages.error(request, "Le format de l'email est incorrecte.")
-        else: messages.error(request, "Les champs obligatoires ne doivent pas être vides")
-        # pour conserver les données si il y a erreur
-        return render(request, 'eleves/nouveau_compte_eleve.html', {is_added:is_added})
-    else:
-        return render(request, 'eleves/nouveau_compte_eleve.html', {is_added:is_added})
+                            else: 
+                                is_added = False
+                                messages.error(request, "Le format de l'email est incorrecte.")
+        else: 
+            is_added = False
+            messages.error(request, "Les champs obligatoires ne doivent pas être vides")
+    # pour conserver les données si il y a erreur
+    context={
+    'is_added':is_added,
+    'user_nom':user_nom,
+    'mot_pass':mot_pass,
+    'conf_mot_pass':conf_mot_pass,
+    'prenom':prenom,
+    'nom':nom,
+    'email':email
+    }
+    return render(request, 'eleves/nouveau_compte_eleve.html', context)
     
 def compte_eleve(request):
     # Récupérer l'utilisateur actuel
