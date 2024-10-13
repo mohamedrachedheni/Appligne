@@ -2540,7 +2540,7 @@ def cours_mon_eleve(request, eleve_id):
     return render(request, 'accounts/cours_mon_eleve.html', context)
 
 def horaire_cours_mon_eleve(request, cours_id):
-    
+    mon_cours = Cours.objects.get(id=cours_id)
     
     # Gestion des requêtes POST
     if request.method == 'POST':
