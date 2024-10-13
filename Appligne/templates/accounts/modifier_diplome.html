@@ -57,8 +57,9 @@
             {% for diplome in diplomes %}
                 <div class="row  ajout-dipl p3" id="supprimerDivDiplome_{{ forloop.counter }}" >
                     <div class="col-md-1 position-relative align-self-center">
-                        <label class="form-label" for="principal_id_{{ forloop.counter }}">Principal</label>
+                        
                         <input class="form-check-input" type="checkbox" id="principal_id_{{ forloop.counter }}" name="principal_{{ forloop.counter }}" {% if diplome.principal %}checked{% endif %}>
+                        <label class="form-label" for="principal_id_{{ forloop.counter }}">Principal</label>
                     </div>                     
                     <div class="col-md-4 col-sm-12 position-relative">
                         <label class="form-label">Diplôme</label>

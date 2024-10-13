@@ -81,7 +81,7 @@
                         <a href="{% url 'liste_declaration_cours' %}" class="dropdown-item"  >Liste de mes cours déclarés</a>
                     </li>
                     <li>
-                        <a href="{% url 'liste_mes_eleve' %}" class="dropdown-item"  >Liste de mes élèves</a>
+                        <a href="{% url 'liste_mes_eleve' %}" class="dropdown-item"  >Élèves/ Cours/ Règlements</a>
                     </li>
                     <li>
                         <a href="{% url 'ajouter_cours' %}" class="dropdown-item"  >Ajouter un cours</a>
@@ -90,6 +90,9 @@
                         <a href="{% url 'temoignage_mes_eleves' %}" class="dropdown-item"  >Liste des témoignages</a>
                     </li>
                 </ul>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'compte_prof' %}"><strong>Voire mon compte</strong></a>
             </li>
         </ul>
     </div>

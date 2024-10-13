@@ -274,7 +274,7 @@ def nouveau_diplome(request):
                     #messages.info(request, f"Nombre de diplômes : {len(diplome_keys)}")
                     # recupérer les données de chaque diplome et les enregistrer
                     # il faut réviser cette procédure (à première vu le JS de reordonner() est correcte)
-                    for i in range(1, len(diplome_keys) + 1):
+                    for i in range(1, len(diplome_keys) + 1): # il faut ajouter une logique d'analyse pour confirmer l'enregistrement final par message.success
                         # Récupération des valeurs du formulaire
                         diplome_key = f'diplome_{i}'
                         date_obtenu_key = f'date_obtenu_{i}'
@@ -317,6 +317,16 @@ def nouveau_diplome(request):
                              # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
                             if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
                                 if date_obtenu:
+                                    # il faut tester le format de date_obtenu
+                                    try:
+                                            # si la convertion est réussie
+                                            date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y')
+                                            # messages.info(request, f"Format de date de naissance est correcte {date_naissance_01}")
+                                    except ValueError:
+                                        messages.error(request, f"Format de la date: {date_obtenu}, est invalide. Utilisez jj/mm/aaaa")
+                                        messages.error(request, f"Erreur liée à la date d'obtention du diplôme {i}")
+                                        return render(request, 'accounts/nouveau_diplome.html', context)
+                                        
                                     diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
                                     diplome_instance.set_date_obtenu_from_str(date_obtenu)
                                     diplome_instance.save()
@@ -395,9 +405,10 @@ def nouveau_experience(request):
                     Commentaire_key = f'comm_{i}'
                     #print("diplome_key= ", type_key, "date_obtenu_key= ", date_debut_key, "date_fin_key= ", date_fin_key, "principal_key= ", principal_key, "actuellement_key= ", actuellement_key, "Commentaire_key= ", Commentaire_key, "########################")
                     if request.POST.get(type_key): # car dans le JS de la page on a réodonner les ID
-                        type = request.POST.get(type_key)
                         debut = request.POST.get(date_debut_key, None)
                         fin = request.POST.get(date_fin_key, None)
+                        
+                        type = request.POST.get(type_key)
                         commentaire = request.POST.get(Commentaire_key, None)
                         if request.POST.get(principal_key, None) == "on":
                             principal = True
@@ -409,6 +420,14 @@ def nouveau_experience(request):
                         # Vérification si le type d'expérience n'existe pas déjà pour cet utilisateur
                         if not Experience.objects.filter(user=user, type=type, commentaire=commentaire).exists():
                             if debut:
+                                # tester le format des dates
+                                try:
+                                    # si la convertion est réussie
+                                    debut_01 = datetime.strptime(debut, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                                    if fin: fin_01 = datetime.strptime(fin, '%d/%m/%Y') # fin_01 juste pour le try seulement
+                                except ValueError:
+                                    messages.error(request, "Format de l'un des dates est invalide. Utilisez jj/mm/aaaa")
+                                    return render(request, 'accounts/nouveau_experience.html')
                                 experience_instance = Experience(user=user, type=type, commentaire=commentaire, principal=principal, actuellement=actuellement)
                                 experience_instance.set_date_debut_from_str(debut)
                                 experience_instance.set_date_fin_from_str(fin)
@@ -670,6 +689,11 @@ def get_communes(request):
         return JsonResponse([], safe=False)
 
 
+from django.contrib import auth
+from django.shortcuts import redirect, render
+from django.contrib import messages
+from .models import Professeur, Eleve  # Importez les modèles Professeur et Eleve
+
 def signin(request):
     user_nom = ""
     mot_pass = ""
@@ -677,21 +701,33 @@ def signin(request):
         user_nom = request.POST['user_nom']
         mot_pass = request.POST['mot_pass']
         user = auth.authenticate(username=user_nom, password=mot_pass)
+        
         if user is not None:
-            # si la case souvients_toi n'est pas cochée
+            # Si la case souviens_toi n'est pas cochée, la session expire à la fermeture du navigateur
             if 'souviens_toi' not in request.POST:
-                # par défaut request.session.set_expiry(1)
-                # au prochain chargement de la page signin le user n'est pas logged in
                 request.session.set_expiry(0)
             else:
                 request.session.set_expiry(1209600)  # 2 semaines
-            # au prochain chargement de la page signin le user est logged in
-            # le user est connecté
+
+            # Authentification réussie, le user est connecté
             auth.login(request, user)
-            return render(request, 'accounts/signin.html')
+
+            # Vérification si l'utilisateur est un professeur
+            if Professeur.objects.filter(user=user).exists():
+                return redirect('compte_prof')
+            
+            # Vérification si l'utilisateur est un élève
+            elif Eleve.objects.filter(user=user).exists():
+                return redirect('compte_eleve')
+            
+            # Si l'utilisateur n'est ni professeur ni élève
+            else: # à gérer le cas des administrateurs plus tard
+                return redirect('index')  # Redirection par défaut si aucun rôle trouvé
         else:
             messages.error(request, "Le nom de l'utilisateur ou le mot de passe est invalide")
-    return render(request, 'accounts/signin.html', {'user_nom':user_nom, 'mot_pass':mot_pass})
+            
+    return render(request, 'accounts/signin.html', {'user_nom': user_nom, 'mot_pass': mot_pass})
+
     
 
 # *********************** à réviser début  ******************************************
@@ -952,7 +988,6 @@ def modifier_compte_prof(request):
     date_naissance = None
     adresse = None
     photo = None
-    photo_nouveau = None
     if user.is_authenticated:
         # # messages.info(request, f"Vous etes connecté. {user.first_name}")
         # Vérifier si l'utilisateur a un profil de professeur associé
@@ -993,6 +1028,7 @@ def modifier_compte_prof(request):
                 civilite_nouveau = request.POST['civilite']
                 numero_telephone_nouveau = request.POST['numero_telephone']
                 date_naissance_nouveau = request.POST['date_naissance']
+
                 adresse_nouveau = request.POST['adresse']
                 #photo_nouveau = request.FILES['photo']
                 context = {'username':username_nouveau,
@@ -1021,10 +1057,22 @@ def modifier_compte_prof(request):
                 # Vérifier le format de la date
                 try:
                         # si la convertion est réussie
-                        date_naissance_01 = datetime.strptime(date_naissance_nouveau, '%d/%m/%Y')
+                        date_naissance_nouveau = datetime.strptime(date_naissance_nouveau, '%d/%m/%Y')
                         # messages.info(request, f"Format de date de naissance est correcte {date_naissance_01}")
                 except ValueError:
                     messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
+                    date_naissance_nouveau = date_naissance
+                    # actualiser le context
+                    context = {'username':username_nouveau,
+                       'first_name':first_name_nouveau,
+                       'last_name':last_name_nouveau,
+                       'email':email_nouveau,
+                       'civilite':civilite_nouveau,
+                       'numero_telephone':numero_telephone_nouveau,
+                       'date_naissance':date_naissance_nouveau,
+                       'adresse':adresse_nouveau,
+                       'photo': photo,}
+
                     return render(request, 'accounts/modifier_compte_prof.html', context)
                 
                 # définir un forma pour l'email
@@ -1187,7 +1235,7 @@ def modifier_description(request):
     return render(request, 'accounts/modifier_description.html')
 
 
-def modifier_diplome(request):
+def modifier_diplome(request): # il faut refaire la logique d'enregistrement de ce view
     diplome_cathegories = Diplome_cathegorie.objects.all()
     if request.user.is_authenticated:
         user = request.user
@@ -1214,7 +1262,7 @@ def modifier_diplome(request):
                 # messages.info(request, f"Nombre de diplômes : {len(diplome_keys)}")
                 # début de l'enregistrement
                 # supprimer les anciens enregistrements
-                diplomes.delete()
+                diplomes.delete() # il faut sauvegarder une copi des enregistrement en cas d"echec d'enregistrement
                 for diplome_key in diplome_keys:
                     # messages.info(request, f"Nombre de diplômes : {diplome_key}")
                     i = int(diplome_key.split('_')[1])
@@ -1247,6 +1295,13 @@ def modifier_diplome(request):
                         # Récupérer l'ID de l'objet Diplome_cathegorie
                         diplome_cathegorie_id = diplome_obj.id
                         date_obtenu = request.POST.get(date_obtenu_key, None)
+                        if date_obtenu:
+                            # tester le format des dates
+                            try:
+                                # si la convertion est réussie
+                                date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                            except ValueError:
+                                date_obtenu = datetime.now().strftime('%d/%m/%Y')  # à améliorer cette logique d'enregistrement
                         if request.POST.get(principal_key, None) == "on":
                             principal = True
                         else: principal = False
@@ -1337,7 +1392,21 @@ def modifier_experience(request):
                     type = type[:100]
                     messages.info(request, "Cette expérience a été tronquée aux 100 premiers caractères.")
                 date_debut = request.POST.get(date_debut_key, None)
+                # tester le format des dates, à améliorer cette logique d'ednregistrement
+                if date_debut:
+                    try:
+                        # si la convertion est réussie
+                        date_debut_01 = datetime.strptime(date_debut, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                    except ValueError:
+                        date_debut = datetime.now().strftime('%d/%m/%Y')
+                
                 date_fin = request.POST.get(date_fin_key, None)
+                if date_fin:
+                    try:
+                        # si la convertion est réussie
+                        date_fin_01 = datetime.strptime(date_fin, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                    except ValueError:
+                        date_fin = None
                 # si 'principal_key' existe alors principale==on si non None
                 principal = request.POST.get(principal_key, None) == "on"
                 actuellement = request.POST.get(act_key, None) == "on"
