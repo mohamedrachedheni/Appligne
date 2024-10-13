@@ -1063,7 +1063,7 @@ def modifier_compte_prof(request):
                 # Vérifier le format de la date
                 try:
                         # si la convertion est réussie
-                        date_naissance_nouveau = datetime.strptime(date_naissance_nouveau, '%d/%m/%Y')
+                        date_naissance_nouveau_01 = datetime.strptime(date_naissance_nouveau, '%d/%m/%Y') # date_naissance_nouveau_01 est crée juste pour tester le format de la date
                         # messages.info(request, f"Format de date de naissance est correcte {date_naissance_01}")
                 except ValueError:
                     messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
