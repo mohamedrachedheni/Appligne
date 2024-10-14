@@ -31,7 +31,7 @@
             <div class="container">
                 <!-- Titre de la section -->
                 <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-primary px-3">Mes élèves actifs</h6>
+                    <h6 class="section-title bg-white text-primary px-3"> {% if is_active %} Mes élèves actifs {% else %} Mes élèves non actifs {% endif %} </h6>
                 </div>
                 <!-- Inclusion des alertes -->
                 <div class="col-md-12">
@@ -46,6 +46,20 @@
             <!-- Liste des élèves -->
             <div class="container-xxl py-5">
                 <div class="container">
+                    <div class="container " >
+                        <div class="row justify-content-between g-2 p-3 ">
+                            <div class="col-lg-4 col-sm-12">
+                                <button type="submit" class="btn btn-primary" name="btn_active">
+                                    Les élèves actifs
+                                </button>
+                            </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <button type="submit" class="btn btn-primary" name="btn_non_active">
+                                    Les élèves non actifs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="container bg-light p-5">
                         <div class="row g-1">
                             <!-- Vérifie si l'utilisateur est authentifié -->
@@ -68,13 +82,13 @@
                             </div>
                             <!-- Bouton pour voir les cours -->
                             <div class="col-md-1">
-                                <button type="submit" class="btn btn-warning" name="btn_cours_{{eleve.id}}">
+                                <button type="submit" class="btn btn-warning" name="btn_cours_{{eleve.id}}" {% if not is_active %} disabled  {% endif %} >
                                     Cours
                                 </button>
                             </div>
                             <!-- Bouton pour voir le règlement -->
                             <div class="col-md-1">
-                                <button type="submit" class="btn btn-warning" name="btn_reglement_{{eleve.id}}">
+                                <button type="submit" class="btn btn-warning" name="btn_reglement_{{eleve.id}}" {% if not is_active %} disabled  {% endif %} >
                                     Règlement
                                 </button>
                             </div>

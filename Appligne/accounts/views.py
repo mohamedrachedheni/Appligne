@@ -877,7 +877,7 @@ def nouveau_fichier(request):
                 return render(request, 'accounts/nouveau_fichier.html', context)
     if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('nouveau_description')
+        return redirect('signin')
     
     email_user = user.email
     
@@ -2425,8 +2425,12 @@ def modifier_cours(request, cours_id):
 
 def liste_mes_eleve(request):
     user = request.user
+    is_active = True # par défaut
+    if 'btn_active' in request.POST: is_active = True
+    if 'btn_non_active' in request.POST: is_active = False
     # Récupérer les informations des élèves actifs associés à l'utilisateur connecté
-    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=True)
+    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=is_active)
+    
 
     # Si aucun élève n'est trouvé, renvoyer un message d'erreur
     if not mes_eleves.exists():
@@ -2484,6 +2488,7 @@ def liste_mes_eleve(request):
     # Passer les informations des élèves au contexte du template
     context = {
         'mes_eleves': mes_eleves,
+        'is_active': is_active,
     }
     return render(request, 'accounts/liste_mes_eleve.html', context)
 
