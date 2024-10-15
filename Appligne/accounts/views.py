@@ -1652,18 +1652,21 @@ def demande_cours_recu(request):
     
 
 def demande_cours_recu_eleve(request, email_id):
-    email = Email_telecharge.objects.filter(id=email_id).first()
-    context = {'email': email, 'email_id': email_id}
     user = request.user
-
     if not user.is_authenticated: # teste ne nécessaire
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin') # Rediriger vers authentification
-
-    if not email: # teste ne nécessaire
+    
+    email = Email_telecharge.objects.filter(id=email_id).first() # récupérer l'email
+    if not email: # teste pas nécessaire
         messages.info(request, "Il n'y a pas d'email envoyé.")
         return redirect('demande_cours_recu') # Rediriger vers la page précédente
-
+    
+    eleve = get_object_or_404(Eleve, user_id=email.user.id) # récupérer l'élève
+    mon_eleve_exists = Mes_eleves.objects.filter(eleve=eleve, user=user).exists() # Voire si c'est mon élève
+    if mon_eleve_exists: mon_eleve_id= Mes_eleves.objects.filter(eleve=eleve, user=user).first().id # Récupérer l'ID de mon èmève
+    context = {'email': email, 'email_id': email_id, 'mon_eleve_exists': mon_eleve_exists}
+    
     # Initialiser le validateur d'email
     email_validator = EmailValidator()
 
@@ -1738,6 +1741,9 @@ def demande_cours_recu_eleve(request, email_id):
     
     if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
         return redirect('ajouter_mes_eleve', eleve_id=email.user.id) # Rediriger vers autre page
+    
+    if 'btn_voire_eleve' in request.POST: # bouton ajout élève activé
+        return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id) # Rediriger vers autre page
 
     return render(request, 'accounts/demande_cours_recu_eleve.html', context) # Revenir à la même page, le context est nécessaire pout le template
 
@@ -2042,8 +2048,8 @@ def ajouter_mes_eleve(request, eleve_id):
     user = request.user
     # Récupérer l'élève et le parent correspondant à l'ID spécifié
     eleve = get_object_or_404(Eleve, user_id=eleve_id)
-    parent = get_object_or_404(Parent, user_id=eleve_id)
-
+    # parent = get_object_or_404(Parent, user_id=eleve_id) # à revoire si c'est pas nécessaire
+    parent = Parent.objects.filter(user_id=eleve_id).first()
     # Vérifier si l'élève existe déjà dans la table Mes_eleves
     if Mes_eleves.objects.filter(eleve=eleve, user=user).exists():
         messages.error(request, "L'élève est déjà dans la liste des élèves inscrits")
@@ -2094,10 +2100,10 @@ def modifier_mes_eleve(request, mon_eleve_id):
     if 'btn_enr' in request.POST:
         # pour désactiver mon_eleve il faut qu'il n'a pas 
         #  une demande de règlement en attente ou en cours ou contester
-        if mon_eleve.is_active and not 'is_active' in request.POST:
+        if mon_eleve.is_active and not 'is_active' in request.POST: # si l'élève à été déactivé
             demande_paiements = Demande_paiement.objects.filter(user=user, mon_eleve=mon_eleve)
-            for demande_paiement in demande_paiements:
-                if demande_paiement.statut_demande in ['En attente','En cours','Contester']:
+            for demande_paiement in demande_paiements: # voire s'il y a une demande de réglement pour l'élève
+                if demande_paiement.statut_demande in ['En attente','En cours','Contester']: # la désactivation est refusée
                     messages.error(request, "L'élève ne peut ëtre désactivé, car il a au moins une demande de paiement En attente ou En cours ou Contester")
                     return render(request, 'accounts/modifier_mes_eleve.html', context)
             # Désactiver l'élève
@@ -2564,7 +2570,18 @@ def horaire_cours_mon_eleve(request, cours_id):
             mon_cours.prix_heure = prix_heure_dec
             mon_cours.save()
             messages.success(request, "Le prix de l'heure est modifié avec succès.")
-        
+            return redirect('horaire_cours_mon_eleve', cours_id=cours_id )
+
+        # Gestion de la modification du prix de l'heure
+        if 'btn_activer' in request.POST:
+            
+            if mon_cours.is_active:  mon_cours.is_active = False
+            else: mon_cours.is_active = True
+            mon_cours.save()
+            if not  mon_cours.is_active: messages.success(request, "Le cours est désactivé.")
+            else: messages.success(request, "Le cours est activé.")
+            return redirect('horaire_cours_mon_eleve', cours_id=cours_id )
+
         # Gestion de la suppression d'un horaire
         sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
         if sup_enr_keys:
@@ -2619,7 +2636,7 @@ def horaire_cours_mon_eleve(request, cours_id):
     """
 
     # Initialiser les variables nécessaires
-    mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
+    mon_cours = get_object_or_404(Cours, id=cours_id)
     mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
     
     # Récupère tous les horaires associés au cours
@@ -2661,11 +2678,14 @@ def liste_seance_cours(request):
     et gère la redirection vers la page de détail d'une séance spécifique si demandé.
     """
     user = request.user  # Récupère l'utilisateur actuel
+    is_active = True # par défaut
+    if 'btn_active' in request.POST: is_active = True
+    if 'btn_non_active' in request.POST: is_active = False
 
     # Filtre les horaires en attente associés aux cours actifs pour l'utilisateur actuel
     liste_horaires = Horaire.objects.filter(
         statut_cours="En attente",
-        cours__is_active=True,
+        cours__is_active=is_active,
         cours__mon_eleve__is_active=True,
         cours__user=user  # Assure que les cours appartiennent à l'utilisateur (professeur) actuel
     ).order_by('date_cours', 'heure_debut')
@@ -2895,10 +2915,17 @@ def declaration_cours(request, eleve_id):
 def liste_declaration_cours(request):
     # Obtenir l'utilisateur actuel
     user = request.user
-    
+    statut_demande = 'En cours'
+    if 'btn_en_cours' in request.POST: statut_demande = 'En cours'
+    if 'btn_attente' in request.POST: statut_demande = 'En attente'
+    if 'btn_contester' in request.POST: statut_demande = 'Contester'
+    if 'btn_annuler' in request.POST: statut_demande = 'Annuler'
+    if 'btn_regler' in request.POST: statut_demande = 'Réaliser'
     # Filtrer les demandes de paiement associées à l'utilisateur, en excluant celles qui sont annulées
-    demande_paiements = Demande_paiement.objects.filter(user=user).exclude(statut_demande='Annuler')
+    demande_paiements = Demande_paiement.objects.filter(user=user, statut_demande=statut_demande)
 
+    if 'btn_tous' in request.POST: demande_paiements = Demande_paiement.objects.filter(user=user)
+    
     # Construire la liste des cours déclarés avec les détails nécessaires
     cours_declares = [
         {

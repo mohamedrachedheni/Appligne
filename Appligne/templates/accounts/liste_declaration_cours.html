@@ -31,6 +31,7 @@
     <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
         <div class="container-xxl py-1">
             <div class="container">
+                
                 <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
                     <h6 class="section-title bg-white text-center text-primary px-3">
                         Etat par élève des déclarations des cours pour règlement
@@ -44,6 +45,40 @@
         <form method="POST" enctype="multipart/form-data" autocomplete="off">
             {% csrf_token %}
             <div class="container-xxl py-5">
+                <div class="container " >
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_tous">
+                                Tous
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_en_cours">
+                                En cours
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_attente">
+                                En attente
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_contester">
+                                Contestées
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_annuler">
+                                Annulées
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12">
+                            <button type="submit" class="btn btn-primary" name="btn_regler">
+                                Réglées
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="container bg-light p-5">
                     <div class="row g-1">
                         {% if request.user.is_authenticated %}
