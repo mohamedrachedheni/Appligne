@@ -72,21 +72,16 @@ def nouveau_compte_prof(request):
     date_naiss = request.POST.get('date_naiss', '')
     photo = request.FILES.get('photo', None)  # Photo peut être None si non fournie
     teste = True
-
-    # Contexte initial
-    context = {
-        'user_nom': user_nom,
-        'mot_pass': mot_pass,
-        'conf_mot_pass': conf_mot_pass,
-        'civilite': civilite,
-        'prenom': prenom,
-        'nom': nom,
-        'adresse': adresse,
-        'email': email,
-        'phone': phone,
-        'date_naiss': date_naiss,
-        'photo': photo,
-    }
+    # Vérification de la photo
+    if not photo:
+        default_photo_path = os.path.join(settings.BASE_DIR, 'static/img/favicon.png')
+        try:
+            with open(default_photo_path, 'rb') as f:
+                photo_data = f.read()
+                photo_file = ContentFile(photo_data, name='favicon.png')
+                photo = photo_file
+        except IOError:
+            messages.error(request, "Fichier par défaut introuvable.")
 
     if 'btn_enr' in request.POST:
         # Validation du nom d'utilisateur
