@@ -126,7 +126,7 @@ def nouveau_compte_prof(request):
         # Validation de la date de naissance
         if date_naiss:
             try:
-                date_naiss01 = datetime.strptime(date_naiss, '%d/%m/%Y')
+                date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y')
             except ValueError:
                 messages.error(request, "Le format de la date de naissance est incorrect.")
                 teste = False
@@ -157,7 +157,20 @@ def nouveau_compte_prof(request):
             messages.success(request, "Enregistrement réussi.")
             diplome_cathegories = Diplome_cathegorie.objects.all()
             return render(request, 'accounts/nouveau_diplome.html', {'diplome_cathegories': diplome_cathegories})
-
+    # Contexte initial
+    context = {
+        'user_nom': user_nom,
+        'mot_pass': mot_pass,
+        'conf_mot_pass': conf_mot_pass,
+        'civilite': civilite,
+        'prenom': prenom,
+        'nom': nom,
+        'adresse': adresse,
+        'email': email,
+        'phone': phone,
+        'date_naiss': date_naiss,
+        'photo': photo,
+    }
     return render(request, 'accounts/nouveau_compte_prof.html', context)
 
 def nouveau_diplome(request):
