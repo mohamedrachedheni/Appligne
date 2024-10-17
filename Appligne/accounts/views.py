@@ -126,7 +126,7 @@ def nouveau_compte_prof(request):
         # Validation de la date de naissance
         if date_naiss:
             try:
-                date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y')
+                date_naiss01 = datetime.strptime(date_naiss, '%d/%m/%Y')
             except ValueError:
                 messages.error(request, "Le format de la date de naissance est incorrect.")
                 teste = False
