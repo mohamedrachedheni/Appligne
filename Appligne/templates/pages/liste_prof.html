@@ -325,9 +325,9 @@
                     <a href="?page={{ professeurs.previous_page_number }}">Précédant&nbsp;&nbsp;</a>
                     {% endif %}
 
-                    Page:&nbsp;{{ professeurs.number }}&nbsp;&nbsp;parmis&nbsp;&nbsp;{{ professeurs.paginator.count }}
+                    Page:&nbsp;{{ professeurs.number }}&nbsp;&nbsp;Total enr.&nbsp;&nbsp;{{ professeurs.paginator.count }}
                     {% if professeurs.has_next %}
-                    <a href="?page={{ professeurs.next_page_number }}">&nbsp; suivant &nbsp;</a>
+                    <a href="?page={{ professeurs.next_page_number }}">&nbsp; Page suivante &nbsp;</a>
                     <a href="?page={{ professeurs.paginator.num_pages  }}">Fin&nbsp;&nbsp;&raquo;</a>
                     {% endif %}
 

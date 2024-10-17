@@ -25,8 +25,7 @@ from django.db.models import F, Value, CharField
 from django.db.models import Func
 from django.db.models import Sum, F, ExpressionWrapper, DurationField, FloatField, fields, DecimalField
 from django.db.models.functions import Concat
-
-
+from django.contrib.auth.password_validation import validate_password
 
 import re
 import os
@@ -60,184 +59,106 @@ def is_password_compromised(password):
 
 
 def nouveau_compte_prof(request):
-    # Récupérer l'utilisateur actuel
-    user = request.user
-    photo = None
-    first_name = "xxx"
-    if user.is_authenticated:
-        # # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            # on ne peut pas revenir à nouveau_compte_prof.html les coordonnées sont enregistrées
-            return render(request, 'accounts/compte_prof.html', context)
+    # Initialiser les variables
+    user_nom = request.POST.get('user_nom', '')
+    mot_pass = request.POST.get('mot_pass', '')
+    conf_mot_pass = request.POST.get('conf_mot_pass', '')
+    civilite = request.POST.get('civilite', None)
+    prenom = request.POST.get('prenom', '')
+    nom = request.POST.get('nom', '')
+    adresse = request.POST.get('adresse', '')
+    email = request.POST.get('email', '')
+    phone = request.POST.get('phone', '')
+    date_naiss = request.POST.get('date_naiss', '')
+    photo = request.FILES.get('photo', None)  # Photo peut être None si non fournie
+    teste = True
 
-    if request.method == 'POST' and 'btn_enr' in request.POST :
-        # definir les variable pour les champs
-        user_nom = None
-        mot_pass = None
-        conf_mot_pass = None
-        civilite = None
-        prenom = None
-        nom = None
-        adresse = None
-        email = None
-        phone = None
-        date_naiss = None
-        photo = None
-        is_added = None
-        
-        # get valus from the form
-        # si user_nom existe parmis les valeurs retournées par request.POST
-        # alors la user_nom prend la valeur retournée user_nom
-        # cette erreur peut etre causée en changeant le template en cliquant sur le bouton droit de la souris puis inspecter
-        if 'user_nom' in request.POST: 
-            user_nom = request.POST['user_nom']
-            if not user_nom.strip():
-                messages.error(request, "Le nom de l'utilisateur ne peut pas être vide ou contenir uniquement des espaces.")
-        # si non le message d'erreur est envoyé
-        else: messages.error(request, "Erreur liée au nom de l'utilisateur")
-        # le paramaitre de redirect est url et de render est template
-        if 'mot_pass' in request.POST: mot_pass = request.POST['mot_pass']# Vérifier la longueur du mot de passe
-        else: messages.error(request, "Erreur liée au mot de passe")
-        if 'conf_mot_pass' in request.POST and mot_pass == request.POST['conf_mot_pass']: conf_mot_pass = request.POST['conf_mot_pass']
-        else: 
-            messages.error(request, "Erreur liée à la confirmatio du mot de passe")
-            conf_mot_pass = request.POST['conf_mot_pass']
-        if 'civilite' in request.POST: civilite = request.POST['civilite']
-        else: messages.error(request, "Erreur liée à la civilité")
-        if 'prenom' in request.POST: prenom = request.POST['prenom'] 
-        else: messages.error(request, "Erreur liée au prénom")
-        if 'nom' in request.POST: nom = request.POST['nom']
-        else: messages.error(request, "Erreur liée au nom")
-        if 'adresse' in request.POST: adresse = request.POST['adresse']
-        else: messages.error(request, "Erreur liée à l'adresse")
-        if 'email' in request.POST: email = request.POST['email']
-        else: messages.error(request, "Erreur liée à l'email")
-        if 'phone' in request.POST: phone = request.POST['phone']
-        else: messages.error(request, "Erreur liée au numéro du téléphone")
-        if 'date_naiss' in request.POST: 
-            date_naiss = request.POST['date_naiss']
-            try:
-                # si la convertion est réussie
-                date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y') # debut_01 juste pour le try seulement
-            except ValueError:
-                messages.error(request, f"Le format de la date de naissance est incorrecte date de naissance = {date_naiss}")
-            # convertissons une chaîne de caractères en un objet de type datetime
-            # pour que pickadate peut la récupérer par le context en cas d'erreur
-        else: messages.error(request, "Erreur liée à la date de naissance")
-        if 'photo' in request.FILES: photo = request.FILES['photo']
+    # Contexte initial
+    context = {
+        'user_nom': user_nom,
+        'mot_pass': mot_pass,
+        'conf_mot_pass': conf_mot_pass,
+        'civilite': civilite,
+        'prenom': prenom,
+        'nom': nom,
+        'adresse': adresse,
+        'email': email,
+        'phone': phone,
+        'date_naiss': date_naiss,
+        'photo': photo,
+    }
+
+    if 'btn_enr' in request.POST:
+        # Validation du nom d'utilisateur
+        if User.objects.filter(username=user_nom).exists():
+            messages.error(request, "Le nom de l'utilisateur est déjà utilisé.")
+            teste = False
+        if not user_nom.strip():
+            messages.error(request, "Le nom de l'utilisateur ne peut pas être vide.")
+            teste = False
+
+        # Validation du mot de passe
+        if not mot_pass:
+            messages.error(request, "Le mot de passe ne peut pas être vide.")
+            teste = False
+        elif mot_pass != conf_mot_pass:
+            messages.error(request, "La confirmation du mot de passe ne correspond pas.")
+            teste = False
         else:
-            # Charger le fichier par défaut s'il n'y a pas d'image téléchargée
-            default_photo_path = os.path.join(settings.BASE_DIR, 'static/img/favicon.png')
             try:
-                with open(default_photo_path, 'rb') as f:
-                    photo_data = f.read()
-                    # Créer un objet ContentFile avec les données du fichier par défaut
-                    photo_file = ContentFile(photo_data, name='favicon.png')
-                    photo=photo_file  # Enregistrer le fichier dans le champ photo
-            except IOError:
-                messages.error(request, "Fichier par défaut introuvable")
-        # pas de message d'erreur pour photo car c'est un champ non obligatoire
-        context= {
-        'user_nom':user_nom,
-        'mot_pass':mot_pass,
-        'conf_mot_pass':conf_mot_pass,
-        'civilite':civilite,
-        'prenom':prenom,
-        'nom':nom,
-        'adresse':adresse,
-        'email':email,
-        'phone':phone,
-        'date_naiss':date_naiss,
-        # erreur: l'adresse du photo n'est pas récupérée ??
-        'photo':photo,
-        'is_added':is_added,
-        }
-        
-        if user_nom and mot_pass and conf_mot_pass and civilite and prenom and nom and adresse and email and phone and date_naiss:
-            if User.objects.filter(username=user_nom).exists():
-                messages.error(request, "Le nom de l'utilisateur est déjà utilisé, donnez un autre nom.")
-                return render(request, 'accounts/nouveau_compte_prof.html', context)
-            else:
-                if User.objects.filter(email=email).exists():
-                    messages.error(request, "L'email est déjà utilisé, donnez un autre email")
-                    return render(request, 'accounts/nouveau_compte_prof.html', context)
-                else:
-                    if not prenom.strip() or not nom.strip() or not adresse.strip() or not user_nom.strip():
-                        messages.error(request, "Le prénom, le nom , l'adresse et le nom de l'utilisateur ne peuvent pas être vide ou contenir uniquement des espaces.")
-                        return render(request, 'accounts/nouveau_compte_prof.html', context)
-                    else:
-                        if len(mot_pass) < 8:
-                            messages.error(request, "Le mot de passe doit contenir au moins 8 caractères.")
-                            return render(request, 'accounts/nouveau_compte_prof.html', context)
-                        
-                        else:
-                            # Vérifier si le mot de passe est compromis en appelant la fonction is_password_compromised
-                            if is_password_compromised(mot_pass):
-                                # Afficher un message d'erreur si le mot de passe est compromis
-                                messages.error(request, f"Le mot de passe que vous avez choisi a été compromis lors d'une violation de données. Veuillez choisir un mot de passe différentde: {mot_pass}")
-                                # à faire: introduire une boite de dialogue pour confirmer ou refuser
-                                return render(request, 'accounts/nouveau_compte_prof.html', context)
-                            else:
-                                # définir un forma pour l'email
-                                patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
-                                # si le format de l'email est correcte
-                                if re.match(patt, email):
-                                    # ajouter le user
-                                    user = User.objects.create_user(first_name=prenom, last_name=nom, email=email, username=user_nom, password=mot_pass, is_active=True)
-                                    user.save()
-                                    
-                                    # ajouter professeur (user du model professeur = user sauvegardé)
-                                    professeur = Professeur(user=user, adresse=adresse, numero_telephone=phone, civilite=civilite, photo=photo)
-                                    professeur.set_date_naissance_from_str(request.POST['date_naiss']) # car la fonction attend une chaine de caractaires et non pas un objet de type datetime
-                                    professeur.save()
-                                    auth.login(request, user)
-                                    is_added = True
+                validate_password(mot_pass)
+            except ValidationError as e:
+                for error in e:
+                    messages.error(request, error)
+                teste = False
 
-                                    # Récupérer l'utilisateur actuel
-                                    user = request.user
-                                    photo = None
-                                    first_name = "xxx"
-                                    if user.is_authenticated:
-                                        # messages.success(request, f"Vous etes connecté. {user.first_name}")
-                                        # Vérifier si l'utilisateur a un profil de professeur associé
-                                        if hasattr(user, 'professeur'):
-                                            # Si tel est le cas, récupérer le profil du professeur
-                                            professeur = Professeur.objects.get(user=user)
-                                            # Extraire la photo du profil du professeur
-                                            photo = professeur.photo
-                                            first_name = user.first_name
-                                    # Passer la photo à votre modèle de contexte
-                                    context = {'photo': photo, 'first_name':first_name, 'is_added':is_added}
-                                    messages.success(request, "L'enregistrement de vos coordonnées est réussi, passez à l'étape suivante")
-                                    diplome_cathegories = Diplome_cathegorie.objects.all()
-                                    return render(request, 'accounts/nouveau_diplome.html', {'photo': photo, 'first_name':first_name, 'diplome_cathegories':diplome_cathegories})
+        # Validation de l'email
+        if email:
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, "Le format de l'email est incorrect.")
+                teste = False
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "Cet email est déjà utilisé.")
+                teste = False
 
-                                else:
-                                    messages.error(request, "Le format de l'email est incorrecte.")
-                                    return render(request, 'accounts/nouveau_compte_prof.html', context)
-        else: messages.error(request, "Les champs obligatoires ne doivent pas être vides")
+        # Validation de la date de naissance
+        if date_naiss:
+            try:
+                date_naiss = datetime.strptime(date_naiss, '%d/%m/%Y')
+            except ValueError:
+                messages.error(request, "Le format de la date de naissance est incorrect.")
+                teste = False
 
-        # pour conserver les données si il y a erreur
-        return render(request, 'accounts/nouveau_compte_prof.html', context)
-    else:
-        # Rendre la réponse en utilisant le template 'pages/index.html'
-        response = render(request, 'accounts/nouveau_compte_prof.html')
-        # Ajouter les en-têtes pour empêcher la mise en cache de la page
-        # Cela garantit que le navigateur récupère toujours les données les plus récentes
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
-        response['Pragma'] = 'no-cache'  # HTTP 1.0.
-        response['Expires'] = '0'  # Proxies.
-        # Retourner la réponse
-        return response
+        # Vérification si tout est valide
+        if teste:
+            user = User.objects.create_user(
+                first_name=prenom,
+                last_name=nom,
+                email=email,
+                username=user_nom,
+                password=mot_pass,
+                is_active=True
+            )
+            user.save()
 
+            professeur = Professeur(
+                user=user,
+                adresse=adresse,
+                numero_telephone=phone,
+                civilite=civilite,
+                photo=photo
+            )
+            professeur.set_date_naissance_from_str(request.POST['date_naiss'])
+            professeur.save()
+
+            auth.login(request, user)
+            messages.success(request, "Enregistrement réussi.")
+            diplome_cathegories = Diplome_cathegorie.objects.all()
+            return render(request, 'accounts/nouveau_diplome.html', {'diplome_cathegories': diplome_cathegories})
+
+    return render(request, 'accounts/nouveau_compte_prof.html', context)
 
 def nouveau_diplome(request):
     # Récupérer l'utilisateur actuel

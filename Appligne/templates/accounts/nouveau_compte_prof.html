@@ -20,8 +20,7 @@
 </div>
 
 
-<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_compte_prof' %}"  >
-    <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
+<form method="POST" enctype="multipart/form-data" >
     {% csrf_token %}
     
     <!-- mon compte début -->
@@ -113,10 +112,7 @@
                     </div>
                     <div class="col-md-4 position-relative">
                         <label for="photo_id" class="form-label">Photo d'identité</label>
-                        <input type="file" accept="image/*" capture="camera" class="form-control" id="photo_id"
-                            name="photo" value="{{photo}}" >
-                        <!-- L'attribut "accept" avec la valeur "image/*" acceptera tous les types d'images -->
-                        <!-- L'attribut "capture" avec la valeur "camera" ouvrira la caméra sur les appareils mobiles -->
+                        <input type="file" accept="image/*" capture="camera" class="form-control" id="photo_id" name="photo" >
                     </div>
                     <div class="row justify-content-end g-2 p-3 ">
                         <div class="col-lg-1 col-md-4 col-sm-6">
