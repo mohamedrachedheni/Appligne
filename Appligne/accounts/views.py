@@ -169,397 +169,276 @@ def nouveau_compte_prof(request):
     return render(request, 'accounts/nouveau_compte_prof.html', context)
 
 def nouveau_diplome(request):
-    # Récupérer l'utilisateur actuel
-    user = request.user
-    photo = None
-    first_name = "xxx"
+    user = request.user # Récupérer l'utilisateur actuel
     diplome_cathegories = Diplome_cathegorie.objects.all()
     
     if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
         if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name, 'diplome_cathegories': diplome_cathegories}
+            context = {'diplome_cathegories': diplome_cathegories}
             if not request.method == 'POST' or not 'btn_enr' in request.POST:
                 return render(request, 'accounts/nouveau_diplome.html', context)
-        if request.method == 'POST' and 'btn_enr' in request.POST:
-                
-            # Récupérer l'ID de l'utilisateur actuellement connecté
-            user_id = request.user.id
-            # s'il y a un utilisateur connecté à son compte
-            if user_id is not None:
-                try:
-                    user = User.objects.get(id=user_id)
-                except User.DoesNotExist:
-                    messages.error(request, "Utilisateur non trouvé.")
-                    return render(request, 'accounts/nouveau_diplome.html', context)
-                # Liste des diplômes dans le request dont le nom commence par: diplome_
-                diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
-                if not diplome_keys:
-                    messages.error(request, "Il faut donner au moins un diplôme")
-                    return render(request, 'accounts/nouveau_diplome.html', context)
-                else:
-                    #messages.info(request, f"Nombre de diplômes : {len(diplome_keys)}")
-                    # recupérer les données de chaque diplome et les enregistrer
-                    # il faut réviser cette procédure (à première vu le JS de reordonner() est correcte)
-                    for i in range(1, len(diplome_keys) + 1): # il faut ajouter une logique d'analyse pour confirmer l'enregistrement final par message.success
-                        # Récupération des valeurs du formulaire
-                        diplome_key = f'diplome_{i}'
-                        date_obtenu_key = f'date_obtenu_{i}'
-                        principal_key = f'principal_{i}'
-                        intitule_key = f'intitule_{i}'
-                        autre_diplome_key = f'autre_diplome_{i}'
-                        #print("diplome_key= ", diplome_key, "date_obtenu_key= ", date_obtenu_key, "principal_key= ", principal_key, "intitule_key= ", intitule_key, "########################")
-                        if request.POST.get(diplome_key):
-                            diplome = request.POST.get(diplome_key)
-                            if diplome == 'Autre':
-                                autre_diplome = request.POST.get(autre_diplome_key)
-                                if autre_diplome != '' and autre_diplome != 'Autre':
-                                    # Vérification si le diplôme "Autre" n'existe pas déjà pour le pays France
-                                    diplome_autre_exists = Diplome_cathegorie.objects.filter(nom_pays__nom_pays='France', dip_cathegorie=autre_diplome).exists()
-                                    if not diplome_autre_exists:
-                                        # Récupération de l'objet Pays France
-                                        pays_france = Pays.objects.get(nom_pays='France')
-                                        # Création d'un nouvel enregistrement dans Diplome_cathegorie pour le diplôme "Autre"
-                                        diplome_autre = Diplome_cathegorie.objects.create(nom_pays=pays_france, dip_cathegorie=autre_diplome)
-                                        diplome_autre.save()
-                                        # messages.success(request, f"Le diplôme '{autre_diplome}' a été ajouté au Diplome_cathegorie pour le pays France.")
-                                        diplome = autre_diplome
-                                    else:
-                                        diplome = autre_diplome
-                                        # messages.warning(request, f"Le diplôme '{autre_diplome}' existe déjà dans la catégorie 'Autre' pour le pays France.")
-                                else:
-                                    messages.error(request, "Le diplôme 'Autre' ne peut pas être vide ou égal à 'Autre'.")
+        if 'btn_enr' in request.POST:
+            # Liste des diplômes dans le request dont le nom commence par: diplome_
+            diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
+            if not diplome_keys:
+                messages.error(request, "Il faut donner au moins un diplôme")
+                return render(request, 'accounts/nouveau_diplome.html', context)
+            else:
+                for i in range(1, len(diplome_keys) + 1): # il faut ajouter une logique d'analyse pour confirmer l'enregistrement final par message.success
+                    # Récupération des valeurs du formulaire
+                    diplome_key = f'diplome_{i}'
+                    date_obtenu_key = f'date_obtenu_{i}'
+                    principal_key = f'principal_{i}'
+                    intitule_key = f'intitule_{i}'
+                    autre_diplome_key = f'autre_diplome_{i}' # champ réservé pour les diplomes qui ne figure pas dans la liste
+                    if request.POST.get(diplome_key):
+                        diplome = request.POST.get(diplome_key)
+                        if diplome == 'Autre':
+                            autre_diplome = request.POST.get(autre_diplome_key)
+                            if autre_diplome != '' and autre_diplome != 'Autre':
+                                # Vérification si le diplôme "Autre" n'existe pas déjà pour le pays France
+                                diplome_autre_exists = Diplome_cathegorie.objects.filter(nom_pays__nom_pays='France', dip_cathegorie=autre_diplome).exists()
+                                if not diplome_autre_exists:
+                                    # Récupération de l'objet Pays France
+                                    pays_france = Pays.objects.get(nom_pays='France')
+                                    # Création d'un nouvel enregistrement dans Diplome_cathegorie pour le diplôme "Autre"
+                                    diplome_autre = Diplome_cathegorie.objects.create(nom_pays=pays_france, dip_cathegorie=autre_diplome)
+                                    diplome_autre.save()
+                                    diplome = autre_diplome
+                                else: # le diplome ajouté existe déjà dans la table diplome_cathegorie
+                                    diplome = autre_diplome
+                            else:
+                                messages.error(request, "Le diplôme 'Autre' ne peut pas être vide ou égal à 'Autre'.")
 
-                            # Requête pour récupérer l'objet Diplome_cathegorie
-                            diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
-                            # Récupérer l'ID de l'objet Diplome_cathegorie
-                            diplome_cathegorie_id = diplome_obj.id
-                            date_obtenu = request.POST.get(date_obtenu_key, None)
-                            if request.POST.get(principal_key, None) == "on":
-                                principal = True
-                            else: principal = False
-                            intitule = request.POST.get(intitule_key, None)
-                            #print("diplome= ", diplome, "date_obtenu= ", date_obtenu, "principal= ", principal, "intitule= ",intitule)
+                        # Requête pour récupérer l'objet Diplome_cathegorie
+                        diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
+                        # Récupérer l'ID de l'objet Diplome_cathegorie
+                        diplome_cathegorie_id = diplome_obj.id
+                        date_obtenu = request.POST.get(date_obtenu_key, None)
+                        if request.POST.get(principal_key, None) == "on":
+                            principal = True
+                        else: principal = False
+                        intitule = request.POST.get(intitule_key, None)
 
-                             # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
-                            if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
-                                if date_obtenu:
-                                    # il faut tester le format de date_obtenu
-                                    try:
-                                            # si la convertion est réussie
-                                            date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y')
-                                            # messages.info(request, f"Format de date de naissance est correcte {date_naissance_01}")
-                                    except ValueError:
-                                        messages.error(request, f"Format de la date: {date_obtenu}, est invalide. Utilisez jj/mm/aaaa")
-                                        messages.error(request, f"Erreur liée à la date d'obtention du diplôme {i}")
-                                        return render(request, 'accounts/nouveau_diplome.html', context)
-                                        
-                                    diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
-                                    diplome_instance.set_date_obtenu_from_str(date_obtenu)
-                                    diplome_instance.save()
-                                    #messages.success(request, f"L'enregistrement des diplômes est réussi, passez à l'étape suivante {i}")
-                                    
-                                else:
-                                    messages.error(request, f"Erreur liée à la date d'obtention du diplôme {i}")
+                            # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
+                        if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
+                            if date_obtenu:
+                                # il faut tester le format de date_obtenu
+                                try:
+                                        # si la convertion est réussie
+                                        date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y')
+                                except ValueError:
+                                    messages.error(request, f"Format de la date: {date_obtenu}, est invalide. Utilisez jj/mm/aaaa")
                                     return render(request, 'accounts/nouveau_diplome.html', context)
-                            else:  messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
-                        else:
-                            # erreur à dépasser
-                            messages.error(request, f"Erreur liée au diplôme {i}")
-                # Rendre la réponse en utilisant le template 'pages/index.html'
-                response = render(request, 'accounts/nouveau_experience.html', context)
-                # Ajouter les en-têtes pour empêcher la mise en cache de la page
-                # Cela garantit que le navigateur récupère toujours les données les plus récentes
-                response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
-                response['Pragma'] = 'no-cache'  # HTTP 1.0.
-                response['Expires'] = '0'  # Proxies.
-                # Retourner la réponse
-                return response
+                                    
+                                diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
+                                diplome_instance.set_date_obtenu_from_str(date_obtenu)
+                                diplome_instance.save()
+                            else:
+                                messages.error(request, f"Erreur liée à la date d'obtention du diplôme {diplome}")
+                                return render(request, 'accounts/nouveau_diplome.html', context)
+                        else:  messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
+                    else:
+                        # erreur à dépasser
+                        messages.error(request, f"Erreur liée au diplôme {i}")
+            # Rendre la réponse en utilisant le template 'pages/index.html'
+            response = render(request, 'accounts/nouveau_experience.html') # ?.??
+            # Ajouter les en-têtes pour empêcher la mise en cache de la page
+            # Cela garantit que le navigateur récupère toujours les données les plus récentes
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
+            response['Pragma'] = 'no-cache'  # HTTP 1.0.
+            response['Expires'] = '0'  # Proxies.
+            # Retourner la réponse
+            return response
     else:
         messages.error(request, "Il n'y a pas d'utilisateur connecté à son compte.")
         return render(request, 'pages/index.html')
 
 
 def nouveau_experience(request):
-    # Récupérer l'utilisateur actuel
-    user = request.user
-    photo = None
-    first_name = "xxx"
+    user = request.user # Récupérer l'utilisateur actuel
+    if not user.is_authenticated or not hasattr(user, 'professeur'):
+        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+        return redirect('signin')
     
-    if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_experience.html', context)
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        # Récupérer l'ID de l'utilisateur actuellement connecté
-        user_id = request.user.id
-        # s'il y a un utilisateur connecté à son compte
-        if user_id is not None:
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                messages.error(request, "Utilisateur non trouvé.")
-                return render(request, 'accounts/nouveau_experience.html')
-            
-            # Liste des expériences dans le request dont le nom commence par: type_
-            type_keys = [key for key in request.POST.keys() if key.startswith('type_')]
-            if not type_keys: # s'il n'y a pas d'expérience sélectionnée
-                messages.error(request, "Il faut donner au moins une expérience, sinon sélectionnez Débutant(e)")
-                return render(request, 'accounts/nouveau_experience.html')
-            else: # s'il y a au mois une expérience sélectionnée
-                # messages.success(request, f"Nombre d expérience : {len(type_keys)}")
-                # recupérer les données de chaque expérience et les enregistrer
-                # dans le JS de la page il faut que la fonc
-                for i in range(1, len(type_keys) + 1):
-                    # Récupération des valeurs du formulaire
-                    # Définir les paramaitres
-                    type_key = f'type_{i}'
-                    # car il y a deux dates avec des indice différents paire et impaire (voire function ReOrderId02() dans Appligne/static/js/Code_en_plus.js)
-                    date_debut_key = f'date_debut_{2 * i - 1}'
-                    date_fin_key = f'date_fin_{2 * i}'
-                    principal_key = f'principal_{i}'
-                    actuellement_key = f'act_{i}'
-                    Commentaire_key = f'comm_{i}'
-                    #print("diplome_key= ", type_key, "date_obtenu_key= ", date_debut_key, "date_fin_key= ", date_fin_key, "principal_key= ", principal_key, "actuellement_key= ", actuellement_key, "Commentaire_key= ", Commentaire_key, "########################")
-                    if request.POST.get(type_key): # car dans le JS de la page on a réodonner les ID
-                        debut = request.POST.get(date_debut_key, None)
-                        fin = request.POST.get(date_fin_key, None)
-                        
-                        type = request.POST.get(type_key)
-                        commentaire = request.POST.get(Commentaire_key, None)
-                        if request.POST.get(principal_key, None) == "on":
-                            principal = True
-                        else: principal = False
-                        if request.POST.get(actuellement_key, None) == "on":
-                            actuellement = True
-                        else: actuellement = False
-                        #print("diplome_key= ", type, "date_obtenu_key= ", debut, "date_fin_key= ", fin, "principal_key= ", principal, "actuellement_key= ", actuellement, "Commentaire_key= ", commentaire , "*****************")
-                        # Vérification si le type d'expérience n'existe pas déjà pour cet utilisateur
-                        if not Experience.objects.filter(user=user, type=type, commentaire=commentaire).exists():
-                            if debut:
-                                # tester le format des dates
-                                try:
-                                    # si la convertion est réussie
-                                    debut_01 = datetime.strptime(debut, '%d/%m/%Y') # debut_01 juste pour le try seulement
-                                    if fin: fin_01 = datetime.strptime(fin, '%d/%m/%Y') # fin_01 juste pour le try seulement
-                                except ValueError:
-                                    messages.error(request, "Format de l'un des dates est invalide. Utilisez jj/mm/aaaa")
-                                    return render(request, 'accounts/nouveau_experience.html')
-                                experience_instance = Experience(user=user, type=type, commentaire=commentaire, principal=principal, actuellement=actuellement)
-                                experience_instance.set_date_debut_from_str(debut)
-                                experience_instance.set_date_fin_from_str(fin)
-                                experience_instance.save()
-                                # messages.success(request, f"L'enregistrement de l'éxpérence {type} : {commentaire} est réussi. {i}")
-                            else: # on peut définir par défaut date début ou rendre date début non obligatoire
-                                debut = datetime.now().strftime('%d/%m/%Y')
-                                experience_instance = Experience(user=user, type=type, commentaire=commentaire, principal=principal, actuellement=actuellement)
-                                experience_instance.set_date_debut_from_str(debut)
-                                experience_instance.set_date_fin_from_str(fin)
-                                experience_instance.save()
-                                # messages.success(request, f"L'enregistrement de l'éxpérence {type} : {commentaire} est réussi. {i}")
-                                # messages.error(request, f"Erreur liée à la date du début de l'éxpériencr {type} : {commentaire} ")
-                                return render(request, 'accounts/nouveau_experience.html')
-                        else: 
-                            # on passe au type d'expérience suivant s'il y en a
-                            # messages.warning(request, f"Le type d'expérience '{type}' : '{commentaire}' , existe déjà pour cet utilisateur.")
-                            continue
-                    else: # revoire ce cas: s'il y a des div avec des type défini et des div sans type défini alors quoi faire
-                        # il vaut mieux ignorer l'enregistrement avec un message d'information
-                        # messages.warning(request, f"Vous n'avez pas défini d'expérience,dans ce cas l'enregistrement est ignoré")
-                        continue
-                return redirect('modifier_format_cours')
-        else:
-            messages.error(request, "Il n'y a pas d'utilisateur connecté à son compte.")
+    if 'btn_enr' in request.POST:
+        # Liste des expériences dans le request dont le nom commence par: type_
+        type_keys = [key for key in request.POST.keys() if key.startswith('type_')]
+        if not type_keys: # s'il n'y a pas d'expérience sélectionnée
+            messages.error(request, "Il faut donner au moins une expérience, sinon sélectionnez Débutant(e)")
             return render(request, 'accounts/nouveau_experience.html')
+        else: # s'il y a au mois une expérience sélectionnée
+            for i in range(1, len(type_keys) + 1):
+                # Récupération des valeurs du formulaire
+                # Définir les paramaitres
+                type_key = f'type_{i}'
+                # car il y a deux dates avec des indice différents paire et impaire (voire function ReOrderId02() dans Appligne/static/js/Code_en_plus.js)
+                date_debut_key = f'date_debut_{2 * i - 1}'
+                date_fin_key = f'date_fin_{2 * i}'
+                principal_key = f'principal_{i}'
+                actuellement_key = f'act_{i}'
+                Commentaire_key = f'comm_{i}'
+
+                if request.POST.get(type_key): # car dans le JS de la page on a réodonner les ID
+                    debut = request.POST.get(date_debut_key, None)
+                    fin = request.POST.get(date_fin_key, None)
+                    
+                    type = request.POST.get(type_key)
+                    commentaire = request.POST.get(Commentaire_key, None)
+                    if request.POST.get(principal_key, None) == "on":
+                        principal = True
+                    else: principal = False
+                    if request.POST.get(actuellement_key, None) == "on":
+                        actuellement = True
+                    else: actuellement = False
+                    # Vérification si le type d'expérience n'existe pas déjà pour cet utilisateur
+                    if not Experience.objects.filter(user=user, type=type, commentaire=commentaire).exists():
+                        if debut:
+                            # tester le format des dates
+                            try:
+                                # si la convertion est réussie
+                                debut_01 = datetime.strptime(debut, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                                if fin: fin_01 = datetime.strptime(fin, '%d/%m/%Y') # fin_01 juste pour le try seulement
+                            except ValueError:
+                                messages.error(request, "Format de l'un des dates est invalide. Utilisez jj/mm/aaaa")
+                                return render(request, 'accounts/nouveau_experience.html')
+                            experience_instance = Experience(user=user, type=type, commentaire=commentaire, principal=principal, actuellement=actuellement)
+                            experience_instance.set_date_debut_from_str(debut)
+                            experience_instance.set_date_fin_from_str(fin)
+                            experience_instance.save()
+                        else: # on peut définir par défaut date début ou rendre date début non obligatoire
+                            debut = datetime.now().strftime('%d/%m/%Y')
+                            experience_instance = Experience(user=user, type=type, commentaire=commentaire, principal=principal, actuellement=actuellement)
+                            experience_instance.set_date_debut_from_str(debut)
+                            experience_instance.set_date_fin_from_str(fin)
+                            experience_instance.save()
+                            return render(request, 'accounts/nouveau_experience.html')
+                        
+                    else: continue # on passe au type d'expérience suivant s'il y en a
+
+                else: continue # on passe au type d'expérience suivant s'il y en a
+
+            return redirect('nouveau_matiere')
+
     return render(request, 'accounts/nouveau_experience.html')
 
 
 
 def nouveau_matiere(request):
-    # Récupérer l'utilisateur actuel
     user = request.user
-    photo = None
-    first_name = "xxx"
-    
-    if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_matiere.html', context)
+    if not user.is_authenticated or not hasattr(user, 'professeur'):
+        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+        return redirect('signin')
+
     # Vérifie si la méthode de la requête est POST et si le bouton 'btn_enr' a été soumis
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        # Récupérer l'ID de l'utilisateur actuellement connecté
-        user_id = request.user.id
-        # Vérifier si un utilisateur est connecté à son compte
-        if user_id is not None:
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                messages.error(request, "Utilisateur non trouvé.")
-                return render(request, 'accounts/nouveau_matiere.html')
+    if 'btn_enr' in request.POST:
 
-            # Récupérer les listes de matières et de niveaux sélectionnés dans le formulaire
-            liste_matieres = [key for key in request.POST.keys() if key.startswith('matiere_')]
-            liste_niveaux = [key for key in request.POST.keys() if key.startswith('niveau_chx_')]
-            
-            # Vérifier si au moins une matière et ses niveaux correspondants ont été sélectionnés
-            if not liste_matieres or not liste_niveaux:
-                messages.error(request, "Il faut sélectionner au moins une matière à enseigner et les niveaux correspondants")
-                return render(request, 'accounts/nouveau_matiere.html')
-
-            # Parcourir chaque matière sélectionnée
-            for matiere_key in liste_matieres:
-                # extraire l'indice de la matière
-                # renvoie la partie de la chaîne matiere_key qui commence après le préfixe 'matiere_'
-                i = int(matiere_key[len('matiere_'):])
-                # récupérer la valeur du clé 'matiere_{i}'
-                matiere = request.POST.get(f'matiere_{i}')
-                # Récupérer l'objet Matiere correspondant à la matière sélectionnée
-                matiere_obj = Matiere.objects.filter(matiere=matiere).first()
-                
-                # Vérifier si la matière existe dans la base de données
-                if not matiere_obj:
-                    messages.error(request, f"Matière = '{matiere}' non trouvée. Contactez l'administrateur du site")
-                    return render(request, 'accounts/nouveau_matiere.html')
-                
-                matiere_id = matiere_obj.id
-                # Vérifier si la case à cocher 'principal' est cochée
-                # si request.POST.get(f'principal_{i}') == "on" => principal=True
-                # si non => principal=False
-                principal = request.POST.get(f'principal_{i}') == "on"
-                
-                # Récupérer les niveaux sélectionnés pour cette matière
-                niveau_chx = request.POST.getlist(f'niveau_chx_{i}')
-                # Remarque: Si niveau_chx est vide le reste du code est ignoré
-                if not niveau_chx: 
-                    messages.error(request, f"La matière = '{matiere}' n'a pas de niveaux sélectionnés, elle n'est pas prise en compte")
-                    # passer à la matière suivante
-                    continue
-                # pour le cas si niveau_chx est non null
-                niveaux_id = [] # initialiser la liste niveaux_id
-                
-                # Parcourir chaque niveau sélectionné
-                for niveau_name in niveau_chx:
-                    try: 
-                        # Récupérer l'objet Niveau correspondant au niveau sélectionné
-                        niveau_obj = Niveau.objects.get(niveau=niveau_name)
-                        niveaux_id.append(niveau_obj.id)
-                    except Niveau.DoesNotExist:
-                        messages.error(request, f"Niveau = '{niveau_name}' non trouvé. Contactez l'administrateur du site")
-                        return render(request, 'accounts/nouveau_matiere.html')
-                
-                # Sauvegarder les enregistrements Prof_mat_niv pour chaque niveau sélectionné
-                for niveau_id in niveaux_id:
-                    
-                    # pour les filtres on utilise la valeur des ID (matiere_id ; niveau_id))
-                    # si l'enregistrement n'existe pas
-                    if not Prof_mat_niv.objects.filter(user=user, matiere=matiere_id, niveau=niveau_id).exists():
-                        niveau_obj = Niveau.objects.get(id=niveau_id)
-                        # pour l'enregistrement on utilise les objets liés aux ID (matiere_obj ; niveau_obj)
-                        prof_mat_niv = Prof_mat_niv(user=user, matiere=matiere_obj, niveau=niveau_obj, principal=principal)
-                        prof_mat_niv.save()
-                        # messages.success(request, f"Enregistrement de: Principal = '{principal}'; Matière = '{matiere}';  Niveau = '{niveau_id}' effectué avec succès.")
-                    else:
-                        continue # passer au suivant niveau si l'enregistrement existe déjà
-            # Rediriger vers une autre page après traitement
-            messages.success(request, " L'enregistrement des matières et des niveaux sélectionnés est achevé avec succès")
-            return redirect('nouveau_zone')
+        # Récupérer les listes de matières et de niveaux sélectionnés dans le formulaire
+        liste_matieres = [key for key in request.POST.keys() if key.startswith('matiere_')]
+        liste_niveaux = [key for key in request.POST.keys() if key.startswith('niveau_chx_')]
         
-        # Si aucun utilisateur connecté n'est trouvé
-        else:
-            messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+        # Vérifier si au moins une matière et ses niveaux correspondants ont été sélectionnés
+        if not liste_matieres or not liste_niveaux:
+            messages.error(request, "Il faut sélectionner au moins une matière à enseigner et les niveaux correspondants")
             return render(request, 'accounts/nouveau_matiere.html')
 
-    # Si la méthode HTTP n'est pas POST
-    else:
-        # Afficher le formulaire de sélection de matières
-        return render(request, 'accounts/nouveau_matiere.html')
+        # Parcourir chaque matière sélectionnée
+        for matiere_key in liste_matieres:
+            # extraire l'indice de la matière
+            # renvoie la partie de la chaîne matiere_key qui commence après le préfixe 'matiere_'
+            i = int(matiere_key[len('matiere_'):])
+            # récupérer la valeur du clé 'matiere_{i}'
+            matiere = request.POST.get(f'matiere_{i}')
+            # Récupérer l'objet Matiere correspondant à la matière sélectionnée
+            matiere_obj = Matiere.objects.filter(matiere=matiere).first()
+            
+            # Vérifier si la matière existe dans la base de données
+            if not matiere_obj:
+                messages.error(request, f"Matière = '{matiere}' non trouvée. Contactez l'administrateur du site")
+                return render(request, 'accounts/nouveau_matiere.html')
+            
+            matiere_id = matiere_obj.id
+            # Vérifier si la case à cocher 'principal' est cochée
+            # si request.POST.get(f'principal_{i}') == "on" => principal=True
+            # si non => principal=False
+            principal = request.POST.get(f'principal_{i}') == "on"
+            
+            # Récupérer les niveaux sélectionnés pour cette matière
+            niveau_chx = request.POST.getlist(f'niveau_chx_{i}')
+            # Remarque: Si niveau_chx est vide le reste du code est ignoré
+            if not niveau_chx: 
+                messages.error(request, f"La matière = '{matiere}' n'a pas de niveaux sélectionnés, elle n'est pas prise en compte")
+                # passer à la matière suivante
+                continue
+            # pour le cas si niveau_chx est non null
+            niveaux_id = [] # initialiser la liste niveaux_id
+            
+            # Parcourir chaque niveau sélectionné
+            for niveau_name in niveau_chx:
+                try: 
+                    # Récupérer l'objet Niveau correspondant au niveau sélectionné
+                    niveau_obj = Niveau.objects.get(niveau=niveau_name)
+                    niveaux_id.append(niveau_obj.id)
+                except Niveau.DoesNotExist:
+                    messages.error(request, f"Niveau = '{niveau_name}' non trouvé. Contactez l'administrateur du site")
+                    return render(request, 'accounts/nouveau_matiere.html')
+            
+            # Sauvegarder les enregistrements Prof_mat_niv pour chaque niveau sélectionné
+            for niveau_id in niveaux_id:
+                
+                # pour les filtres on utilise la valeur des ID (matiere_id ; niveau_id))
+                # si l'enregistrement n'existe pas
+                if not Prof_mat_niv.objects.filter(user=user, matiere=matiere_id, niveau=niveau_id).exists():
+                    niveau_obj = Niveau.objects.get(id=niveau_id)
+                    # pour l'enregistrement on utilise les objets liés aux ID (matiere_obj ; niveau_obj)
+                    prof_mat_niv = Prof_mat_niv(user=user, matiere=matiere_obj, niveau=niveau_obj, principal=principal)
+                    prof_mat_niv.save()
+
+                else:
+                    continue # passer au suivant niveau si l'enregistrement existe déjà
+        # Rediriger vers une autre page après traitement
+        messages.success(request, " L'enregistrement des matières et des niveaux sélectionnés est achevé avec succès")
+        return redirect('nouveau_zone')
+
+    return render(request, 'accounts/nouveau_matiere.html')
+
 
     
 def nouveau_zone(request):
-    # Récupérer l'utilisateur actuel
     user = request.user
-    photo = None
-    first_name = "xxx"
+    if not user.is_authenticated or not hasattr(user, 'professeur'):
+        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+        return redirect('signin')
+
     btn_text = "Enregistrez les zones"  # Texte par défaut du bouton
-    
-    if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name, 'btn_text': btn_text}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_zone.html', context)
-    btn_text = "Enregistrez les zones"  # Texte par défaut du bouton
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        user_id = request.user.id
-        if user_id is not None:
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                messages.error(request, "Utilisateur non trouvé.")
-                return render(request, 'accounts/nouveau_zone.html')
-            # Récupérer les listes des communes du GET sélectionnées dans le deuxième select name="communes_chx"
-            liste_communes = request.POST.getlist('communes_chx')
-            if not liste_communes:
-                messages.error(request, "Pas de commune")
-                return render(request, 'accounts/nouveau_zone.html')
-            for commune in liste_communes:
-                # il faut extraire les ID à par et les commune à par car value= id_commune
-                # Extraction de l'id de la commune et du texte de la commune
-                commune_id, commune_text = commune.split('_')
-                # pour les filtres on utilise la valeur des ID (matiere_id ; niveau_id))
-                    
-                # si l'enregistrement n'existe pas
-                if not Commune.objects.filter(id=commune_id).exists():
-                    messages.error(request, f"L'ID de la  commune: '{commune_text}' n'est pas reconnue, Contactez l'administrateur")
-                    continue # on ignore les ID non reconnus
-                if not Prof_zone.objects.filter(user=user, commune=commune_id).exists():
-                    commune_obj = Commune.objects.get(id=commune_id)
-                    # pour l'enregistrement on utilise les objets liés aux ID (matiere_obj ; niveau_obj)
-                    prof_zone = Prof_zone(user=user, commune=commune_obj)
-                    prof_zone.save()
-                    # messages.success(request, f"Enregistrement de la Commune  = '{commune_text}' effectué avec succès.")
-                    # Modifier le texte du bouton après l'enregistrement réussi
-                    btn_text = "Ajoutez d'autres zones"
-                else:
-                    # messages.info(request, f"Enregistrement de la Commune  = '{commune_text}' éxiste déjà.")
-                    continue # passer à la suivante commune si l'enregistrement existe déjà   
-            return render(request, 'accounts/nouveau_zone.html', {'btn_text': btn_text})        
+    if 'btn_enr' in request.POST:
+        # Récupérer les listes des communes du GET sélectionnées dans le deuxième select name="communes_chx"
+        liste_communes = request.POST.getlist('communes_chx')
+        if not liste_communes:
+            messages.error(request, "Pas de commune")
+            return render(request, 'accounts/nouveau_zone.html')
+        for commune in liste_communes:
+            # il faut extraire les ID à par et les commune à par car value= id_commune
+            # Extraction de l'id de la commune et du texte de la commune
+            commune_id, commune_text = commune.split('_')
+            # pour les filtres on utilise la valeur des ID (matiere_id ; niveau_id))
+                
+            # si l'enregistrement n'existe pas
+            if not Commune.objects.filter(id=commune_id).exists():
+                messages.error(request, f"L'ID de la  commune: '{commune_text}' n'est pas reconnue, Contactez l'administrateur")
+                continue # on ignore les ID non reconnus
+            if not Prof_zone.objects.filter(user=user, commune=commune_id).exists():
+                commune_obj = Commune.objects.get(id=commune_id)
+                # pour l'enregistrement on utilise les objets liés aux ID (matiere_obj ; niveau_obj)
+                prof_zone = Prof_zone(user=user, commune=commune_obj)
+                prof_zone.save()
+                
+                # Modifier le texte du bouton après l'enregistrement réussi
+                btn_text = "Ajoutez d'autres zones"
+            else:
+                # messages.info(request, f"Enregistrement de la Commune  = '{commune_text}' éxiste déjà.")
+                continue # passer à la suivante commune si l'enregistrement existe déjà   
+        return redirect('nouveau_description')        
     return render(request, 'accounts/nouveau_zone.html', {'btn_text': btn_text})
 
 
@@ -718,71 +597,50 @@ def est_url_youtube(url):
 
 
 def nouveau_description(request):
-    # Récupérer l'utilisateur actuel
+    titre=""
+    parcours=""
+    pedagogie=""
+    video=""
     user = request.user
-    photo = None
-    first_name = "xxx"
-    
-    if user.is_authenticated:
-        # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_description.html', context)
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        # en cas d'erreur il faut conserver les données déjà sésies (à faire)
-        user_id = request.user.id
-        if user_id is not None:
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                messages.error(request, "Utilisateur non trouvé.")
-                return render(request, 'accounts/nouveau_description.html')
-            #messages.info(request, "info 1")
-            titre  = request.POST.get('titre')
-            # teste sur la longueur du titre
-            if len(titre)>255:
-                messages.error(request, "Le titre de votre fichier ne doit pas dépasser 255 caractaires.")
-                return render(request, 'accounts/nouveau_description.html')  # Rediriger si le titre n'est pas valide
-            #messages.info(request, "info 2")
-            parcours  = request.POST.get('parcours')
-            pedagogie  = request.POST.get('pedagogie')
-            video = request.POST.get('video_youtube_url')      
-            # Vérifier si l'URL est une vidéo YouTube
-            if video and not est_url_youtube(video):
-                messages.error(request, "L'URL de la vidéo n'est pas valide.")
-                return render(request, 'accounts/nouveau_description.html')
-            #messages.info(request, "info 3")
-            if not Pro_fichier.objects.filter(user=user).exists():
-                
-                # messages.success(request, f"url_video = '{video}'  / url_API = '{video}'.")
+    if not user.is_authenticated or not hasattr(user, 'professeur'):
+        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+        return redirect('signin')
+    teste = True
+    if 'btn_enr' in request.POST:
+        titre  = request.POST.get('titre', "")
+        # teste sur la longueur du titre
+        if len(titre)>255:
+            messages.error(request, "Le titre de votre fichier ne doit pas dépasser 255 caractaires.")
+            teste = False
+        parcours  = request.POST.get('parcours', "")
+        pedagogie  = request.POST.get('pedagogie', "")
+        video = request.POST.get('video_youtube_url', "")      
+        # Vérifier si l'URL est une vidéo YouTube
+        if video and not est_url_youtube(video):
+            messages.error(request, "L'URL de la vidéo n'est pas valide.")
+            teste = False
+        if teste:
+            if not Pro_fichier.objects.filter(user=user).exists() :
                 pro_fichier = Pro_fichier(user=user, titre_fiche=titre, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video)
                 pro_fichier.save()
                 messages.success(request, "Enregistrement de la description détaillée est achevé.")
                 return redirect('nouveau_fichier')  # Rediriger vers l'étape suivante
-            else:   
-                # ouvrir la boite de dialogue à faire une recherche
-                #return render(request, 'accounts/nouveau_description.html', {'show_modal': True, 'parcours': parcours,
-                
+            else:
                 # supprimer l'ancien enregistrement
                 ancien_enregistrement = Pro_fichier.objects.get(user=user)
                 ancien_enregistrement.delete()
                 # Créez un nouveau Pro_fichier avec les données mises à jour
                 pro_fichier = Pro_fichier(user=user, titre_fiche=titre, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video)
                 pro_fichier.save()
-                #messages.info(request, "info 4")
                 messages.success(request, "Enregistrement de la description détaillée est modifié avec succés.")
                 return redirect('nouveau_fichier')  # Rediriger vers l'étape suivante
-    #messages.info(request, "info 5")
-    return render(request, 'accounts/nouveau_description.html')
+    context={
+        'titre': titre,
+        'parcours': parcours,
+        'pedagogie': pedagogie,
+        'video': video,
+    }
+    return render(request, 'accounts/nouveau_description.html', context)
 
 def nouveau_fichier(request):
     # Récupérer l'utilisateur actuel
@@ -868,6 +726,7 @@ def nouveau_fichier(request):
             email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire_id, sujet=sujet)
             email_telecharge.save()
             messages.success(request, "Email enregistré")
+            return redirect('modifier_format_cours')
     return render(request, 'accounts/nouveau_fichier.html', {'email_user': email_user})
 
 
@@ -1031,7 +890,7 @@ def modifier_compte_prof(request):
                     professeur.save()
                     # auth.login(request, user)
                     messages.success(request, "Les informations ont été mises à jour avec succès.")
-                    return redirect('votre_compte')
+                    return redirect('compte_prof')
                 else:
                     messages.error(request, "Le format de l'email est incorrecte.")
                     # Rendre la réponse en utilisant le template 'pages/index.html'
@@ -1121,7 +980,7 @@ def modifier_format_cours(request):
 
         # Message de succès et redirection vers la page du compte utilisateur
         messages.success(request, "Les nouveaux formats des cours sont enregistrés. Vous devez réviser vos prix par heure pour chaque enregistrement nouveau.")
-        return redirect('votre_compte')
+        return redirect('nouveau_prix_heure')
 
     # Rendre la page avec les données initiales
     return render(request, 'accounts/modifier_format_cours.html', initial_data)
@@ -1160,7 +1019,7 @@ def modifier_description(request):
                 pro_fichier = Pro_fichier(user=user, titre_fiche=titre_fiche, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video_youtube_url)
                 pro_fichier.save()
                 messages.success(request, "Les nouvelles descriptions sont enregistrés")
-                return redirect('votre_compte')
+                return redirect('compte_prof')
         except Pro_fichier.DoesNotExist:
             messages.error(request, "Les données des descriptions n'existent pas pour cet utilisateur. Vous devez ajouter vos descriptions avant")
             return redirect('nouveau_description')
@@ -1254,7 +1113,7 @@ def modifier_diplome(request): # il faut refaire la logique d'enregistrement de 
                         else: 
                             # messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
                             continue
-                return redirect('votre_compte')
+                return redirect('compte_prof')
         except Diplome.DoesNotExist:
             messages.error(request, "Les données des diplômes n'existent pas pour cet utilisateur. Vous devez ajouter vos diplômes avant")
             return render(request, 'accounts/modifier_diplome.html', context)
@@ -1370,7 +1229,7 @@ def modifier_experience(request):
                     continue
             
             # Redirection vers la page du compte après l'enregistrement
-            return redirect('votre_compte')
+            return redirect('compte_prof')
 
         # Rendu de la page de modification d'expérience avec le contexte
         return render(request, 'accounts/modifier_experience.html', context)
@@ -1483,7 +1342,7 @@ def modifier_matiere(request):
                     prof_mat_niv.save()
             if j > 0:messages.info(request, f"Il y a {j} nouveau(x) enregistrement(s), vous devez réviser vos prix par heur pour chaque enregistrement")
             messages.success(request, "L'enregistrement est achevé avec succés. ")
-            return redirect('votre_compte')
+            return redirect('compte_prof')
 
         # Rendu de la page de modification de matières avec le contexte
         return render(request, 'accounts/modifier_matiere.html', context)
@@ -1528,7 +1387,7 @@ def modifier_zone(request):
             if not zone_keys:
                 messages.error(request, "Vous avez supprimé toutes les zones.")
                 prof_zones.delete()
-                return redirect('votre_compte')
+                return redirect('compte_prof')
             prof_zones.delete()
             # Boucle sur les matières soumises via le formulaire
             for zone_key in zone_keys:
@@ -1550,7 +1409,7 @@ def modifier_zone(request):
                     messages.info(request, f"Revoire le programmeur => erreur enregistrement zone d'activité: zone_value: {zone_value}")
             # Redirection vers la page du compte après l'enregistrement
             # messages.success(request, f"L'enregistrement des zones a réussi.")
-            return redirect('votre_compte')
+            return redirect('compte_prof')
 
         # Rendu de la page de modification de matières avec le contexte
         return render(request, 'accounts/modifier_zone.html', context)
@@ -1572,7 +1431,7 @@ def demande_cours_recu(request):
     
     if emails.count() == 0:
         messages.info(request, "Il n'y a pas d'Email nouvellement envoyé.")
-        return redirect('votre_compte')
+        return redirect('compte_prof')
     # tri enregistrements par ordre décroissant des date_telechargement
     email_detailles = Email_detaille.objects.filter(email__in=emails).order_by('-email__date_telechargement')
     context = {'email_detailles': email_detailles}
@@ -1968,7 +1827,7 @@ def nouveau_prix_heure(request):
         ])
 
         messages.success(request, "Enregistrement achevé.")
-        return redirect('nouveau_prix_heure') # ça marche très bien
+        return redirect('compte_prof') # ça marche très bien
 
     return render(request, 'accounts/nouveau_prix_heure.html', context)
 

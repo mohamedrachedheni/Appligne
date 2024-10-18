@@ -55,8 +55,7 @@
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="titre_id" class="form-label">Titre de votre fiche</label>
-                                    <input type="text" class="form-control" id="titre_id" required
-                                        placeholder="Prof de mathématique" name="titre">
+                                    <input type="text" class="form-control" id="titre_id" required name="titre" value="{{titre}}">
                                 </div>
                             </div>
                             <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
@@ -125,7 +124,7 @@
                                 <div class="col-12 position-relative">
                                     <label for="parcours_id" class="form-label">Description</label>
                                     <textarea class="form-control profil" id="parcours_id" rows="4"
-                                        name="parcours">Découvrez davantage sur mon parcours éducatif pour établir une connexion transparente avant toute demande de cours :</textarea>
+                                        name="parcours" >{{parcours}}</textarea>
                                 </div>
                             </div>
                             <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
@@ -241,7 +240,7 @@
                                     <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
                                         pédagogie</label>
                                     <textarea class="form-control profil " id="pedagogie_id" rows="4"
-                                        name="pedagogie">Explorez ma pédagogique et découvrez comment je façonne une expérience d'apprentissage enrichissante pour chaque élève, garantissant un progrès constant.</textarea>
+                                        name="pedagogie"> {{pedagogie}} </textarea>
                                 </div>
                             </div>
                             <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
@@ -368,7 +367,7 @@
                                 </div>
                                 <div class="col-12 ">
                                     <input type="text" class="form-control" id="video_id"
-                                        placeholder="https://www.youtube.com/embed/Axkpyigw6eA?si=rWTdXuhpOMOhV7zZ" name="video_youtube_url">
+                                        placeholder="https://www.youtube.com/embed/qQwKjQ8LrAw?si=-ZVQimzhs9LaT0Xt" name="video_youtube_url" value=" {{video}} " >
                                 </div>
                                 <div class="col-12 position-relative d-flex justify-content-center align-items-center">
             
