@@ -293,16 +293,7 @@ class Pro_fichier(models.Model):
     class Meta:
         ordering = ['-date_modif']
 
-class Prof_doc_telecharge(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date_telechargement = models.DateField(default=date.today)
-    doc_telecharge = models.ImageField(upload_to='photos/%y/%m/')
 
-    def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - {self.date_telechargement}"
-
-    class Meta:
-        ordering = ['-date_telechargement']
 
 class Email_telecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # ID de l'expéditeur 
@@ -323,6 +314,18 @@ class Email_telecharge(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name if self.user else 'No User'} {self.user.last_name if self.user else ''} - {self.date_telechargement}"
+
+    class Meta:
+        ordering = ['-date_telechargement']
+
+class Prof_doc_telecharge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date_telechargement = models.DateField(default=date.today)
+    doc_telecharge = models.ImageField(upload_to='photos/%y/%m/')
+    email_telecharge = models.ForeignKey(Email_telecharge, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} - {self.date_telechargement}"
 
     class Meta:
         ordering = ['-date_telechargement']

@@ -643,70 +643,47 @@ def nouveau_description(request):
     return render(request, 'accounts/nouveau_description.html', context)
 
 def nouveau_fichier(request):
-    # Récupérer l'utilisateur actuel
     user = request.user
-    photo = None
-    first_name = "xxx"
     
-    if user.is_authenticated:
-        # # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_fichier.html', context)
-    if not user.is_authenticated:
-        messages.error(request, "Pas d'utilisateur connecté.")
+    if not user.is_authenticated or not hasattr(user, 'professeur'):
+        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
         return redirect('signin')
-    
-    email_user = user.email
-    
-    if request.method == 'POST' and 'btn_enr' in request.POST:
-        email_prof = request.POST.get('email_user')
-        text_email = request.POST.get('text_email')
-        
-        fichiers_list = request.FILES.getlist('fichiers_list')
-
-        extensions_images = ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.raw', '.psd', '.ai',
-                             '.exif', '.jfif', '.jpe', '.heif', '.heic']
-
-        if fichiers_list:
-            for fichier in fichiers_list:
-                nom_fichier = fichier.name
-                # Obtenez l'extension du fichier
-                extension_fichier = os.path.splitext(nom_fichier)[1].lower()
-                #messages.info(request, f"L extension_fichier = '{extension_fichier}' nom du fichier = '{nom_fichier}' ")
-                if extension_fichier in extensions_images:
-                    prof_doc_telecharge = Prof_doc_telecharge(user=user, doc_telecharge=fichier)
-                    prof_doc_telecharge.save()
-                else:
-                    messages.error(request, f"Le fichier '{nom_fichier}' n'est pas une image valide et n'a pas été enregistré.")
-                    messages.error(request, "Les extensions des fichiers acceptés sont: .jpg, .jpeg, .png, .bmp, .webp, .raw, .psd, .ai,.exif, .jfif, .jpe, .heif, .heic ")
-
+    email_prof = request.POST.get('email_user', "").strip()
+    text_email = request.POST.get('text_email', "").strip()
+    fichiers_list = request.FILES.getlist('fichiers_list', None)
+    sujet = request.POST.get('sujet', '').strip()
+    extensions_images = ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.raw', '.psd', '.ai',
+                                '.exif', '.jfif', '.jpe', '.heif', '.heic']
+    teste = True
+    if fichiers_list:
+        for fichier in fichiers_list:
+            nom_fichier = fichier.name
+            # Obtenez l'extension du fichier
+            extension_fichier = os.path.splitext(nom_fichier)[1].lower()
+            if not extension_fichier in extensions_images:
+                messages.error(request, f"Le fichier '{nom_fichier}' n'est pas une image valide et n'a pas été enregistré.")
+                messages.error(request, "Les extensions des fichiers acceptés sont: .jpg, .jpeg, .png, .bmp, .webp, .raw, .psd, .ai,.exif, .jfif, .jpe, .heif, .heic ")
+                teste = False # si erreur l'enregistrement ne passera pas voire reste de code
+    if 'btn_enr' in request.POST and teste:
         if text_email:
-            # messages.error(request, "Teste 01 ")
             if not email_prof:
-                #messages.error(request, "Teste 02 ")
-                # si l'utilisateur n'a pas spécifié son email, l'email de l'utiluisateur déjà enregistré est pris par défaut
-                email_prof = email_user
-            # messages.error(request, "Teste 03 ")
+                email_prof = user.email # si l'utilisateur n'a pas spécifié son email, l'email de l'utiluisateur déjà enregistré est pris par défaut
+            #tester le format de l'email
+            email_validator = EmailValidator() # Initialiser le validateur d'email
+            # Validation de l'email_prof
+            try:
+                email_validator(email_prof)
+            except ValidationError:
+                email_prof = user.email # si le format de l'email est éronné on reprond l'email du user
+
             # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
             user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
             user_destinataire_id = user_destinataire.id
             
             # traitement de l'envoie de l'email
             # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
-            sujet = request.POST.get('sujet', '').strip()  # Obtient la valeur de 'sujet' ou une chaîne vide
             if not sujet:  # Vérifie si sujet est nul ou une chaîne d'espaces après le strip
                 sujet = "Sujet non défini"
-            # messages.error(request, f"Teste 02 sujet= {sujet} ")
             # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
             destinations = ['prosib25@gmail.com']
             # L'envoie de l'email n'est pas obligatoire
@@ -723,11 +700,21 @@ def nouveau_fichier(request):
             # except Exception as e:
             #     messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
             # messages.success(request, "L'email a été envoyé avec succès. ")
+        
             email_telecharge = Email_telecharge(user=user, email_telecharge=email_prof, text_email=text_email, user_destinataire=user_destinataire_id, sujet=sujet)
             email_telecharge.save()
             messages.success(request, "Email enregistré")
-            return redirect('modifier_format_cours')
-    return render(request, 'accounts/nouveau_fichier.html', {'email_user': email_user})
+            
+            if fichiers_list:
+                for fichier in fichiers_list:
+                    nom_fichier = fichier.name
+                    # Obtenez l'extension du fichier
+                    extension_fichier = os.path.splitext(nom_fichier)[1].lower()
+                    prof_doc_telecharge = Prof_doc_telecharge(user=user, doc_telecharge=fichier, email_telecharge=email_telecharge)
+                    prof_doc_telecharge.save()
+                return redirect('modifier_format_cours')
+        else: messages.error(request, "Vous devez ajouter un texte pour votre email")
+    return render(request, 'accounts/nouveau_fichier.html', {'text_email': text_email, 'email_prof': email_prof, 'sujet': sujet})
 
 
 def votre_compte(request):
