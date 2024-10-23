@@ -45,7 +45,7 @@
                     </div>
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'modifier_compte_prof' %}"  >
+            <form method="POST" enctype="multipart/form-data" autocomplete="off"  >
                 <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
                 {% csrf_token %}
                 
@@ -61,7 +61,7 @@
                                     <label for="username_id" class="form-label">Nom de l'utilisateur</label>
                                     <!-- autocomplete="off" ne marche pas ?? -->
                                     <input type="text" class="form-control" id="username_id" name="username" required
-                                        title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{username}}" autocomplete="off" >
+                                        title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{username}}" autocomplete="off" disabled >
                                 </div>
                                 
                                 

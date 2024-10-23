@@ -758,153 +758,116 @@ def logout(request):
 
 
 def modifier_compte_prof(request):
-    # Récupérer l'utilisateur actuel
+    # paramètres par défaut
+    teste = True
     user = request.user
-    username = None
-    first_name = None
-    last_name = None
-    email = None
-    civilite = None
-    numero_telephone = None
-    date_naissance = None
-    adresse = None
-    photo = None
-    if user.is_authenticated:
-        # # messages.info(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            # # messages.info(request, "if hasattr(user, 'professeur'):")
-            professeur = Professeur.objects.get(user=user)
-            # Extraire les données
-            username = user.username
-            first_name = user.first_name
-            last_name = user.last_name
-            email = user.email
-            civilite = professeur.civilite
-            numero_telephone = professeur.numero_telephone
-            date_naissance = professeur.date_naissance
-            adresse = professeur.adresse
-            photo = professeur.photo
-            # Passer les doànnées à votre modèle de contexte
-            context = {'username':username,
-                       'first_name':first_name,
-                       'last_name':last_name,
-                       'email':email,
-                       'civilite':civilite,
-                       'numero_telephone':numero_telephone,
-                       'date_naissance':date_naissance,
-                       'adresse':adresse,
-                       'photo': photo,}
-            # la page est activée sans enregistrement
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/modifier_compte_prof.html', context)
 
-            # si le bouton enregister est cliqué
-            if request.method == 'POST' and 'btn_enr' in request.POST:
-                username_nouveau = request.POST['username']
-                first_name_nouveau = request.POST['first_name']
-                last_name_nouveau = request.POST['last_name']
-                email_nouveau = request.POST['email']
-                civilite_nouveau = request.POST['civilite']
-                numero_telephone_nouveau = request.POST['numero_telephone']
-                date_naissance_nouveau = request.POST['date_naissance']
-
-                adresse_nouveau = request.POST['adresse']
-                #photo_nouveau = request.FILES['photo']
-                context = {'username':username_nouveau,
-                       'first_name':first_name_nouveau,
-                       'last_name':last_name_nouveau,
-                       'email':email_nouveau,
-                       'civilite':civilite_nouveau,
-                       'numero_telephone':numero_telephone_nouveau,
-                       'date_naissance':date_naissance_nouveau,
-                       'adresse':adresse_nouveau,
-                       'photo': photo,}
-                if not username_nouveau.strip() or not first_name_nouveau.strip() or not last_name_nouveau.strip() or not email_nouveau.strip() or not civilite_nouveau.strip() or not numero_telephone_nouveau.strip() or not date_naissance_nouveau.strip() or not adresse_nouveau.strip():
-                    messages.error(request, "Tous les champs ne peuvent pas être vide ou contenir uniquement des espaces.")
-                    return render(request, 'accounts/modifier_compte_prof.html', context)
-                
-                # si le nom de l'utilisateur a été changé et qu'il éxiste déjà
-                if username_nouveau != username and User.objects.filter(username=username_nouveau).exists():
-                    messages.error(request, "Le nom de l'utilisateur est déjà utilisé, donnez un autre nom.")
-                    return render(request, 'accounts/modifier_compte_prof.html', context)
-
-                # si l'email a été changé et que le nouveau email existe déjà
-                if email_nouveau != email and User.objects.filter(email=email_nouveau).exists():
-                    messages.error(request, "L'email est déjà utilisé, donnez un autre email")
-                    return render(request, 'accounts/modifier_compte_prof.html', context)
-
-                # Vérifier le format de la date
-                try:
-                        # si la convertion est réussie
-                        date_naissance_nouveau_01 = datetime.strptime(date_naissance_nouveau, '%d/%m/%Y') # date_naissance_nouveau_01 est crée juste pour tester le format de la date
-                        # messages.info(request, f"Format de date de naissance est correcte {date_naissance_01}")
-                except ValueError:
-                    messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
-                    date_naissance_nouveau = date_naissance
-                    # actualiser le context
-                    context = {'username':username_nouveau,
-                       'first_name':first_name_nouveau,
-                       'last_name':last_name_nouveau,
-                       'email':email_nouveau,
-                       'civilite':civilite_nouveau,
-                       'numero_telephone':numero_telephone_nouveau,
-                       'date_naissance':date_naissance_nouveau,
-                       'adresse':adresse_nouveau,
-                       'photo': photo,}
-
-                    return render(request, 'accounts/modifier_compte_prof.html', context)
-                
-                # définir un forma pour l'email
-                patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
-                # si le format de l'email est correcte
-                if re.match(patt, email_nouveau):
-                    # Mettre à jour les données de l'utilisateur
-                    user.username = username_nouveau
-                    user.first_name = first_name_nouveau
-                    user.last_name = last_name_nouveau
-                    user.email = email_nouveau
-                    user.save()
-
-                    # Mettre à jour les données du professeur
-                    professeur.adresse = adresse_nouveau
-                    professeur.numero_telephone = numero_telephone_nouveau
-                    professeur.civilite = civilite_nouveau
-                    professeur.set_date_naissance_from_str(date_naissance_nouveau)
-                    # s'il y a un changement de photo d'identité
-                    if 'photo' in request.FILES: professeur.photo = request.FILES['photo']  
-                    professeur.save()
-                    # auth.login(request, user)
-                    messages.success(request, "Les informations ont été mises à jour avec succès.")
-                    return redirect('compte_prof')
-                else:
-                    messages.error(request, "Le format de l'email est incorrecte.")
-                    # Rendre la réponse en utilisant le template 'pages/index.html'
-                    response = render(request, 'accounts/modifier_compte_prof.html', context)
-                    # Ajouter les en-têtes pour empêcher la mise en cache de la page
-                    # Cela garantit que le navigateur récupère toujours les données les plus récentes
-                    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
-                    response['Pragma'] = 'no-cache'  # HTTP 1.0.
-                    response['Expires'] = '0'  # Proxies.
-                    # Retourner la réponse
-                    return response
-        else:
-            messages.error(request, "Vous n'etes pas connecté en tant que prof")
-            return redirect('signin') 
-
-    else:
+    if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+    
+    #Récupérer les anciennes données enregistrées
+    professeur = Professeur.objects.get(user=user)
+    username = user.username
+    first_name = user.first_name
+    last_name = user.last_name
+    email = user.email
+    civilite = professeur.civilite
+    numero_telephone = professeur.numero_telephone
+    date_naissance = professeur.date_naissance
+    adresse = professeur.adresse
+
+    # si le bouton enregister est cliqué
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # récupérer les données du template
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        civilite = request.POST['civilite']
+        numero_telephone = request.POST['numero_telephone']
+        date_naissance = request.POST['date_naissance']
+        adresse = request.POST['adresse']
+
+
+        if not first_name.strip() or not last_name.strip() or not email.strip() or not civilite.strip() or not numero_telephone.strip() or not date_naissance.strip() or not adresse.strip():
+            messages.error(request, "Tous les champs ne peuvent pas être vide ou contenir uniquement des espaces.")
+            teste = False
+
+        # si l'email a été changé et que le nouveau email existe déjà
+        if email != user.email and User.objects.filter(email=email).exists():
+            messages.error(request, "L'email est déjà utilisé, donnez un autre email")
+            teste = False
+
+        # Vérifier le format de la date
+        try:
+                # si la convertion est réussie
+                date_naissance_nouveau_01 = datetime.strptime(date_naissance, '%d/%m/%Y') # date_naissance_nouveau_01 est crée juste pour tester le format de la date
+        except ValueError:
+            messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
+            date_naissance = professeur.date_naissance
+            teste = False
+
+        #tester le format de l'email
+        email_validator = EmailValidator() # Initialiser le validateur d'email
+        # Validation de l'email_prof
+        try:
+            email_validator(email)
+        except ValidationError:
+            messages.error(request, "Le format de l'email est incorrecte.")
+            teste = False
+
+        if teste: # si tous les données sont valides
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+
+            # Mettre à jour les données du professeur 
+            professeur.adresse = adresse
+            professeur.numero_telephone = numero_telephone
+            professeur.civilite = civilite
+            professeur.set_date_naissance_from_str(date_naissance)
+            # s'il y a un changement de photo d'identité
+            if 'photo' in request.FILES: professeur.photo = request.FILES['photo']  
+            professeur.save()
+            # auth.login(request, user)
+            messages.success(request, "Les informations ont été mises à jour avec succès.")
+            return redirect('compte_prof')
+
+    context = {'username':username,
+        'first_name':first_name,
+        'last_name':last_name,
+        'email':email,
+        'civilite':civilite,
+        'numero_telephone':numero_telephone,
+        'date_naissance':date_naissance,
+        'adresse':adresse}
+    return render(request, 'accounts/modifier_compte_prof.html', context)
+    # voire l'interet de ce code alternative
+    # # Rendre la réponse en utilisant le template 'pages/index.html'
+    # response = render(request, 'accounts/modifier_compte_prof.html', context)
+    # # Ajouter les en-têtes pour empêcher la mise en cache de la page
+    # # Cela garantit que le navigateur récupère toujours les données les plus récentes
+    # response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
+    # response['Pragma'] = 'no-cache'  # HTTP 1.0.
+    # response['Expires'] = '0'  # Proxies.
+    # # Retourner la réponse
+    # return response
+
 
 
 def modifier_format_cours(request):
+    user = request.user
     # Vérification si l'utilisateur est authentifié
     if not request.user.is_authenticated:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
     
-    user = request.user
+    
     try:
         # Essayer de récupérer l'objet Format_cour de l'utilisateur
         format_cour = Format_cour.objects.get(user=user)
@@ -1017,100 +980,100 @@ def modifier_description(request):
 
 
 def modifier_diplome(request): # il faut refaire la logique d'enregistrement de ce view
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+    teste = True
     diplome_cathegories = Diplome_cathegorie.objects.all()
-    if request.user.is_authenticated:
-        user = request.user
-        try:
-            diplomes = Diplome.objects.filter(user=user)
-            # Conversion de la date dans le bon format
-            for diplome in diplomes:
-                diplome.obtenu = diplome.obtenu.strftime('%d/%m/%Y')
-            
-            context = {
-                'diplome_cathegories': diplome_cathegories,
-                'diplomes': diplomes,
-            }
 
-            if not (request.method == 'POST' and 'btn_enr' in request.POST):
-                return render(request, 'accounts/modifier_diplome.html', context)
+    diplomes = Diplome.objects.filter(user=user)
+    if not diplomes:
+        messages.error(request, "Les données des diplômes n'existent pas pour cet utilisateur. Vous devez ajouter vos diplômes avant")
+        teste = False
 
-            if request.method == 'POST' and 'btn_enr' in request.POST:
-                # Liste des diplômes dans le request dont le nom commence par: diplome_1
-                diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
-                if not diplome_keys:
-                    messages.error(request, "Il faut donner au moins un diplôme  ")
-                    return render(request, 'accounts/modifier_diplome.html', context)
-                # messages.info(request, f"Nombre de diplômes : {len(diplome_keys)}")
-                # début de l'enregistrement
-                # supprimer les anciens enregistrements
-                diplomes.delete() # il faut sauvegarder une copi des enregistrement en cas d"echec d'enregistrement
-                for diplome_key in diplome_keys:
-                    # messages.info(request, f"Nombre de diplômes : {diplome_key}")
-                    i = int(diplome_key.split('_')[1])
-                    diplome_key = f'diplome_{i}'
-                    date_obtenu_key = f'date_obtenu_{i}'
-                    principal_key = f'principal_{i}'
-                    intitule_key = f'intitule_{i}'
-                    if request.POST.get(diplome_key):
-                        diplome = request.POST.get(diplome_key)
-                        # messages.info(request, f"diplôme : {diplome}")
-                        if not diplome.strip() or diplome == 'Autre':  # Vérifie si la chaîne est vide ou contient seulement des espaces ou = 'Autre'
-                            messages.error(request, "Le diplôme ne peut pas être vide ou contenir uniquement des espaces. ou intitulé: Autre")
-                            continue  # Move to the next iteration of the loop
-                        if len(diplome) > 100:
-                            diplome = diplome[:100]  # Prendre seulement les 100 premiers caractères
-                            messages.info(request, "Le diplôme a été tronqué aux 100 premiers caractères.")
-                        diplome_cathegorie = Diplome_cathegorie.objects.filter(dip_cathegorie=diplome)
-                        if not diplome_cathegorie.exists():
-                            # messages.info(request, f"diplôme : {diplome}")
-                            # Le diplôme n'existe pas, nous devons l'ajouter à la table Diplome_cathegorie
-                            pays_default = Pays.objects.get(nom_pays='France')  # Remplacez 'Default' par le nom du pays par défaut
-                            new_diplome_cathegorie = Diplome_cathegorie.objects.create(nom_pays=pays_default, dip_cathegorie=diplome)
-                            new_diplome_cathegorie.save()
-                            # messages.info(request, f"Le diplôme '{diplome}' a été ajouté à la catégorie de diplômes.")
-                        
-                        # Le diplôme existe déjà dans la table Diplome_cathegorie
-                        # messages.warning(request, "Début enregistrement")
-                        # Requête pour récupérer l'objet Diplome_cathegorie
-                        diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
-                        # Récupérer l'ID de l'objet Diplome_cathegorie
-                        diplome_cathegorie_id = diplome_obj.id
-                        date_obtenu = request.POST.get(date_obtenu_key, None)
-                        if date_obtenu:
-                            # tester le format des dates
-                            try:
-                                # si la convertion est réussie
-                                date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y') # debut_01 juste pour le try seulement
-                            except ValueError:
-                                date_obtenu = datetime.now().strftime('%d/%m/%Y')  # à améliorer cette logique d'enregistrement
-                        if request.POST.get(principal_key, None) == "on":
-                            principal = True
-                        else: principal = False
-                        intitule = request.POST.get(intitule_key, None)
-                        # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
-                        if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
-                            if not date_obtenu:
-                                date_obtenu = datetime.now().strftime('%d/%m/%Y')  # Prendre la date du jour au format jj/mm/aaaa
-                                # messages.info(request, f"La date d'obtention du diplôme: {diplome} est convertie à la date du jour par défaut")
-                            diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
-                            diplome_instance.set_date_obtenu_from_str(date_obtenu)
-                            diplome_instance.save()
-                            # messages.success(request, f"L'enregistrement du diplôme: {diplome},  est réussi, passez à l'étape suivante ")
-                            
-                        else: 
-                            # messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
-                            continue
-                return redirect('compte_prof')
-        except Diplome.DoesNotExist:
-            messages.error(request, "Les données des diplômes n'existent pas pour cet utilisateur. Vous devez ajouter vos diplômes avant")
+    for diplome in diplomes:
+        diplome.obtenu = diplome.obtenu.strftime('%d/%m/%Y') # code correct
+    
+    context = {
+        'diplome_cathegories': diplome_cathegories,
+        'diplomes': diplomes,
+    }
+
+    if not (request.method == 'POST' and 'btn_enr' in request.POST):
+        return render(request, 'accounts/modifier_diplome.html', context)
+
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        # Liste des diplômes dans le request dont le nom commence par: diplome_1
+        diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
+        if not diplome_keys:
+            messages.error(request, "Il faut donner au moins un diplôme  ")
             return render(request, 'accounts/modifier_diplome.html', context)
-    else:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
+        
+        # début de l'enregistrement
+        # supprimer les anciens enregistrements
+        diplomes.delete() # il faut sauvegarder une copi des enregistrement en cas d"echec d'enregistrement
+        for diplome_key in diplome_keys:
+            i = int(diplome_key.split('_')[1])
+            diplome_key = f'diplome_{i}'
+            date_obtenu_key = f'date_obtenu_{i}'
+            principal_key = f'principal_{i}'
+            intitule_key = f'intitule_{i}'
+            if request.POST.get(diplome_key):
+                diplome = request.POST.get(diplome_key)
+                if not diplome.strip() or diplome == 'Autre':  # Vérifie si la chaîne est vide ou contient seulement des espaces ou = 'Autre'
+                    messages.error(request, "Le diplôme ne peut pas être vide ou contenir uniquement des espaces. ou intitulé: Autre")
+                    continue  # Move to the next iteration of the loop
+                if len(diplome) > 100:
+                    diplome = diplome[:100]  # Prendre seulement les 100 premiers caractères
+                    messages.info(request, "Le diplôme a été tronqué aux 100 premiers caractères.")
+                diplome_cathegorie = Diplome_cathegorie.objects.filter(dip_cathegorie=diplome)
+                if not diplome_cathegorie.exists():
+                    # Le diplôme n'existe pas, nous devons l'ajouter à la table Diplome_cathegorie
+                    pays_default = Pays.objects.get(nom_pays='France')  # Remplacez 'Default' par le nom du pays par défaut
+                    new_diplome_cathegorie = Diplome_cathegorie.objects.create(nom_pays=pays_default, dip_cathegorie=diplome)
+                    new_diplome_cathegorie.save()
+                
+                # Le diplôme existe déjà dans la table Diplome_cathegorie
+                # Requête pour récupérer l'objet Diplome_cathegorie
+                diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
+                # Récupérer l'ID de l'objet Diplome_cathegorie
+                diplome_cathegorie_id = diplome_obj.id
+                date_obtenu = request.POST.get(date_obtenu_key, None)
+                if date_obtenu:
+                    # tester le format des dates
+                    try:
+                        # si la convertion est réussie
+                        date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                    except ValueError:
+                        date_obtenu = datetime.now().strftime('%d/%m/%Y')  # à améliorer cette logique d'enregistrement
+                if request.POST.get(principal_key, None) == "on":
+                    principal = True
+                else: principal = False
+                intitule = request.POST.get(intitule_key, None)
+                # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
+                if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
+                    if not date_obtenu:
+                        date_obtenu = datetime.now().strftime('%d/%m/%Y')  # Prendre la date du jour au format jj/mm/aaaa
+                    diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
+                    diplome_instance.set_date_obtenu_from_str(date_obtenu)
+                    diplome_instance.save()
+                    
+                else: # si le diplome existe 
+                    continue
+        return redirect('compte_prof')
+
+        
+
     return render(request, 'accounts/modifier_diplome.html', context)
 
 
 def modifier_experience(request):
+    user = request.user
     # Vérification si l'utilisateur est connecté
     if not request.user.is_authenticated:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
@@ -1118,18 +1081,14 @@ def modifier_experience(request):
 
     # Récupération de toutes les catégories d'expérience
     experience_cathegories = Experience_cathegorie.objects.all()
-    user = request.user
     experiences = Experience.objects.filter(user=user)
 
-    # Si l'utilisateur a déjà des expériences enregistrées
-    if experiences.exists():
-        # messages.info(request, f"Nombre d'expériences: {len(experiences)}")
-        
+    if experiences.exists(): # Si l'utilisateur a déjà des expériences enregistrées
         # Formatage des dates pour l'affichage
         for experience in experiences:
-            if experience.debut: # non nécessaire mais par prudense
+            if experience.debut: # non nécessaire mais par prudense / voire sinon,
                 experience.debut = experience.debut.strftime('%d/%m/%Y')
-            if experience.fin: # nécessaire car la date peut etre nulle
+            if experience.fin: # n'est pas nécessaire car la date peut etre nulle
                 experience.fin = experience.fin.strftime('%d/%m/%Y')
             else:
                 experience.fin = "" # que le champ reste vide au lieu de None
@@ -1147,7 +1106,6 @@ def modifier_experience(request):
             if not experience_keys:
                 messages.error(request, "Il faut donner au moins une expérience.")
                 return render(request, 'accounts/modifier_experience.html', context)
-            # messages.info(request, f"Nombre d'expériences : {len(experience_keys)}")
             # paramaitre pour tester si il y a eu un enregistrement au moins
             # pour éviter le cas d'effacer tous les anciens enregistrements sans enregistrer au moins un
             premier_nouveau_enregistrement = False
@@ -1167,8 +1125,7 @@ def modifier_experience(request):
                 # Récupération des données soumises dans le template de l'expérience
                 type = request.POST.get(experience_key)
                 if not type.strip():
-                    # messages.info(request, "Cette expérience ne peut pas être vide ou contenir uniquement des espaces.")
-                    continue
+                    continue # iniorer l'enregistrement
                 if len(type) > 100:
                     type = type[:100]
                     messages.info(request, "Cette expérience a été tronquée aux 100 premiers caractères.")
@@ -1187,7 +1144,7 @@ def modifier_experience(request):
                         # si la convertion est réussie
                         date_fin_01 = datetime.strptime(date_fin, '%d/%m/%Y') # debut_01 juste pour le try seulement
                     except ValueError:
-                        date_fin = None
+                        date_fin = None # date_fin = "" génère une erreur d'enregistrement
                 # si 'principal_key' existe alors principale==on si non None
                 principal = request.POST.get(principal_key, None) == "on"
                 actuellement = request.POST.get(act_key, None) == "on"
@@ -1195,7 +1152,6 @@ def modifier_experience(request):
 
                 # Si c'est le premier enregistrement, supprimer les anciennes expériences de l'utilisateur
                 if not premier_nouveau_enregistrement:
-                    # messages.warning(request, "Début enregistrement")
                     experiences.delete()
                     premier_nouveau_enregistrement = True
 
@@ -1203,22 +1159,18 @@ def modifier_experience(request):
                 # remarque la suppression des anciens enregistrements est effectuée seulement avant le premier enregistrement
                 # donc le premier enregistrement est obligatoirement effectué car il ne peut y avoire de doublant
                 if not Experience.objects.filter(user=user, type=type, commentaire=commentaire).exists():
-                    if not date_debut:
-                        date_debut = datetime.now().strftime('%d/%m/%Y')
-                        # messages.info(request, f"La date de début de l'expérience {type} est convertie à la date du jour par défaut")
+                    # if not date_debut: # voire si ce teste est nécessaire
+                    #     date_debut = datetime.now().strftime('%d/%m/%Y')
+                        
                     experience_instance = Experience(user=user, type=type, actuellement=actuellement, commentaire=commentaire, principal=principal)
                     experience_instance.set_date_debut_from_str(date_debut)
                     experience_instance.set_date_fin_from_str(date_fin)
                     experience_instance.save()
-                    # messages.success(request, f"L'enregistrement de cette expérience {type} a réussi.")
                 else:
-                    # messages.warning(request, f"Cette expérience '{type}' : '{commentaire}' existe déjà pour cet utilisateur.")
-                    continue
+                    continue # ignorer l'enregistrement
             
-            # Redirection vers la page du compte après l'enregistrement
             return redirect('compte_prof')
 
-        # Rendu de la page de modification d'expérience avec le contexte
         return render(request, 'accounts/modifier_experience.html', context)
 
     # Si l'utilisateur n'a pas encore d'expériences enregistrées
@@ -1232,16 +1184,14 @@ def modifier_matiere(request):
     if not request.user.is_authenticated:
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
-
+    user = request.user
+    
     # Récupération de toutes les catégories de matières et niveaux
     matieres = Matiere.objects.all()
     niveaus = Niveau.objects.all()
-    user = request.user
     prof_mat_nivs = Prof_mat_niv.objects.filter(user=user)
-    
     liste_mat_niv_anciens = []
     
-
     # Si l'utilisateur a déjà des matières enregistrées
     if prof_mat_nivs.exists():
         for prof_mat_niv in prof_mat_nivs: # creer la liste des anciens enregistrement
@@ -1276,7 +1226,6 @@ def modifier_matiere(request):
                 principal = request.POST.get(principal_key, False)
                 matiere_name = request.POST.get(matiere_key, None)
                 niveau_name = request.POST.get(niveau_key, None)
-
                 principal_modif = True if principal == "on" else False
 
                 # Récupération des objets Matiere et Niveau correspondants
@@ -1311,7 +1260,6 @@ def modifier_matiere(request):
                         # Supprimer les enregistrements de Prof_mat_niv
                         prof_mat_niv_sup.delete()
             
-            # Ajouter les nouveau enregistrements de Prof_mat_niv
             # Ajouter les nouveau enregistrements de Prof_mat_niv
             j = 0 # conte nouveaux enregistrement
             for matiere_modif, niveau_modif, principal_modif in liste_mat_niv_modifs:
@@ -1735,6 +1683,9 @@ def modifier_mot_pass(request):
 
 def nouveau_prix_heure(request):
     user = request.user
+    if not user.is_authenticated: # teste ne nécessaire
+        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
+        return redirect('signin') # Rediriger vers authentification
 
     # Vérifie si l'utilisateur a défini un format de cours
     try:
@@ -1803,7 +1754,7 @@ def nouveau_prix_heure(request):
                 liste_prix_mat_niv_for.append((mat_niv_id, selected_formats[format_key], prix_dec))
 
         if not liste_prix_mat_niv_for:
-            messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.")
+            messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.") # à réviser avec Hichem
             return render(request, 'accounts/nouveau_prix_heure.html', context)
 
         # Remplace les anciens prix horaires par les nouveaux

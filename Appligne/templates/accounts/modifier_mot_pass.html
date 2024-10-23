@@ -27,7 +27,7 @@
             </div>
 
             <!-- Form for modifying login credentials -->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'modifier_mot_pass' %}">
+            <form method="POST" enctype="multipart/form-data" autocomplete="off">
                 {% csrf_token %}
                 <div class="container bg-light p-5">
                     <div class="row g-4">
