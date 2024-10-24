@@ -33,7 +33,7 @@
         <div class="container-xxl py-1">
             <div class="container">
                 <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Liste des cours en attente</h6>
+                    <h6 class="section-title bg-white text-center text-primary px-3"> {% if is_active %} Liste des cours actifs en attente {% else %} Liste des cours non actifs en attente {% endif %} </h6>
                 </div>
                 <div class="col-md-12">
                     {% include 'partials/_alerts.html' %}
