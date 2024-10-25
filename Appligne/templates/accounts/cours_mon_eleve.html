@@ -46,6 +46,20 @@
             <!-- Student Information -->
             <div class="container-xxl py-5">
                 <div class="container">
+                    <div class="container " >
+                        <div class="row justify-content-between g-2 p-3 ">
+                            <div class="col-lg-4 col-sm-12">
+                                <button type="submit" class="btn btn-primary" name="btn_active">
+                                    Les cours actifs
+                                </button>
+                            </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <button type="submit" class="btn btn-primary" name="btn_non_active">
+                                    Les cours non actifs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="container bg-light p-5">
                         <div class="row g-1">
                             {% if request.user.is_authenticated %}

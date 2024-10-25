@@ -752,10 +752,15 @@ def votre_compte(request):
 
 def compte_prof(request):
     # Récupérer l'utilisateur actuel
-    user = request.user
-    if user.is_authenticated and hasattr(user, 'professeur'):
-        return render(request, 'accounts/compte_prof.html')
-    return redirect('index')
+    user = authentifier(request)
+
+    # Effacer tous les paramètres de session sauf l'utilisateur
+    keys_to_keep = ['_auth_user_id', '_auth_user_backend', '_auth_user_hash']
+    keys_to_delete = [key for key in request.session.keys() if key not in keys_to_keep]
+    for key in keys_to_delete:
+        del request.session[key]
+        
+    return render(request, 'accounts/compte_prof.html')
 
 def logout(request):
     if request.user.is_authenticated:
@@ -2258,13 +2263,18 @@ def cours_mon_eleve(request, eleve_id):
     """
 
     # Récupère l'utilisateur actuel
-    user = request.user
+    user = authentifier(request)
+    
+    if 'btn_non_active' in request.POST:
+        request.session['is_active'] = False
+    if 'btn_active' in request.POST:
+        request.session['is_active'] = True
     
     # Récupère l'élève correspondant à l'ID fourni. Si l'élève n'existe pas ou n'est pas actif, renvoie une erreur 404.
     mon_eleve = get_object_or_404(Mes_eleves, id=eleve_id, is_active=True)
     
     # Récupère tous les cours actifs associés à cet élève
-    mes_cours = Cours.objects.filter(mon_eleve=mon_eleve, is_active=True)
+    mes_cours = Cours.objects.filter(mon_eleve=mon_eleve, is_active=request.session.get('is_active', True))
 
     # Si aucun cours n'est trouvé pour cet élève, affiche un message d'erreur et redirige vers la page 'compte_prof'
     if not mes_cours.exists():
@@ -2284,7 +2294,7 @@ def cours_mon_eleve(request, eleve_id):
             
             try:
                 # Récupère le cours correspondant à l'ID fourni
-                mon_cours = Cours.objects.get(id=cours_id, is_active=True)
+                mon_cours = Cours.objects.get(id=cours_id, is_active=request.session.get('is_active', True))
                 
                 # Redirige vers la vue 'horaire_cours_mon_eleve' en passant l'ID du cours
                 return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
