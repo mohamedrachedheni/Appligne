@@ -45,4 +45,6 @@ urlpatterns = [
     path('envoie_email/<int:destinataire_id>/', views.envoie_email, name='envoie_email'),
     path('temoignage_mes_eleves', views.temoignage_mes_eleves, name='temoignage_mes_eleves'),
     path('temoignage_detaille/<int:temoignage_id>/', views.temoignage_detaille, name='temoignage_detaille'),
+    path('obtenir_parametres_cours', views.obtenir_parametres_cours, name='obtenir_parametres_cours'),
 ]
+

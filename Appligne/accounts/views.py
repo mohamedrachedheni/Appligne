@@ -1874,10 +1874,174 @@ def modifier_mes_eleve(request, mon_eleve_id):
         
     return render(request, 'accounts/modifier_mes_eleve.html', context)
 
+# def para_defaut_cours(request, eleve):
+#     user = authentifier(request)
+#     professur_user_id = user.id
+    
+#     # Extraction de l'ID de l'élève à partir de la chaîne sélectionnée
+#     match = re.match(r'\[(\d+)\]', eleve)
+#     if not match:
+#         messages.error(request, "Format d'élève invalide.")
+#         return render(request, 'accounts/ajouter_cours.html', context)
+
+#     eleve_id = int(match.group(1))  # ID dans Mes_eleves
+#     try:
+#         # Vérification de l'existence de l'élève
+#         mon_eleve = Mes_eleves.objects.get(pk=eleve_id, user=user, is_active=True)
+#     except ObjectDoesNotExist:
+#         messages.error(request, f'Élève non valide sélectionné. eleve_id= {eleve_id}')
+#         return render(request, 'accounts/ajouter_cours.html', context)
+    
+#     eleve_id = mon_eleve.eleve_id
+#     # messages.info(request, f'eleve_id = {eleve_id}')
+    
+#     # Récupérer le user_id de l'élève
+#     eleve_user = Eleve.objects.filter(id=eleve_id).first()
+#     if not eleve_user:
+#         messages.error(request, f"Aucun utilisateur trouvé pour l'ID élève {eleve_id}")
+#         return render(request, 'accounts/ajouter_cours.html', context)
+    
+#     eleve_user_id = eleve_user.user_id
+#     # messages.info(request, f'eleve_user_id = {eleve_user_id}')
+    
+#     # Récupération du dernier Email_detaille lié via Email_telecharge
+#     dernier_email_telecharge_id = Email_telecharge.objects.filter(user_id=eleve_user_id, user_destinataire=professur_user_id).values_list('id', flat=True).first()
+#     # messages.info(request, f'dernier_email_telecharge_id = {dernier_email_telecharge_id}')
+#     if dernier_email_telecharge_id:
+#         try:
+#             email_detaille_id = Email_detaille.objects.filter(email_id=dernier_email_telecharge_id).first().id # Accès au Email_detaille via la relation OneToOne `email_detaille`
+#             # messages.info(request, f'email_detaille_id = {email_detaille_id}')
+#         except Email_detaille.DoesNotExist:
+#             messages.warning(request, "Aucun Email_detaille associé trouvé pour cet Email_telecharge.")
+#     else:
+#         messages.warning(request, "Aucun email téléchargé trouvé pour cet élève.")
+    
+#     format = Email_detaille.objects.filter(pk=email_detaille_id).first().format_cours
+#     format_map = {
+#     'a_domicile': 'Cours à domicile',
+#     'webcam': 'Cours par webcam',
+#     'stage': 'Stage pendant les vacances',
+#     'stage_webcam': 'Stage par webcam'
+#     }
+#     # Récupération de la clé correspondante à la valeur donnée
+#     format_cle = format_map.get(format)
+#     # messages.info(request, f"format_cle = {format_cle} ")
+#     matiere = Email_detaille.objects.filter(pk=email_detaille_id).first().matiere
+#     # messages.info(request, f"matiere = {matiere} ")
+#     matiere_id = Matiere.objects.filter(matiere=matiere).first().id
+#     # messages.info(request, f"matiere_id = {matiere_id} ")
+#     niveau = Email_detaille.objects.filter(pk=email_detaille_id).first().niveau
+#     # messages.info(request, f"niveau = {niveau} ")
+#     niveau_id = Niveau.objects.filter(niveau=niveau).first().id
+#     # messages.info(request, f"niveau_id = {niveau_id} ")
+#     prof_mat_niv = Prof_mat_niv.objects.filter(user_id=professur_user_id, matiere_id=matiere_id, niveau_id=niveau_id).first()
+#     # messages.info(request, f"prof_mat_niv = {prof_mat_niv} ")
+#     prof_mat_niv_id = prof_mat_niv.id
+#     # messages.info(request, f"prof_mat_niv_id = {prof_mat_niv_id} ")
+#     prix_heure = Prix_heure.objects.filter(user_id=professur_user_id, prof_mat_niv_id=prof_mat_niv_id, format=format_cle ).first()
+#     if prix_heure: prix_heure = str(prix_heure.prix_heure)
+#     else: prix_heure=""
+#     para_defaut_cours = {
+#         "format": format_cle,
+#         "matiere": matiere,
+#         "niveau": niveau,
+#         "prix_heure": prix_heure
+#     }
+#     # messages.info(request, f"para = {para_defaut_cours} ")
+#     retur para_defaut_cours
+
+
+from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
+import re
+
+def obtenir_parametres_cours(request):
+    response_data = {}
+
+    # Vérifiez uniquement si la méthode est POST
+    if request.method == "POST":
+        user = authentifier(request)
+        professur_user_id = user.id
+
+        # Extraction et validation du paramètre 'eleve'
+        eleve = request.POST.get('eleve')
+        match = re.match(r'\[(\d+)\]', eleve)
+        if not match:
+            return JsonResponse({"error": "Format d'élève invalide."}, status=400)
+
+        eleve_id = int(match.group(1))
+
+        try:
+            # Vérification de l'existence de l'élève dans `Mes_eleves`
+            mon_eleve = get_object_or_404(Mes_eleves, pk=eleve_id, user=request.user, is_active=True)
+            eleve_user = get_object_or_404(Eleve, id=mon_eleve.eleve_id)
+
+            # Récupération de l'ID de l'email téléchargé et d'Email_detaille associé
+            dernier_email_telecharge_id = Email_telecharge.objects.filter(
+                user_id=eleve_user.user_id, user_destinataire=professur_user_id
+            ).values_list('id', flat=True).first()
+
+            if not dernier_email_telecharge_id:
+                return JsonResponse({"error": "Aucun email téléchargé trouvé pour cet élève."}, status=404)
+
+            # Récupération des détails de cours depuis `Email_detaille`
+            email_detaille = Email_detaille.objects.filter(email_id=dernier_email_telecharge_id).first()
+            if not email_detaille:
+                return JsonResponse({"error": "Aucun Email_detaille associé trouvé."}, status=404)
+
+            # Mapping et récupération des valeurs `format`, `matiere`, `niveau`, `prix_heure`
+            format_cle = {
+                'a_domicile': 'Cours à domicile',
+                'webcam': 'Cours par webcam',
+                'stage': 'Stage pendant les vacances',
+                'stage_webcam': 'Stage par webcam'
+            }.get(email_detaille.format_cours, "")
+
+            # Récupération de `matiere_id` et `niveau_id`
+            matiere_id = Matiere.objects.filter(matiere=email_detaille.matiere).values_list('id', flat=True).first()
+            niveau_id = Niveau.objects.filter(niveau=email_detaille.niveau).values_list('id', flat=True).first()
+
+            # Vérification des valeurs récupérées
+            if not matiere_id or not niveau_id:
+                return JsonResponse({"error": "Matière ou niveau non trouvé."}, status=404)
+
+            # Récupération ou création de `Prof_mat_niv`
+            prof_mat_niv = Prof_mat_niv.objects.filter(
+                user_id=professur_user_id, matiere_id=matiere_id, niveau_id=niveau_id
+            ).first()
+            
+            if not prof_mat_niv:
+                return JsonResponse({"error": "Professeur, matière ou niveau introuvable."}, status=404)
+
+            # Récupération du prix par heure
+            prix_heure = Prix_heure.objects.filter(
+                user_id=professur_user_id, prof_mat_niv_id=prof_mat_niv.id, format=format_cle
+            ).values_list('prix_heure', flat=True).first()
+            prix_heure = str(prix_heure) if prix_heure else ""
+
+            # Création du dictionnaire de réponse
+            para_defaut_cours = {
+                "format": format_cle,
+                "matiere": email_detaille.matiere,
+                "niveau": email_detaille.niveau,
+                "prix_heure": prix_heure
+            }
+            
+            response_data['para_defaut_cours'] = para_defaut_cours
+            return JsonResponse(response_data)
+
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Élève non valide sélectionné."}, status=400)
+
+    return JsonResponse({"error": "Requête invalide."}, status=400)
+
+
+
 
 
 def ajouter_cours(request):
-    user = request.user
+    user = authentifier(request)
+    professur_user_id = user.id
     
     # Récupération des matières et niveaux pour le formulaire
     matieres = Matiere.objects.all()
@@ -1894,7 +2058,6 @@ def ajouter_cours(request):
             output_field=CharField()
         )
     ).values_list('eleve_nom', flat=True)
-
     # Contexte de la page à renvoyer au template
     context = {
         'matieres': matieres,
@@ -1937,6 +2100,7 @@ def ajouter_cours(request):
         except ObjectDoesNotExist:
             messages.error(request, f'Élève non valide sélectionné. eleve_id= {eleve_id}')
             return render(request, 'accounts/ajouter_cours.html', context)
+        
 
         # Extraction et conversion du prix en décimal
         try:

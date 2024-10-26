@@ -58,10 +58,10 @@
                                     <label class="form-label">Elève inscrit</label>
                                     <div class="dropdown">
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="eleve_id" name="eleve" readonly required value="{{ eleve }}">
-                                            <ul class="dropdown-menu" id="dropdownMenu_eleve_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_eleve_id">
+                                            <input type="text" class="form-control" id="eleve_id" name="eleve" readonly required value="{{ eleve }}" placeholder="Sélectionnez un élève">
+                                            <ul class="dropdown-menu" id="dropdownMenu_eleve_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_eleve_id" >
                                                 {% for eleve in mes_eleves %}
-                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="eleve_{{ forloop.counter }}" data-value="{{ eleve }}">{{ eleve }}</a></li>
+                                                <li><a class="dropdown-item dropdown-item-demande eleve" href="#" data-target="eleve_{{ forloop.counter }}" data-value="{{ eleve }}">{{ eleve }}</a></li>
                                                 {% endfor %}
                                             </ul>
                                             <input type="hidden" id="selected_eleve_id">
@@ -148,4 +148,47 @@
 {% endblock %}
 {% block javascript %}
     <script src="{% static 'js/Code_en_plus_ajouter_cours.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const dropdownItems = document.querySelectorAll(".dropdown-item-demande.eleve");
+            const eleveInput = document.getElementById("eleve_id");
+            const selectedEleveInput = document.getElementById("selected_eleve_id");
+    
+            dropdownItems.forEach(item => {
+                item.addEventListener("click", function(event) {
+                    event.preventDefault(); // Empêche le comportement par défaut du lien
+    
+                    const eleveName = this.getAttribute("data-value");
+                    eleveInput.value = eleveName;
+                    selectedEleveInput.value = eleveName;
+    
+                    // Effectuer une requête AJAX pour obtenir les paramètres du cours
+                    fetch('/accounts/obtenir_parametres_cours', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}' // Assurez-vous d'inclure le CSRF token
+                        },
+                        body: new URLSearchParams({ 'eleve': eleveName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.para_defaut_cours) {
+                            // Mise à jour des champs input avec les valeurs du dictionnaire para_defaut_cours
+                            document.getElementById("format_id").value = data.para_defaut_cours.format || "";
+                            document.getElementById("matiere_id").value = data.para_defaut_cours.matiere || "";
+                            document.getElementById("niveau_id").value = data.para_defaut_cours.niveau || "";
+                            document.getElementById("prix_heure_id").value = data.para_defaut_cours.prix_heure || "";
+                        } else if (data.error) {
+                            console.error("Erreur:", data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erreur lors de la requête AJAX:", error);
+                    });
+                });
+            });
+        });
+    </script>
+    
 {% endblock %}
