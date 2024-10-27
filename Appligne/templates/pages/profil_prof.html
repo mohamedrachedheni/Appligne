@@ -83,8 +83,8 @@
     <div class="container py-4">
 
         <h4>{{ user.pro_fichier.titre_fiche }}</h4>
-        <a href="{% url 'demande_cours_envoie' id_prof=user.id %}" class="btn btn-lg btn-primary" >
-        <h5>Contacter <strong>{{user.first_name}}</strong></h5>
+        <a href=" {% url 'demande_cours_envoie' id_prof=user.id %} " class="btn btn-lg btn-primary" >
+        <h5 title="Vous devez être connecté à votre compte, si non créez un compte élève avant">Contacter <strong>{{user.first_name}}</strong></h5>
         </a>
 
     </div>

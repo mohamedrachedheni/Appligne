@@ -31,19 +31,6 @@ import re
 import os
 import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe)
 import hashlib # convertir le suffixe en une chaîne d'octets
-# import json
-# import locale
-
-def authentifier(request):
-    if not request.user.is_authenticated:
-        messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
-    user = request.user
-    # Vérifier si l'utilisateur a un profil de professeur associé
-    if not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant que prof")
-        return redirect('signin')
-    return user
 
 def is_password_compromised(password):
     # Hash du mot de passe en SHA-1
@@ -179,96 +166,104 @@ def nouveau_compte_prof(request):
     return render(request, 'accounts/nouveau_compte_prof.html', context)
 
 def nouveau_diplome(request):
-    user = request.user # Récupérer l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
+
     diplome_cathegories = Diplome_cathegorie.objects.all()
-    
-    if user.is_authenticated:
-        if hasattr(user, 'professeur'):
-            context = {'diplome_cathegories': diplome_cathegories}
-            if not request.method == 'POST' or not 'btn_enr' in request.POST:
-                return render(request, 'accounts/nouveau_diplome.html', context)
-        if 'btn_enr' in request.POST:
-            # Liste des diplômes dans le request dont le nom commence par: diplome_
-            diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
-            if not diplome_keys:
-                messages.error(request, "Il faut donner au moins un diplôme")
-                return render(request, 'accounts/nouveau_diplome.html', context)
-            else:
-                for i in range(1, len(diplome_keys) + 1): # il faut ajouter une logique d'analyse pour confirmer l'enregistrement final par message.success
-                    # Récupération des valeurs du formulaire
-                    diplome_key = f'diplome_{i}'
-                    date_obtenu_key = f'date_obtenu_{i}'
-                    principal_key = f'principal_{i}'
-                    intitule_key = f'intitule_{i}'
-                    autre_diplome_key = f'autre_diplome_{i}' # champ réservé pour les diplomes qui ne figure pas dans la liste
-                    if request.POST.get(diplome_key):
-                        diplome = request.POST.get(diplome_key)
-                        if diplome == 'Autre':
-                            autre_diplome = request.POST.get(autre_diplome_key)
-                            if autre_diplome != '' and autre_diplome != 'Autre':
-                                # Vérification si le diplôme "Autre" n'existe pas déjà pour le pays France
-                                diplome_autre_exists = Diplome_cathegorie.objects.filter(nom_pays__nom_pays='France', dip_cathegorie=autre_diplome).exists()
-                                if not diplome_autre_exists:
-                                    # Récupération de l'objet Pays France
-                                    pays_france = Pays.objects.get(nom_pays='France')
-                                    # Création d'un nouvel enregistrement dans Diplome_cathegorie pour le diplôme "Autre"
-                                    diplome_autre = Diplome_cathegorie.objects.create(nom_pays=pays_france, dip_cathegorie=autre_diplome)
-                                    diplome_autre.save()
-                                    diplome = autre_diplome
-                                else: # le diplome ajouté existe déjà dans la table diplome_cathegorie
-                                    diplome = autre_diplome
-                            else:
-                                messages.error(request, "Le diplôme 'Autre' ne peut pas être vide ou égal à 'Autre'.")
 
-                        # Requête pour récupérer l'objet Diplome_cathegorie
-                        diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
-                        # Récupérer l'ID de l'objet Diplome_cathegorie
-                        diplome_cathegorie_id = diplome_obj.id
-                        date_obtenu = request.POST.get(date_obtenu_key, None)
-                        if request.POST.get(principal_key, None) == "on":
-                            principal = True
-                        else: principal = False
-                        intitule = request.POST.get(intitule_key, None)
+    context = {'diplome_cathegories': diplome_cathegories}
+    if not request.method == 'POST' or not 'btn_enr' in request.POST:
+        return render(request, 'accounts/nouveau_diplome.html', context)
+    if 'btn_enr' in request.POST:
+        # Liste des diplômes dans le request dont le nom commence par: diplome_
+        diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
+        if not diplome_keys:
+            messages.error(request, "Il faut donner au moins un diplôme")
+            return render(request, 'accounts/nouveau_diplome.html', context)
+        else:
+            for i in range(1, len(diplome_keys) + 1): # il faut ajouter une logique d'analyse pour confirmer l'enregistrement final par message.success
+                # Récupération des valeurs du formulaire
+                diplome_key = f'diplome_{i}'
+                date_obtenu_key = f'date_obtenu_{i}'
+                principal_key = f'principal_{i}'
+                intitule_key = f'intitule_{i}'
+                autre_diplome_key = f'autre_diplome_{i}' # champ réservé pour les diplomes qui ne figure pas dans la liste
+                if request.POST.get(diplome_key):
+                    diplome = request.POST.get(diplome_key)
+                    if diplome == 'Autre':
+                        autre_diplome = request.POST.get(autre_diplome_key)
+                        if autre_diplome != '' and autre_diplome != 'Autre':
+                            # Vérification si le diplôme "Autre" n'existe pas déjà pour le pays France
+                            diplome_autre_exists = Diplome_cathegorie.objects.filter(nom_pays__nom_pays='France', dip_cathegorie=autre_diplome).exists()
+                            if not diplome_autre_exists:
+                                # Récupération de l'objet Pays France
+                                pays_france = Pays.objects.get(nom_pays='France')
+                                # Création d'un nouvel enregistrement dans Diplome_cathegorie pour le diplôme "Autre"
+                                diplome_autre = Diplome_cathegorie.objects.create(nom_pays=pays_france, dip_cathegorie=autre_diplome)
+                                diplome_autre.save()
+                                diplome = autre_diplome
+                            else: # le diplome ajouté existe déjà dans la table diplome_cathegorie
+                                diplome = autre_diplome
+                        else:
+                            messages.error(request, "Le diplôme 'Autre' ne peut pas être vide ou égal à 'Autre'.")
 
-                            # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
-                        if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
-                            if date_obtenu:
-                                # il faut tester le format de date_obtenu
-                                try:
-                                        # si la convertion est réussie
-                                        date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y')
-                                except ValueError:
-                                    messages.error(request, f"Format de la date: {date_obtenu}, est invalide. Utilisez jj/mm/aaaa")
-                                    return render(request, 'accounts/nouveau_diplome.html', context)
-                                    
-                                diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
-                                diplome_instance.set_date_obtenu_from_str(date_obtenu)
-                                diplome_instance.save()
-                            else:
-                                messages.error(request, f"Erreur liée à la date d'obtention du diplôme {diplome}")
+                    # Requête pour récupérer l'objet Diplome_cathegorie
+                    diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
+                    # Récupérer l'ID de l'objet Diplome_cathegorie
+                    diplome_cathegorie_id = diplome_obj.id
+                    date_obtenu = request.POST.get(date_obtenu_key, None)
+                    if request.POST.get(principal_key, None) == "on":
+                        principal = True
+                    else: principal = False
+                    intitule = request.POST.get(intitule_key, None)
+
+                        # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
+                    if not Diplome.objects.filter(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
+                        if date_obtenu:
+                            # il faut tester le format de date_obtenu
+                            try:
+                                    # si la convertion est réussie
+                                    date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y')
+                            except ValueError:
+                                messages.error(request, f"Format de la date: {date_obtenu}, est invalide. Utilisez jj/mm/aaaa")
                                 return render(request, 'accounts/nouveau_diplome.html', context)
-                        else:  messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
-                    else:
-                        # erreur à dépasser
-                        messages.error(request, f"Erreur liée au diplôme {i}")
-            # Rendre la réponse en utilisant le template 'pages/index.html'
-            response = render(request, 'accounts/nouveau_experience.html') # ?.??
-            # Ajouter les en-têtes pour empêcher la mise en cache de la page
-            # Cela garantit que le navigateur récupère toujours les données les plus récentes
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
-            response['Pragma'] = 'no-cache'  # HTTP 1.0.
-            response['Expires'] = '0'  # Proxies.
-            # Retourner la réponse
-            return response
-    else:
-        messages.error(request, "Il n'y a pas d'utilisateur connecté à son compte.")
-        return render(request, 'pages/index.html')
+                                
+                            diplome_instance = Diplome(user=user, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
+                            diplome_instance.set_date_obtenu_from_str(date_obtenu)
+                            diplome_instance.save()
+                        else:
+                            messages.error(request, f"Erreur liée à la date d'obtention du diplôme {diplome}")
+                            return render(request, 'accounts/nouveau_diplome.html', context)
+                    else:  messages.warning(request, f"Le diplôme '{diplome}' : '{intitule}' , existe déjà pour cet utilisateur.")
+                else:
+                    # erreur à dépasser
+                    messages.error(request, f"Erreur liée au diplôme {i}")
+        # Rendre la réponse en utilisant le template 'pages/index.html'
+        response = render(request, 'accounts/nouveau_experience.html') # ?.??
+        # Ajouter les en-têtes pour empêcher la mise en cache de la page
+        # Cela garantit que le navigateur récupère toujours les données les plus récentes
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
+        response['Pragma'] = 'no-cache'  # HTTP 1.0.
+        response['Expires'] = '0'  # Proxies.
+        # Retourner la réponse
+        return response
+
 
 
 def nouveau_experience(request):
-    user = request.user # Récupérer l'utilisateur actuel
-    if not user.is_authenticated or not hasattr(user, 'professeur'):
-        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
         return redirect('signin')
     
     if 'btn_enr' in request.POST:
@@ -335,9 +330,13 @@ def nouveau_experience(request):
 
 
 def nouveau_matiere(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'professeur'):
-        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
         return redirect('signin')
 
     # Vérifie si la méthode de la requête est POST et si le bouton 'btn_enr' a été soumis
@@ -415,10 +414,15 @@ def nouveau_matiere(request):
 
     
 def nouveau_zone(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'professeur'):
-        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
-        return redirect('signin')
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+
 
     btn_text = "Enregistrez les zones"  # Texte par défaut du bouton
     if 'btn_enr' in request.POST:
@@ -611,10 +615,15 @@ def nouveau_description(request):
     parcours=""
     pedagogie=""
     video=""
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'professeur'):
-        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
         return redirect('signin')
+
     teste = True
     if 'btn_enr' in request.POST:
         titre  = request.POST.get('titre', "")
@@ -653,11 +662,15 @@ def nouveau_description(request):
     return render(request, 'accounts/nouveau_description.html', context)
 
 def nouveau_fichier(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    
-    if not user.is_authenticated or not hasattr(user, 'professeur'):
-        messages.error(request, "Vous devez vous autantifier en tant que professeur.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
         return redirect('signin')
+
     email_prof = request.POST.get('email_user', "").strip()
     text_email = request.POST.get('text_email', "").strip()
     fichiers_list = request.FILES.getlist('fichiers_list', None)
@@ -730,8 +743,6 @@ def nouveau_fichier(request):
 def votre_compte(request):
     # Récupérer l'utilisateur actuel
     user = request.user
-    photo = None
-    first_name = "xxx"
     if user.is_authenticated:
         # messages.success(request, f"Vous etes connecté. {user.first_name}")
         # Vérifier si l'utilisateur a un profil de professeur associé
@@ -752,7 +763,15 @@ def votre_compte(request):
 
 def compte_prof(request):
     # Récupérer l'utilisateur actuel
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
+
 
     # Effacer tous les paramètres de session sauf l'utilisateur
     keys_to_keep = ['_auth_user_id', '_auth_user_backend', '_auth_user_hash']
@@ -768,18 +787,15 @@ def logout(request):
         # messages.success(request, 'Vous etes déconnecté(e) de votre compte')
     return redirect('index')
 
-# def compte_prof_copy(request):
-#     return render(request, 'accounts/compte_prof_copy.html')
 
 
 def modifier_compte_prof(request):
     # paramètres par défaut
     teste = True
-    user = request.user
-
-    if not user.is_authenticated:
+    if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
+    user = request.user
     # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'professeur'):
         messages.error(request, "Vous n'etes pas connecté en tant que prof")
@@ -876,11 +892,14 @@ def modifier_compte_prof(request):
 
 
 def modifier_format_cours(request):
-    user = request.user
-    # Vérification si l'utilisateur est authentifié
     if not request.user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     
     
     try:
@@ -954,47 +973,7 @@ def modifier_format_cours(request):
 
 
 def modifier_description(request):
-    if request.user.is_authenticated:
-        user = request.user
-        try:
-            pro_fichier = Pro_fichier.objects.get(user=user)
-            date_modif = pro_fichier.date_modif
-            titre_fiche = pro_fichier.titre_fiche
-            parcours = pro_fichier.parcours
-            pedagogie = pro_fichier.pedagogie
-            video_youtube_url = pro_fichier.video_youtube_url
-            context = {
-                'date_modif': date_modif,
-                'titre_fiche': titre_fiche,
-                'parcours': parcours,
-                'pedagogie': pedagogie,
-                'video_youtube_url': video_youtube_url,
-            }
-            if not (request.method == 'POST' and 'btn_enr' in request.POST):
-                return render(request, 'accounts/modifier_description.html', context)
-            if request.method == 'POST' and 'btn_enr' in request.POST:
-                titre_fiche  = request.POST.get('titre_fiche')
-                parcours  = request.POST.get('parcours')
-                pedagogie  = request.POST.get('pedagogie')
-                video_youtube_url = request.POST.get('video_youtube_url')
-                # supprimer l'ancien enregistrement
-                ancien_enregistrement = Pro_fichier.objects.get(user=user)
-                ancien_enregistrement.delete()
-                # Créez un nouveau Pro_fichier avec les données mises à jour
-                pro_fichier = Pro_fichier(user=user, titre_fiche=titre_fiche, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video_youtube_url)
-                pro_fichier.save()
-                messages.success(request, "Les nouvelles descriptions sont enregistrés")
-                return redirect('compte_prof')
-        except Pro_fichier.DoesNotExist:
-            messages.error(request, "Les données des descriptions n'existent pas pour cet utilisateur. Vous devez ajouter vos descriptions avant")
-            return redirect('nouveau_description')
-    else:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
-    return render(request, 'accounts/modifier_description.html')
 
-
-def modifier_diplome(request): # il faut refaire la logique d'enregistrement de ce view
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -1003,6 +982,53 @@ def modifier_diplome(request): # il faut refaire la logique d'enregistrement de 
     if not hasattr(user, 'professeur'):
         messages.error(request, "Vous n'etes pas connecté en tant que prof")
         return redirect('signin') 
+    try:
+        pro_fichier = Pro_fichier.objects.get(user=user)
+        date_modif = pro_fichier.date_modif
+        titre_fiche = pro_fichier.titre_fiche
+        parcours = pro_fichier.parcours
+        pedagogie = pro_fichier.pedagogie
+        video_youtube_url = pro_fichier.video_youtube_url
+        context = {
+            'date_modif': date_modif,
+            'titre_fiche': titre_fiche,
+            'parcours': parcours,
+            'pedagogie': pedagogie,
+            'video_youtube_url': video_youtube_url,
+        }
+        if not (request.method == 'POST' and 'btn_enr' in request.POST):
+            return render(request, 'accounts/modifier_description.html', context)
+        if request.method == 'POST' and 'btn_enr' in request.POST:
+            titre_fiche  = request.POST.get('titre_fiche')
+            parcours  = request.POST.get('parcours')
+            pedagogie  = request.POST.get('pedagogie')
+            video_youtube_url = request.POST.get('video_youtube_url')
+            # supprimer l'ancien enregistrement
+            ancien_enregistrement = Pro_fichier.objects.get(user=user)
+            ancien_enregistrement.delete()
+            # Créez un nouveau Pro_fichier avec les données mises à jour
+            pro_fichier = Pro_fichier(user=user, titre_fiche=titre_fiche, parcours=parcours, pedagogie=pedagogie, video_youtube_url=video_youtube_url)
+            pro_fichier.save()
+            messages.success(request, "Les nouvelles descriptions sont enregistrés")
+            return redirect('compte_prof')
+    except Pro_fichier.DoesNotExist:
+        messages.error(request, "Les données des descriptions n'existent pas pour cet utilisateur. Vous devez ajouter vos descriptions avant")
+        return redirect('nouveau_description')
+
+    return render(request, 'accounts/modifier_description.html')
+
+
+def modifier_diplome(request): # il faut refaire la logique d'enregistrement de ce view
+   
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+
     teste = True
     diplome_cathegories = Diplome_cathegorie.objects.all()
 
@@ -1088,11 +1114,14 @@ def modifier_diplome(request): # il faut refaire la logique d'enregistrement de 
 
 
 def modifier_experience(request):
-    user = request.user
-    # Vérification si l'utilisateur est connecté
     if not request.user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
 
     # Récupération de toutes les catégories d'expérience
     experience_cathegories = Experience_cathegorie.objects.all()
@@ -1195,11 +1224,15 @@ def modifier_experience(request):
 
 
 def modifier_matiere(request):
-    # Vérification si l'utilisateur est connecté
+
     if not request.user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     
     # Récupération de toutes les catégories de matières et niveaux
     matieres = Matiere.objects.all()
@@ -1302,11 +1335,15 @@ def modifier_matiere(request):
     return redirect('nouveau_matiere')
 
 def modifier_zone(request):
-    user = request.user
-    # Vérification si l'utilisateur est connecté
     if not request.user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin')
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+
 
     # Récupération de toutes les prof_zones pour l'utilisateur connecté
     prof_zones = Prof_zone.objects.filter(user=request.user)
@@ -1390,7 +1427,14 @@ def demande_cours_recu(request):
     
 
 def demande_cours_recu_eleve(request, email_id):
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
     
     email = Email_telecharge.objects.filter(id=email_id).first() # récupérer l'email
     if not email: # teste pas nécessaire
@@ -1494,7 +1538,14 @@ def demande_cours_recu_eleve(request, email_id):
 
 def reponse_email(request, email_id): 
     email = Email_telecharge.objects.filter(id=email_id).first() # envoyé par l'élève
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     text_email = f"""
         Suite à votre email :
         Date de réception : {email.date_telechargement}
@@ -1702,10 +1753,15 @@ def modifier_mot_pass(request):
 
 
 def nouveau_prix_heure(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated: # teste ne nécessaire
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
-        return redirect('signin') # Rediriger vers authentification
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
+
 
     # Vérifie si l'utilisateur a défini un format de cours
     try:
@@ -1791,7 +1847,14 @@ def nouveau_prix_heure(request):
 
 
 def ajouter_mes_eleve(request, eleve_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     # Récupérer l'élève et le parent correspondant à l'ID spécifié
     eleve = get_object_or_404(Eleve, user_id=eleve_id)
     # parent = get_object_or_404(Parent, user_id=eleve_id) # à revoire si c'est pas nécessaire
@@ -1823,7 +1886,14 @@ def ajouter_mes_eleve(request, eleve_id):
     return render(request, 'accounts/ajouter_mes_eleve.html', context)
 
 def modifier_mes_eleve(request, mon_eleve_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     # Récupérer l'élève et le parent correspondant à l'ID spécifié
     mon_eleve = Mes_eleves.objects.filter(id=mon_eleve_id).first()
     # Vérifier si l'élève existe déjà dans la table Mes_eleves
@@ -1874,93 +1944,13 @@ def modifier_mes_eleve(request, mon_eleve_id):
         
     return render(request, 'accounts/modifier_mes_eleve.html', context)
 
-# def para_defaut_cours(request, eleve):
-#     user = authentifier(request)
-#     professur_user_id = user.id
-    
-#     # Extraction de l'ID de l'élève à partir de la chaîne sélectionnée
-#     match = re.match(r'\[(\d+)\]', eleve)
-#     if not match:
-#         messages.error(request, "Format d'élève invalide.")
-#         return render(request, 'accounts/ajouter_cours.html', context)
-
-#     eleve_id = int(match.group(1))  # ID dans Mes_eleves
-#     try:
-#         # Vérification de l'existence de l'élève
-#         mon_eleve = Mes_eleves.objects.get(pk=eleve_id, user=user, is_active=True)
-#     except ObjectDoesNotExist:
-#         messages.error(request, f'Élève non valide sélectionné. eleve_id= {eleve_id}')
-#         return render(request, 'accounts/ajouter_cours.html', context)
-    
-#     eleve_id = mon_eleve.eleve_id
-#     # messages.info(request, f'eleve_id = {eleve_id}')
-    
-#     # Récupérer le user_id de l'élève
-#     eleve_user = Eleve.objects.filter(id=eleve_id).first()
-#     if not eleve_user:
-#         messages.error(request, f"Aucun utilisateur trouvé pour l'ID élève {eleve_id}")
-#         return render(request, 'accounts/ajouter_cours.html', context)
-    
-#     eleve_user_id = eleve_user.user_id
-#     # messages.info(request, f'eleve_user_id = {eleve_user_id}')
-    
-#     # Récupération du dernier Email_detaille lié via Email_telecharge
-#     dernier_email_telecharge_id = Email_telecharge.objects.filter(user_id=eleve_user_id, user_destinataire=professur_user_id).values_list('id', flat=True).first()
-#     # messages.info(request, f'dernier_email_telecharge_id = {dernier_email_telecharge_id}')
-#     if dernier_email_telecharge_id:
-#         try:
-#             email_detaille_id = Email_detaille.objects.filter(email_id=dernier_email_telecharge_id).first().id # Accès au Email_detaille via la relation OneToOne `email_detaille`
-#             # messages.info(request, f'email_detaille_id = {email_detaille_id}')
-#         except Email_detaille.DoesNotExist:
-#             messages.warning(request, "Aucun Email_detaille associé trouvé pour cet Email_telecharge.")
-#     else:
-#         messages.warning(request, "Aucun email téléchargé trouvé pour cet élève.")
-    
-#     format = Email_detaille.objects.filter(pk=email_detaille_id).first().format_cours
-#     format_map = {
-#     'a_domicile': 'Cours à domicile',
-#     'webcam': 'Cours par webcam',
-#     'stage': 'Stage pendant les vacances',
-#     'stage_webcam': 'Stage par webcam'
-#     }
-#     # Récupération de la clé correspondante à la valeur donnée
-#     format_cle = format_map.get(format)
-#     # messages.info(request, f"format_cle = {format_cle} ")
-#     matiere = Email_detaille.objects.filter(pk=email_detaille_id).first().matiere
-#     # messages.info(request, f"matiere = {matiere} ")
-#     matiere_id = Matiere.objects.filter(matiere=matiere).first().id
-#     # messages.info(request, f"matiere_id = {matiere_id} ")
-#     niveau = Email_detaille.objects.filter(pk=email_detaille_id).first().niveau
-#     # messages.info(request, f"niveau = {niveau} ")
-#     niveau_id = Niveau.objects.filter(niveau=niveau).first().id
-#     # messages.info(request, f"niveau_id = {niveau_id} ")
-#     prof_mat_niv = Prof_mat_niv.objects.filter(user_id=professur_user_id, matiere_id=matiere_id, niveau_id=niveau_id).first()
-#     # messages.info(request, f"prof_mat_niv = {prof_mat_niv} ")
-#     prof_mat_niv_id = prof_mat_niv.id
-#     # messages.info(request, f"prof_mat_niv_id = {prof_mat_niv_id} ")
-#     prix_heure = Prix_heure.objects.filter(user_id=professur_user_id, prof_mat_niv_id=prof_mat_niv_id, format=format_cle ).first()
-#     if prix_heure: prix_heure = str(prix_heure.prix_heure)
-#     else: prix_heure=""
-#     para_defaut_cours = {
-#         "format": format_cle,
-#         "matiere": matiere,
-#         "niveau": niveau,
-#         "prix_heure": prix_heure
-#     }
-#     # messages.info(request, f"para = {para_defaut_cours} ")
-#     retur para_defaut_cours
-
-
-from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
-import re
 
 def obtenir_parametres_cours(request):
     response_data = {}
 
     # Vérifiez uniquement si la méthode est POST
     if request.method == "POST":
-        user = authentifier(request)
+        user = request.user
         professur_user_id = user.id
 
         # Extraction et validation du paramètre 'eleve'
@@ -2040,7 +2030,14 @@ def obtenir_parametres_cours(request):
 
 
 def ajouter_cours(request):
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
     professur_user_id = user.id
     
     # Récupération des matières et niveaux pour le formulaire
@@ -2133,7 +2130,14 @@ from django.utils.dateparse import parse_date
 from datetime import datetime
 
 def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près défini
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
 
     # Récupérer le cours actif associé à l'ID fourni
     mon_cours = get_object_or_404(Cours, id=cours_id, is_active=True)
@@ -2284,7 +2288,14 @@ def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près dé
     return render(request, 'accounts/ajouter_horaire.html', context)
 
 def modifier_cours(request, cours_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     mon_cours = Cours.objects.get(id=cours_id)
     is_activ_first = mon_cours.is_active
     prix_heure = str(mon_cours.prix_heure)  # pour que le masque de saisie puisse l'interpréter correctement
@@ -2352,7 +2363,14 @@ def modifier_cours(request, cours_id):
 
 
 def liste_mes_eleve(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     is_active = True # par défaut
     if 'btn_active' in request.POST: is_active = True
     if 'btn_non_active' in request.POST: is_active = False
@@ -2427,7 +2445,14 @@ def cours_mon_eleve(request, eleve_id):
     """
 
     # Récupère l'utilisateur actuel
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
     
     if 'btn_non_active' in request.POST:
         request.session['is_active'] = False
@@ -2626,7 +2651,14 @@ def liste_seance_cours(request):
     Affiche la liste des séances de cours en attente pour l'utilisateur actuel
     et gère la redirection vers la page de détail d'une séance spécifique si demandé.
     """
-    user = request.user  # Récupère l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')   # Récupère l'utilisateur actuel
     is_active = True # par défaut
     if 'btn_active' in request.POST: is_active = True
     if 'btn_non_active' in request.POST: is_active = False
@@ -2660,7 +2692,14 @@ def liste_seance_cours(request):
 
 
 def demande_reglement(request, eleve_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     
     # Récupérer l'élève actif pour l'utilisateur actuel
     mon_eleve = get_object_or_404(Mes_eleves, id=eleve_id, user=user, is_active=True)
@@ -2713,7 +2752,14 @@ def demande_reglement(request, eleve_id):
 
 
 def declaration_cours(request, eleve_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     professeur = Professeur(user=user)
     
     # Récupérer l'élève actif associé à l'utilisateur
@@ -2863,7 +2909,14 @@ def declaration_cours(request, eleve_id):
 
 def liste_declaration_cours(request):
     # Obtenir l'utilisateur actuel
-    user = authentifier(request)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
     statut_demande = 'En cours'
     if 'btn_en_cours' in request.POST: statut_demande = 'En cours'
     if 'btn_attente' in request.POST: statut_demande = 'En attente'
@@ -2986,7 +3039,14 @@ def detaille_demande_reglement(request, demande_paiement_id):
 
 
 def envoie_email(request, destinataire_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin') 
     # Récupère le destinataire en utilisant l'ID fourni, renvoie une erreur 404 s'il n'existe pas
     destinataire = get_object_or_404(User, id=destinataire_id)
     

@@ -20,9 +20,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 
 
-
-
-
 # Create your views here.
 
 def nouveau_compte_eleve(request):
@@ -146,44 +143,70 @@ def nouveau_compte_eleve(request):
     return render(request, 'eleves/nouveau_compte_eleve.html', context)
     
 def compte_eleve(request):
-    # Récupérer l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if user.is_authenticated:
-        # messages.success(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'eleve'):
-            return render(request, 'eleves/compte_eleve.html')
-    messages.error(request, "Vous devez être connecté pour effectuer cette action.")
-    return redirect('signin')
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+    
+    # Effacer tous les paramètres de session sauf l'utilisateur
+    keys_to_keep = ['_auth_user_id', '_auth_user_backend', '_auth_user_hash']
+    keys_to_delete = [key for key in request.session.keys() if key not in keys_to_keep]
+    for key in keys_to_delete:
+        del request.session[key]
+
+    return render(request, 'eleves/compte_eleve.html')
+
 
 def modifier_coordonnee_eleve(request):
-
-    # Récupérer l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'eleve'):
-        messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
-    # eleve = Eleve.objects.get(user=user)
-    # messages.info(request, f"civilite = {eleve.civilite}; email = {user.email}; adresse = {eleve.adresse}; numero_telephone = {eleve.numero_telephone}; date_naissance = {eleve.date_naissance} ")
 
-    # messages.info(request, "Teste : 1")
-    if user.is_authenticated and hasattr(user, 'eleve'):
-        eleve = Eleve.objects.get(user=user)
-        #eleve = user.eleve
-        first_name = user.first_name
-        last_name = user.last_name
-        email = user.email
-        civilite = eleve.civilite
-        #diplome.obtenu = diplome.obtenu.strftime('%d/%m/%Y')
-        date_naissance = eleve.date_naissance
-        if date_naissance:
-            # Conversion de la date de naissance en objet datetime
-            date_naissance_formatted = date_naissance.strftime('%d/%m/%Y')
-        else: date_naissance_formatted = ""
-        numero_telephone = eleve.numero_telephone
-        adresse = eleve.adresse
-        numero_telephone = eleve.numero_telephone
-        date_naissance = eleve.date_naissance
+
+    eleve = Eleve.objects.get(user=user)
+    #eleve = user.eleve
+    first_name = user.first_name
+    last_name = user.last_name
+    email = user.email
+    civilite = eleve.civilite
+    #diplome.obtenu = diplome.obtenu.strftime('%d/%m/%Y')
+    date_naissance = eleve.date_naissance
+    if date_naissance:
+        # Conversion de la date de naissance en objet datetime
+        date_naissance_formatted = date_naissance.strftime('%d/%m/%Y')
+    else: date_naissance_formatted = ""
+    numero_telephone = eleve.numero_telephone
+    adresse = eleve.adresse
+    numero_telephone = eleve.numero_telephone
+    date_naissance = eleve.date_naissance
+    context={
+        'first_name':first_name,
+        'last_name':last_name,
+        'email':email,
+        'civilite':civilite,
+        'adresse':adresse,
+        'numero_telephone':numero_telephone,
+        'date_naissance':date_naissance_formatted,
+    }
+    if not (request.method == 'POST' and 'btn_enr' in request.POST):
+        return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
+    else:
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        civilite = request.POST['civilite']
+        adresse = request.POST['adresse']
+        numero_telephone = request.POST['numero_telephone']
+        date_naissance = request.POST['date_naissance']
         context={
             'first_name':first_name,
             'last_name':last_name,
@@ -191,59 +214,39 @@ def modifier_coordonnee_eleve(request):
             'civilite':civilite,
             'adresse':adresse,
             'numero_telephone':numero_telephone,
-            'date_naissance':date_naissance_formatted,
+            'date_naissance':date_naissance,
         }
-        if not (request.method == 'POST' and 'btn_enr' in request.POST):
-            return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
-        else:
-            first_name = request.POST['first_name']
-            last_name = request.POST['last_name']
-            email = request.POST['email']
-            civilite = request.POST['civilite']
-            adresse = request.POST['adresse']
-            numero_telephone = request.POST['numero_telephone']
-            date_naissance = request.POST['date_naissance']
-            context={
-                'first_name':first_name,
-                'last_name':last_name,
-                'email':email,
-                'civilite':civilite,
-                'adresse':adresse,
-                'numero_telephone':numero_telephone,
-                'date_naissance':date_naissance,
-            }
 
-            if User.objects.filter(email=email).exists() and email != user.email:
-                messages.error(request, "L'email est déjà utilisé, donnez un autre email")
-                return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
-            if not first_name.strip() or not last_name.strip():
-                messages.error(request, "Le prénom, le nom et le nom de l'utilisateur ne peuvent pas être vide ou contenir uniquement des espaces.")
-                return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
-            if not re.match(r'^\d{2}/\d{2}/\d{4}$', date_naissance): 
-                messages.error(request, "Le format de la date de naissence n'est pas valide. donnez une date sous la forme jj/mm/aaa tel que : 12/06/1990")
-                return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
-            # définir un forma pour l'email
-            patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
-            # si le format de l'email est correcte
-            if re.match(patt, email):
-                # Mettre à jour les données de l'utilisateur et de l'élève
-                user.first_name = first_name
-                user.last_name = last_name
-                user.email = email
-                user.save()
-                # messages.info(request, f"civilite = {civilite}; email = {email}; adresse = {adresse}; numero_telephone = {numero_telephone}; date_naissance = {date_naissance} ")
-                
-                eleve.civilite = civilite
-                eleve.adresse = adresse
-                eleve.numero_telephone = numero_telephone
-                eleve.set_date_naissance_from_str(date_naissance)
-                eleve.save()
-                messages.success(request, "Vos informations ont été mises à jour avec succès.")
-                return redirect('compte_eleve')
-            messages.error(request, "L'adresse e-mail n'est pas valide.")
-        return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
-    messages.error(request, "Vous devez être connecté pour effectuer cette action.")
-    return redirect('signin')
+        if User.objects.filter(email=email).exists() and email != user.email:
+            messages.error(request, "L'email est déjà utilisé, donnez un autre email")
+            return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
+        if not first_name.strip() or not last_name.strip():
+            messages.error(request, "Le prénom, le nom et le nom de l'utilisateur ne peuvent pas être vide ou contenir uniquement des espaces.")
+            return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
+        if not re.match(r'^\d{2}/\d{2}/\d{4}$', date_naissance): 
+            messages.error(request, "Le format de la date de naissence n'est pas valide. donnez une date sous la forme jj/mm/aaa tel que : 12/06/1990")
+            return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
+        # définir un forma pour l'email
+        patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
+        # si le format de l'email est correcte
+        if re.match(patt, email):
+            # Mettre à jour les données de l'utilisateur et de l'élève
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            # messages.info(request, f"civilite = {civilite}; email = {email}; adresse = {adresse}; numero_telephone = {numero_telephone}; date_naissance = {date_naissance} ")
+            
+            eleve.civilite = civilite
+            eleve.adresse = adresse
+            eleve.numero_telephone = numero_telephone
+            eleve.set_date_naissance_from_str(date_naissance)
+            eleve.save()
+            messages.success(request, "Vos informations ont été mises à jour avec succès.")
+            return redirect('compte_eleve')
+        messages.error(request, "L'adresse e-mail n'est pas valide.")
+    return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
+
 
 
 # Formulaire pour les coordonnées du parent
@@ -263,10 +266,15 @@ class ParentForm(forms.ModelForm):
 
 @login_required  # Assure que l'utilisateur est connecté avant d'accéder à cette vue
 def modifier_coordonnee_parent(request):
-    user = request.user  # Obtient l'utilisateur actuellement connecté
-    if not user.is_authenticated or not hasattr(user, 'eleve'):
-        messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
+
 
     try:
         parent = user.parent  # Tente de récupérer l'objet Parent lié à l'utilisateur
@@ -301,13 +309,16 @@ def modifier_coordonnee_parent(request):
     return render(request, 'eleves/modifier_coordonnee_parent.html', context)  # Affiche le template avec le formulaire
 
 
-
-
-
-
-
-
 def demande_cours_eleve(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+
     # Paramètres par défaut
     # Récupère l'ancienne valeur de la région à partir de la session
     # la valeur de la session par défaut est 'Paris'
@@ -466,32 +477,41 @@ def demande_cours_eleve(request):
 
 
 def demande_cours_envoie(request, id_prof):
-    user_prof = get_object_or_404(User, id=id_prof)
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if user.is_authenticated and hasattr(user, 'eleve'):
-        email_prof = user_prof.email
-        nom_prof = user_prof.first_name
-        matiere_defaut = request.session.get('matiere_defaut', '[Matière non définie]')
-        niveau_defaut = request.session.get('niveau_defaut', '[Niveau scolaire non définie]')
-        radio_name = request.session.get('radio_name', '[Format cours non défini]')
-        
-        nom_eleve = user.first_name + " " + user.last_name
-        email_eleve = user.email
-        adresse_eleve = user.eleve.adresse
-        telephone_eleve = user.eleve.numero_telephone
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève.<br> Pour contacter un professeur il faut créer un compte élève.")
+        return redirect('signin')
 
-        if hasattr(user, 'parent'):
-            parent = user.parent
-            nom_parent = parent.prenom_parent + " " + user.parent.nom_parent
-            telephone_parent =parent.telephone_parent
-            email_parent =parent.email_parent
-        else:
-            nom_parent = ""
-            telephone_parent = ""
-            email_parent = ""
+    user_prof = get_object_or_404(User, id=id_prof)
+    
+    
+    email_prof = user_prof.email
+    nom_prof = user_prof.first_name
+    matiere_defaut = request.session.get('matiere_defaut', '[Matière non définie]')
+    niveau_defaut = request.session.get('niveau_defaut', '[Niveau scolaire non définie]')
+    radio_name = request.session.get('radio_name', '[Format cours non défini]')
+    
+    nom_eleve = user.first_name + " " + user.last_name
+    email_eleve = user.email
+    adresse_eleve = user.eleve.adresse
+    telephone_eleve = user.eleve.numero_telephone
 
-        # Formater le contenu du courriel avec des balises HTML
-        formatted_content = f"""
+    if hasattr(user, 'parent'):
+        parent = user.parent
+        nom_parent = parent.prenom_parent + " " + user.parent.nom_parent
+        telephone_parent =parent.telephone_parent
+        email_parent =parent.email_parent
+    else:
+        nom_parent = ""
+        telephone_parent = ""
+        email_parent = ""
+
+    # Formater le contenu du courriel avec des balises HTML
+    formatted_content = f"""
 Cher/Chère {nom_prof},
 Je suis {nom_parent},
 le parent de {nom_eleve}
@@ -513,84 +533,86 @@ veuillez confirmer la réception.
 Cordialement,
 {nom_parent} / {nom_eleve}
 """
-        
-        context = {
-            'formatted_content': formatted_content,
-            'id_prof':id_prof
-        }
-        if not (request.method == 'POST' and 'btn_enr' in request.POST):
-            return render(request, 'eleves/demande_cours_envoie.html', context)
-        
-        # si non c'est le cas de : (request.method == 'POST' and 'btn_enr' in request.POST)
-        text_email = request.POST.get('text_email')
-        if text_email:
-            user_destinataire = user_prof.id
-            
-            # traitement de l'envoie de l'email
-            # si le sujet de l'email n'est pas défini dans le GET alors sujet='Demande de cours
-            sujet = request.POST.get('sujet', '').strip()
-            if not sujet: sujet = "Demande de cours"
-            destinations = ['prosib25@gmail.com', email_prof]
-            # Validation des emails dans destinations
-            email_validator = EmailValidator() # Initialiser le validateur d'email
-            for destination in destinations:
-                try:
-                    email_validator(destination)
-                except ValidationError:
-                    messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")
-
-            # L'envoie de l'email n'est pas obligatoire
-            try:
-                send_mail(
-                    sujet,
-                    text_email,
-                    email_eleve,
-                    destinations,
-                    fail_silently=False,
-                )
-            except Exception as e:
-                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
-            messages.success(request, "L'email a été envoyé avec succès.")
-            email_telecharge = Email_telecharge(user=user,
-                                                 email_telecharge=email_eleve  , # l'adresse email de l'expéditeur
-                                                 sujet=sujet, 
-                                                 text_email=text_email, 
-                                                 user_destinataire=user_destinataire ) # user.id du destinataire
-            email_telecharge.save()
-            # Enregistrement dans la table détaille email
-            email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
-            email_detaille.save()
-            messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
-            # vider la session
-            # Supprimer les données spécifiques de la session
-            if 'radio_name' in request.session:
-                del request.session['radio_name']
-            if 'radio_name_text' in request.session:
-                del request.session['radio_name_text']
-            if 'matiere_defaut' in request.session:
-                del request.session['matiere_defaut']
-            if 'niveau_defaut' in request.session:
-                del request.session['niveau_defaut']
-            if 'region_defaut' in request.session:
-                del request.session['region_defaut']
-            if 'departement_defaut' in request.session:
-                del request.session['departement_defaut']
-            return redirect('compte_eleve')
-            
-        messages.error(request, "Il faut définir le contenu de l'Email")
+    
+    context = {
+        'formatted_content': formatted_content,
+        'id_prof':id_prof
+    }
+    if not (request.method == 'POST' and 'btn_enr' in request.POST):
         return render(request, 'eleves/demande_cours_envoie.html', context)
-    messages.error(request, "Vous devez être connecté pour effectuer cette action.")
-    return redirect('signin')
+    
+    # si non c'est le cas de : (request.method == 'POST' and 'btn_enr' in request.POST)
+    text_email = request.POST.get('text_email')
+    if text_email:
+        user_destinataire = user_prof.id
+        
+        # traitement de l'envoie de l'email
+        # si le sujet de l'email n'est pas défini dans le GET alors sujet='Demande de cours
+        sujet = request.POST.get('sujet', '').strip()
+        if not sujet: sujet = "Demande de cours"
+        destinations = ['prosib25@gmail.com', email_prof]
+        # Validation des emails dans destinations
+        email_validator = EmailValidator() # Initialiser le validateur d'email
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")
+
+        # L'envoie de l'email n'est pas obligatoire
+        try:
+            send_mail(
+                sujet,
+                text_email,
+                email_eleve,
+                destinations,
+                fail_silently=False,
+            )
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
+        messages.success(request, "L'email a été envoyé avec succès.")
+        email_telecharge = Email_telecharge(user=user,
+                                                email_telecharge=email_eleve  , # l'adresse email de l'expéditeur
+                                                sujet=sujet, 
+                                                text_email=text_email, 
+                                                user_destinataire=user_destinataire ) # user.id du destinataire
+        email_telecharge.save()
+        # Enregistrement dans la table détaille email
+        email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
+        email_detaille.save()
+        messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
+        # vider la session
+        # Supprimer les données spécifiques de la session
+        if 'radio_name' in request.session:
+            del request.session['radio_name']
+        if 'radio_name_text' in request.session:
+            del request.session['radio_name_text']
+        if 'matiere_defaut' in request.session:
+            del request.session['matiere_defaut']
+        if 'niveau_defaut' in request.session:
+            del request.session['niveau_defaut']
+        if 'region_defaut' in request.session:
+            del request.session['region_defaut']
+        if 'departement_defaut' in request.session:
+            del request.session['departement_defaut']
+        return redirect('compte_eleve')
+        
+    messages.error(request, "Il faut définir le contenu de l'Email")
+    return render(request, 'eleves/demande_cours_envoie.html', context)
+
 
 
 def email_recu(request):
-    # Vérification si l'utilisateur est connecté
     if not request.user.is_authenticated:
-        messages.error(request, "Vous devez être connecté pour accéder à cette page.")
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
-    
-    user_id = request.user.id
 
+    user_id = user.id
     # Fonction interne pour récupérer les emails en fonction des critères de filtrage
     def get_emails(filter_criteria):
         emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
@@ -630,6 +652,15 @@ def email_recu(request):
 
 
 def email_detaille(request, email_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+
     email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève
     id_eleve = email.user_destinataire # ID de l'élève
     id_prof = email.user.id
@@ -721,7 +752,15 @@ Contenu de l'émail:
     return render(request, 'eleves/email_detaille.html', context)
 
 def reponse_email_eleve(request, email_id): # email_id est envoyé par le template demande_cours_recu_eleve.html
-    
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+
     text_email = request.session.get('text_email',None)
     sujet = request.session.get('sujet',None)
     email_eleve = request.session.get('email_eleve',None)
@@ -807,10 +846,15 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
 
 
 def demande_paiement_recu(request):
-    user = request.user  # Utilisateur actuel (élève), enregistrement élève dans la table User
-    if not user.is_authenticated or not hasattr(user, 'eleve'):
-        messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
+
     eleve = Eleve.objects.filter(user=user).first()  # Enregistrement de l'élève dans la table Eleve
     mon_eleve = Mes_eleves.objects.filter(eleve=eleve).first()
     
@@ -838,9 +882,13 @@ def demande_paiement_recu(request):
 
 
 def detaille_demande_paiement_recu(request, demande_paiement_id):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'eleve'):
-        messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
 
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
@@ -1021,11 +1069,15 @@ def update_historique_prof(prof, demande_paiement, user):
 
 
 def temoignage_eleve(request):
-    # Récupération de l'utilisateur connecté
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
     user = request.user
-    if not user.is_authenticated or not hasattr(user, 'eleve'):
-        messages.error(request, "Vous devez être connecté pour effectuer cette action.")
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
+
     slug_pattern = f'Elv{user.id}'
     
     # Filtrer les paiements approuvés de l'élève contenant son identifiant dans le slug
