@@ -483,7 +483,7 @@ def demande_cours_envoie(request, id_prof):
     user = request.user
     # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'eleve'):
-        messages.error(request, "Vous n'etes pas connecté en tant qu'élève.<br> Pour contacter un professeur il faut créer un compte élève.")
+        messages.error(request, "Vous n'êtes pas connecté en tant qu'élève.<br> Pour contacter un professeur il faut créer un compte élève.")
         return redirect('signin')
 
     user_prof = get_object_or_404(User, id=id_prof)
