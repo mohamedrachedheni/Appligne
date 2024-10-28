@@ -10,6 +10,7 @@ from django.core.validators import  EmailValidator
 from django.core.exceptions import  ValidationError
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -140,7 +141,7 @@ def liste_prof(request):
     niveau_defaut = request.POST.get('niveau', request.session.get('niveau_defaut', "Terminale Générale"))
     region_defaut = request.POST.get('region', request.session.get('region_defaut', "ILE-DE-FRANCE"))
     departement_defaut = request.POST.get('departement', request.session.get('departement_defaut', "PARIS"))
-    tri = 'evaluation_decroissante'
+    tri = request.POST.get('tri', 'evaluation_decroissante')
 
     # Récupérer les filtres possibles pour les matières, niveaux, régions et départements
     matieres = Matiere.objects.all()
@@ -228,6 +229,12 @@ def liste_prof(request):
 
     # Rendre la page avec le contexte (résultats par défaut ou après recherche)
     return render(request, 'pages/liste_prof.html', context)
+
+
+
+
+
+
 
 
 

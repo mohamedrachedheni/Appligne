@@ -747,17 +747,10 @@ def votre_compte(request):
         # messages.success(request, f"Vous etes connecté. {user.first_name}")
         # Vérifier si l'utilisateur a un profil de professeur associé
         if hasattr(user, 'professeur'):
-            # Si tel est le cas, récupérer le profil du professeur
-            professeur = Professeur.objects.get(user=user)
-            # Extraire la photo du profil du professeur
-            photo = professeur.photo
-            first_name = user.first_name
-            # Passer la photo à votre modèle de contexte
-            context = {'photo': photo, 'first_name':first_name}
-            return render(request, 'accounts/compte_prof.html', context)
+            return redirect('compte_prof')
         else: 
             if hasattr(user, 'eleve'):
-                return render(request, 'eleves/compte_eleve.html')
+                return redirect('compte_eleve')
     messages.error(request, "Vous devez être connecté pour effectuer cette action.")
     return redirect('signin')
 
@@ -1945,7 +1938,7 @@ def modifier_mes_eleve(request, mon_eleve_id):
     return render(request, 'accounts/modifier_mes_eleve.html', context)
 
 
-def obtenir_parametres_cours(request):
+def obtenir_parametres_cours(request): # Json / AJAX
     response_data = {}
 
     # Vérifiez uniquement si la méthode est POST
@@ -3178,3 +3171,32 @@ def temoignage_detaille(request, temoignage_id):
             return redirect('temoignage_mes_eleves')
     
     return render(request, 'accounts/temoignage_detaille.html', {'temoignage': temoignage})
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def obtenir_liste_department(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        region_defaut = data.get("region", "")
+
+        if not region_defaut:
+            return JsonResponse({"error": "Aucune région sélectionnée."}, status=400)
+
+        departements = Departement.objects.filter(region__region=region_defaut).values('id', 'departement')
+
+        if not departements:
+            return JsonResponse({"error": "La liste des départements est vide."}, status=400)
+
+        departement_defaut = departements.first() if departements.exists() else None
+
+        para_departement = {
+            "departement": list(departements),
+            "departement_defaut": departement_defaut,
+        }
+
+        return JsonResponse({"para_departement": para_departement})
+    return JsonResponse({"error": "Requête invalide"}, status=400)

@@ -309,7 +309,7 @@ def modifier_coordonnee_parent(request):
     return render(request, 'eleves/modifier_coordonnee_parent.html', context)  # Affiche le template avec le formulaire
 
 
-def demande_cours_eleve(request):
+def demande_cours_eleve(request): # à supprimer elle est remplacé par liste_prof
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   

@@ -49,9 +49,3 @@ function toggleText() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var selectElement = document.querySelector('select[name="tri"]');
-    selectElement.addEventListener('change', function() {
-        this.form.submit();
-    });
-});

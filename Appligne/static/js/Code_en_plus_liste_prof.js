@@ -1,70 +1,91 @@
-/*********************** http://localhost:8000/liste_prof  début **************************** */
+// Récupérer le token CSRF à partir du meta-tag
+const csrftoken = document.querySelector('[name=csrf-token]').content;
 
-
-
-/*********************** http://localhost:8000/liste_prof  fin **************************** */
-
-// Fonction pour mettre à jour la valeur de l'input lorsque l'utilisateur sélectionne un élément dans la liste déroulante
-function updateInputValue(event) {
-    const inputId = event.target.closest('.dropdown').querySelector('input[type="text"]').id;
-    const selectedValue = event.target.getAttribute('data-value');
-    document.getElementById(inputId).value = selectedValue;
-    const dropdown = event.target.closest('.dropdown-menu');
-    dropdown.style.display = 'none';
+// Fonction pour mettre à jour l'input de dropdown
+function updateDropdownInput(dropdownId, inputId) {
+    const dropdown = document.getElementById(dropdownId);
+    dropdown.addEventListener("click", function(event) {
+        event.preventDefault();
+        const selectedValue = event.target.getAttribute("data-value");
+        if (selectedValue) {
+            document.getElementById(inputId).value = selectedValue;
+        }
+    });
 }
 
-// Gestion des événements
+// Fonction pour obtenir les départements de la région sélectionnée
+function fetchDepartements(regionId) {
+    fetch('/accounts/obtenir_liste_department', {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ region: regionId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.para_departement) {
+            const departements = data.para_departement.departement;
+            const departementDefaut = data.para_departement.departement_defaut;
+            const departementInput = document.getElementById("departement_id");
+            const departementDropdown = document.getElementById("dropdownMenu_departement_id");
 
+            // Mettre à jour l'input du département par défaut
+            departementInput.value = departementDefaut ? departementDefaut.departement : '';
+
+            // Vider la liste des départements
+            departementDropdown.innerHTML = '';
+
+            // Ajouter les nouveaux départements dans le menu déroulant
+            departements.forEach(dep => {
+                const li = document.createElement("li");
+                const a = document.createElement("a");
+                a.classList.add("dropdown-item", "dropdown-item-demande");
+                a.href = "#";
+                a.setAttribute("data-value", dep.departement);
+                a.textContent = dep.departement;
+                li.appendChild(a);
+                departementDropdown.appendChild(li);
+            });
+        } else {
+            console.error("Erreur: ", data.error);
+        }
+    })
+    .catch(error => console.error("Erreur lors de la récupération des départements:", error));
+}
+
+// Ajouter les événements pour chaque dropdown
 document.addEventListener('DOMContentLoaded', function () {
-    // Afficher le menu déroulant lorsqu'un input est cliqué
-    const inputs = document.querySelectorAll('input[type="text"]');
-    inputs.forEach(input => {
-        input.addEventListener('click', function(event) {
-            const dropdown = input.parentElement.querySelector('.dropdown-menu');
-            dropdown.style.display = 'block';
-            event.stopPropagation();
-        });
-    });
-
-    // Mettre à jour l'input lorsqu'un élément de la liste déroulante est cliqué
-    const dropdownItems = document.querySelectorAll('ul.dropdown-menu a.dropdown-item');
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', function(event) {
-            updateInputValue(event);
-            event.preventDefault();
-        });
-    });
-
-    // Masquer le menu déroulant lorsqu'on clique en dehors
-    document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('.dropdown-menu');
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-    });
-
-    // Soumettre le formulaire lorsqu'un élément de la liste déroulante est cliqué
-    const dropdownRegion = document.getElementById("dropdownMenu_region_id");
-    dropdownRegion.addEventListener("click", function(event) {
-        event.preventDefault(); 
+    // Région
+    updateDropdownInput("dropdownMenu_region_id", "region_id");
+    document.getElementById("dropdownMenu_region_id").addEventListener("click", function(event) {
         const selectedRegion = event.target.getAttribute("data-value");
-        document.getElementById("region_id").value = selectedRegion; 
-        document.getElementById("liste_prof_id").submit(); 
+        if (selectedRegion) {
+            fetchDepartements(selectedRegion);
+        }
     });
 
-    // Actualiser le formulaire lorsqu'une case est cochée
-    const checkboxes = document.querySelectorAll('.form-check-input');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function(event) {
-            checkboxes.forEach(input => {
-                if (input !== checkbox) {
-                    input.checked = false;
+    // Département
+    updateDropdownInput("dropdownMenu_departement_id", "departement_id");
+
+    // Matière
+    updateDropdownInput("dropdownMenu_matiere_id", "matiere_id");
+
+    // Niveau
+    updateDropdownInput("dropdownMenu_niveau_id", "niveau_id");
+
+    // Ajout d'un gestionnaire d'événements pour chaque bouton radio
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Lorsqu'un radio est sélectionné, désélectionner les autres
+            radioButtons.forEach(otherRadio => {
+                if (otherRadio !== radio) {
+                    otherRadio.checked = false;
                 }
             });
         });
     });
 });
-
-
