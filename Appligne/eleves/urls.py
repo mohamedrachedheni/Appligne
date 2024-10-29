@@ -6,7 +6,6 @@ urlpatterns = [
     path('modifier_coordonnee_eleve', views.modifier_coordonnee_eleve, name='modifier_coordonnee_eleve'),
     path('compte_eleve', views.compte_eleve, name='compte_eleve'),
     path('modifier_coordonnee_parent', views.modifier_coordonnee_parent, name='modifier_coordonnee_parent'),
-    path('demande_cours_eleve', views.demande_cours_eleve, name='demande_cours_eleve'),
     path('demande_cours_envoie/<int:id_prof>/', views.demande_cours_envoie, name='demande_cours_envoie'),
     path('email_recu', views.email_recu, name='email_recu'),
     path('email_detaille/<int:email_id>/', views.email_detaille, name='email_detaille'),
