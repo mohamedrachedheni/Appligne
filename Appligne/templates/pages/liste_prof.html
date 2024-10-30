@@ -176,46 +176,36 @@
         <div class="container p-4">
             <div class="container">
                 <div class="row g-5 justify-content-start">
-                    <div class="col-1 g-3" style="width: 30px;">
-                        <i class="fa fa-arrow-right text-primary me-2"></i>
-                    </div>
-                    <div class="col-11 g-3">
-                        <h5 class="mb-4">{{ professeurs.paginator.count }} professeur(s) en {{ matiere_defaut }} : {{ radio_name_text }} - {{ niveau_defaut }} - {{ region_defaut }}</h5>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- <div class="container py-4">
-                <div class="row g-5">
-                    <div class="col-1 g-3" style="width: 30px;">
-                        <i class="fa fa-arrow-right text-primary me-2"></i>
-                    </div>
-                    <div class="col-11 g-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked onchange="toggleText()">
-                            <label class="form-check-label" for="flexSwitchCheckChecked">
-                                <span class="mb-4" id="priceText">Prix <b>après</b> réduction d'impôts</span>
-                            </label>
+                    <div class="col-12">
+                        <div class="row g-5 justify-content-start">
+                            <div class="col-1 g-3" style="width: 30px;">
+                                <i class="fa fa-arrow-right text-primary me-2"></i>
+                            </div>
+                            <div class="col-11 g-3">
+                                <h6 class="mb-4">{{ professeurs.paginator.count }} professeur(s) en {{ matiere_defaut }} : {{ radio_name_text }} - {{ niveau_defaut }} - {{ region_defaut }}</h6>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div> -->
-        
+            </div>
             <div class="container py-4">
                 <div class="row g-5">
-                    <div class="col-1 g-3" style="width: 30px;">
-                        <i class="fa fa-arrow-right text-primary me-2"></i>
-                    </div>
-                    <div class="col-2 g-3  ">
-                        <h6 class="mb-1  ">Tri par :</h6>
-                    </div>
-                    <div class="col-3 g-3">
-                        <select class="form-select form-select-sm" aria-label="Small select example" style="width:200px" name="tri" >
-
-                            <option value="evaluation_decroissante" {% if tri == "evaluation_decroissante"  %} selected {% endif %} >Évaluation décroissante</option>
-                            <option value="tarif_croissante" {% if tri == "tarif_croissante" %}  selected {% endif %} >Tarif croissant</option>
-                        </select>
-                    </div>
+                    <div class="col-12">
+                        <div class="row g-5">
+                            <div class="col-1 g-3" style="width: 30px;">
+                                <i class="fa fa-arrow-right text-primary me-2"></i>
+                            </div>
+                            <div class="col-2 g-3  ">
+                                <h6 class="mb-1  ">Tri par :</h6>
+                            </div>
+                            <div class="col-3 g-3">
+                                <select class="form-select form-select-sm" aria-label="Small select example" style="width:200px" name="tri" >
+                                    <option value="evaluation_decroissante" {% if tri == "evaluation_decroissante"  %} selected {% endif %} >Évaluation décroissante</option>
+                                    <option value="tarif_croissante" {% if tri == "tarif_croissante" %}  selected {% endif %} >Tarif croissant</option>
+                                </select>
+                            </div>
+                        </div>                       
+                    </div>                    
                 </div>
             </div>
         </div>
