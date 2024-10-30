@@ -35,18 +35,18 @@
                                             <div class="input-group has-validation">
                                                 <span class="input-group-text">@</span>
                                                 <input type="text" class="form-control" id="email_id"
-                                                    aria-describedby="validationTooltipUsernamePrepend" name="email_user" value="{{email_user}}" >
+                                                    aria-describedby="validationTooltipUsernamePrepend" name="email_user" value="{{email}}" >
                                             </div>
                                         </div>
                                         <div class="col-12 position-relative">
                                             <label for="sujet_id" class="form-label">Sujet de l'email</label>
                                             <input type="text" class="form-control" id="sujet_id"
-                                                name="sujet">
+                                                name="sujet" value="{{sujet}}">
                                         </div>
                                         <div class="col-12 position-relative">
                                             <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
                                             <textarea class="form-control profil" id="text_email_id" rows="4"
-                                                name="text_email" placeholder="Au besoin, posez vos questions" ></textarea>
+                                                name="text_email" placeholder="Au besoin, posez vos questions" > {{text_email}} </textarea>
                                         </div>
 
                                         <div class="row justify-content-between g-2 p-3 ">

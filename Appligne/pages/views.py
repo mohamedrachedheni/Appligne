@@ -141,8 +141,9 @@ def liste_prof(request):
     niveau_defaut = request.POST.get('niveau', request.session.get('niveau_defaut', "Terminale Générale"))
     region_defaut = request.POST.get('region', request.session.get('region_defaut', "ILE-DE-FRANCE"))
     departement_defaut = request.POST.get('departement', request.session.get('departement_defaut', "PARIS"))
-    tri = request.POST.get('tri', 'evaluation_decroissante')
-
+    tri = request.POST.get('tri', request.session.get('tri', "evaluation_decroissante"))
+    if request.method == 'POST':
+        request.session['tri'] = request.POST['tri'] # conserver le dernier choix des tris
     # Récupérer les filtres possibles pour les matières, niveaux, régions et départements
     matieres = Matiere.objects.all()
     niveaux = Niveau.objects.all()
@@ -176,7 +177,7 @@ def liste_prof(request):
         format=radio_name_text
     ).values('prix_heure')
 
-    ordre_tri = '-historique_prof__moyenne_point_cumule' if tri == 'evaluation_decroissante' else '-annotated_prix_heure'
+    ordre_tri = '-historique_prof__moyenne_point_cumule' if tri == 'evaluation_decroissante' else 'annotated_prix_heure'
     # la recherche des prof doit etre en fonction
     # de la région qui est, elle meme, en foction du type de format du cours
     # Rechercher les professeurs avec les nouveaux critères si format cours est:("a_domicile", "stage")
@@ -350,42 +351,53 @@ def profil_prof(request, id_user):
 
 # destiné au email envoyées par les visiteur qui n'ont pas encore de compte
 def nous_contacter(request):
+    email = request.POST.get('email_user', '').strip()
+    text_email = request.POST.get('text_email', '').strip()
+    sujet = request.POST.get('sujet', '').strip()
+    context={
+    'email': email,
+    'text_email': text_email,
+    'sujet': sujet,
+    }
     # Sélectionnez le premier utilisateur qui est superuser, staff et actif
     # par defaux pour eviter erreur de la base de donnée user-id can not be null
     # car le visiteur n'a pas de compt user
     # user = User.objects.filter(is_superuser=True, is_staff=True, is_active=True).first()
+    teste = True
     if request.method == 'POST' and 'btn_enr' in request.POST:
-        email = request.POST.get('email_user')
-        text_email = request.POST.get('text_email')
-        if text_email:
-            # messages.error(request, "Teste 01 ")
-            if not email:
+        if not text_email:
+            messages.error(request, "Vous devez désigner le contenu de votre email ")
+            teste = False
+        if not email:
                 messages.error(request, "Vous devez indiquer votre email ")
-                return render(request, 'pages/nous_contacter.html')
-            # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
-            user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
-            user_destinataire_id = user_destinataire.id
-            
-            # traitement de l'envoie de l'email
-            # Validation de l'email_prof
-            email_validator = EmailValidator()
+                teste = False
+        else:
+            email_validator = EmailValidator() 
             try:
-                email_validator(email)
+                email_validator(email) #teste format email
             except ValidationError:
-                messages.error(request, "L'adresse email est invalide.")
-                return render(request, 'pages/nous_contacter.html')
+                messages.error(request, "L'adresse email n'est pas valide.")
+                teste = False
             
-            # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
-            sujet = request.POST.get('sujet', 'Sujet non défini').strip()  # Obtient la valeur de 'sujet' ou une chaîne vide
-            # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
-            destinations = ['prosib25@gmail.com']
-            # Validation des emails dans destinations
-            for destination in destinations:
-                try:
-                    email_validator(destination)
-                except ValidationError:
-                    messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
-                    return render(request, 'pages/nous_contacter.html')
+        # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
+        user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
+        user_destinataire_id = user_destinataire.id
+        
+        
+        
+        # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
+        if not sujet: sujet = 'Sujet non défini'
+        # on peut ajouter d'autres destinations: destinations = ['prosib25@gmail.com', 'autre_adresse_email']
+        destinations = ['prosib25@gmail.com']
+        # Validation des emails dans destinations
+        for destination in destinations:
+            email_validator = EmailValidator() 
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                teste = False
+        if teste == True:        
             try:
                 send_mail(
                     sujet,
@@ -394,12 +406,15 @@ def nous_contacter(request):
                     destinations,
                     fail_silently=False,
                 )
-                # ajouter un teste pour voir si tous les enregistrement relatifs au professeur sous achevés
+                messages.success(request, "L'email a été envoyé avec succès. ")
             except Exception as e:
                 messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
-            
-            messages.success(request, "L'email a été envoyé avec succès. ")
+                teste = False
+        
+        if teste == True:
             email_telecharge = Email_telecharge( email_telecharge=email, text_email=text_email, user_destinataire=user_destinataire_id, sujet=sujet)
             email_telecharge.save()
-            messages.success(request, "Email enregistré")
-    return render(request, 'pages/nous_contacter.html')
+            messages.success(request, "L'email a été enregistrer. ")
+            return redirect('index')
+        
+    return render(request, 'pages/nous_contacter.html', context)
