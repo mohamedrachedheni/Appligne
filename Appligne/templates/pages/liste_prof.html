@@ -16,7 +16,7 @@
                     {% include 'partials/_alerts.html' %}
                 </div>
                 <div class="container shadow-sm rounded mb-4 p-4 container-recherche">
-                    <div class="container">
+                    <div class="container p-1 ">
                         <div class="row g-1">
                             <!-- format cours -->
                             <div class="col-md-4 position-relative">
@@ -133,7 +133,7 @@
                             </div>
         
                             <!-- Département -->
-                            <div class="col-md-3 position-relative">
+                            <div class="col-md-3 position-relative ">
                                 <label class="form-label text-white">Département</label>
                                 <div class="row g-1">
                                     <div class="col-md-9 position-relative">
@@ -159,7 +159,7 @@
                                         </div>
                                     </div>
                                     <!-- Bouton Rechercher -->
-                                    <div class="col-md-3 position-relative">
+                                    <div class="col-md-3 d-flex justify-content-center position-relative g-2 p-3  ">
                                         <button class="btn btn-primary" type="submit" name="btn_rechercher">Rechercher</button>
                                     </div>
                                 </div>
@@ -206,11 +206,11 @@
                     <div class="col-1 g-3" style="width: 30px;">
                         <i class="fa fa-arrow-right text-primary me-2"></i>
                     </div>
-                    <div class="col-1 g-3">
-                        <h6 class="mb-4">Tri par :</h6>
+                    <div class="col-2 g-3  ">
+                        <h6 class="mb-1  ">Tri par :</h6>
                     </div>
-                    <div class="col-2 g-3">
-                        <select class="form-select form-select-sm" aria-label="Small select example" style="width:170px" name="tri" >
+                    <div class="col-3 g-3">
+                        <select class="form-select form-select-sm" aria-label="Small select example" style="width:200px" name="tri" >
 
                             <option value="evaluation_decroissante" {% if tri == "evaluation_decroissante"  %} selected {% endif %} >Évaluation décroissante</option>
                             <option value="tarif_croissante" {% if tri == "tarif_croissante" %}  selected {% endif %} >Tarif croissant</option>
