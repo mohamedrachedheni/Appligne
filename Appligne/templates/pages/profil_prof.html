@@ -5,9 +5,6 @@
 
 
 {% block content %}
-
-
-
     <!-- Header Start -->
     <div class="container-fluid bg-ciel  mb-5 ">
         <div class="container py-4">
@@ -63,6 +60,7 @@
         </div>
     </div>
     <!-- Header End -->
+    <!-- Titre du contenu -->
     <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
         <div class="container-xxl py-1">
             <div class="container">
@@ -77,9 +75,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Testimonial début -->
-
+    <!-- Titre du contenu fin-->
+    <!-- Titre fichier -->
     <div class="container py-4">
 
         <h4>{{ user.pro_fichier.titre_fiche }}</h4>
@@ -88,8 +85,9 @@
         </a>
 
     </div>
-
-<div class=" container py-2">
+    <!-- Titre fichier fin -->
+    <!-- Détaille ficher -->
+    <div class=" container py-2">
             <div class="row g-5">
                 <h5>Présentation</h5>
                 <div class="col-lg-6 col-md-6 justify-content-start ">
@@ -135,11 +133,9 @@
         <div class="row g-5">
             <h5>Méthodologie</h5>
             <div class="col-lg-6 col-md-6 justify-content-start ">
-
                 <span><textarea class="form-control profil bg-light "  rows="3" id="validationTooltip01" required
                         style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
             </div>
-
             <div class="col-lg-6 col-md-6 justify-content-start ">
                 <div class="row g-5">
                     <div class="col-lg-6 col-md-6 justify-content-start ">
@@ -207,11 +203,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
-
     <div class="container py-2 ">
         <div class="row g-5">
             <h5>Expériences</h5>
@@ -279,80 +273,199 @@
             </div>
         </div>
     </div>
+    <!-- Détaille fichier fin -->
+
+    
+    <!-- Testimonial -->
     {% if temoignages %}
-    {% for temoignage in temoignages %}
-    <div class="col-lg-6 col-md-6 justify-content-start">
-        <div class="testimonial-item">
-            <div class="testimonial-text {% if forloop.counter|divisibleby:2 %} bg-white {% else %} bg-light {% endif %} p-4" style="height: 200px;">
-                <div class="row gy-2 gx-4 mb-4">
-                    <div class="col-lg-4 justify-content-start">
-                        <p class="mb-0"><strong>{{ temoignage.user_eleve.last_name }} {{ temoignage.user_eleve.first_name }}</strong></p>
-                    </div>
-                    <div class="col-lg-4 justify-content-start">
-                        <div class="mb-3">
-                            <small class="fa fa-star " id="id_{{temoignage.id}}_t1" ></small>
-                            <small class="fa fa-star " id="id_{{temoignage.id}}_t2" ></small>
-                            <small class="fa fa-star " id="id_{{temoignage.id}}_t3" ></small>
-                            <small class="fa fa-star " id="id_{{temoignage.id}}_t4" ></small>
-                            <small class="fa fa-star " id="id_{{temoignage.id}}_t5" ></small>
+        <div class="container py-2">
+        <!-- Témoignage -->
+            <div class="row g-5">
+                {% for temoignage in temoignages %}
+                <div class="col-lg-4 justify-content-start">
+                    <div class="testimonial-item">
+                        <div class="testimonial-text {% if forloop.counter|divisibleby:2 %} bg-white {% else %} bg-light {% endif %} p-4" style="height: 200px;">
+                            <div class="row gy-2 gx-4 mb-4">
+                                <div class="col-lg-4 justify-content-start">
+                                    <p class="mb-0"><strong>{{ temoignage.user_eleve.last_name }} {{ temoignage.user_eleve.first_name }}</strong></p>
+                                </div>
+                                <div class="col-lg-4 justify-content-start">
+                                    <div class="mb-3">
+                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t1" ></small>
+                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t2" ></small>
+                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t3" ></small>
+                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t4" ></small>
+                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t5" ></small>
+                                    </div>
+                                    <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}">
+                                </div>
+                                <div class="col-lg-4 justify-content-start">
+                                    <p class="mb-0"><strong>{{ temoignage.date_modification|date:"d/m/Y" }}</strong></p>
+                                </div>
+                                <div class="col-lg-12 justify-content-start">
+                                    <p class="mb-0 "  
+                                    style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; "
+                                    >{{ temoignage.text_eleve|slice:":150" }}{% if temoignage.text_eleve|length > 150 %}...{% endif %}</p>
+                                </div>                    
+                                {% if temoignage.text_prof %}
+                                    <div class="col-lg-12 justify-content-start">
+                                        <p class="mb-0">
+                                            <strong>Réponse prof:</strong> {{ temoignage.text_prof|slice:":150" }}{% if temoignage.text_prof|length > 150 %}...{% endif %}
+                                        </p>
+                                                                                
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}">
                     </div>
-                    <div class="col-lg-4 justify-content-start">
-                        <p class="mb-0"><strong>{{ temoignage.date_modification|date:"d/m/Y" }}</strong></p>
-                    </div>
-                    <div class="col-lg-12 justify-content-start">
-                        <p class="mb-0 "  
-                        style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; "
-                        >{{ temoignage.text_eleve|slice:":300" }}{% if temoignage.text_eleve|length > 300 %}...{% endif %}</p>
-                    </div>                    
-                    {% if temoignage.text_prof %}
-                    <div class="col-lg-12 justify-content-start">
-                        <p class="mb-0"><strong>Retour du professeur sur le témoignage : </strong>{{ temoignage.text_prof }}</p>
-                    </div>
-                    {% endif %}
                 </div>
+                {% endfor %}
+            </div>
+        <!-- Pagination -->
+            <div class="col-lg-12 d-flex justify-content-center">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        {% if temoignages.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in temoignages.paginator.page_range %}
+                            <li class="page-item {% if temoignages.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        
+                        {% if temoignages.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ temoignages.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% else %}
+        <p>Aucun témoignage trouvé.</p>
+    {% endif %}
+    <!-- Testimonial fin -->
+
+    <!-- video début -->
+    {% if user.pro_fichier.video_youtube_url  %}
+        <div class="container py-5 " id="Video">
+            <div class="container">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Vidéo de présentation</h6>
+                    <h1 class="mb-5">Pour une perspective plus vivante</h1>
+                </div>
+                <div class="container bg-light">
+                    <div class="row g-2 p-3">
+                        <div class="col-12 ">
+                            <label for="video_id" class="form-label">Url de la vidéo</label>
+                        </div>
+                        <div class="col-12 ">
+                            <input type="text" class="form-control" id="video_id"
+                            name="video_youtube_url" value= {{user.pro_fichier.video_youtube_url}} readonly >
+                        </div>
+                        <div class="col-12 position-relative d-flex justify-content-center align-items-center">
+
+
+                            <div class="embed-responsive embed-responsive-16by9">
+                                <iframe class="embed-responsive-item"
+                                    src={{user.pro_fichier.video_youtube_url}}
+                                    title="YouTube video player" frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>                    
+    {% endif %}
+    <!-- vidéo fin -->
+
+    <!-- Liste profs début -->
+    <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container">
+            <div class="text-center">
+                <h6 class="section-title bg-white text-center text-primary px-3">Autres profs</h6>
+                <h4 class="mb-5">D'autres éminents enseignants.</h4>
+                <a class="btn btn-link p-3" href="{% url 'liste_prof'%}">Voire tous les profs</a>
+            </div>
+            <div class="owl-carousel testimonial-carousel position-relative">
+                {% for prof in professeurs %}
+                <div class="testimonial-item text-center">
+                    <a href="{% url 'profil_prof' id_user=prof.id %}">
+                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
+                        style="width: 80px; height: 80px;">
+                    </a>
+                    <h5 class="mb-0">{{ prof.username }}</h5>
+                    
+                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                        <div class="row gy-2 gx-4 mb-4">
+                            
+                            <div class="col-lg-6 justify-content-start">
+                                <p>
+                                    {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                {% for unique_matiere in unique_matiere_list %}
+                                {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
+                                    {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {% else %} Prix non défini {% endif %}
+                                </b></strong>
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">
+                                    {% if prof.historique_prof.nb_heure_declare %}
+                                            {{ prof.historique_prof.nb_heure_declare }} heures dispensées
+                                        {% else %}
+                                            pas d'heures dispensées
+                                        {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">Lieu: <strong>Paris</strong></p><!-- introduire le paramètre lieu au lieu de Paris -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
             </div>
         </div>
     </div>
-    {% endfor %}
-    
-    <!-- Pagination -->
-    <div class="col-lg-6 d-flex justify-content-center">
-        <nav aria-label="Page navigation example">
-            <ul class="pagination">
-                {% if temoignages.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">&laquo;</span>
-                    </li>
-                {% endif %}
-                
-                {% for num in temoignages.paginator.page_range %}
-                    <li class="page-item {% if temoignages.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                {% endfor %}
-                
-                {% if temoignages.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ temoignages.next_page_number }}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">&raquo;</span>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+    <!-- Liste profs fin -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary  back-to-top" >
+        <h5>Vers le haut</h5>
+    </a>
+    <!-- Back to Top fin -->
+
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
 
     <!-- Script for focus on page link -->
     <script>
@@ -374,160 +487,4 @@
             });
         });
     </script>
-
-{% else %}
-    <p>Aucun témoignage trouvé.</p>
-{% endif %}
-
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <div class="row g-5">
-                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 200px;">
-                        <div class="position-relative h-100">
-                            <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg'%}"
-                                alt="" style="object-fit: cover;">
-                        </div>
-                    </div>
-                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
-                        <h6 class="section-title bg-white text-start text-primary pe-3">About Us</h6>
-                        <h6 class="mb-4">Bienvenue sur Appenligne</h6>
-
-                        <div class="row gy-2 gx-4 mb-4">
-                            <div class="col-sm-6">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
-                            </div>
-                            <div class="col-sm-6">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Online </p>
-                            </div>
-                            <div class="col-sm-6">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>International </p>
-                            </div>
-                            <div class="col-sm-6">
-                                <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Skilled </p>
-                            </div>
-                        </div>
-                        <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'index'%}">En savoir plus</a>
-                    </div>
-                </div>
-
-            </div>
-        
-        <!-- Testimonial fin -->
-
-                <!-- video début -->
-                {% if user.pro_fichier.video_youtube_url  %}
-                <div class="container py-5 " id="Video">
-                    <div class="container">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h6 class="section-title bg-white text-center text-primary px-3">Vidéo de présentation</h6>
-                            <h1 class="mb-5">Pour une perspective plus vivante</h1>
-                        </div>
-                        <div class="container bg-light">
-                            <div class="row g-2 p-3">
-                                <div class="col-12 ">
-                                    <label for="video_id" class="form-label">Url de la vidéo</label>
-                                </div>
-                                <div class="col-12 ">
-                                    <input type="text" class="form-control" id="video_id"
-                                       name="video_youtube_url" value= {{user.pro_fichier.video_youtube_url}} readonly >
-                                </div>
-                                <div class="col-12 position-relative d-flex justify-content-center align-items-center">
-    
-    
-                                    <div class="embed-responsive embed-responsive-16by9">
-                                        <iframe class="embed-responsive-item"
-                                            src={{user.pro_fichier.video_youtube_url}}
-                                            title="YouTube video player" frameborder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            allowfullscreen></iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>                    
-            {% endif %}
-        <!-- vidéo fin -->
-
-        <!-- Liste profs début -->
-        <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
-            <div class="container">
-                <div class="text-center">
-                    <h6 class="section-title bg-white text-center text-primary px-3">AutreA profs</h6>
-                    <h4 class="mb-5">D'autres éminents enseignants.</h4>
-                    <a class="btn btn-link p-3" href="{% url 'liste_prof'%}">Voire tous les profs</a>
-                </div>
-                <div class="owl-carousel testimonial-carousel position-relative">
-                    {% for prof in professeurs %}
-                    <div class="testimonial-item text-center">
-                        <a href="{% url 'profil_prof' id_user=prof.id %}">
-                            <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
-                            style="width: 80px; height: 80px;">
-                        </a>
-                        <h5 class="mb-0">{{ prof.username }}</h5>
-                        
-                        <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                            <div class="row gy-2 gx-4 mb-4">
-                                <!-- <div class="col-lg-6 justify-content-start">
-                                    <div class="mb-3">
-                                        <small class="fa fa-star " id="profid_{{prof.id}}_t1" ></small>
-                                        <small class="fa fa-star " id="profid_{{prof.id}}_t2" ></small>
-                                        <small class="fa fa-star " id="profid_{{prof.id}}_t3" ></small>
-                                        <small class="fa fa-star " id="profid_{{prof.id}}_t4" ></small>
-                                        <small class="fa fa-star " id="profid_{{prof.id}}_t5" ></small>
-                                        <small> {% if prof.historique_prof.nb_evaluation %} ( {{ prof.historique_prof.nb_evaluation }} avis) {% else %} Aucun avis {% endif %} </small>
-                                    </div>
-                                    <input type="hidden" class="temoignage" id="value_profid_{{prof.id}}" value="{{ prof.historique_prof.moyenne_point_cumule  }}">
-                                </div> -->
-                                <div class="col-lg-6 justify-content-start">
-                                    <p>
-                                        {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
-                                    {% for unique_matiere in unique_matiere_list %}
-                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
-                                    {% endfor %}
-                                    </p>
-                                </div>
-                                
-
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
-                                        {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {% else %} Prix non défini {% endif %}
-                                    </b></strong>
-                                    </p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">
-                                        {% if prof.historique_prof.nb_heure_declare %}
-                                                {{ prof.historique_prof.nb_heure_declare }} heures dispensées
-                                            {% else %}
-                                                pas d'heures dispensées
-                                            {% endif %}
-                                    </p>
-                                </div>
-                                <div class="col-lg-6 justify-content-start">
-                                    <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    
-                </div>
-            </div>
-        </div>
-        <!-- Liste profs fin -->
-
-    </div>
-    <!-- Testimonial fin -->
-
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary  back-to-top" >
-        <h5>Vers le haut</h5>
-    </a>
-
-</form>
-{% endblock %}
-
-{% block javascript %}
-    <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
 {% endblock %}

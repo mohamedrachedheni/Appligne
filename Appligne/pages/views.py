@@ -247,7 +247,7 @@ def profil_prof(request, id_user):
     temoignages = Temoignage.objects.filter(user_prof=user).distinct()
 
     # Pagination : diviser la liste des professeurs par pages de 4 éléments
-    elements_par_page = 2
+    elements_par_page = 3
     paginator = Paginator(temoignages, elements_par_page)
     page = request.GET.get('page', 1)
     temoignages = paginator.get_page(page)
@@ -333,7 +333,7 @@ def profil_prof(request, id_user):
     ).distinct().order_by('-historique_prof__moyenne_point_cumule')
 
     # Pagination : diviser la liste des professeurs par pages de 4 éléments
-    elements_par_page_prof = 4
+    elements_par_page_prof = 3
     paginator_prof = Paginator(professeurs, elements_par_page_prof)
     page_prof = request.GET.get('page', 1)
     professeurs = paginator_prof.get_page(page_prof)
