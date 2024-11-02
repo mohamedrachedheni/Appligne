@@ -43,15 +43,15 @@
                                 {% endfor %}
                             </p>
                             <div class="mb-3">
-                                <small class="fa fa-star spaced"   id="t1" ></small>
-                                <small class="fa fa-star spaced"   id="t2" ></small>
-                                <small class="fa fa-star spaced"   id="t3" ></small>
-                                <small class="fa fa-star spaced"   id="t4" ></small>
-                                <small class="fa fa-star spaced"   id="t5" ></small>
+                                <small class="fa fa-star "   id="id_t1"  ></small>
+                                <small class="fa fa-star "   id="id_t2" ></small>
+                                <small class="fa fa-star "   id="id_t3" ></small>
+                                <small class="fa fa-star "   id="id_t4" ></small>
+                                <small class="fa fa-star "   id="id_t5"  ></small>
                                 <small> {% if historique_prof.nb_evaluation %} ( {{ historique_prof.nb_evaluation }} avis) {% else %} Aucun avis {% endif %} </small>
                             </div>
                             <!-- Champ caché pour stocker la note sélectionnée -->
-                            <input type="hidden" name="temoignage" id="temoignage-value" value="{{ historique_prof.moyenne_point_cumule }}">
+                            <input type="hidden" name="temoignage" id="value_id_prof" value="{{ historique_prof.moyenne_point_cumule }}" data-group="professeur" >
                             <p class="mb-0"><i class="fa fa-arrow-right  me-2" style="color: blue;"></i> {% if historique_prof.nb_heure_declare  %} {{ historique_prof.nb_heure_declare }} heures dispensées {% else %} Pas d'heures dispensées {% endif %} </p>
                         </div>
                     </div>
@@ -297,7 +297,7 @@
                                         <small class="fa fa-star " id="id_{{temoignage.id}}_t4" ></small>
                                         <small class="fa fa-star " id="id_{{temoignage.id}}_t5" ></small>
                                     </div>
-                                    <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}">
+                                    <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}" data-group="temoignage" >
                                 </div>
                                 <div class="col-lg-4 justify-content-start">
                                     <p class="mb-0"><strong>{{ temoignage.date_modification|date:"d/m/Y" }}</strong></p>
@@ -323,11 +323,11 @@
             </div>
         <!-- Pagination -->
             <div class="col-lg-12 d-flex justify-content-center">
-                <nav aria-label="Page navigation example">
+                <nav aria-label="Page navigation example" id="nav_page">
                     <ul class="pagination">
                         {% if temoignages.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous">
+                                <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous" id="previous-page-link" >
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
@@ -466,25 +466,98 @@
 
 {% block javascript %}
     <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
-
-    <!-- Script for focus on page link -->
+    <!-- <script src="{% static 'js/Code_en_plus_profil_prof-01.js' %}"></script>
+    <script src="{% static 'js/Code_en_plus_profil_prof-02.js' %}"></script> -->
+    
     <script>
+        // Fonction pour redimensionner les textarea selon leur contenu
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';  // Réinitialise la hauteur
+            textarea.style.height = (textarea.scrollHeight - 2) + 'px';  // Ajuste la hauteur en fonction du contenu
+        }
+    
         document.addEventListener("DOMContentLoaded", function() {
-            var savedPage = localStorage.getItem('currentPage');
-            if (savedPage) {
-                var pageLink = document.querySelector('.pagination a.page-link[href="?page=' + savedPage + '"]');
-                if (pageLink) {
-                    pageLink.focus();
-                }
-            }
-
-            var pageLinks = document.querySelectorAll('.pagination a.page-link');
-            pageLinks.forEach(function(link) {
-                link.addEventListener('click', function() {
-                    var pageNumber = this.getAttribute('href').split('page=')[1];
-                    localStorage.setItem('currentPage', pageNumber);
+            // Redimensionne les textarea lors du chargement de la page et lors de la saisie
+            const textareas = document.querySelectorAll('.form-control.profil');
+            textareas.forEach(textarea => {
+                adjustTextareaHeight(textarea);
+                textarea.addEventListener('input', function() {
+                    adjustTextareaHeight(textarea);
                 });
             });
+    
+            // Appelle la fonction pour gérer les étoiles
+            updateStarRatings();
         });
+    
+        // Fonction pour gérer l'affichage des étoiles
+        function updateStarRatings() {
+            // Gestion des étoiles pour chaque témoignage
+            document.querySelectorAll('[id^="value_id_"][data-group="temoignage"]').forEach(inputElement => {
+                const temoignageId = inputElement.id.split('_')[2]; // Récupère l'ID du témoignage
+                const evaluation = parseInt(inputElement.value); // Récupère la note d'évaluation
+    
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.getElementById(`id_${temoignageId}_t${i}`);
+                    if (star) {
+                        star.style.color = i <= evaluation ? 'rgb(0, 200, 255)' : 'grey';
+                    }
+                }
+            });
+    
+            // Gestion des étoiles pour le professeur
+            const profInput = document.querySelector('[data-group="professeur"]');
+            if (profInput) {
+                const evaluationProf = parseInt(profInput.value);
+                
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.getElementById(`t${i}`);
+                    if (star) {
+                        star.style.color = i <= evaluationProf ? 'rgb(0, 200, 255)' : 'grey';
+                    }
+                }
+            }
+        }
+    
+        function rate(value, id, group) {
+            const labels = ["Mauvais", "Moyen", "Bien", "Très bien", "Excellent"];
+            const prefix = group === 'temoignage' ? `id_${id}_t` : `id_t`;
+    
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById(`${prefix}${i}`);
+                if (star) {
+                    star.style.color = i <= value ? 'rgb(0, 100, 255)' : 'grey';
+                }
+            }
+    
+            if (group === 'temoignage') {
+                document.getElementById(`label_${id}`).innerText = labels[value - 1];
+                document.getElementById(`value_id_${id}`).value = value;
+            } else if (group === 'professeur') {
+                document.getElementById('label_prof').innerText = labels[value - 1];
+                document.getElementById('value_id_prof').value = value;
+            }
+        }
+    
+        // Appelle la fonction pour restaurer les étoiles après chargement de la page
+        window.onload = function() {
+            restorePreviousRating();  // Restaurer les étoiles pour tous les groupes
+        };
+    
+        // Fonction pour restaurer l'état des étoiles pour chaque groupe en fonction de la valeur précédente
+        function restorePreviousRating() {
+            document.querySelectorAll('[id^="value_id_"]').forEach(inputElement => {
+                const id = inputElement.id.includes('prof') ? 'prof' : inputElement.id.split('_')[2];  // Gestion du cas 'prof'
+                const previousValue = parseInt(inputElement.value);
+                const group = inputElement.getAttribute('data-group');  // Récupère le groupe pour identifier s'il s'agit d'un témoignage ou d'un professeur
+    
+                if (previousValue && group) {
+                    rate(previousValue, id, group);  // Appel à 'rate' avec l'ID et le groupe corrects
+                }
+            });
+        }
     </script>
+
+    
+
 {% endblock %}

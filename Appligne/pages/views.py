@@ -239,7 +239,6 @@ def liste_prof(request):
 
 
 
-
 def profil_prof(request, id_user):
     user = get_object_or_404(User, id=id_user)
 
@@ -338,6 +337,8 @@ def profil_prof(request, id_user):
     page_prof = request.GET.get('page', 1)
     professeurs = paginator_prof.get_page(page_prof)
 
+    
+
     context = {
         'user': user,
         'departements_distincts': departements_distincts,
@@ -347,6 +348,9 @@ def profil_prof(request, id_user):
         'professeurs': professeurs,
     }
     return render(request, 'pages/profil_prof.html', context)
+
+
+
 
 
 # destiné au email envoyées par les visiteur qui n'ont pas encore de compte
