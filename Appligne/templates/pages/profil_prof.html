@@ -5,559 +5,444 @@
 
 
 {% block content %}
-    <!-- Header Start -->
-    <div class="container-fluid bg-ciel  mb-5 ">
-        <div class="container py-4">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 ">
-                    <div class="row g-5">
-                        <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
-                            <div class="position-relative h-100">
-                                <!-- professeur et peas professeurs car il y a un seul professeur sélectionné par son id -->
-                                <img class="border rounded-circle p-2 mx-auto mb-3" src="{{user.professeur.photo.url}}"
-                                    style="width: 180px; height: 180px;">
-
-                            </div>
-                        </div>
-                        <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
-                            <h5 class="mb-0">{{user.first_name}} / {{ pro_fichier.video_youtube_url }}</h5>
-                            <!-- la class grid pour aligner les matières sur une meme ligne -->
-                            <div class="grid  ">
-                                <!-- à introduire le code dans un fichier css -->
-                                <div class="left-align-content" style="font-size: 16px; font-weight: bold;">
-                                    <!-- pour éviter les répétitions des matières -->
-                                    {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
-                                    {% for unique_matiere in unique_matiere_list %}
-                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <!-- on n'a pas besoin de faire un regroupement car la contrainte des tables di^plome et experience suffisent -->
-                            <p>
-                                {% for diplome in user.diplome_set.all %}
-                                {{ diplome.diplome }}{% if not forloop.last %} | {% endif %}
-                                {% endfor %}
-                                */* {% for experience in user.experience_set.all %}
-                                {{ experience.type }}{% if not forloop.last %} | {% endif %}
-                                {% endfor %}
-                            </p>
-                            <div class="mb-3">
-                                <small class="fa fa-star "   id="id_t1"  ></small>
-                                <small class="fa fa-star "   id="id_t2" ></small>
-                                <small class="fa fa-star "   id="id_t3" ></small>
-                                <small class="fa fa-star "   id="id_t4" ></small>
-                                <small class="fa fa-star "   id="id_t5"  ></small>
-                                <small> {% if historique_prof.nb_evaluation %} ( {{ historique_prof.nb_evaluation }} avis) {% else %} Aucun avis {% endif %} </small>
-                            </div>
-                            <!-- Champ caché pour stocker la note sélectionnée -->
-                            <input type="hidden" name="temoignage" id="value_id_prof" value="{{ historique_prof.moyenne_point_cumule }}" data-group="professeur" >
-                            <p class="mb-0"><i class="fa fa-arrow-right  me-2" style="color: blue;"></i> {% if historique_prof.nb_heure_declare  %} {{ historique_prof.nb_heure_declare }} heures dispensées {% else %} Pas d'heures dispensées {% endif %} </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-    <!-- Titre du contenu -->
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container-xxl py-1">
-            <div class="container">
-                <!-- Titre secondaire de la section témoignage et évaluation -->
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Témoignage et évaluation</h6>
-                </div>
-                <!-- Affichage des alertes (succès, erreurs, etc.) -->
-                <div class="col-md-12">
-                    {% include 'partials/_alerts.html' %}
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Titre du contenu fin-->
-    <!-- Titre fichier -->
+<!-- Header Start -->
+<div class="container-fluid bg-ciel  mb-5 ">
     <div class="container py-4">
-
-        <h4>{{ user.pro_fichier.titre_fiche }}</h4>
-        <a href=" {% url 'demande_cours_envoie' id_prof=user.id %} " class="btn btn-lg btn-primary" >
-        <h5 title="Vous devez être connecté à votre compte, si non créez un compte élève avant">Contacter <strong>{{user.first_name}}</strong></h5>
-        </a>
-
-    </div>
-    <!-- Titre fichier fin -->
-    <!-- Détaille ficher -->
-    <div class=" container py-2">
-            <div class="row g-5">
-                <h5>Présentation</h5>
-                <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip02" rows="" required
-                            style="border:transparent;">{{ user.pro_fichier.parcours }}</textarea></span>
-                </div>
-                <div class="col-lg-6 col-md-6 justify-content-start ">
-                    <div class="row g-5">
-                        <div class="col-lg-6 col-md-6 justify-content-start ">
-                            <div class="wow fadeInUp" data-wow-delay="0.1s">
-                                <div class="service-item text-center pt-3">
-                                    <div class="p-4">
-                                        <i class="fa fa-3x fa-graduation-cap text-primary mb-4"></i>
-                                        <h5 class="mb-3">Tarif</h5>
-                                        <p><strong><b class="prix_par_heure">
-                                            {% if prix_heure is not none and prix_heure != "N/A" %}
-                                            {{prix_heure}}&nbsp;€/h
-                                            {% else %}
-                                                <strong>Le prix de l'heure n'est pas défini/ {{prix_heure}} </strong>
-                                            {% endif %}
-                                        </b></strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 justify-content-start ">
-                            <div class="wow fadeInUp" data-wow-delay="0.3s">
-                                <div class="service-item text-center pt-3">
-                                    <div class="p-4">
-                                        <i class="fa fa-3x fa fa-users text-primary mb-4"></i>
-                                        <h5 class="mb-3">Elèves suivis </h5>
-                                        <p><strong><b> {{historique_prof.nb_eleve_inscrit}} </strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    </div>
-
-    <div class="container py-2">
-        <div class="row g-5">
-            <h5>Méthodologie</h5>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <span><textarea class="form-control profil bg-light "  rows="3" id="validationTooltip01" required
-                        style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
-            </div>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 ">
                 <div class="row g-5">
-                    <div class="col-lg-6 col-md-6 justify-content-start ">
-                        <div class="wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="service-item text-center pt-3">
-                                <div class="p-4">
-                                    <i class="fa fa-3x fa-flag text-primary mb-4"></i>
-                                    <h5 class="mb-3">Ancienneté</h5>
-                                    <p><strong><b> {{historique_prof.date_premier_cours}} </b></strong></p>
-                                </div>
-                            </div>
+                    <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
+                        <div class="position-relative h-100">
+                            <!-- professeur et peas professeurs car il y a un seul professeur sélectionné par son id -->
+                            <img class="border rounded-circle p-2 mx-auto mb-3" src="{{user.professeur.photo.url}}"
+                                style="width: 180px; height: 180px;">
+
                         </div>
                     </div>
-                    <div class="col-lg-6 col-md-6 justify-content-start ">
-                        <div class="wow fadeInUp" data-wow-delay="0.3s">
-                            <div class="service-item text-center pt-3">
-                                <div class="p-4">
-                                    <i class="fa fa-3x fa-home text-primary mb-4"></i>
-                                    <h5 class="mb-3">Lieux</h5>
-                    
-                                    <!-- Utilisation d'une boucle pour afficher les départements distincts -->
-                                    {% for departement in departements_distincts %}
-                                    <p><strong><b>{{ departement.departement }}</strong></p>
-                                    {% endfor %}
-                                    
-                                </div>
-                            </div>
-                        </div>
-                    </div>                    
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container py-2">
-        <div class="row g-5">
-            <h5> Parcours académique</h5>
-            <div class="col-lg-6 col-md-6 justify-content-start">
-                <ul class="list-group bg-light">
-                    {% for diplome in user.diplome_set.all %}
-                    <li class="list-group-item bg-light" style="border:transparent;">
-                        <i class="fa fa-arrow-right text-primary me-2"></i>
-                        <!-- pour afficher le date abrégée 00/00/0000 -->
-                        {{ diplome.obtenu|date:"d/m/Y" }} | {{ diplome.diplome_cathegorie }} - {{ diplome.intitule }}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <div class="row g-5">
-                    <div class="col-lg-12 col-md-12 justify-content-start">
-                        <div class="wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="service-item text-center pt-3  container-fluid >
-                                        <div class=" p-4 ">
-                                            <h5 class=" mb-3">Matières</h5>
-                                <div class="row align-items-start py-3">
-                                    <!-- pour éviter les répétitions des matières -->
-                                    {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
-                                    {% for unique_matiere in unique_matiere_list %}
-                                    <div class="col  btn-info p-2 " style="margin: 3px;">{{unique_matiere.grouper.matiere }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="container py-2 ">
-        <div class="row g-5">
-            <h5>Expériences</h5>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <ul class="list-group bg-light">
-                    {% for exp in user.experience_set.all %}
-                    <li class="list-group-item bg-light" style="border:transparent;">
-                        <i class="fa fa-arrow-right text-primary me-2"></i>
-                        {{ exp.debut|date:"d/m/Y" }} | {{ exp.type }} - {{ exp.commentaire }}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="col-lg-6 col-md-6 justify-content-start ">
-                <div class="row g-5">
-                    <div class="col-lg-12 col-md-12 justify-content-start">
-                        <div class="wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="service-item text-center pt-3  container-fluid >
-                                    <div class=" p-4 ">
-                                        <h5 class=" mb-3">Cadre des cours</h5>
-                                <div class="row align-items-start py-3">
-                                    {% if  user.format_cour.a_domicile %}
-                                    <div class="col btn-info p-2" style="margin: 3px">
-                                        Cours à domicile
-                                    </div>
-                                    {% endif %}
-                                    <div class="col btn-info p-2" style="margin: 3px;  display: none " >
-                                        Cours à domicile
-                                    </div>
-                                    {% if user.format_cour.webcam %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px ">
-                                        Cours à distance
-                                    </div>
-                                    {% endif %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px;  display: none ">
-                                        Cours à distance
-                                    </div>
-                                    {% if user.format_cour.stage %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px">
-                                        Cours en petit groupe
-                                    </div>
-                                    {% endif %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px;  display: none ">
-                                        Cours en petit groupe
-                                    </div>
-                                    {% if user.format_cour.stage_webcam %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px">
-                                        Webcam en groupe
-                                    </div>
-                                    {% endif %}
-                                    <div class="col btn-info p-2"
-                                        style="margin: 3px;  display: none ">
-                                        Webcam en groupe
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Détaille fichier fin -->
-
-    
-    <!-- Testimonial -->
-    {% if temoignages %}
-        <div class="container py-2">
-        <!-- Témoignage -->
-            <div class="row g-5">
-                {% for temoignage in temoignages %}
-                <div class="col-lg-4 justify-content-start">
-                    <div class="testimonial-item">
-                        <div class="testimonial-text {% if forloop.counter|divisibleby:2 %} bg-white {% else %} bg-light {% endif %} p-4" style="height: 200px;">
-                            <div class="row gy-2 gx-4 mb-4">
-                                <div class="col-lg-4 justify-content-start">
-                                    <p class="mb-0"><strong>{{ temoignage.user_eleve.last_name }} {{ temoignage.user_eleve.first_name }}</strong></p>
-                                </div>
-                                <div class="col-lg-4 justify-content-start">
-                                    <div class="mb-3">
-                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t1" ></small>
-                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t2" ></small>
-                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t3" ></small>
-                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t4" ></small>
-                                        <small class="fa fa-star " id="id_{{temoignage.id}}_t5" ></small>
-                                    </div>
-                                    <input type="hidden" class="temoignage" id="value_id_{{temoignage.id}}" value="{{ temoignage.evaluation_eleve }}" data-group="temoignage" >
-                                </div>
-                                <div class="col-lg-4 justify-content-start">
-                                    <p class="mb-0"><strong>{{ temoignage.date_modification|date:"d/m/Y" }}</strong></p>
-                                </div>
-                                <div class="col-lg-12 justify-content-start">
-                                    <p class="mb-0 "  
-                                    style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; "
-                                    >{{ temoignage.text_eleve|slice:":150" }}{% if temoignage.text_eleve|length > 150 %}...{% endif %}</p>
-                                </div>                    
-                                {% if temoignage.text_prof %}
-                                    <div class="col-lg-12 justify-content-start">
-                                        <p class="mb-0">
-                                            <strong>Réponse prof:</strong> {{ temoignage.text_prof|slice:":150" }}{% if temoignage.text_prof|length > 150 %}...{% endif %}
-                                        </p>
-                                                                                
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        <!-- Pagination -->
-            <div class="col-lg-12 d-flex justify-content-center">
-                <nav aria-label="Page navigation example" id="nav_page">
-                    <ul class="pagination">
-                        {% if temoignages.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ temoignages.previous_page_number }}" aria-label="Previous" id="previous-page-link" >
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">&laquo;</span>
-                            </li>
-                        {% endif %}
-                        
-                        {% for num in temoignages.paginator.page_range %}
-                            <li class="page-item {% if temoignages.number == num %}active{% endif %}">
-                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                            </li>
-                        {% endfor %}
-                        
-                        {% if temoignages.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ temoignages.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">&raquo;</span>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    {% else %}
-        <p>Aucun témoignage trouvé.</p>
-    {% endif %}
-    <!-- Testimonial fin -->
-
-    <!-- video début -->
-    {% if user.pro_fichier.video_youtube_url  %}
-        <div class="container py-5 " id="Video">
-            <div class="container">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Vidéo de présentation</h6>
-                    <h1 class="mb-5">Pour une perspective plus vivante</h1>
-                </div>
-                <div class="container bg-light">
-                    <div class="row g-2 p-3">
-                        <div class="col-12 ">
-                            <label for="video_id" class="form-label">Url de la vidéo</label>
-                        </div>
-                        <div class="col-12 ">
-                            <input type="text" class="form-control" id="video_id"
-                            name="video_youtube_url" value= {{user.pro_fichier.video_youtube_url}} readonly >
-                        </div>
-                        <div class="col-12 position-relative d-flex justify-content-center align-items-center">
-
-
-                            <div class="embed-responsive embed-responsive-16by9">
-                                <iframe class="embed-responsive-item"
-                                    src={{user.pro_fichier.video_youtube_url}}
-                                    title="YouTube video player" frameborder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowfullscreen></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>                    
-    {% endif %}
-    <!-- vidéo fin -->
-
-    <!-- Liste profs début -->
-    <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container">
-            <div class="text-center">
-                <h6 class="section-title bg-white text-center text-primary px-3">Autres profs</h6>
-                <h4 class="mb-5">D'autres éminents enseignants.</h4>
-                <a class="btn btn-link p-3" href="{% url 'liste_prof'%}">Voire tous les profs</a>
-            </div>
-            <div class="owl-carousel testimonial-carousel position-relative">
-                {% for prof in professeurs %}
-                <div class="testimonial-item text-center">
-                    <a href="{% url 'profil_prof' id_user=prof.id %}">
-                        <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
-                        style="width: 80px; height: 80px;">
-                    </a>
-                    <h5 class="mb-0">{{ prof.username }}</h5>
-                    
-                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                        <div class="row gy-2 gx-4 mb-4">
-                            
-                            <div class="col-lg-6 justify-content-start">
-                                <p>
-                                    {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                    <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.3s">
+                        <h5 class="mb-0">{{user.first_name}} / {{ pro_fichier.video_youtube_url }}</h5>
+                        <!-- la class grid pour aligner les matières sur une meme ligne -->
+                        <div class="grid  ">
+                            <!-- à introduire le code dans un fichier css -->
+                            <div class="left-align-content" style="font-size: 16px; font-weight: bold;">
+                                <!-- pour éviter les répétitions des matières -->
+                                {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
                                 {% for unique_matiere in unique_matiere_list %}
                                 {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
                                 {% endfor %}
-                                </p>
                             </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
-                                    {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {% else %} Prix non défini {% endif %}
-                                </b></strong>
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">
-                                    {% if prof.historique_prof.nb_heure_declare %}
-                                            {{ prof.historique_prof.nb_heure_declare }} heures dispensées
-                                        {% else %}
-                                            pas d'heures dispensées
-                                        {% endif %}
-                                </p>
-                            </div>
-                            <div class="col-lg-6 justify-content-start">
-                                <p class="mb-0">Lieu: <strong>Paris</strong></p><!-- introduire le paramètre lieu au lieu de Paris -->
+                        </div>
+
+                        <!-- on n'a pas besoin de faire un regroupement car la contrainte des tables di^plome et experience suffisent -->
+                        <p>
+                            {% for diplome in user.diplome_set.all %}
+                            {{ diplome.diplome }}{% if not forloop.last %} | {% endif %}
+                            {% endfor %}
+                            */* {% for experience in user.experience_set.all %}
+                            {{ experience.type }}{% if not forloop.last %} | {% endif %}
+                            {% endfor %}
+                        </p>
+                        <div class="mb-3">
+                            <small class="fa fa-star " id="id_t1"></small>
+                            <small class="fa fa-star " id="id_t2"></small>
+                            <small class="fa fa-star " id="id_t3"></small>
+                            <small class="fa fa-star " id="id_t4"></small>
+                            <small class="fa fa-star " id="id_t5"></small>
+                            <small> {% if historique_prof.nb_evaluation %} ( {{ historique_prof.nb_evaluation }} avis)
+                                {% else %} Aucun avis {% endif %} </small>
+                        </div>
+                        <!-- Champ caché pour stocker la note sélectionnée -->
+                        <input type="hidden" name="temoignage" id="value_id_prof"
+                            value="{{ historique_prof.moyenne_point_cumule }}" data-group="professeur">
+                        <p class="mb-0"><i class="fa fa-arrow-right  me-2" style="color: blue;"></i>
+                            {% if historique_prof.nb_heure_declare %} {{ historique_prof.nb_heure_declare }} heures
+                            dispensées
+                            {% else %} Pas d'heures dispensées {% endif %} </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+<!-- Titre du contenu -->
+<div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="container-xxl py-1">
+        <div class="container">
+            <!-- Titre secondaire de la section témoignage et évaluation -->
+            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="section-title bg-white text-center text-primary px-3">Témoignage et évaluation</h6>
+            </div>
+            <!-- Affichage des alertes (succès, erreurs, etc.) -->
+            <div class="col-md-12">
+                {% include 'partials/_alerts.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Titre du contenu fin-->
+<!-- Titre fichier -->
+<div class="container py-4">
+
+    <h4>{{ user.pro_fichier.titre_fiche }}</h4>
+    <a href=" {% url 'demande_cours_envoie' id_prof=user.id %} " class="btn btn-lg btn-primary">
+        <h5 title="Vous devez être connecté à votre compte, si non créez un compte élève avant">Contacter
+            <strong>{{user.first_name}}</strong>
+        </h5>
+    </a>
+
+</div>
+<!-- Titre fichier fin -->
+<!-- Détaille ficher -->
+<div class=" container py-2">
+    <div class="row g-5">
+        <h5>Présentation</h5>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip02" rows="" required
+                    style="border:transparent;">{{ user.pro_fichier.parcours }}</textarea></span>
+        </div>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <div class="row g-5">
+                <div class="col-lg-6 col-md-6 justify-content-start ">
+                    <div class="wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="service-item text-center pt-3">
+                            <div class="p-4">
+                                <i class="fa fa-3x fa-graduation-cap text-primary mb-4"></i>
+                                <h5 class="mb-3">Tarif</h5>
+                                <p><strong><b class="prix_par_heure">
+                                            {% if prix_heure is not none and prix_heure != "N/A" %}
+                                            {{prix_heure}}&nbsp;€/h
+                                            {% else %}
+                                            <strong>Le prix de l'heure n'est pas défini/ {{prix_heure}} </strong>
+                                            {% endif %}
+                                        </b></strong></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
-                
+                <div class="col-lg-6 col-md-6 justify-content-start ">
+                    <div class="wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="service-item text-center pt-3">
+                            <div class="p-4">
+                                <i class="fa fa-3x fa fa-users text-primary mb-4"></i>
+                                <h5 class="mb-3">Elèves suivis </h5>
+                                <p><strong><b> {{historique_prof.nb_eleve_inscrit}} </strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <!-- Liste profs fin -->
+</div>
 
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary  back-to-top" >
-        <h5>Vers le haut</h5>
-    </a>
-    <!-- Back to Top fin -->
+<div class="container py-2">
+    <div class="row g-5">
+        <h5>Méthodologie</h5>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip01" required
+                    style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
+        </div>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <div class="row g-5">
+                <div class="col-lg-6 col-md-6 justify-content-start ">
+                    <div class="wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="service-item text-center pt-3">
+                            <div class="p-4">
+                                <i class="fa fa-3x fa-flag text-primary mb-4"></i>
+                                <h5 class="mb-3">Ancienneté</h5>
+                                <p><strong><b> {{historique_prof.date_premier_cours}} </b></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 justify-content-start ">
+                    <div class="wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="service-item text-center pt-3">
+                            <div class="p-4">
+                                <i class="fa fa-3x fa-home text-primary mb-4"></i>
+                                <h5 class="mb-3">Lieux</h5>
+
+                                <!-- Utilisation d'une boucle pour afficher les départements distincts -->
+                                {% for departement in departements_distincts %}
+                                <p><strong><b>{{ departement.departement }}</strong></p>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-2">
+    <div class="row g-5">
+        <h5> Parcours académique</h5>
+        <div class="col-lg-6 col-md-6 justify-content-start">
+            <ul class="list-group bg-light">
+                {% for diplome in user.diplome_set.all %}
+                <li class="list-group-item bg-light" style="border:transparent;">
+                    <i class="fa fa-arrow-right text-primary me-2"></i>
+                    <!-- pour afficher le date abrégée 00/00/0000 -->
+                    {{ diplome.obtenu|date:"d/m/Y" }} | {{ diplome.diplome_cathegorie }} - {{ diplome.intitule }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <div class="row g-5">
+                <div class="col-lg-12 col-md-12 justify-content-start">
+                    <div class="wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="service-item text-center pt-3  container-fluid >
+                                        <div class=" p-4 ">
+                                            <h5 class=" mb-3">Matières</h5>
+                            <div class="row align-items-start py-3">
+                                <!-- pour éviter les répétitions des matières -->
+                                {% regroup user.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                {% for unique_matiere in unique_matiere_list %}
+                                <div class="col  btn-info p-2 " style="margin: 3px;">{{unique_matiere.grouper.matiere }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container py-2 ">
+    <div class="row g-5">
+        <h5>Expériences</h5>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <ul class="list-group bg-light">
+                {% for exp in user.experience_set.all %}
+                <li class="list-group-item bg-light" style="border:transparent;">
+                    <i class="fa fa-arrow-right text-primary me-2"></i>
+                    {{ exp.debut|date:"d/m/Y" }} | {{ exp.type }} - {{ exp.commentaire }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-lg-6 col-md-6 justify-content-start ">
+            <div class="row g-5">
+                <div class="col-lg-12 col-md-12 justify-content-start">
+                    <div class="wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="service-item text-center pt-3  container-fluid >
+                                    <div class=" p-4 ">
+                                        <h5 class=" mb-3">Cadre des cours</h5>
+                            <div class="row align-items-start py-3">
+                                {% if user.format_cour.a_domicile %}
+                                <div class="col btn-info p-2" style="margin: 3px">
+                                    Cours à domicile
+                                </div>
+                                {% endif %}
+                                <div class="col btn-info p-2" style="margin: 3px;  display: none ">
+                                    Cours à domicile
+                                </div>
+                                {% if user.format_cour.webcam %}
+                                <div class="col btn-info p-2" style="margin: 3px ">
+                                    Cours à distance
+                                </div>
+                                {% endif %}
+                                <div class="col btn-info p-2" style="margin: 3px;  display: none ">
+                                    Cours à distance
+                                </div>
+                                {% if user.format_cour.stage %}
+                                <div class="col btn-info p-2" style="margin: 3px">
+                                    Cours en petit groupe
+                                </div>
+                                {% endif %}
+                                <div class="col btn-info p-2" style="margin: 3px;  display: none ">
+                                    Cours en petit groupe
+                                </div>
+                                {% if user.format_cour.stage_webcam %}
+                                <div class="col btn-info p-2" style="margin: 3px">
+                                    Webcam en groupe
+                                </div>
+                                {% endif %}
+                                <div class="col btn-info p-2" style="margin: 3px;  display: none ">
+                                    Webcam en groupe
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Détaille fichier fin -->
+
+<!-- debut temoignage -->
+<div id="temoignages-container" data-id-user="{{ user.id }}">
+    {% include 'partials/temoignages.html' %}
+</div>
+<!-- fin temoignage  -->
+
+
+
+<!-- video début -->
+{% if user.pro_fichier.video_youtube_url %}
+<div class="container py-5 " id="Video">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h6 class="section-title bg-white text-center text-primary px-3">Vidéo de présentation</h6>
+            <h1 class="mb-5">Pour une perspective plus vivante</h1>
+        </div>
+        <div class="container bg-light">
+            <div class="row g-2 p-3">
+                <div class="col-12 ">
+                    <label for="video_id" class="form-label">Url de la vidéo</label>
+                </div>
+                <div class="col-12 ">
+                    <input type="text" class="form-control" id="video_id" name="video_youtube_url"
+                        value={{user.pro_fichier.video_youtube_url}} readonly>
+                </div>
+                <div class="col-12 position-relative d-flex justify-content-center align-items-center">
+
+
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe class="embed-responsive-item" src={{user.pro_fichier.video_youtube_url}}
+                            title="YouTube video player" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- vidéo fin -->
+
+<!-- Liste profs début -->
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="container">
+        <div class="text-center">
+            <h6 class="section-title bg-white text-center text-primary px-3">Autres profs</h6>
+            <h4 class="mb-5">D'autres éminents enseignants.</h4>
+            <a class="btn btn-link p-3" href="{% url 'liste_prof'%}">Voire tous les profs</a>
+        </div>
+        <div class="owl-carousel testimonial-carousel position-relative">
+            {% for prof in professeurs %}
+            <div class="testimonial-item text-center">
+                <a href="{% url 'profil_prof' id_user=prof.id %}">
+                    <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
+                        style="width: 80px; height: 80px;">
+                </a>
+                <h5 class="mb-0">{{ prof.username }}</h5>
+
+                <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                    <div class="row gy-2 gx-4 mb-4">
+
+                        <div class="col-lg-6 justify-content-start">
+                            <p>
+                                {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                {% for unique_matiere in unique_matiere_list %}
+                                {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div class="col-lg-6 justify-content-start">
+                            <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
+                                        {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {%
+                                        else %} Prix non défini {% endif %}
+                                    </b></strong>
+                            </p>
+                        </div>
+                        <div class="col-lg-6 justify-content-start">
+                            <p class="mb-0">
+                                {% if prof.historique_prof.nb_heure_declare %}
+                                {{ prof.historique_prof.nb_heure_declare }} heures dispensées
+                                {% else %}
+                                pas d'heures dispensées
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-lg-6 justify-content-start">
+                            <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                            <!-- introduire le paramètre lieu au lieu de Paris -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+<!-- Liste profs fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary  back-to-top">
+    <h5>Vers le haut</h5>
+</a>
+<!-- Back to Top fin -->
 
 
 {% endblock %}
 
 {% block javascript %}
-    <script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
-    <!-- <script src="{% static 'js/Code_en_plus_profil_prof-01.js' %}"></script>
-    <script src="{% static 'js/Code_en_plus_profil_prof-02.js' %}"></script> -->
-    
-    <script>
-        // Fonction pour redimensionner les textarea selon leur contenu
-        function adjustTextareaHeight(textarea) {
-            textarea.style.height = 'auto';  // Réinitialise la hauteur
-            textarea.style.height = (textarea.scrollHeight - 2) + 'px';  // Ajuste la hauteur en fonction du contenu
-        }
-    
-        document.addEventListener("DOMContentLoaded", function() {
-            // Redimensionne les textarea lors du chargement de la page et lors de la saisie
-            const textareas = document.querySelectorAll('.form-control.profil');
-            textareas.forEach(textarea => {
-                adjustTextareaHeight(textarea);
-                textarea.addEventListener('input', function() {
-                    adjustTextareaHeight(textarea);
-                });
-            });
-    
-            // Appelle la fonction pour gérer les étoiles
-            updateStarRatings();
-        });
-    
-        // Fonction pour gérer l'affichage des étoiles
-        function updateStarRatings() {
-            // Gestion des étoiles pour chaque témoignage
-            document.querySelectorAll('[id^="value_id_"][data-group="temoignage"]').forEach(inputElement => {
-                const temoignageId = inputElement.id.split('_')[2]; // Récupère l'ID du témoignage
-                const evaluation = parseInt(inputElement.value); // Récupère la note d'évaluation
-    
-                for (let i = 1; i <= 5; i++) {
-                    const star = document.getElementById(`id_${temoignageId}_t${i}`);
-                    if (star) {
-                        star.style.color = i <= evaluation ? 'rgb(0, 200, 255)' : 'grey';
-                    }
-                }
-            });
-    
-            // Gestion des étoiles pour le professeur
-            const profInput = document.querySelector('[data-group="professeur"]');
-            if (profInput) {
-                const evaluationProf = parseInt(profInput.value);
-                
-                for (let i = 1; i <= 5; i++) {
-                    const star = document.getElementById(`t${i}`);
-                    if (star) {
-                        star.style.color = i <= evaluationProf ? 'rgb(0, 200, 255)' : 'grey';
-                    }
-                }
-            }
-        }
-    
-        function rate(value, id, group) {
-            const labels = ["Mauvais", "Moyen", "Bien", "Très bien", "Excellent"];
-            const prefix = group === 'temoignage' ? `id_${id}_t` : `id_t`;
-    
-            for (let i = 1; i <= 5; i++) {
-                const star = document.getElementById(`${prefix}${i}`);
-                if (star) {
-                    star.style.color = i <= value ? 'rgb(0, 100, 255)' : 'grey';
-                }
-            }
-    
-            if (group === 'temoignage') {
-                document.getElementById(`label_${id}`).innerText = labels[value - 1];
-                document.getElementById(`value_id_${id}`).value = value;
-            } else if (group === 'professeur') {
-                document.getElementById('label_prof').innerText = labels[value - 1];
-                document.getElementById('value_id_prof').value = value;
-            }
-        }
-    
-        // Appelle la fonction pour restaurer les étoiles après chargement de la page
-        window.onload = function() {
-            restorePreviousRating();  // Restaurer les étoiles pour tous les groupes
-        };
-    
-        // Fonction pour restaurer l'état des étoiles pour chaque groupe en fonction de la valeur précédente
-        function restorePreviousRating() {
-            document.querySelectorAll('[id^="value_id_"]').forEach(inputElement => {
-                const id = inputElement.id.includes('prof') ? 'prof' : inputElement.id.split('_')[2];  // Gestion du cas 'prof'
-                const previousValue = parseInt(inputElement.value);
-                const group = inputElement.getAttribute('data-group');  // Récupère le groupe pour identifier s'il s'agit d'un témoignage ou d'un professeur
-    
-                if (previousValue && group) {
-                    rate(previousValue, id, group);  // Appel à 'rate' avec l'ID et le groupe corrects
-                }
-            });
-        }
-    </script>
+<script src="{% static 'js/Code_en_plus_profil_prof.js' %}"></script>
+<!-- <script src="{% static 'js/Code_en_plus_profil_prof-01.js' %}"></script> -->
+    <script src="{% static 'js/Code_en_plus_profil_prof-02.js' %}"></script>
 
+<script>
     
+</script>
+
+<script>
+    $(document).ready(function () {
+        const idUser = $('#temoignages-container').data('id-user');
+        
+        $('.pagination-link').on('click', function (event) {
+            event.preventDefault();
+            const page = $(this).data('page');
+            fetchTemoignages(page, idUser);
+        });
+    });
+
+    function fetchTemoignages(page, idUser) {
+        $.get(`/accounts/temoignages_partial/${idUser}/`, { page: page })
+            .done(function (html) {
+                $('#temoignages-container').html(html);
+
+                $('.pagination-link').on('click', function (event) {
+                    event.preventDefault();
+                    const page = $(this).data('page');
+                    fetchTemoignages(page, idUser);
+                });
+
+                // Appel direct des fonctions nécessaires après le chargement du contenu
+                initializeProfilFeatures();
+            })
+            .fail(function (error) {
+                console.error('Erreur:', error);
+            });
+    }
+
+    // Fonction pour appeler les fonctionnalités de Code_en_plus_profil_prof-02.js après chaque mise à jour
+    function initializeProfilFeatures() {
+        // Ajuste la hauteur des textareas
+        document.querySelectorAll('.form-control.profil').forEach(textarea => {
+            adjustTextareaHeight(textarea);
+            textarea.addEventListener('input', function () {
+                adjustTextareaHeight(textarea);
+            });
+        });
+
+        // Met à jour les étoiles
+        updateStarRatings();
+
+        // Restaure les évaluations précédentes
+        restorePreviousRating();
+    }
+</script>
+
 
 {% endblock %}

@@ -47,5 +47,7 @@ urlpatterns = [
     path('temoignage_detaille/<int:temoignage_id>/', views.temoignage_detaille, name='temoignage_detaille'),
     path('obtenir_parametres_cours', views.obtenir_parametres_cours, name='obtenir_parametres_cours'),
     path('obtenir_liste_department', views.obtenir_liste_department, name='obtenir_liste_department'),
+    path('temoignages_partial/<int:id_user>/', views.temoignages_partial, name='temoignages_partial'),
+
 ]
 

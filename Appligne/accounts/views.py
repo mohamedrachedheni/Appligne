@@ -31,6 +31,8 @@ import re
 import os
 import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe)
 import hashlib # convertir le suffixe en une chaîne d'octets
+from django.core.paginator import Paginator
+
 
 def is_password_compromised(password):
     # Hash du mot de passe en SHA-1
@@ -3200,3 +3202,16 @@ def obtenir_liste_department(request):
 
         return JsonResponse({"para_departement": para_departement})
     return JsonResponse({"error": "Requête invalide"}, status=400)
+
+
+def temoignages_partial(request, id_user):
+    user = get_object_or_404(User, id=id_user)
+    temoignages = Temoignage.objects.filter(user_prof=user).distinct()
+
+    # Pagination
+    elements_par_page = 3
+    paginator = Paginator(temoignages, elements_par_page)
+    page = request.GET.get('page', 1)
+    temoignages = paginator.get_page(page)
+
+    return render(request, 'partials/temoignages.html', {'temoignages': temoignages})
