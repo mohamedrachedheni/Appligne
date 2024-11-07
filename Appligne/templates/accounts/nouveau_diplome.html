@@ -51,11 +51,10 @@
 {% csrf_token %}
 
 <!-- parcours scolaire debut -->
-<div class="container-xxl py-5" >
-    <!--<input type="hidden" value="{{user_id}}" name="user_id">-->
+
     <div class="container">
-        <div class="container bg-light  p-5" name="diplome">
-            <div class="row  ajout-dipl p3" id="supprimerDivDiplome_1" >
+        <div class="container bg-light   p-4" name="diplome">
+            <div class="row  ajout-dipl  " id="supprimerDivDiplome_1" >
                 <div class="col-md-1 col-sm-12  position-relative" for="principal_id_1">
                     
                     <input class="form-check-input" type="checkbox" id="principal_id_1" name="principal_1">
@@ -85,7 +84,7 @@
                         <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
                             <input type="text" class="form-control form-control-intitule" id="intitule_id_1"   name="intitule_1" >
                         </div>
-                        <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                        <div class="col-lg-2 col-md-6 col-sm-6 d-flex justify-content-center position-relative">
                             <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivDiplome_1')">
                                 <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
                                     <path
@@ -98,28 +97,28 @@
                 </div>
             </div>
             <div class="row g-2 p-3" >
-                <div class="col-12">
+                <div class="col-12 ">
                     <!--data-options: pour stocker les options, puis en les récupérant dans la fonction JavaScript -->
                     <!-- voire: ajouterDiplome_01 -->
                     <button class="btn btn-secondary" onclick="ajouterDiplome_01('row  ajout-dipl p3')" id="boutonAjouterDiplome" data-options='{% for cathegorie in diplome_cathegories %}<option value="{{ cathegorie.dip_cathegorie }}">{{ cathegorie.dip_cathegorie }}</option>{% endfor %}'>Ajouter un diplôme</button>
                 </div>
             </div>
         </div>
-        <div class="row justify-content-between g-2 p-3 ">
-            <div class="col-lg-2 col-md-4 col-sm-6"">
+        <div class="row justify-content-between g-2 p-3  ">
+            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center position-relative ">
                 <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
             </div>
-            <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center position-relative ">
                 <a class="btn btn-primary" href="{% url 'nouveau_experience' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
             </div>
-            <div class="col-lg-1 col-md-4 col-sm-6">
+            <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center position-relative ">
                 <button type="submit" class="btn btn-warning" name="btn_enr">
                     Enregistrer
                 </button>
             </div>
         </div>
     </div>
-</div>
+
 <!-- parcours scolaire fin -->
 
 </form>
