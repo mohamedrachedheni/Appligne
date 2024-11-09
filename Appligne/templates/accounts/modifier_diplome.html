@@ -53,7 +53,7 @@
 <!-- parcours scolaire debut -->
 <div class="container-xxl py-5" >
     <div class="container">
-        <div class="container bg-light  p-5">
+        <div class="container bg-light  p-4">
             {% for diplome in diplomes %}
                 <div class="row  ajout-dipl p3" id="supprimerDivDiplome_{{ forloop.counter }}" >
                     <div class="col-md-1 position-relative align-self-center">
@@ -86,7 +86,7 @@
                             <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
                                 <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}" name="intitule_{{ forloop.counter }}" value="{{ diplome.intitule }}" >
                             </div>
-                            <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                            <div class="col-lg-2 col-md-6 col-sm-6 d-flex justify-content-center">
                                 <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivDiplome_{{ forloop.counter }}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
                                         <path
@@ -101,14 +101,14 @@
             {% endfor %}
         </div>
         <div class="row justify-content-between g-2 p-3 ">
-            <div class="col-lg-2 col-md-4 col-sm-6"">
-                <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
+                <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
             </div>
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <a class="btn btn-primary" href="{% url 'modifier_diplome' %}"><span style="color: white;">Annulez la modification</span></a>
+            <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
+                <a class="btn btn-primary w-100" href="{% url 'modifier_diplome' %}"><span style="color: white;">Annulez la modification</span></a>
             </div>
-            <div class="col-lg-1 col-md-4 col-sm-6">
-                <button type="submit" class="btn btn-warning" name="btn_enr">
+            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
+                <button type="submit" class="btn btn-warning w-100" name="btn_enr">
                     Enregistrer
                 </button>
             </div>

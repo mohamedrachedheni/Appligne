@@ -54,7 +54,7 @@
             <!-- identité et coordonnees debut -->
             <div class="container-xxl py-5 ">
                 <div class="container ">
-                    <div class="container bg-light  p-5">
+                    <div class="container bg-light  p-4">
                         <div class="row g-4">
                             <!-- Si le user n'est pas connecté -->
                             {% if request.user.is_authenticated %}
@@ -127,8 +127,8 @@
                                 <input type="text" class="form-control" id="remarque_id" name="remarque" value="">
                             </div>
                             <div class="row justify-content-end g-2 p-3 ">
-                                <div class="col-lg-1 col-md-4 col-sm-6">
-                                    <button type="submit" class="btn btn-warning" name="btn_enr">
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <button type="submit" class="btn btn-warning w-100" name="btn_enr">
                                         Enregistrer
                                     </button>
                                 </div>

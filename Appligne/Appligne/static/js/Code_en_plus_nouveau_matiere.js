@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Code HTML du nouveau diplôme
         var nouveauDiplomeHTML = `
-                <div class="${className}" id="supprimerDivMatiere-${indice+1}">
+                <div class="${className} p-0 " id="supprimerDivMatiere-${indice+1}">
                     <div class="col-md-1  position-relative">
 
                         
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </optgroup>
                         </select>
                     </div>
-                    <div class="col-lg-2 position-relative p-2 g-4">
+                    <div class="col-lg-2  p-2 g-4 d-flex justify-content-center ">
                         <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivMatiere-${indice+1}')">
                             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
                                 <path

@@ -48,19 +48,19 @@
                 <div class="container">
                     <div class="container " >
                         <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-4 col-sm-12">
-                                <button type="submit" class="btn btn-primary" name="btn_active">
+                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_active">
                                     Cours actifs
                                 </button>
                             </div>
-                            <div class="col-lg-4 col-sm-12">
-                                <button type="submit" class="btn btn-primary" name="btn_non_active">
+                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_non_active">
                                     Cours non actifs
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="container bg-light p-5">
+                    <div class="container bg-light p-4">
                         <div class="row g-1">
                             {% if request.user.is_authenticated %}
 
@@ -97,14 +97,14 @@
                             <div class="col-lg-4 position-relative">
                                 <div class="row">
                                     <label for="eleve_{{ forloop.counter }}_id" class="form-label">Nom élève</label>
-                                    <div class="col-md-8 position-relative">
+                                    <div class="col-md-8 position-relative mb-2">
                                         <input type="text" class="form-control" id="eleve_{{ forloop.counter }}_id"
                                             name="eleve_{{ enr_horaire.id }}"
                                             value="{{ enr_horaire.cours.mon_eleve.eleve.user.last_name }} {{ enr_horaire.cours.mon_eleve.eleve.user.first_name }}"
                                             readonly>
                                     </div>
-                                    <div class="col-lg-4 position-relative">
-                                        <button type="submit" class="btn btn-warning" name="btn_detaille_{{ enr_horaire.id }}">
+                                    <div class="col-lg-4 mb-2 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_detaille_{{ enr_horaire.id }}">
                                             Détail
                                         </button>
                                     </div>

@@ -139,7 +139,7 @@ function configurerPikaday(indice) {
 
         // Code HTML du nouveau diplôme
         var nouveauDiplomeHTML = `
-        <div class="${className} p-3" id="supprimer_div_${indice+1}">
+        <div class="${className} p-1" id="supprimer_div_${indice+1}">
                     <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
                         
                         <input class="form-check-input check-pricipal" type="checkbox"  id="principal_${indice+1}" name="principal_${indice+1}" >
@@ -174,13 +174,13 @@ function configurerPikaday(indice) {
                         <label class="form-label">Fin</label>
                         <input type="text" class="form-control form-control-date" id="date_id_${(indice+1)*2}" name="date_fin_${(indice+1)*2}" >
                     </div>
-                    <div class="col-lg-2 col-md-4 col-sm-6 g-3 ">
+                    <div class="col-lg-2 col-md-4 col-sm-6 g-3 d-flex justify-content-center ">
                         <div class="row ">
-                            <div class="col-12" style="padding: -25px; margin-top: -8px;">
+                            <div class="col-12" >
                                 <label class="form-check-label" >Actuellement</label>
 
                             </div>
-                            <div class="col-12" style="padding: 15px; padding-left: 45px;">
+                            <div class="col-12" >
                                 <div class="form-check form-switch switch-column">
                                     <input class="form-check-input mg-checkbox" type="checkbox" role="switch"
                                         id="act_id_${indice+1}" checked onchange="toggleText()"
@@ -189,13 +189,13 @@ function configurerPikaday(indice) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-8 col-sm-6 position-relative" style="margin-left: -40px; ">
+                    <div class="col-lg-2 col-md-8 col-sm-6 position-relative" >
                         <label class="form-label">Commentaires</label>
-                        <div class="row" style="margin-right:-100px">
+                        <div class="row" >
                             <div class="col-lg-8 col-md-6 col-sm-6 position-relative">
                                 <input type="text" class="form-control" id="comm_id_${indice+1}" name="comm_${indice+1}" >
                             </div>
-                            <div class="col-lg-4 col-md-6 col-sm-6 position-relative">
+                            <div class="col-lg-4 col-md-6 col-sm-6 d-flex justify-content-center ">
                                 <button class="btn  btn-sup " onclick="supprimerDiv('supprimer_div_${indice+1}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
                                         <path

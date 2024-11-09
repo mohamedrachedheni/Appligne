@@ -43,84 +43,84 @@
                 <div class="container bg-light p-5">
                     <div class="row g-1">
                         {% if request.user.is_authenticated %}
-                        <!-- Informations de l'élève -->
-                        <div class="col-md-12 position-relative">
-                            <p><strong>{{ mon_eleve.eleve.user.last_name }}</strong> <strong>{{ mon_eleve.eleve.user.first_name }}</strong></p>
-                            <input type="text" class="form-control" id="eleve_id" name="eleve" readonly
-                                   value="[Màj le: {{ mon_eleve.date_modification }}] -- Téléphone: {{ mon_eleve.eleve.numero_telephone }} -- Adresse: {{ mon_eleve.eleve.adresse }}"
-                                   style="font-weight: bold;">
-                        </div>
-
-                        <!-- Cours associés -->
-                        {% for mon_cours in mes_cours %}
-                        <div class="col-md-12 position-relative">
-                            <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}"
-                                   name="cours_{{ forloop.counter }}" readonly
-                                   value="{{ mon_cours.format_cours }} -- {{ mon_cours.matiere }} -- Niveau: {{ mon_cours.niveau }}  -- Prix de l'heure: {{ mon_cours.prix_heure }} €"
-                                   style="font-weight: bold;">
-                        </div>
-
-                        <!-- Séances associées au cours -->
-                        {% for enr_horaire in enr_horaires %}
-                        {% if mon_cours.id == enr_horaire.cours_id %}
-                        <div class="col-lg-2 position-relative">
-                            <label class="form-label" for="date_id_{{ forloop.counter }}_enr">Date</label>
-                            <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter }}"
-                                   name="date_{{ enr_horaire.id }}" value="{{ enr_horaire.date }}" readonly>
-                        </div>
-                        <div class="col-md-1 position-relative">
-                            <label for="debut_enr{{ forloop.counter }}_id" class="form-label">Début</label>
-                            <input type="text" class="form-control form-control-heure" id="debut_{{ forloop.counter }}_id"
-                                   name="debut_{{ enr_horaire.id }}" value="{{ enr_horaire.debut }}" placeholder="00:00" readonly>
-                        </div>
-                        <div class="col-md-1 position-relative">
-                            <label for="fin_enr{{ forloop.counter }}_id" class="form-label">Fin</label>
-                            <input type="text" class="form-control form-control-heure" id="fin_{{ forloop.counter }}_id"
-                                   name="fin_{{ enr_horaire.id }}" value="{{ enr_horaire.fin }}" placeholder="00:00" readonly>
-                        </div>
-                        <div class="col-md-4 position-relative">
-                            <label for="contenu_enr{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
-                            <input type="text" class="form-control" id="contenu_enr{{ forloop.counter }}_id"
-                                   name="contenu_{{ enr_horaire.id }}" value="{{ enr_horaire.contenu }}" readonly>
-                        </div>
-                        <div class="col-lg-4 position-relative">
-                            <div class="row">
-                                <label class="form-label" for="statut_enr{{ forloop.counter }}_id">Statut</label>
-                                <div class="col-lg-4 position-relative">
-                                    <input type="text" class="form-control" id="statut_enr{{ forloop.counter }}_id"
-                                           name="statut_{{ enr_horaire.id }}" value="{{ enr_horaire.statut }}" readonly>
-                                </div>
-                                <div class="col-8 position-relative">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chk_{{ enr_horaire.id }}"
-                                            name="chk_{{ enr_horaire.id }}" 
-                                            {% if enr_horaire.payment_id or enr_horaire.demande_paiement_id or enr_horaire.statut == "Annuler" %}disabled{% endif %}>
-                                        <label class="form-check-label" for="chk_{{ enr_horaire.id }}">
-
-                                            {% if enr_horaire.payment_id %}
-                                            Déjà réglée
-                                            {% elif enr_horaire.demande_paiement_id and not enr_horaire.payment_id %}
-                                            Demande de règlement en cours
-                                            {% elif enr_horaire.statut == "Annuler"  %}
-                                            L'horaire du cours est annulé
-                                            {% else %}
-                                            Horaire non déclaré
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                </div>
+                            <!-- Informations de l'élève -->
+                            <div class="col-md-12 position-relative">
+                                <p><strong>{{ mon_eleve.eleve.user.last_name }}</strong> <strong>{{ mon_eleve.eleve.user.first_name }}</strong></p>
+                                <input type="text" class="form-control" id="eleve_id" name="eleve" readonly
+                                    value="[Màj le: {{ mon_eleve.date_modification }}] -- Téléphone: {{ mon_eleve.eleve.numero_telephone }} -- Adresse: {{ mon_eleve.eleve.adresse }}"
+                                    style="font-weight: bold;">
                             </div>
-                        </div>
-                        <hr>
-                        {% endif %}
-                        {% endfor %}
-                        {% endfor %}
-                        <!-- Bouton de demande de règlement -->
-                        <div class="col-lg-12 position-relative">
-                            <button type="submit" class="btn btn-warning" name="btn_reglement">
-                                Demande de règlement
-                            </button>
-                        </div>
+
+                            <!-- Cours associés -->
+                            {% for mon_cours in mes_cours %}
+                                <div class="col-md-12 position-relative">
+                                    <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}"
+                                        name="cours_{{ forloop.counter }}" readonly
+                                        value="{{ mon_cours.format_cours }} -- {{ mon_cours.matiere }} -- Niveau: {{ mon_cours.niveau }}  -- Prix de l'heure: {{ mon_cours.prix_heure }} €"
+                                        style="font-weight: bold;">
+                                </div>
+
+                                <!-- Séances associées au cours -->
+                                {% for enr_horaire in enr_horaires %}
+                                    {% if mon_cours.id == enr_horaire.cours_id %}
+                                        <div class="col-lg-2 position-relative">
+                                            <label class="form-label" for="date_id_{{ forloop.counter }}_enr">Date</label>
+                                            <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter }}"
+                                                name="date_{{ enr_horaire.id }}" value="{{ enr_horaire.date }}" readonly>
+                                        </div>
+                                        <div class="col-md-1 position-relative">
+                                            <label for="debut_enr{{ forloop.counter }}_id" class="form-label">Début</label>
+                                            <input type="text" class="form-control form-control-heure" id="debut_{{ forloop.counter }}_id"
+                                                name="debut_{{ enr_horaire.id }}" value="{{ enr_horaire.debut }}" placeholder="00:00" readonly>
+                                        </div>
+                                        <div class="col-md-1 position-relative">
+                                            <label for="fin_enr{{ forloop.counter }}_id" class="form-label">Fin</label>
+                                            <input type="text" class="form-control form-control-heure" id="fin_{{ forloop.counter }}_id"
+                                                name="fin_{{ enr_horaire.id }}" value="{{ enr_horaire.fin }}" placeholder="00:00" readonly>
+                                        </div>
+                                        <div class="col-md-4 position-relative">
+                                            <label for="contenu_enr{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
+                                            <input type="text" class="form-control" id="contenu_enr{{ forloop.counter }}_id"
+                                                name="contenu_{{ enr_horaire.id }}" value="{{ enr_horaire.contenu }}" readonly>
+                                        </div>
+                                        <div class="col-lg-4 position-relative">
+                                            <div class="row">
+                                                <label class="form-label" for="statut_enr{{ forloop.counter }}_id">Statut</label>
+                                                <div class="col-lg-4 position-relative">
+                                                    <input type="text" class="form-control" id="statut_enr{{ forloop.counter }}_id"
+                                                        name="statut_{{ enr_horaire.id }}" value="{{ enr_horaire.statut }}" readonly>
+                                                </div>
+                                                <div class="col-8 position-relative">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="chk_{{ enr_horaire.id }}"
+                                                            name="chk_{{ enr_horaire.id }}" 
+                                                            {% if enr_horaire.payment_id or enr_horaire.demande_paiement_id or enr_horaire.statut == "Annuler" %}disabled{% endif %}>
+                                                        <label class="form-check-label" for="chk_{{ enr_horaire.id }}">
+
+                                                            {% if enr_horaire.payment_id %}
+                                                                Déjà réglée
+                                                                {% elif enr_horaire.demande_paiement_id and not enr_horaire.payment_id %}
+                                                                Demande de règlement en cours
+                                                                {% elif enr_horaire.statut == "Annuler"  %}
+                                                                L'horaire du cours est annulé
+                                                                {% else %}
+                                                                Horaire non déclaré
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                            <!-- Bouton de demande de règlement -->
+                            <div class="col-lg-3 justify-content-end ">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_reglement">
+                                    Demande de règlement
+                                </button>
+                            </div>
                         {% endif %}
                     </div>
                 </div>

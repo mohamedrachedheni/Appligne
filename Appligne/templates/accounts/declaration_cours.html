@@ -51,7 +51,7 @@
             <!-- identité et coordonnées début -->
             <div class="container-xxl py-5">
                 <div class="container">
-                    <div class="container bg-light p-5">
+                    <div class="container bg-light ">
                         <div class="row g-1">
                             {% if request.user.is_authenticated %}
                             <div class="col-md-12 position-relative">
@@ -137,8 +137,8 @@ Cordialement,
                                     value="{{ montant_total|floatformat:2 }}" readonly>
                             </div>
 
-                            <div class="col-lg-3 position-relative">
-                                <button type="submit" class="btn btn-warning" name="btn_declaration">
+                            <div class="col-lg-3 position-relative mb-2">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_declaration">
                                     Déclaration de cours
                                 </button>
                             </div>

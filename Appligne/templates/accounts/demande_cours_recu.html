@@ -46,7 +46,7 @@
                 {% csrf_token %}
                 <div class="container-xxl py-5">
                     <div class="container">
-                        <div class="container bg-light p-5">
+                        <div class="container bg-light p-4">
                             {% for email_detaille in email_detailles %}
                                 <div class="row  " style="margin-bottom: 30px;" >
                                     <div class="col-md-2 col-sm-12 position-relative">
@@ -68,10 +68,10 @@
                                     <div class="col-md-3 col-sm-12 position-relative">
                                         <div class="row ajout-dipl p3">
                                             <label for="intitule_id_{{ forloop.counter }}" class="form-label">Format cours</label>
-                                            <div class="col-md-8 col-sm-12 position-relative"> 
+                                            <div class="col-md-7 col-sm-12 position-relative mb-2"> 
                                                 <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}" value="{{email_detaille.format_cours}}" readonly>
                                             </div>
-                                            <div class="col-md-4 col-sm-12 position-relative"><a class="btn btn-primary" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
+                                            <div class="col-md-5 col-sm-12 "><a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
                                                         style="color: white;">
                                                 Détaille</span></a>
                                             </div>

@@ -27,7 +27,7 @@
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2">
             <!-- début sidebar -->
-            {% include 'partials/_sidebar.html' %}
+            {% include 'partials/_sidebar_eleve.html' %}
             <!-- fin sidebar -->
         </div>
         <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
@@ -50,7 +50,7 @@
                 <!-- identité et coordonnees debut -->
                 <div class="container-xxl py-5">
                     <div class="container">
-                        <div class="container bg-light p-5">
+                        <div class="container bg-light ">
                             <div class="row g-1">
                                 {% if request.user.is_authenticated %}
     <div class="col-md-12 position-relative">
@@ -103,13 +103,13 @@
                 ></textarea></span>
     </div>
     <div class="row justify-content-between g-2 p-3 ">
-        <div class="col-lg-7 position-relative">
-            <button type="submit" class="btn btn-warning" name="btn_contester">
+        <div class="col-lg-5 position-relative">
+            <button type="submit" class="btn btn-warning w-100" name="btn_contester">
                 Envoyer un émail de contestation
             </button>
         </div>
         <div class="col-lg-5 position-relative">
-            <button type="submit" class="btn btn-warning" name="btn_reglement">
+            <button type="submit" class="btn btn-warning w-100" name="btn_reglement">
                 Passer au règlement de la demande de paiement
             </button>
         </div>

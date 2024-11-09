@@ -51,7 +51,7 @@
                 <!-- Intitulez votre fiche de professeur debut -->
                 <div class="container-xxl py-5" id="intitulez_Votre_fiche">
                     <div class="container">
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-4">
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="titre_id" class="form-label">Titre de votre fiche</label>
@@ -103,7 +103,7 @@
                         </div>
             
                         <div class="row justify-content-end g-2 p-3 ">
-                            <div class="col-lg-1 col-md-4 col-sm-6">
+                            <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center ">
                                 <a class="btn btn-primary" href="#parcours"><span style="color: white;">Suivant</span></a>
                             </div>
                         </div>
@@ -119,7 +119,7 @@
                             <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
                             <h1 class="mb-5">Détaillez votre parcours</h1>
                         </div>
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-4">
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="parcours_id" class="form-label">Description</label>
@@ -213,11 +213,11 @@
                             </div>
             
                             <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center  ">
                                     <a class="btn btn-primary" href="#intitulez_Votre_fiche"><span
                                             style="color: white;">Précédent</span></a>
                                 </div>
-                                <div class="col-lg-1 col-md-4 col-sm-6">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center  ">
                                     <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Suivant</span></a>
                                 </div>
                             </div>
@@ -234,7 +234,7 @@
                             <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
                             <h1 class="mb-5">Déroulement et pédagogie de votre cours</h1>
                         </div>
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-4">
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
@@ -340,10 +340,10 @@
                             </div>
             
                             <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-1 col-md-4 col-sm-6 ">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center  ">
                                     <a class="btn btn-primary" href="#parcours"><span style="color: white;">Précédent</span></a>
                                 </div>
-                                <div class="col-lg-1 col-md-4 col-sm-6">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center ">
                                     <a class="btn btn-primary" href="#Video"><span style="color: white;">Suivant</span></a>
                                 </div>
                             </div>
@@ -360,7 +360,7 @@
                             <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveau compte</h6>
                             <h1 class="mb-5">Vidéo de présentation</h1>
                         </div>
-                        <div class="container bg-light">
+                        <div class="container bg-light p-4 ">
                             <div class="row g-2">
                                 <div class="col-12 ">
                                     <label for="video_id" class="form-label">Lien de votre vidéo</label>
@@ -391,22 +391,23 @@
                                     s'avère également être une stratégie efficace pour te démarquer de manière unique et captivante.
                                 </p>
                             </div>
+                            <div class="row justify-content-between g-2 p-3">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center ">
+                                    <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Précédent</span></a>
+                                </div>
+                            </div>
                         </div>
             
-                        <div class="row justify-content-between g-2 p-3">
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Précédent</span></a>
-                            </div>
-                        </div>
+                        
                         <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6"">
-                                <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
+                                <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
                             </div>
-                            <div class="col-lg-3 col-md-4 col-sm-6">
-                                <a class="btn btn-primary" href="{% url 'nouveau_fichier' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
+                            <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
+                                <a class="btn btn-primary w-100" href="{% url 'nouveau_fichier' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
                             </div>
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <button type="submit" class="btn btn-warning" name="btn_enr">
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_enr">
                                     Enregistrer
                                 </button>
                             </div>

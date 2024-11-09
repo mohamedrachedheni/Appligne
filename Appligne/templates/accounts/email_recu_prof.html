@@ -45,34 +45,34 @@
                             </div>
                             <div class="container-xxl " >
                                 <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-3 col-sm-12">
-                                        <button type="submit" class="btn btn-primary" name="btn_nouveau">
+                                    <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
                                             Nouveaux
                                         </button>
                                     </div>
-                                    <div class="col-lg-3 col-sm-12">
-                                        <button type="submit" class="btn btn-primary" name="btn_attente">
+                                    <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-primary w-100" name="btn_attente">
                                             En attente
                                         </button>
                                     </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary" name="btn_ignore">
+                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
                                             Ignorés
                                         </button>
                                     </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary" name="btn_repondu">
+                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
                                             Répondus
                                         </button>
                                     </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary" name="btn_tous">
+                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                        <button type="submit" class="btn btn-primary w-100" name="btn_tous">
                                             Tous
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="container-xxl py-5 bg-light " >
+                            <div class="container-xxl py-5 bg-light p-4 " >
                                         {% for email in emails %}
                                             <div class="row  " style="margin-bottom: 30px;">
                                                 <div class="col-md-2 col-sm-12 position-relative ">
@@ -90,13 +90,13 @@
                                                 <div class="col-md-4 col-sm-12 position-relative">
                                                     <div class="row  ">
                                                         <label for="first_name_id_{{ forloop.counter }}" class="form-label">Elève</label>
-                                                        <div class="col-md-8 col-sm-12 position-relative">
+                                                        <div class="col-md-8 col-sm-12 position-relative mb-3">
                                                 
                                                             <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
                                                                 value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
                                                         </div>
-                                                        <div class="col-md-4 col-sm-12 position-relative">
-                                                            <a class="btn btn-primary" name="btn_détaille_{{ email.id }}"
+                                                        <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
                                                                 href="{% url 'demande_cours_recu_eleve' email_id=email.id %}"><span
                                                                     style="color: white;">Détaille <!--{{email.id }}--></span></a>
                                                         </div>

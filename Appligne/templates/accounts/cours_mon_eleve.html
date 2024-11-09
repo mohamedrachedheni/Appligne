@@ -48,19 +48,19 @@
                 <div class="container">
                     <div class="container " >
                         <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-4 col-sm-12">
+                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
                                 <button type="submit" class="btn btn-primary" name="btn_active">
                                     Les cours actifs
                                 </button>
                             </div>
-                            <div class="col-lg-4 col-sm-12">
+                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
                                 <button type="submit" class="btn btn-primary" name="btn_non_active">
                                     Les cours non actifs
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="container bg-light p-5">
+                    <div class="container bg-light p-4">
                         <div class="row g-1">
                             {% if request.user.is_authenticated %}
                             <div class="col-md-12 position-relative">
@@ -80,11 +80,11 @@
                             </div>
                             <div class="col-md-2 position-relative">
                                 <!-- Button to view course details -->
-                                <a class="btn btn-primary " href="{% url 'modifier_cours' cours_id=mon_cours.id %}">Modifier le cours</a>
+                                <a class="btn btn-primary w-100" href="{% url 'modifier_cours' cours_id=mon_cours.id %}">Modifier le cours</a>
                             </div>
                             <div class="col-md-2 position-relative">
                                 <!-- Button to view course details -->
-                                <button type="submit" class="btn btn-warning" name="btn_horaire_{{ mon_cours.id }}">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_horaire_{{ mon_cours.id }}">
                                     Détailles horaires
                                 </button>
                             </div>

@@ -51,28 +51,32 @@
                 <!-- Intitulez votre fiche de professeur debut -->
                 <div class="container-xxl py-5" id="intitulez_Votre_fiche">
                     <div class="container">
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-3">
                             <div class="row g-2 ">
-                                <div class="col-2 position-relative">
+                                <div class="col-lg-2 col-sm-12 position-relative">
                                     <label for="date_modif_id" class="form-label">Dernière modification</label>
                                     <input type="text" class="form-control" id="date_modif_id" placeholder="Prof de mathématique" name="date_modif" value="{{ date_modif|date:'d/m/Y' }}" readonly>
                                 </div>
-                                <div class="col-10 position-relative">
+                                <div class="col-10 col-sm-12 position-relative">
                                     <label for="titre_fiche_id" class="form-label">Titre de votre fiche</label>
                                     <input type="text" class="form-control" id="titre_fiche_id" required
                                         placeholder="Prof de mathématique" name="titre_fiche" value="{{titre_fiche}}" >
                                 </div>
                             </div>
-                            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
                                 <p class="mb-4">Optimisez l'impact de votre profil en le rendant attrayant pour les parents qui
                                     recherchent un enseignant. Choisissez un titre percutant qui met en avant les informations
                                     essentielles : les matières enseignées, la localisation, le format des cours, une expérience
                                     marquante, ainsi que votre diplôme ou école.</p>
                             </div>
                             <!-- Button trigger modal -->
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
-                                En savoir plus
-                            </button>
+                            <div class="containe">
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                                        En savoir plus
+                                    </button>
+                                </div>
+                            </div>
             
                             <!-- Modal Début -->
                             <div class="modal fade " id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel"
@@ -108,8 +112,8 @@
                         </div>
             
                         <div class="row justify-content-end g-2 p-3 ">
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <a class="btn btn-primary" href="#parcours"><span style="color: white;">Suivant</span></a>
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                <a class="btn btn-primary w-100" href="#parcours"><span style="color: white;">Suivant</span></a>
                             </div>
                         </div>
                     </div>
@@ -124,7 +128,7 @@
                             <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
                             <h1 class="mb-5">Détaillez votre parcours</h1>
                         </div>
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-3">
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="parcours_id" class="form-label">Description</label>
@@ -132,7 +136,7 @@
                                         name="parcours" aria-valuetext="{{parcours}}" >{{parcours}}</textarea>
                                 </div>
                             </div>
-                            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
                                 <p class="mb-4">Fournissez une présentation complète de votre parcours éducatif pour permettre aux
                                     parents de mieux vous connaître avant de solliciter vos services.</p>
                                 <div class="row gy-2 gx-4 mb-4">
@@ -159,10 +163,17 @@
                                     </div>
                                 </div>
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#exampleModal2">
-                                    Exemple:
-                                </button>
+
+                                <div class="containe">
+                                    <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                                        data-bs-target="#exampleModal2">
+                                        Exemple:
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                
             
                                 <!-- Modal Début -->
                                 <div class="modal fade " id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel"
@@ -218,12 +229,12 @@
                             </div>
             
                             <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-1 col-md-4 col-sm-6 ">
-                                    <a class="btn btn-primary" href="#intitulez_Votre_fiche"><span
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <a class="btn btn-primary w-100" href="#intitulez_Votre_fiche"><span
                                             style="color: white;">Précédent</span></a>
                                 </div>
-                                <div class="col-lg-1 col-md-4 col-sm-6">
-                                    <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Suivant</span></a>
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <a class="btn btn-primary w-100" href="#pedagogie"><span style="color: white;">Suivant</span></a>
                                 </div>
                             </div>
                         </div>
@@ -239,7 +250,7 @@
                             <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
                             <h1 class="mb-5">Déroulement et pédagogie de votre cours</h1>
                         </div>
-                        <div class="container bg-light  p-5">
+                        <div class="container bg-light  p-3">
                             <div class="row g-2 ">
                                 <div class="col-12 position-relative">
                                     <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
@@ -248,7 +259,7 @@
                                         name="pedagogie" >{{pedagogie}}</textarea>
                                 </div>
                             </div>
-                            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
+                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
                                 <div class="row gy-2 gx-4 mb-4">
                                     <div class="col-12">
                                         <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Pédagogie et
@@ -272,10 +283,14 @@
                                     </div>
                                 </div>
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#exampleModal3">
-                                    Exemple:
-                                </button>
+                                <div class="containe">
+                                    <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center"> 
+                                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                                            data-bs-target="#exampleModal3">
+                                            Exemple:
+                                        </button>
+                                    </div>
+                                </div>
             
                                 <!-- Modal Début -->
                                 <div class="modal fade " id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel"
@@ -345,11 +360,11 @@
                             </div>
             
                             <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-1 col-md-4 col-sm-6 ">
-                                    <a class="btn btn-primary" href="#parcours"><span style="color: white;">Précédent</span></a>
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <a class="btn btn-primary w-100" href="#parcours"><span style="color: white;">Précédent</span></a>
                                 </div>
-                                <div class="col-lg-1 col-md-4 col-sm-6">
-                                    <a class="btn btn-primary" href="#Video"><span style="color: white;">Suivant</span></a>
+                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <a class="btn btn-primary w-100" href="#Video"><span style="color: white;">Suivant</span></a>
                                 </div>
                             </div>
                         </div>
@@ -398,17 +413,17 @@
                             </div>
                         </div>
             
-                        <div class="row justify-content-between g-2 p-3">
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <a class="btn btn-primary" href="#pedagogie"><span style="color: white;">Précédent</span></a>
+                        <div class="row justify-content-between g-2 p-3 ">
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                <a class="btn btn-primary w-100" href="#pedagogie"><span style="color: white;">Précédent</span></a>
                             </div>
                         </div>
                         <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6"">
-                                <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
                             </div>
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <button type="submit" class="btn btn-warning" name="btn_enr">
+                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_enr">
                                     Enregistrer
                                 </button>
                             </div>

@@ -50,8 +50,8 @@
                 <!-- identité et coordonnees debut -->
                 <div class="container-xxl py-5">
                     <div class="container">
-                        <div class="container bg-light p-5">
-                            <div class="row g-1">
+                        <div class="container bg-light ">
+                            <div class="row g-2">
                                 {% if request.user.is_authenticated %}
     <!-- Cours déclaré -->
     
@@ -61,7 +61,7 @@
                 <input type="text" class="form-control " id="demande_{{ enr.id }}" name="demande_{{ enr.id }}" value="Professeur: {{ enr.user.last_name }} {{ enr.user.first_name}} -- Elève: {{ enr.mon_eleve.eleve.user.last_name }} {{ enr.mon_eleve.eleve.user.first_name }} -- Montant total: {{ enr.montant }} &euro; -- Demande: {{ enr.statut_demande }} -- {% if enr.vue_le %} Vue le: {{enr.vue_le}}  {% else %}Non vue {% endif %} {% if enr.email %} -- Voire email reçu {% else %} Pas d'email reçu {% endif %} " readonly>
             </div>
             <div class="col-lg-1 position-relative">
-                <button type="submit" class="btn btn-warning" name="btn_detaille_{{ enr.id }}">
+                <button type="submit" class="btn btn-warning w-100" name="btn_detaille_{{ enr.id }}">
                     Détaille
                 </button>
             </div>

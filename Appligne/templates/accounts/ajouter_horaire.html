@@ -19,13 +19,21 @@
 
 <!-- Mon compte début -->
 <div class="row justify-content-center">
-    <div class="col-md-4 col-lg-2">
+    <div class="col-sm-12 col-md-4 col-lg-2  ">
+        <!-- début sidebar -->
         {% include 'partials/_sidebar.html' %}
+        <!-- fin sidebar -->
     </div>
-    <div class="col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container-xxl py-1">
+    <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+        <!-- Début page -->
+        <!-- formulaire créer compte prof début -->
+        <div class="container-xxl py-1" >
             <div class="container">
-                <h6 class="section-title bg-white text-primary px-3 text-center">Ajouter un cours</h6>
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Ajouter un cours</h6>
+
+                </div>
                 <div class="col-md-12">
                     {% include 'partials/_alerts.html' %}
                 </div>
@@ -37,121 +45,120 @@
             {% csrf_token %}
 
             <div class="container py-5">
-                <div class="container bg-light p-5">
+                <div class="container bg-light p-4">
                     <div class="row g-4">
                         {% if request.user.is_authenticated %}
 
-                        <!-- Elève inscrit -->
-                        <div class="col-md-12 position-relative">
-                            <label for="eleve_id" class="form-label">Élève</label>
-                            <input type="text" class="form-control" id="eleve_id" name="eleve"
-                                value="{{ mon_eleve.eleve_nom }}" readonly>
-                        </div>
-
-                        <!-- Détails du cours -->
-                        <div class="col-md-12 position-relative">
-                            <label for="cours_id" class="form-label">Cours</label>
-                            <input type="text" class="form-control" id="cours_id" name="cours"
-                                value="{{ detaille_cours.eleve_cours }}" readonly>
-                        </div>
-
-                        <!-- Boucle des horaires à ajouter -->
-                        {% for horaire in horaires %}
-                        <div class="col-lg-2 position-relative">
-                            <label for="date_id_{{ forloop.counter }}" class="form-label">Date</label>
-                            <input type="text" class="form-control form-control-date"
-                                id="date_id_{{ forloop.counter }}" name="date{{ forloop.counter }}"
-                                value="{{ horaire.date }}">
-                        </div>
-                        <div class="col-md-2 position-relative">
-                            <label for="debut{{ forloop.counter }}_id" class="form-label">Début</label>
-                            <input type="text" class="form-control form-control-heure"
-                                id="debut{{ forloop.counter }}_id" name="debut{{ forloop.counter }}"
-                                value="{{ horaire.debut }}" placeholder="00:00">
-                        </div>
-                        <div class="col-md-2 position-relative">
-                            <label for="fin{{ forloop.counter }}_id" class="form-label">Fin</label>
-                            <input type="text" class="form-control form-control-heure"
-                                id="fin{{ forloop.counter }}_id" name="fin{{ forloop.counter }}"
-                                value="{{ horaire.fin }}" placeholder="00:00">
-                        </div>
-                        <div class="col-md-4 position-relative">
-                            <label for="contenu{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
-                            <input type="text" class="form-control" id="contenu{{ forloop.counter }}_id"
-                                name="contenu{{ forloop.counter }}" value="{{ horaire.contenu }}">
-                        </div>
-                        <div class="col-lg-2 position-relative">
-                            <label for="statut{{ forloop.counter }}_id" class="form-label">Statut</label>
-                            <select class="form-select" id="statut{{ forloop.counter }}_id"
-                                name="statut{{ forloop.counter }}">
-                                <option value="En attente" {% if horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
-                                <option value="Réaliser" {% if horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
-                                <option value="Annuler" {% if horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
-                            </select>
-                        </div>
-                        <hr>
-                        {% endfor %}
-
-                        <!-- Bouton d'enregistrement -->
-                        <div class="row justify-content-end g-2 p-3">
-                            <div class="col-lg-1 col-md-4 col-sm-6">
-                                <button type="submit" class="btn btn-success" name="btn_enr">Enregistrer</button>
+                            <!-- Elève inscrit -->
+                            <div class="col-md-12 position-relative">
+                                <label for="eleve_id" class="form-label">Élève</label>
+                                <input type="text" class="form-control" id="eleve_id" name="eleve"
+                                    value="{{ mon_eleve.eleve_nom }}" readonly>
                             </div>
-                        </div>
 
-                        <!-- Section des cours enregistrés -->
-                        <h6 class="section-title bg-white text-success px-3 text-center">Cours enregistrés</h6>
-                        {% for enr_horaire in enr_horaires %}
-                        <div class="row justify-content-end g-2 p-3">
+                            <!-- Détails du cours -->
+                            <div class="col-md-12 position-relative">
+                                <label for="cours_id" class="form-label">Cours</label>
+                                <input type="text" class="form-control" id="cours_id" name="cours"
+                                    value="{{ detaille_cours.eleve_cours }}" readonly>
+                            </div>
+
+                            <!-- Boucle des horaires à ajouter -->
+                            {% for horaire in horaires %}
                             <div class="col-lg-2 position-relative">
-                                <label for="date_id_{{ forloop.counter }}_enr" class="form-label">Date</label>
+                                <label for="date_id_{{ forloop.counter }}" class="form-label">Date</label>
                                 <input type="text" class="form-control form-control-date"
-                                    id="date_id_{{ forloop.counter }}_enr" name="date_enr{{ forloop.counter }}"
-                                    value="{{ enr_horaire.date }}" readonly>
-                            </div>
-                            <div class="col-md-1 position-relative">
-                                <label for="debut_enr{{ forloop.counter }}_id" class="form-label">Début</label>
-                                <input type="text" class="form-control form-control-heure"
-                                    id="debut_enr{{ forloop.counter }}_id" name="debut_enr{{ forloop.counter }}"
-                                    value="{{ enr_horaire.debut }}" readonly>
-                            </div>
-                            <div class="col-md-1 position-relative">
-                                <label for="fin_enr{{ forloop.counter }}_id" class="form-label">Fin</label>
-                                <input type="text" class="form-control form-control-heure"
-                                    id="fin_enr{{ forloop.counter }}_id" name="fin_enr{{ forloop.counter }}"
-                                    value="{{ enr_horaire.fin }}" readonly>
+                                    id="date_id_{{ forloop.counter }}" name="date{{ forloop.counter }}"
+                                    value="{{ horaire.date }}">
                             </div>
                             <div class="col-md-2 position-relative">
-                                <label for="contenu_enr{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
-                                <input type="text" class="form-control" id="contenu_enr{{ forloop.counter }}_id"
-                                    name="contenu_enr{{ forloop.counter }}" value="{{ enr_horaire.contenu }}" readonly>
+                                <label for="debut{{ forloop.counter }}_id" class="form-label">Début</label>
+                                <input type="text" class="form-control form-control-heure"
+                                    id="debut{{ forloop.counter }}_id" name="debut{{ forloop.counter }}"
+                                    value="{{ horaire.debut }}" placeholder="00:00">
                             </div>
-                            <div class="col-lg-5 position-relative">
-                                <label for="statut_enr{{ forloop.counter }}_id" class="form-label">Statut</label>
-                                <div class="row g-0 ">
-                                    <div class="col-lg-5 position-relative">
-                                        <select class="form-select" id="statut_enr{{ forloop.counter }}_id"
-                                        name="statut_enr{{ forloop.counter }}" disabled>
-                                        <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
-                                        <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
-                                        <option value="Annuler" {% if enr_horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
-                                    </select>
-                                    </div>
-                                    <div class="col-md-5 position-relative">
-                                        <input type="text" class="form-control" id="statut_reglement_enr{{ forloop.counter }}_id"
-                                            name="statut_reglement_enr{{ enr_horaire.id }}" value="{{ enr_horaire.statut_reglement }}" disabled>
-                                    </div>
+                            <div class="col-md-2 position-relative">
+                                <label for="fin{{ forloop.counter }}_id" class="form-label">Fin</label>
+                                <input type="text" class="form-control form-control-heure"
+                                    id="fin{{ forloop.counter }}_id" name="fin{{ forloop.counter }}"
+                                    value="{{ horaire.fin }}" placeholder="00:00">
+                            </div>
+                            <div class="col-md-4 position-relative">
+                                <label for="contenu{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
+                                <input type="text" class="form-control" id="contenu{{ forloop.counter }}_id"
+                                    name="contenu{{ forloop.counter }}" value="{{ horaire.contenu }}">
+                            </div>
+                            <div class="col-lg-2 position-relative">
+                                <label for="statut{{ forloop.counter }}_id" class="form-label">Statut</label>
+                                <select class="form-select" id="statut{{ forloop.counter }}_id"
+                                    name="statut{{ forloop.counter }}">
+                                    <option value="En attente" {% if horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
+                                    <option value="Réaliser" {% if horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
+                                    <option value="Annuler" {% if horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
+                                </select>
+                            </div>
+                            <hr>
+                            {% endfor %}
+
+                            <!-- Bouton d'enregistrement -->
+                            <div class="row justify-content-end g-2 p-3">
+                                <div class="col-lg-1 col-md-4 col-sm-6 d-flex justify-content-center">
+                                    <button type="submit" class="btn btn-success" name="btn_enr">Enregistrer</button>
+                                </div>
+                            </div>
+
+                            <!-- Section des cours enregistrés -->
+                            <div class="container text-center p-4" >
+                                        <h4 class="section-title  text-success px-3 text-center">Cours enregistrés</h4>
+                            </div>
+                            {% for enr_horaire in enr_horaires %}
+                                <div class="row justify-content-end g-0 p-0">
                                     <div class="col-lg-2 position-relative">
-                                        <button type="submit" class="btn btn-warning " name="btn_sup_{{enr_horaire.id}}" {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} >Sup</button>
+                                        <label for="date_id_{{ forloop.counter }}_enr" class="form-label">Date</label>
+                                        <input type="text" class="form-control form-control-date"
+                                            id="date_id_{{ forloop.counter }}_enr" name="date_enr{{ forloop.counter }}"
+                                            value="{{ enr_horaire.date }}" readonly>
+                                    </div>
+                                    <div class="col-md-1 position-relative">
+                                        <label for="debut_enr{{ forloop.counter }}_id" class="form-label">Début</label>
+                                        <input type="text" class="form-control form-control-heure"
+                                            id="debut_enr{{ forloop.counter }}_id" name="debut_enr{{ forloop.counter }}"
+                                            value="{{ enr_horaire.debut }}" readonly>
+                                    </div>
+                                    <div class="col-md-1 position-relative">
+                                        <label for="fin_enr{{ forloop.counter }}_id" class="form-label">Fin</label>
+                                        <input type="text" class="form-control form-control-heure"
+                                            id="fin_enr{{ forloop.counter }}_id" name="fin_enr{{ forloop.counter }}"
+                                            value="{{ enr_horaire.fin }}" readonly>
+                                    </div>
+                                    <div class="col-md-2 position-relative">
+                                        <label for="contenu_enr{{ forloop.counter }}_id" class="form-label">Contenu de la séance</label>
+                                        <input type="text" class="form-control" id="contenu_enr{{ forloop.counter }}_id"
+                                            name="contenu_enr{{ forloop.counter }}" value="{{ enr_horaire.contenu }}" readonly>
+                                    </div>
+                                    <div class="col-lg-5 position-relative">
+                                        <label for="statut_enr{{ forloop.counter }}_id" class="form-label">Statut</label>
+                                        <div class="row g-0 ">
+                                            <div class="col-lg-5 position-relative mb-2 ">
+                                                <select class="form-select" id="statut_enr{{ forloop.counter }}_id"
+                                                name="statut_enr{{ forloop.counter }}" disabled>
+                                                <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
+                                                <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
+                                                <option value="Annuler" {% if enr_horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5 position-relative mb-2 ">
+                                                <input type="text" class="form-control" id="statut_reglement_enr{{ forloop.counter }}_id"
+                                                    name="statut_reglement_enr{{ enr_horaire.id }}" value="{{ enr_horaire.statut_reglement }}" disabled>
+                                            </div>
+                                            <div class="col-lg-2 d-flex justify-content-center mb-2 ">
+                                                <button type="submit" class="btn btn-warning " name="btn_sup_{{enr_horaire.id}}" {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} >Sup</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                        </div>
-                        
-                            
-                            
-                        </div>
-                        <hr>
-                        {% endfor %}
+                                <hr>
+                            {% endfor %}
                         {% endif %}
                     </div>
                 </div>
