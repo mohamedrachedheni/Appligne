@@ -11,7 +11,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-10 ">
                 <div class="row g-5">
-                    <div class="col-2 g-4 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
+                    <div class="col-2 g-5 wow fadeInUp" data-wow-delay="0.1s" style="max-height: 400px;">
                         <div class="position-relative h-100">
                             <!-- professeur et peas professeurs car il y a un seul professeur sélectionné par son id -->
                             <img class="border rounded-circle p-2 mx-auto mb-3" src="{{user.professeur.photo.url}}"
@@ -58,6 +58,11 @@
                             {% if historique_prof.nb_heure_declare %} {{ historique_prof.nb_heure_declare }} heures
                             dispensées
                             {% else %} Pas d'heures dispensées {% endif %} </p>
+                            <a href=" {% url 'demande_cours_envoie' id_prof=user.id %} " class="btn btn-lg btn-success  btn-block>
+                                <h5 title="Vous devez être connecté à votre compte, si non créez un compte élève avant">Contacter
+                                    <strong>{{user.first_name}}</strong>
+                                </h5>
+                            </a>
                     </div>
                 </div>
             </div>
@@ -85,11 +90,6 @@
 <div class="container py-4">
 
     <h4>{{ user.pro_fichier.titre_fiche }}</h4>
-    <a href=" {% url 'demande_cours_envoie' id_prof=user.id %} " class="btn btn-lg btn-primary">
-        <h5 title="Vous devez être connecté à votre compte, si non créez un compte élève avant">Contacter
-            <strong>{{user.first_name}}</strong>
-        </h5>
-    </a>
 
 </div>
 <!-- Titre fichier fin -->
@@ -98,8 +98,8 @@
     <div class="row g-5">
         <h5>Présentation</h5>
         <div class="col-lg-6 col-md-6 justify-content-start ">
-            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip02" rows="" required
-                    style="border:transparent;">{{ user.pro_fichier.parcours }}</textarea></span>
+            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip02" 
+                    style="border:transparent;" readonly >{{ user.pro_fichier.parcours }}</textarea></span>
         </div>
         <div class="col-lg-6 col-md-6 justify-content-start ">
             <div class="row g-5">
@@ -140,8 +140,8 @@
     <div class="row g-5">
         <h5>Méthodologie</h5>
         <div class="col-lg-6 col-md-6 justify-content-start ">
-            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip01" required
-                    style="border:transparent;">{{ user.pro_fichier.pedagogie }}</textarea></span>
+            <span><textarea class="form-control profil bg-light " rows="3" id="validationTooltip01"
+                    style="border:transparent;" readonly>{{ user.pro_fichier.pedagogie }}</textarea></span>
         </div>
         <div class="col-lg-6 col-md-6 justify-content-start ">
             <div class="row g-5">
@@ -334,42 +334,41 @@
                 <a href="{% url 'profil_prof' id_user=prof.id %}">
                     <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ prof.professeur.photo.url }}"
                         style="width: 80px; height: 80px;">
-                </a>
-                <h5 class="mb-0">{{ prof.username }}</h5>
+                    <h5 class="mb-0">{{ prof.username }}</h5>
 
-                <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
-                    <div class="row gy-2 gx-4 mb-4">
+                    <div class="testimonial-text bg-light text-center p-4" style="height: 100px;">
+                        <div class="row gy-2 gx-4 mb-4">
 
-                        <div class="col-lg-6 justify-content-start">
-                            <p>
-                                {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
-                                {% for unique_matiere in unique_matiere_list %}
-                                {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
-                                {% endfor %}
-                            </p>
-                        </div>
-                        <div class="col-lg-6 justify-content-start">
-                            <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
-                                        {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {%
-                                        else %} Prix non défini {% endif %}
-                                    </b></strong>
-                            </p>
-                        </div>
-                        <div class="col-lg-6 justify-content-start">
-                            <p class="mb-0">
-                                {% if prof.historique_prof.nb_heure_declare %}
-                                {{ prof.historique_prof.nb_heure_declare }} heures dispensées
-                                {% else %}
-                                pas d'heures dispensées
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-lg-6 justify-content-start">
-                            <p class="mb-0">Lieu: <strong>Paris</strong></p>
-                            <!-- introduire le paramètre lieu au lieu de Paris -->
+                            <div class="col-lg-6 justify-content-start">
+                                <p>
+                                    {% regroup prof.prof_mat_niv_set.all by matiere as unique_matiere_list %}
+                                    {% for unique_matiere in unique_matiere_list %}
+                                    {{ unique_matiere.grouper.matiere }}{% if not forloop.last %} | {% endif %}
+                                    {% endfor %}
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">Tarif: <strong><b class="prix_par_heure">
+                                            {% if prof.annotated_prix_heure %} {{ prof.annotated_prix_heure }} &nbsp;€/h {% else %} Prix non défini {% endif %}
+                                        </b></strong>
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">
+                                    {% if prof.historique_prof.nb_heure_declare %}
+                                    {{ prof.historique_prof.nb_heure_declare }} heures dispensées
+                                    {% else %}
+                                    pas d'heures dispensées
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-lg-6 justify-content-start">
+                                <p class="mb-0">Lieu: <strong>Paris</strong></p>
+                                <!-- introduire le paramètre lieu au lieu de Paris -->
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             {% endfor %}
 

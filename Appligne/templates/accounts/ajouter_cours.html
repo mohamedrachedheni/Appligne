@@ -58,8 +58,8 @@
                                     <label class="form-label">Elève inscrit</label>
                                     <div class="dropdown">
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="eleve_id" name="eleve" readonly required value="{{ eleve }}" placeholder="Sélectionnez un élève">
-                                            <ul class="dropdown-menu" id="dropdownMenu_eleve_id" style="max-height: 300px; overflow-y:auto; width: 300px;" aria-labelledby="dropdownMenu_eleve_id" >
+                                            <input type="text" class="form-control no-gray-background" id="eleve_id" name="eleve" readonly required value="{{ eleve }}" placeholder="Sélectionnez un élève">
+                                            <ul class="dropdown-menu" id="dropdownMenu_eleve_id" style="max-height: 300px; overflow-y:auto; width: 100%;" aria-labelledby="dropdownMenu_eleve_id" >
                                                 {% for eleve in mes_eleves %}
                                                 <li><a class="dropdown-item dropdown-item-demande eleve" href="#" data-target="eleve_{{ forloop.counter }}" data-value="{{ eleve }}">{{ eleve }}</a></li>
                                                 {% endfor %}

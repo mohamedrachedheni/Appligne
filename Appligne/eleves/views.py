@@ -311,6 +311,16 @@ def modifier_coordonnee_parent(request):
 
 
 def demande_cours_envoie(request, id_prof):
+    # Ajout du message informatif
+    # messages.info(
+    #     request,
+    #     f"radio_name = {request.session.get('radio_name', 'Non spécifié')}; "
+    #     f"radio_name_text = {request.session.get('radio_name_text', 'Non spécifié')}; "
+    #     f"matiere_defaut = {request.session.get('matiere_defaut', 'Non spécifié')}; "
+    #     f"niveau_defaut = {request.session.get('niveau_defaut', 'Non spécifié')}; "
+    #     f"region_defaut = {request.session.get('region_defaut', 'Non spécifié')}; "
+    #     f"departement_defaut = {request.session.get('departement_defaut', 'Non spécifié')}."
+    # )
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -372,66 +382,60 @@ Cordialement,
         'formatted_content': formatted_content,
         'id_prof':id_prof
     }
-    if not (request.method == 'POST' and 'btn_enr' in request.POST):
-        return render(request, 'eleves/demande_cours_envoie.html', context)
     
     # si non c'est le cas de : (request.method == 'POST' and 'btn_enr' in request.POST)
-    text_email = request.POST.get('text_email')
-    if text_email:
-        user_destinataire = user_prof.id
-        
-        # traitement de l'envoie de l'email
-        # si le sujet de l'email n'est pas défini dans le GET alors sujet='Demande de cours
-        sujet = request.POST.get('sujet', '').strip()
-        if not sujet: sujet = "Demande de cours"
-        destinations = ['prosib25@gmail.com', email_prof]
-        # Validation des emails dans destinations
-        email_validator = EmailValidator() # Initialiser le validateur d'email
-        for destination in destinations:
-            try:
-                email_validator(destination)
-            except ValidationError:
-                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")
+    if request.method == 'POST' and 'btn_enr' in request.POST:
+        text_email = request.POST.get('text_email')
+        if text_email:
+            user_destinataire = user_prof.id
+            
+            # traitement de l'envoie de l'email
+            # si le sujet de l'email n'est pas défini dans le GET alors sujet='Demande de cours
+            sujet = request.POST.get('sujet', '').strip()
+            if not sujet: sujet = "Demande de cours"
+            destinations = ['prosib25@gmail.com', email_prof]
+            # Validation des emails dans destinations
+            email_validator = EmailValidator() # Initialiser le validateur d'email
+            for destination in destinations:
+                try:
+                    email_validator(destination)
+                except ValidationError:
+                    messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")
 
-        # L'envoie de l'email n'est pas obligatoire
-        try:
-            send_mail(
-                sujet,
-                text_email,
-                email_eleve,
-                destinations,
-                fail_silently=False,
-            )
-        except Exception as e:
-            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
-        messages.success(request, "L'email a été envoyé avec succès.")
-        email_telecharge = Email_telecharge(user=user,
-                                                email_telecharge=email_eleve  , # l'adresse email de l'expéditeur
-                                                sujet=sujet, 
-                                                text_email=text_email, 
-                                                user_destinataire=user_destinataire ) # user.id du destinataire
-        email_telecharge.save()
-        # Enregistrement dans la table détaille email
-        email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
-        email_detaille.save()
-        messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
-        # vider la session
-        # Supprimer les données spécifiques de la session
-        if 'radio_name' in request.session:
-            del request.session['radio_name']
-        if 'radio_name_text' in request.session:
-            del request.session['radio_name_text']
-        if 'matiere_defaut' in request.session:
-            del request.session['matiere_defaut']
-        if 'niveau_defaut' in request.session:
-            del request.session['niveau_defaut']
-        if 'region_defaut' in request.session:
-            del request.session['region_defaut']
-        if 'departement_defaut' in request.session:
-            del request.session['departement_defaut']
-        return redirect('compte_eleve')
-        
-    messages.error(request, "Il faut définir le contenu de l'Email")
+            # L'envoie de l'email n'est pas obligatoire
+            try:
+                send_mail(
+                    sujet,
+                    text_email,
+                    email_eleve,
+                    destinations,
+                    fail_silently=False,
+                )
+            except Exception as e:
+                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email: {str(e)}")
+            messages.success(request, "L'email a été envoyé avec succès.")
+            email_telecharge = Email_telecharge(user=user,
+                                                    email_telecharge=email_eleve  , # l'adresse email de l'expéditeur
+                                                    sujet=sujet, 
+                                                    text_email=text_email, 
+                                                    user_destinataire=user_destinataire ) # user.id du destinataire
+            email_telecharge.save()
+            # Enregistrement dans la table détaille email
+            email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
+            email_detaille.save()
+            messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
+
+            # Annuler les données précédentes dans la session
+            keys_to_clear = [
+                'radio_name', 'radio_name_text', 
+                'matiere_defaut', 'niveau_defaut', 
+                'region_defaut', 'departement_defaut'
+            ]
+            for key in keys_to_clear:
+                request.session.pop(key, None)  # Supprime si existe, sinon rien
+            return redirect('compte_eleve')
+            
+        messages.error(request, "Il faut définir le contenu de l'Email")
     return render(request, 'eleves/demande_cours_envoie.html', context)
 
 

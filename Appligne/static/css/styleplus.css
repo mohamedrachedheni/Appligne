@@ -83,3 +83,10 @@
     text-overflow: ellipsis !important; /* Ajoute des points de suspension si le texte est tronqué */
     white-space: normal !important;    /* Permet d'avoir des retours à la ligne normaux */
 }
+
+.no-gray-background:read-only {
+    background-color: #fff; /* Conserve un fond blanc */
+    color: #000; /* Conserve la couleur du texte */
+    cursor: default; /* Modifie le curseur pour indiquer qu'il est non modifiable */
+    border: 1px solid #ced4da; /* Assure que la bordure reste cohérente */
+}

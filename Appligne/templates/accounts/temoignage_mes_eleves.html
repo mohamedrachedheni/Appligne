@@ -50,6 +50,11 @@
                         <div class="row g-1">
                             <!-- Vérifie si l'utilisateur est authentifié -->
                             {% if request.user.is_authenticated %}
+                            {% if not liste_horaires %}
+                            <div class="col-md-12 position-relative">
+                                <label for="email_id" class="form-label">Vous n’avez pas encore de témoignages. Continuez à offrir votre meilleur, ils ne tarderont pas à venir !</label>
+                            </div>
+                            {% endif %}
                                 <!-- Boucle sur chaque élève associé au professeur -->
                                 {% for user in user_eleves %}
                                     <p><strong>{{ user.last_name }}</strong> <strong>{{ user.first_name }}</strong></p>

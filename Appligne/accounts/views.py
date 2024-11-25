@@ -616,7 +616,7 @@ def nouveau_description(request):
     titre=""
     parcours=""
     pedagogie=""
-    video=""
+    video= ""
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -635,7 +635,7 @@ def nouveau_description(request):
             teste = False
         parcours  = request.POST.get('parcours', "")
         pedagogie  = request.POST.get('pedagogie', "")
-        video = request.POST.get('video_youtube_url', "")      
+        video = request.POST.get('video_youtube_url', "").strip()  
         # Vérifier si l'URL est une vidéo YouTube
         if video and not est_url_youtube(video):
             messages.error(request, "L'URL de la vidéo n'est pas valide.")
@@ -1644,8 +1644,8 @@ def email_recu_prof(request):
     # Fonction interne pour récupérer les emails en fonction des critères de filtrage
     def get_emails(filter_criteria):
         emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
-        if not emails:
-            messages.info(request, "Il n'y a pas d'Email correspondant à votre filtre.")
+        # if not emails:
+        #     messages.info(request, "Il n'y a pas d'Email correspondant à votre filtre.")
         return emails
 
     # Filtrage par défaut pour les nouveaux emails (emails avec suivi = null)
@@ -2248,9 +2248,9 @@ def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près dé
         try:
             horaire_to_delete = Horaire.objects.get(id=horaire_id)
             horaire_to_delete.delete()
-            messages.success(request, f"Horaire avec ID {horaire_id} supprimé avec succès.")
+            messages.success(request, f"Horaire supprimé avec succès.")
         except Horaire.DoesNotExist:
-            messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+            messages.error(request, f"Horaire non trouvé.")
 
     # Récupérer les horaires enregistrés pour ce cours avec la logique de 'statut_reglement'
     enr_horaires = [
@@ -2559,9 +2559,9 @@ def horaire_cours_mon_eleve(request, cours_id):
             try:
                 horaire_to_delete = Horaire.objects.get(id=horaire_id)
                 horaire_to_delete.delete()
-                messages.success(request, f"Horaire avec ID {horaire_id} supprimé avec succès.")
+                messages.success(request, f"Horaire  supprimé avec succès.")
             except Horaire.DoesNotExist:
-                messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+                messages.error(request, f"Horaire  non trouvé.")
         
         # Gestion de la modification d'un horaire
         modif_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_modif_')]
@@ -2596,10 +2596,10 @@ def horaire_cours_mon_eleve(request, cours_id):
                 horaire_enr.statut_cours = statut_cours
                 horaire_enr.calculer_duree()
                 horaire_enr.save()
-                messages.success(request, f"Horaire avec ID {horaire_id} modifié avec succès.")
+                messages.success(request, f"Horaire  modifié avec succès.")
                 
             except Horaire.DoesNotExist:
-                messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+                messages.error(request, f"Horaire  non trouvé.")
     """
     Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
     """
@@ -2679,7 +2679,7 @@ def liste_seance_cours(request):
             return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
         except Horaire.DoesNotExist:
             # Affiche un message d'erreur si l'horaire n'existe pas
-            messages.error(request, f"Horaire avec ID {horaire_id} non trouvé.")
+            messages.error(request, f"Horaire  non trouvé.")
 
     # Rende la vue avec la liste des horaires en attente
     return render(request, 'accounts/liste_seance_cours.html', {'liste_horaires': liste_horaires, 'is_active': is_active})

@@ -94,46 +94,95 @@ def index(request):
             'temoignages': temoignages,
         })
         
-    if request.method == 'POST' and 'btn_rechercher' in request.POST: # bouton recherche activé
-        # annuler les données précédentes dans la session
-        # Supprimer les données spécifiques de la session
-        if 'radio_name' in request.session:
-            del request.session['radio_name']
-        if 'radio_name_text' in request.session:
-            del request.session['radio_name_text']
-        if 'matiere_defaut' in request.session:
-            del request.session['matiere_defaut']
-        if 'niveau_defaut' in request.session:
-            del request.session['niveau_defaut']
-        if 'region_defaut' in request.session:
-            del request.session['region_defaut']
-        if 'departement_defaut' in request.session:
-            del request.session['departement_defaut']
-        # mettre à jour les données de la session pour une nouvelle recherche    
-        if request.POST.get('a_domicile', None):
+    if request.method == 'POST' and 'btn_rechercher' in request.POST:
+        # Annuler les données précédentes dans la session
+        keys_to_clear = [
+            'radio_name', 'radio_name_text', 
+            'matiere_defaut', 'niveau_defaut', 
+            'region_defaut', 'departement_defaut'
+        ]
+        for key in keys_to_clear:
+            request.session.pop(key, None)  # Supprime si existe, sinon rien
+
+        # Mettre à jour les données de la session pour une nouvelle recherche
+        if request.POST.get('a_domicile'):
             request.session['radio_name'] = "a_domicile"
-            request.session['radio_name_text'] = "Cours à domicile" # pour le filtre de Prix_heure
-        if request.POST.get('webcam', None):
+            request.session['radio_name_text'] = "Cours à domicile"
+        elif request.POST.get('webcam'):
             request.session['radio_name'] = "webcam"
             request.session['radio_name_text'] = "Cours par webcam"
-        if request.POST.get('stage', None):
+        elif request.POST.get('stage'):
             request.session['radio_name'] = "stage"
             request.session['radio_name_text'] = "Stage pendant les vacances"
-        if request.POST.get('stage_webcam', None):
+        elif request.POST.get('stage_webcam'):
             request.session['radio_name'] = "stage_webcam"
             request.session['radio_name_text'] = "Stage par webcam"
 
         # Stocker les filtres dans la session pour persistance
-        request.session['matiere_defaut'] = request.POST['matiere']
-        request.session['niveau_defaut'] = request.POST['niveau']
-        request.session['region_defaut'] = request.POST['region']
-        request.session['departement_defaut'] = request.POST['departement']
+        request.session['matiere_defaut'] = request.POST.get('matiere', 'Non spécifié')
+        request.session['niveau_defaut'] = request.POST.get('niveau', 'Non spécifié')
+        request.session['region_defaut'] = request.POST.get('region', 'Non spécifié')
+        request.session['departement_defaut'] = request.POST.get('departement', 'Non spécifié')
+
+        # # Ajout du message informatif
+        # messages.info(
+        #     request,
+        #     f"radio_name = {request.session.get('radio_name', 'Non spécifié')}; "
+        #     f"radio_name_text = {request.session.get('radio_name_text', 'Non spécifié')}; "
+        #     f"matiere_defaut = {request.session.get('matiere_defaut', 'Non spécifié')}; "
+        #     f"niveau_defaut = {request.session.get('niveau_defaut', 'Non spécifié')}; "
+        #     f"region_defaut = {request.session.get('region_defaut', 'Non spécifié')}; "
+        #     f"departement_defaut = {request.session.get('departement_defaut', 'Non spécifié')}."
+        # )
+
         return redirect('liste_prof')
 
     return render(request, 'pages/index.html', context)
 
 def liste_prof(request):
-     # Récupérer ou définir les valeurs par défaut des filtres de recherche à partir de POST ou de la session
+    if request.method == 'POST' and 'btn_rechercher' in request.POST:
+        # Annuler les données précédentes dans la session
+        keys_to_clear = [
+            'radio_name', 'radio_name_text', 
+            'matiere_defaut', 'niveau_defaut', 
+            'region_defaut', 'departement_defaut'
+        ]
+        for key in keys_to_clear:
+            request.session.pop(key, None)  # Supprime si existe, sinon rien
+
+        # Mettre à jour les données de la session pour une nouvelle recherche
+        if request.POST.get('a_domicile'):
+            request.session['radio_name'] = "a_domicile"
+            request.session['radio_name_text'] = "Cours à domicile"
+        elif request.POST.get('webcam'):
+            request.session['radio_name'] = "webcam"
+            request.session['radio_name_text'] = "Cours par webcam"
+        elif request.POST.get('stage'):
+            request.session['radio_name'] = "stage"
+            request.session['radio_name_text'] = "Stage pendant les vacances"
+        elif request.POST.get('stage_webcam'):
+            request.session['radio_name'] = "stage_webcam"
+            request.session['radio_name_text'] = "Stage par webcam"
+
+        # Stocker les filtres dans la session pour persistance
+        request.session['matiere_defaut'] = request.POST.get('matiere', 'Non spécifié')
+        request.session['niveau_defaut'] = request.POST.get('niveau', 'Non spécifié')
+        request.session['region_defaut'] = request.POST.get('region', 'Non spécifié')
+        request.session['departement_defaut'] = request.POST.get('departement', 'Non spécifié')
+
+        # Ajout du message informatif
+        # messages.info(
+        #     request,
+        #     f"radio_name = {request.session.get('radio_name', 'Non spécifié')}; "
+        #     f"radio_name_text = {request.session.get('radio_name_text', 'Non spécifié')}; "
+        #     f"matiere_defaut = {request.session.get('matiere_defaut', 'Non spécifié')}; "
+        #     f"niveau_defaut = {request.session.get('niveau_defaut', 'Non spécifié')}; "
+        #     f"region_defaut = {request.session.get('region_defaut', 'Non spécifié')}; "
+        #     f"departement_defaut = {request.session.get('departement_defaut', 'Non spécifié')}."
+        # )
+
+        return redirect('liste_prof')
+    # Récupérer ou définir les valeurs par défaut des filtres de recherche à partir de POST ou de la session
     # donner la priorité au request puis à la session puis à la valeur par défaut
     radio_name = request.POST.get('radio_name', request.session.get('radio_name', "a_domicile"))
     radio_name_text = request.POST.get('radio_name_text', request.session.get('radio_name_text', "Cours à domicile"))
@@ -150,24 +199,25 @@ def liste_prof(request):
     regions = Region.objects.filter(nom_pays__nom_pays='France')
     departements = Departement.objects.filter(region__region=region_defaut)
 
+    # ce teste est non utile car la fonction ajax l'a remplacé
     if 'region' in request.POST and not 'btn_rechercher' in request.POST: # si la page et actiée par input name='region' seulement sans recherche
         departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input*
     
 
     # Gérer les formats de cours sélectionnés dans le cas request.POST avec ou sans recherche
     # ces testes sont obligatoire si non erreur de résultat, c'est la valeur session qui passe
-    if request.POST.get('a_domicile'):
-        radio_name = "a_domicile"
-        radio_name_text = "Cours à domicile"
-    elif request.POST.get('webcam'):
-        radio_name = "webcam"
-        radio_name_text = "Cours par webcam"
-    elif request.POST.get('stage'):
-        radio_name = "stage"
-        radio_name_text = "Stage pendant les vacances"
-    elif request.POST.get('stage_webcam'): # si on utilise else dans le dernier cas le résultat est faux, c'est la valeut "stage_webcam" qui passe dans le cas not request.POST
-        radio_name = "stage_webcam"
-        radio_name_text = "Stage par webcam"
+    # if request.POST.get('a_domicile'):
+    #     radio_name = "a_domicile"
+    #     radio_name_text = "Cours à domicile"
+    # elif request.POST.get('webcam'):
+    #     radio_name = "webcam"
+    #     radio_name_text = "Cours par webcam"
+    # elif request.POST.get('stage'):
+    #     radio_name = "stage"
+    #     radio_name_text = "Stage pendant les vacances"
+    # elif request.POST.get('stage_webcam'): # si on utilise else dans le dernier cas le résultat est faux, c'est la valeut "stage_webcam" qui passe dans le cas not request.POST
+    #     radio_name = "stage_webcam"
+    #     radio_name_text = "Stage par webcam"
 
     # Sous-requête pour récupérer le prix par heure en fonction des filtres
     prix_heure_subquery = Prix_heure.objects.filter(
@@ -240,6 +290,16 @@ def liste_prof(request):
 
 
 def profil_prof(request, id_user):
+    # Ajout du message informatif
+    # messages.info(
+    #     request,
+    #     f"radio_name = {request.session.get('radio_name', 'Non spécifié')}; "
+    #     f"radio_name_text = {request.session.get('radio_name_text', 'Non spécifié')}; "
+    #     f"matiere_defaut = {request.session.get('matiere_defaut', 'Non spécifié')}; "
+    #     f"niveau_defaut = {request.session.get('niveau_defaut', 'Non spécifié')}; "
+    #     f"region_defaut = {request.session.get('region_defaut', 'Non spécifié')}; "
+    #     f"departement_defaut = {request.session.get('departement_defaut', 'Non spécifié')}."
+    # )
     user = get_object_or_404(User, id=id_user)
 
    # Récupérer les témoignages
@@ -292,7 +352,7 @@ def profil_prof(request, id_user):
         prix_heure = 'N/A'
 
     # Liste des Prof
-     # Valeurs par défaut pour les paramètres de recherche
+    # Valeurs par défaut pour les paramètres de recherche
     radio_name = request.session.get('radio_name', "a_domicile")  # Cours à domicile par défaut
     radio_name_text = request.session.get('radio_name_text', "Cours à domicile")
     matiere_defaut = request.session.get('matiere_defaut', "Maths")

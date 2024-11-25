@@ -43,6 +43,7 @@
                                 style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                                 <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
                             </div>
+                            {% if emails %}
                             <div class="container-xxl " >
                                 <div class="row justify-content-between g-2 p-3 ">
                                     <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
@@ -72,7 +73,13 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                             <div class="container-xxl py-5 bg-light p-4 " >
+                                {% if not emails %}
+                                    <div class="col-md-12 position-relative">
+                                        <label for="email_id" class="form-label">Il n'y a pas d'email</label>
+                                    </div>
+                                {% endif %}
                                         {% for email in emails %}
                                             <div class="row  " style="margin-bottom: 30px;">
                                                 <div class="col-md-2 col-sm-12 position-relative ">
