@@ -1,16 +1,23 @@
 
-from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region
-from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof
-from eleves.models import Temoignage
+from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Professeur, Format_cour, Pro_fichier, Diplome_cathegorie
+from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves, Eleve
+from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune
+from eleves.models import Temoignage, Parent
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.db.models import OuterRef, Subquery, DecimalField
 from django.core.validators import  EmailValidator
-from django.core.exceptions import  ValidationError
+from django.core.exceptions import  ValidationError, ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.http import JsonResponse
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from django.core.validators import validate_email, EmailValidator
+from django.urls import reverse
+from django.utils import timezone
 
 # Create your views here.
 
@@ -482,3 +489,1291 @@ def nous_contacter(request):
             return redirect('index')
         
     return render(request, 'pages/nous_contacter.html', context)
+
+def compte_administrateur(request):
+    # Récupérer l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not user.is_superuser and not user.is_staff:
+        messages.error(request, "Vous n'êtes pas autorisé à acceder au compte administrateur.")
+        return redirect('signin')
+
+
+    # Effacer tous les paramètres de session sauf l'utilisateur
+    keys_to_keep = ['_auth_user_id', '_auth_user_backend', '_auth_user_hash']
+    keys_to_delete = [key for key in request.session.keys() if key not in keys_to_keep]
+    for key in keys_to_delete:
+        del request.session[key]
+        
+    return render(request, 'pages/compte_administrateur.html')
+
+
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_compte_prof(request, user_id=0):
+    """
+    Vue permettant d'afficher tous les utilisateurs ayant un compte de professeur.
+    Accessible uniquement par les administrateurs actifs.
+    """
+    if request.method == 'POST' and 'btn_fermer' in request.POST:
+        return redirect('compte_administrateur')
+
+    # Filtrer les utilisateurs liés au rôle de professeur et trier par prénom puis nom
+    user_profs = User.objects.filter(professeur__isnull=False).order_by('first_name', 'last_name')
+
+    # Vérifier si la liste est vide et ajouter un message d'erreur
+    if not user_profs.exists():
+        messages.error(request, "Aucun professeur trouvé.")
+        return render(request, 'pages/admin_compte_prof.html')
+    
+    # Définir l'ID du professeur sélectionné (valeur par défaut : premier professeur)
+    user_prof_first = User.objects.filter(professeur__isnull=False).last() # A changer user_prof_first par user_prof_last dans le template et le view
+    user_prof_select_id = request.POST.get('user_prof_select_id', user_prof_first.id)
+
+    if user_id!=0:
+        user_prof_select_id=user_id
+        user_prof_first = User.objects.filter(id=user_id).last()
+
+
+    # Convertir l'ID sélectionné en entier avec gestion des erreurs
+    try:
+        user_prof_select_id = int(user_prof_select_id)
+    except (ValueError, TypeError):
+        user_prof_select_id = user_prof_first.id  # Utiliser l'ID du premier professeur par défaut
+
+    # Récupérer l'utilisateur sélectionné ou lever une erreur 404 si non trouvé
+    user_prof_select = get_object_or_404(User, id=user_prof_select_id, professeur__isnull=False)
+
+
+    teste = True # pour autoriser l'enregistrement si tous les condition sont respectées
+
+    # Modifier l'enregistrement du prof électionné dans la table user
+    if request.method == 'POST' and 'btn_enr_user_prof' in request.POST:
+        # récupérer les données du template
+        username = request.POST.get('username', user_prof_select.username).strip()
+        first_name = request.POST.get('first_name', user_prof_select.first_name).strip()
+        last_name = request.POST.get('last_name', user_prof_select.last_name).strip()
+        email = request.POST.get('email', user_prof_select.email).strip()
+
+        if not first_name.strip() or not last_name.strip() or not email.strip() or not username.strip():
+            messages.error(request, "Les champs email, first_name, last_name et username sont obligatoires de la table user.")
+            teste = False
+        
+        # si l'email a été changé et que le nouveau email existe déjà
+        if email != user_prof_select.email and User.objects.filter(email=email).exists():
+            messages.error(request, "L'email est déjà utilisé, donnez un autre email")
+            teste = False
+        
+        # si le user a été changé et que le nouveau user existe déjà
+        if username != user_prof_select.username and User.objects.filter(username=username).exists():
+            messages.error(request, "Le username est déjà utilisé, donnez un autre username")
+            teste = False
+        
+        #tester le format de l'email
+        email_validator = EmailValidator() # Initialiser le validateur d'email
+        # Validation de l'email_prof
+        try:
+            email_validator(email)
+        except ValidationError:
+            messages.error(request, "Le format de l'email est incorrecte.")
+            teste = False
+        
+        if teste: # si tous les données sont valides
+            user_prof_select.first_name = first_name
+            user_prof_select.last_name = last_name
+            user_prof_select.email = email
+            user_prof_select.username = username
+            user_prof_select.is_active = 'is_active' in request.POST
+            user_prof_select.save()
+
+    # Modifier l'enregistrement du prof sélectionné dans la table Professeur
+    if request.method == 'POST' and 'btn_enr_prof' in request.POST:
+        # récupérer les données du template
+        civilite = request.POST.get('civilite', user_prof_select.professeur.civilite).strip()
+        phone = request.POST.get('phone', user_prof_select.professeur.numero_telephone).strip()
+        date_naissance = request.POST.get('date_naissance', user_prof_select.professeur.date_naissance)
+        adresse = request.POST.get('adresse', user_prof_select.professeur.adresse).strip()
+
+        #Vérifier le format de la date
+        try:
+                # si la convertion est réussie
+                date_naissance_nouveau_01 = datetime.strptime(date_naissance, '%d/%m/%Y') # date_naissance_nouveau_01 est crée juste pour tester le format de la date
+        except ValueError:
+            messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
+            #date_naissance = user_prof_select.professeur.date_naissance
+            teste = False
+        if teste: # si tous les données sont valides
+            # Mettre à jour les données du professeur 
+            user_prof_select.professeur.adresse = adresse
+            user_prof_select.professeur.numero_telephone = phone
+            user_prof_select.professeur.civilite = civilite
+            user_prof_select.professeur.set_date_naissance_from_str(date_naissance)
+            # s'il y a un changement de photo d'identité
+            if 'photo' in request.FILES: # s'il y a une nouvelle photo d'identité
+                # Si l'ancienne photo d'identité existe son ficher est supprimé
+                if user_prof_select.professeur.photo:
+                    user_prof_select.professeur.photo.delete(save=False)
+                user_prof_select.professeur.photo = request.FILES['photo'] # sésir la nouvelle photo d'identité
+            user_prof_select.professeur.save()
+    
+    
+    
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_format_cours' est soumis
+    if request.method == 'POST' and 'btn_enr_format_cours' in request.POST:
+        # Récupérer le format cours initial ou définir la valeur par défaut
+        format_cour = Format_cour.objects.filter(user=user_prof_select).first()
+
+        # Modifier l'enregistrement du prof électionné dans la table format_cour
+        # Liste des formats possibles
+        formats = ['chk_a_domicile', 'chk_webcam', 'chk_stage', 'chk_stage_webcam']
+        # Création d'un dictionnaire pour vérifier les formats cochés
+        format_states = {format: request.POST.get(format) is not None for format in formats}
+
+        # Vérifier qu'au moins un format est coché
+        if not any(format_states.values()):
+            messages.error(request, "Il faut au moins cocher une case d'un format de cours.")
+            teste = False
+
+        if teste:
+            # Mettre à jour ou créer un objet Format_cour
+            if format_cour:
+                # Mise à jour des champs existants
+                format_cour.a_domicile = format_states.get('chk_a_domicile', format_cour.a_domicile)
+                format_cour.webcam = format_states.get('chk_webcam', format_cour.webcam)
+                format_cour.stage = format_states.get('chk_stage', format_cour.stage)
+                format_cour.stage_webcam = format_states.get('chk_stage_webcam', format_cour.stage_webcam)
+                format_cour.save()
+            else:
+                # Création d'un nouvel objet si aucun n'existe
+                Format_cour.objects.create(
+                    user=user_prof_select,
+                    a_domicile=format_states.get('chk_a_domicile', False),
+                    webcam=format_states.get('chk_webcam', False),
+                    stage=format_states.get('chk_stage', False),
+                    stage_webcam=format_states.get('chk_stage_webcam', False)
+                )
+                
+            # Suppression des enregistrements Prix_heure non utilisés a la suite
+            # de la Mise à jour des formats si l'objet existe déjà
+            if not format_cour.a_domicile:
+                Prix_heure.objects.filter(user=user_prof_select, format="Cours à domicile").delete()
+            if not format_cour.webcam:
+                Prix_heure.objects.filter(user=user_prof_select, format="Cours par webcam").delete()
+            if not format_cour.stage:
+                Prix_heure.objects.filter(user=user_prof_select, format="Stage pendant les vacances").delete()
+            if not format_cour.stage_webcam:
+                Prix_heure.objects.filter(user=user_prof_select, format="Stage par webcam").delete()
+            
+            messages.success(request, "Les nouveaux formats des cours sont enregistrés. Vous devez réviser vos prix par heure pour chaque enregistrement nouveau.")
+    
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_fichier' est soumis
+    if request.method == 'POST' and 'btn_enr_fichier' in request.POST:
+        # Modifier l'enregistrement du prof électionné dans la table Prof_fichier
+        titre_fiche  = request.POST.get('titre_fiche','')
+        parcours  = request.POST.get('parcours','')
+        pedagogie  = request.POST.get('pedagogie','')
+        video_youtube_url = request.POST.get('video_youtube_url','')
+        # Récupérer l'enregistrement existant
+        ancien_enregistrement = Pro_fichier.objects.filter(user=user_prof_select).first()
+
+        if ancien_enregistrement:
+            # Mettre à jour les champs de l'enregistrement existant
+            ancien_enregistrement.titre_fiche = titre_fiche
+            ancien_enregistrement.parcours = parcours
+            ancien_enregistrement.pedagogie = pedagogie
+            ancien_enregistrement.video_youtube_url = video_youtube_url
+            ancien_enregistrement.save()
+        else:
+            # Créer un nouvel enregistrement si aucun n'existe
+            Pro_fichier.objects.create(
+                user=user_prof_select,
+                titre_fiche=titre_fiche,
+                parcours=parcours,
+                pedagogie=pedagogie,
+                video_youtube_url=video_youtube_url
+            )
+
+        messages.success(request, "Les nouvelles descriptions sont enregistrés")
+
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_diplome' est soumis
+    if request.method == 'POST' and 'btn_enr_diplome' in request.POST:
+        # Stoquer les anciennes données du prof de la table Diplome
+        prof_diplomes = Diplome.objects.filter(user_id=user_prof_select_id)
+        # Modifier l'enregistrement du prof électionné dans la table Diplome
+        # Liste des diplômes dans le request dont le nom commence par: diplome_
+        diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
+        if not diplome_keys:
+            messages.error(request, "Il faut donner au moins un diplôme  ")
+            teste = False
+        
+
+        # début de l'enregistrement
+        if teste:
+            # supprimer les anciens enregistrements
+            diplomes = Diplome.objects.filter(user_id=user_prof_select_id)
+            diplomes.delete() # une copi des enregistrement est sauvegardée dans prof_diplomes en cas d"echec d'enregistrement
+            for diplome_key in diplome_keys:
+                i = int(diplome_key.split('_')[1])
+                diplome_key = f'diplome_{i}' # c'est le name de la balise input diplome
+                date_obtenu_key = f'date_obtenu_{i}'
+                principal_key = f'principal_diplome_{i}'
+                intitule_key = f'intitule_{i}'
+                j = 0 # Pour tester s'il y a eu d'enregistrement si non les anciens enregistrement supprimés doivent être récupérés
+                if request.POST.get(diplome_key):
+                    diplome = request.POST.get(diplome_key)
+                    if not diplome.strip() :  # Vérifie si la chaîne est vide ou contient seulement des espaces
+                        messages.error(request, "Le diplôme ne peut pas être vide ou contenir uniquement des espaces.")
+                        continue  # Move to the next iteration of the loop
+                    if len(diplome) > 100:
+                        diplome = diplome[:100]  # Prendre seulement les 100 premiers caractères
+                        messages.info(request, "Le diplôme a été tronqué aux 100 premiers caractères.")
+                    diplome_cathegorie = Diplome_cathegorie.objects.filter(dip_cathegorie=diplome)
+                    if not diplome_cathegorie.exists():
+                        # Le diplôme n'existe pas, nous devons l'ajouter à la table Diplome_cathegorie
+                        pays_default = Pays.objects.get(nom_pays='France')  # Remplacez 'Default' par le nom du pays par défaut
+                        new_diplome_cathegorie = Diplome_cathegorie.objects.create(nom_pays=pays_default, dip_cathegorie=diplome)
+                        new_diplome_cathegorie.save()
+                    
+                    # Le diplôme existe déjà dans la table Diplome_cathegorie
+                    # Requête pour récupérer l'objet Diplome_cathegorie
+                    diplome_obj = Diplome_cathegorie.objects.get(dip_cathegorie=diplome)
+                    # Récupérer l'ID de l'objet Diplome_cathegorie
+                    diplome_cathegorie_id = diplome_obj.id
+                    date_obtenu = request.POST.get(date_obtenu_key, None)
+                    if date_obtenu:
+                        # tester le format des dates
+                        try:
+                            # si la convertion est réussie
+                            date_obtenu_01 = datetime.strptime(date_obtenu, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                        except ValueError:
+                            date_obtenu = datetime.now().strftime('%d/%m/%Y')  # à améliorer cette logique d'enregistrement
+                    if request.POST.get(principal_key, None) == "on":
+                        principal = True
+                    else: principal = False
+                    intitule = request.POST.get(intitule_key, None)
+                    # Vérification si le diplôme n'existe pas déjà pour cet utilisateur
+                    if not  Diplome.objects.filter(user=user_prof_select, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule).exists():
+                        if not date_obtenu:
+                            date_obtenu = datetime.now().strftime('%d/%m/%Y')  # Prendre la date du jour au format jj/mm/aaaa
+                        diplome_instance = Diplome(user=user_prof_select, diplome_cathegorie_id=diplome_cathegorie_id, intitule=intitule, principal=principal)
+                        diplome_instance.set_date_obtenu_from_str(date_obtenu)
+                        diplome_instance.save()
+                        j = j+1
+                        
+                    else: # si le diplome existe 
+                        continue
+                
+
+            if j == 0:
+                # récupérer les enregistrements supprimés
+                k=0 # pour vérifier si tous les enregistrements ont été récupérés
+                for prof_diplome in prof_diplomes: # erreur car prof_diplomes est supprimé
+                    try:
+                        # Créer et sauvegarder un nouveau diplôme
+                        Diplome.objects.create(
+                            obtenu=prof_diplome.obtenu,
+                            intitule=prof_diplome.intitule,
+                            principal=prof_diplome.principal,
+                            user_id=prof_diplome.user_id,
+                            diplome_cathegorie=prof_diplome.diplome_cathegorie,
+                        )
+                        k=k+1
+                        if k==prof_diplomes.count(): messages.success(request, "Tous les anciens enregistrement du diplôme ont été récupérés.")
+                        
+                    except Exception as e:
+                        messages.error(request, f"Erreur lors de l'ajout du diplôme : {str(e)}")
+                        
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_experience' est soumis
+    if request.method == 'POST' and 'btn_enr_experience' in request.POST:
+        # Modifier l'enregistrement du prof électionné dans la table Experience
+        experiences = Experience.objects.filter(user_id=user_prof_select_id)
+        z=experiences.count()
+        # Liste des expériences dans le request dont le nom commence par: experience_
+        experience_keys = [key for key in request.POST.keys() if key.startswith('experience_')]
+        if not experience_keys:
+            messages.error(request, "Il faut donner au moins une expérience  ")
+            teste = False
+        
+
+        # début de l'enregistrement
+        if teste and z>0:
+            
+            # Stocker les anciennes données du prof dans la table Experience
+            ancien_experiences = []
+
+            # Préparer les anciennes expériences à partir des données initiales
+            for experience in experiences:
+                ancien_experiences.append({
+                    'type': experience.type,
+                    'debut': experience.debut,
+                    'fin': experience.fin,
+                    'actuellement': experience.actuellement,
+                    'commentaire': experience.commentaire,
+                    'principal': experience.principal,
+                    'user_id': experience.user_id,
+                })
+
+            
+            # pour paramètrer les indices des expèriences (voire template)
+            diplomes = Diplome.objects.filter(user_id=user_prof_select_id)
+            prof_diplomes_count= diplomes.count()
+            # supprimer les anciens enregistrements
+            experiences.delete()
+
+            # Récupérer les diplômes modifiés dans le template
+            for experience_key in experience_keys:
+                i = int(experience_key.split('_')[1])
+                experience_key = f'experience_{i}' # c'est le name de la balise input name="experience_{{ forloop.counter }}"
+                date_debut_key = f'date_debut_{i*2 + prof_diplomes_count}'
+                date_fin_key = f'date_fin_{i*2 + prof_diplomes_count + 1}'
+                principal_key = f'principal_experience_{i}'
+                actuellement_key = f'act_{i}'
+                commentaire_key = f'comm_{i}'
+                j = 0 # Pour tester s'il y a eu d'enregistrement si non les anciens enregistrement supprimés doivent être récupérés
+                if request.POST.get(experience_key):
+                    experience = request.POST.get(experience_key)
+                    if not experience.strip() :  # Vérifie si la chaîne est vide ou contient seulement des espaces
+                        messages.error(request, "Le diplôme ne peut pas être vide ou contenir uniquement des espaces.")
+                        continue  # Move to the next iteration of the loop
+                    if len(experience) > 100:
+                        experience = experience[:100]  # Prendre seulement les 100 premiers caractères
+                        messages.info(request, "Le diplôme a été tronqué aux 100 premiers caractères.")
+                    
+                    date_debut = request.POST.get(date_debut_key, None)
+                    if date_debut:
+                        # tester le format des dates
+                        try:
+                            # si la convertion est réussie
+                            date_obtenu_01 = datetime.strptime(date_debut, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                        except ValueError:
+                            date_debut = None
+                    
+                    date_fin = request.POST.get(date_fin_key, None)
+                    if date_fin:
+                        # tester le format des dates
+                        try:
+                            # si la convertion est réussie
+                            date_obtenu_01 = datetime.strptime(date_fin, '%d/%m/%Y') # debut_01 juste pour le try seulement
+                        except ValueError:
+                            date_fin = None
+                    # messages.info(request, f"debut = {date_debut} ; fin= {date_fin}")
+                    if request.POST.get(principal_key, None) == "on":
+                        principal = True
+                    else: principal = False
+                    actuellement = request.POST.get(actuellement_key) == "on" # c'est la même logique que pour principal_key
+                    commentaire = request.POST.get(commentaire_key, None)
+
+                    # Vérification si l'expérience n'existe pas déjà pour cet utilisateur
+                    if not Experience.objects.filter(user=user_prof_select, type=experience,  commentaire=commentaire  ).exists():
+                        experience_instance = Experience(user=user_prof_select, type=experience, commentaire=commentaire , principal=principal, actuellement=actuellement)
+                        if date_debut: experience_instance.set_date_debut_from_str(date_debut)
+                        if date_fin: experience_instance.set_date_fin_from_str(date_fin)
+                        experience_instance.save()
+                        j = j+1
+                    else: # si le diplome existe 
+                        continue
+            if j>0: messages.success(request, f"Il y a eu {j} enregistrement(s) dans la table Experience et {z-j} enregistrement(s) supprimé(s)")    
+
+            if j == 0:
+                # récupérer les enregistrements supprimés
+                k=0 # pour vérifier si tous les enregistrements ont été récupérés
+                
+                # Insérer les expériences dans la table Experience
+                for ancien_experience in ancien_experiences:
+                    try:
+                        # Créer et sauvegarder une nouvelle expérience
+                        Experience.objects.create(
+                            type=ancien_experience['type'],
+                            debut=ancien_experience['debut'],
+                            fin=ancien_experience['fin'],
+                            actuellement=ancien_experience['actuellement'],
+                            commentaire=ancien_experience['commentaire'],
+                            principal=ancien_experience['principal'],
+                            user_id=ancien_experience['user_id'],
+                        )
+                        k += 1
+                    except Exception as e:
+                        # Ajouter un message d'erreur pour chaque échec
+                        messages.error(request, f"Échec de l'enregistrement pour l'expérience : {ancien_experience}. Erreur : {e}")
+
+                # Vérifier si tous les enregistrements ont été récupérés
+                if k == len(ancien_experiences):
+                    messages.success(request, "Tous les anciens enregistrements de la table Experience ont été récupérés.")
+                else:
+                    messages.warning(request, f"{k} sur {len(ancien_experiences)} expériences ont été récupérées avec succès.")
+                        
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_mat_niv' est soumis
+    if request.method == 'POST' and 'btn_enr_mat_niv' in request.POST:
+        # Liste des matières dans le template
+        matiere_keys = [key for key in request.POST.keys() if key.startswith('matiere_')]
+        if not matiere_keys:
+            messages.error(request, "Vous devez garder au moins une matière.")
+            teste = False
+        
+        # début de l'enregistrement
+        if teste:
+            # Stoquer les enregistrement du prof de la table Prof_mat_nov
+            matieres = Prof_mat_niv.objects.filter(user_id=user_prof_select_id)
+            # supprimer les anciens enregistrements, mais ils sont stoqués dans prof_mat_niv au besoin
+            prof_mat_niv_ancien = Prof_mat_niv.objects.filter(user_id=user_prof_select_id)
+            prof_mat_niv_ancien.delete() # une copi des enregistrement est sauvegardée dans prof_diplomes en cas d"echec d'enregistrement
+            
+            j = 0 # pour tester si tous les enregistrement modifiés sont enregistrés
+            for matiere_key in matiere_keys:
+                # pour extraire du request les données des enregistrements
+                i = int(matiere_key.split('_')[1])
+                principal_key = f'principal_matiere_{i}'
+                matiere_key = f'matiere_{i}'
+                niveau_key = f'niveau_{i}'
+
+                principal = request.POST.get(principal_key, False)
+                matiere_name = request.POST.get(matiere_key, None)
+                niveau_name = request.POST.get(niveau_key, None)
+                principal_modif = True if principal == "on" else False
+
+                # Récupération des objets Matiere et Niveau correspondants
+                matiere_modif = Matiere.objects.get(matiere=matiere_name)
+                niveau_modif = Niveau.objects.get(niveau=niveau_name)
+
+                # Enregistrement
+                prof_mat_niv = Prof_mat_niv(user_id=user_prof_select_id, matiere=matiere_modif, niveau=niveau_modif, principal=principal_modif)
+                prof_mat_niv.save()
+                j +=1
+            if j==0:
+                # récupérer les enregistrements supprimés
+                k=0 # pour vérifier si tous les enregistrements ont été récupérés
+                for matiere in matieres:
+                    try:
+                        # Créer et sauvegarder les anciens enregistrements
+                        Prof_mat_niv.objects.create(
+                            principal=matiere.principal,
+                            matiere=matiere.matiere,
+                            niveau=matiere.niveau,
+                            user_id=matiere.user_id,
+                        )
+                        k=k+1
+                        if k==matieres.count(): messages.success(request, "Tous les anciens enregistrement de la table Prof_mat_niv ont été récupérés.")
+                        
+                    except Exception as e:
+                        messages.error(request,(
+                                "Echèque d'enregistrement des modifications dans la table Prof_mat_niv"
+                                "Erreur lors de la récupération des enregistrements dans la table Prof_mat_niv. "
+                                "Probablement, il y a une perte d'enregistrement des expériences du professeur : "
+                                f"{str(e)}"))
+
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_mat_niv' est soumis
+    if request.method == 'POST' and 'btn_enr_prix' in request.POST:
+        # Prépare les formats de cours en fonction des choix de l'utilisateur
+        format_cour = Format_cour.objects.filter(user=user_prof_select).first() # 
+        formats = {
+            'a_domicile': 'Cours à domicile',
+            'webcam': 'Cours par webcam',
+            'stage': 'Stage pendant les vacances',
+            'stage_webcam': 'Stage par webcam'
+        }
+        selected_formats = {key: value for key, value in formats.items() if getattr(format_cour, key)}
+
+        # Récupère les prix horaires existants
+        prix_heure_qs = Prix_heure.objects.filter(user=user_prof_select)
+        
+        # Liste des prix dans le template
+        prix_keys = [key for key in request.POST.keys() if key.startswith('prix_heure-')]
+        if not prix_keys:
+            messages.error(request, "Vous devez sélectionner au moins une matière et un format de cours pour pouvoir définir vos tarifs horaires.")
+            teste = False
+        if teste:
+            liste_prix_mat_niv_for = []
+            for prix_key, prix in request.POST.items():
+                if prix_key.startswith('prix_heure-') and prix: # Si le prix est défini
+                    try:
+                        prix_dec = Decimal(prix[:-4]).quantize(Decimal('0.00'))
+                    except (InvalidOperation, ValueError):
+                        messages.error(request, f"Erreur lors de la conversion du prix '{prix[:-4]}' en décimal.")
+                        continue
+
+                    if prix_dec < 10:
+                        messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés.")
+                        continue
+
+                    mat_niv_id_str, format_key = prix_key.split('-')[1].split('__') # définir mat_niv_id_str, format_key selon la structure de l'attribut name de la balise prix
+                    try:
+                        mat_niv_id = int(mat_niv_id_str)
+                    except ValueError:
+                        messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier.")
+                        continue
+
+                    liste_prix_mat_niv_for.append((mat_niv_id, selected_formats[format_key], prix_dec))
+
+            if not liste_prix_mat_niv_for:
+                messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.") # à réviser avec Hichem
+                teste = False
+
+            if teste:
+                # Remplace les anciens prix horaires par les nouveaux
+                Prix_heure.objects.filter(user=user_prof_select).delete()
+                Prix_heure.objects.bulk_create([
+                    Prix_heure(user=user_prof_select, prof_mat_niv_id=mat_niv_id, format=format_label, prix_heure=prix_dec)
+                    for mat_niv_id, format_label, prix_dec in liste_prix_mat_niv_for
+                ])
+
+                messages.success(request, "Lenregistrement des tarifs des cours par heure est achevé.")
+    
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_zone' est soumis
+    if request.method == 'POST' and 'btn_enr_zone' in request.POST:
+        # Récupération de toutes les prof_zones pour le prof sélectionné dans list_prof_zones = {}
+        list_prof_zones = [] # liste des zones enregistrées
+        prof_zones = Prof_zone.objects.filter(user_id=user_prof_select_id)
+        z=prof_zones.count()
+        # Remplir la liste des zones
+        for prof_zone in prof_zones:
+            list_prof_zones.append(prof_zone.commune.commune)
+
+        # Liste des zones dans le template
+        zone_keys = [key for key in request.POST.keys() if key.startswith('zone_')]
+        
+        # messages.info(request, f"list_prof_zones = {list_prof_zones}")
+        # Gérer le cas s'il n'y a pas de zone à enregistrées
+        if not zone_keys and len(list_prof_zones ) >0:
+            messages.info(request, f"Vous avez supprimé toutes les zones . ({len(list_prof_zones )} )")
+            messages.info(request, "Vous devez avoir au moins une zone d'activité définie si vous proposez des cours en présentiel.")
+            prof_zones.delete()
+            teste = False
+        if not zone_keys and len(list_prof_zones )==0:
+            messages.info(request, f"Vous devez au moins avoire une zone d'activité si vous donner des cours en présentiel. ")
+            teste = False
+        
+        if teste:
+            prof_zones.delete() # pour les remplacer par les nouvelles
+            try:
+                j = 0 # Pour tester si tous les zones sont enregistrées
+                # Boucle sur les zones soumises via le formulaire
+                for zone_key in zone_keys:
+                    i = int(zone_key.split('_')[1])
+                    zone_key = f'zone_{i}'
+                    zone_value = request.POST.get(zone_key, None)
+                    # Diviser la chaîne en deux parties en utilisant '-- ' comme séparateur
+                    parts = zone_value.split('-- ')
+                    # Vérifier s'il y a au moins deux parties après la division
+                    if len(parts) >= 2:
+                        # Extraire la deuxième partie qui est celle juste après '--'
+                        commune_nom = parts[1].strip()
+                        # Récupération l'objets commune
+                        commune_obj = Commune.objects.get(commune=commune_nom)
+                        # Création de la relation Prof_zone
+                        Prof_zone.objects.create(user=user_prof_select, commune=commune_obj)
+                        j = j + 1
+                    else: 
+                        messages.info(request, f"Revoire le programmeur => erreur enregistrement zone d'activité: zone_value: {zone_value}")
+                if j==0:
+                    for commune_name in list_prof_zones:
+                        commune = Commune.objects.get(commune=commune_name)
+                        Prof_zone.objects.create(user=user_prof_select, commune=commune)
+                    messages.info(request, "Les anciennes zones sont récupérées")
+                elif j < len(zone_keys): f"Il y a {zone_keys.count() - j} zone(s) non enregistrée(s)."
+                else: messages.success(request,f"Il y a {z-j} zone(s) supprimée(s) et {j} zone(s) gardée(s) ")
+            except Exception as e:
+                # Restaurer les anciennes zones
+                for commune_name in list_prof_zones:
+                    commune = Commune.objects.get(commune=commune_name)
+                    Prof_zone.objects.create(user=user_prof_select, commune=commune)
+                messages.error(request, "Une erreur système est survenue. Les anciennes zones ont été restaurées.")
+                messages.error(request, f"Détails de l'erreur : {str(e)}")
+
+    # Vérifier si la requête est POST et si le bouton 'btn_enr_prof_doc_telecharge' est soumis
+    if request.method == 'POST' and 'btn_enr_prof_doc_telecharge' in request.POST:
+        # Récupérer tous les documents associés au professeur sélectionné
+        prof_docs = Prof_doc_telecharge.objects.filter(user_id=user_prof_select_id)
+        existe_docs = prof_docs.exists()  # Vérifier si des documents existent
+
+        # Obtenir les clés des documents envoyées dans le formulaire
+        doc_keys = [key for key in request.POST.keys() if key.startswith('doc_telecharge_')]
+
+        if existe_docs:
+            if not doc_keys:  # Tous les documents ont été supprimés dans le template
+                messages.info(request, f"Vous avez supprimé tous les documents. ({prof_docs.count()})")
+                # Supprimer les documents et leurs fichiers associés
+                for prof_doc in prof_docs:
+                    if prof_doc.doc_telecharge:
+                        prof_doc.doc_telecharge.delete(save=False)
+                prof_docs.delete()  # Suppression des enregistrements
+            else:
+                # Supprimer uniquement les documents non présents dans les clés du template
+                doc_ids_in_template = {
+                    int(key.split('_id_')[1])
+                    for key in doc_keys
+                    if '_id_' in key and key.split('_id_')[1].isdigit()
+                }
+                doc_ids_to_delete = prof_docs.exclude(id__in=doc_ids_in_template)
+                if doc_ids_to_delete.exists():
+                    messages.info(request, f"{doc_ids_to_delete.count()} document(s) supprimé(s).")
+                    for prof_doc in doc_ids_to_delete:
+                        if prof_doc.doc_telecharge:
+                            prof_doc.doc_telecharge.delete(save=False)
+                    doc_ids_to_delete.delete()
+                else:
+                    messages.info(request, "Aucun changement dans les documents téléchargés.")
+
+                
+
+    # Vérifier si la requête est POST et si le bouton 'btn_email' est soumis
+    if request.method == 'POST' and 'btn_email' in request.POST:
+        email_user = request.POST.get('email_user', request.user.email)
+        email_prof = request.POST.get('email_prof', user_prof_select.email)
+        sujet = request.POST.get('sujet', 'Sujet non défini')
+        text_email = request.POST.get('text_email')
+        if not text_email:
+            messages.error(request, "Veuillez compléter le contenu de l'email avant de l'envoyer.")
+            teste=False
+
+        # Valider l'adresse e-mail du professeur
+        try:
+            validate_email(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse e-mail du professeur n'est pas valide.")
+
+        # Valider l'adresse e-mail du email_user
+        try:
+            validate_email(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse e-mail du user n'est pas valide.")
+
+        destinations = [email_prof]
+
+        if teste:
+            try:
+                # Envoie l'email à tous les destinataires
+                send_mail(sujet, text_email, email_user, destinations, fail_silently=False)
+                # Message de succès si l'email a été envoyé
+                messages.success(request, "L'email a été envoyé avec succès.")
+            except Exception as e:
+                # Message d'erreur si l'envoi échoue
+                messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
+
+            # Enregistre l'email dans la base de données
+            Email_telecharge.objects.create(
+                user=request.user,
+                email_telecharge=email_prof,
+                text_email=text_email,
+                user_destinataire=user_prof_select.id,
+                sujet=sujet
+            )
+            messages.success(request, "Email enregistré")
+
+    # Récupération de tous les diplomes pour le prof sélectionné
+    diplomes = Diplome.objects.filter(user_id=user_prof_select_id)
+    if not diplomes: 
+        messages.info(request, "Aucun diplôme n'est enregistré. (Non obligatoire) ")
+    prof_diplomes_count= diplomes.count() # pour paramétrer ID et Name des date_début et date_fin des expériences
+
+    
+    # Récupération de toutes les expériances pour le prof sélectionné
+    experiences = Experience.objects.filter(user_id=user_prof_select_id)
+    if not experiences: messages.info(request, "Aucune expérience n'est enregistrée. (Non obligatoire)")
+    
+    # Récupération de tous les prof_mat_nivs pour le prof sélectionné
+    prof_mat_nivs = Prof_mat_niv.objects.filter(user_id=user_prof_select_id)
+    if not prof_mat_nivs: messages.info(request, "Pas d'enregistrement dans la table prof_mat_niv pour le prof. (Il faut définir au moins une matière)")
+
+    # Récupération de toutes les prof_zones pour le prof sélectionné
+    prof_zones = Prof_zone.objects.filter(user_id=user_prof_select_id)
+    if not prof_zones: messages.info(request, "Aucune zone d'activité n'est définie. (Non obligatoire si le format cours est à distance)")
+
+    # Récupération de toutes les documente télécharger par le prof sélectionné
+    prof_doc_telecharges = Prof_doc_telecharge.objects.filter(user_id=user_prof_select_id)
+    if not prof_doc_telecharges: messages.info(request, "Aucun document justificatif n'est téléchargé. (non obligatoire)")
+
+    # contenu émail du document téléchargé
+
+    # Construction de la liste des chaînes "région - département - commune"
+    zone_lists = []
+    selected_formats = {}
+    liste_enregistrements = []
+
+    # Si le prof sélectionné a déjà des zones enregistrées
+    if prof_zones.exists():
+        
+        for prof_zone in prof_zones:
+            commune = prof_zone.commune
+            departement = commune.departement
+            region = departement.region
+            zone_string = f"{region.region} - {departement.departement} -- {commune.commune}"
+            zone_lists.append(zone_string)
+
+    # Vérifie si le prof sélectionné a défini un format de cours
+    format_cour = Format_cour.objects.filter(user_id=user_prof_select_id).first()
+
+    if format_cour:
+        # Récupère le premier enregistrement de format de cours
+        # format_cour = format_cour_qs.first()
+
+        # Vérifie si le prof sélectionné a défini des matières et niveaux
+        prof_mat_niv = Prof_mat_niv.objects.filter(user_id=user_prof_select_id)
+        if not prof_mat_niv:
+            messages.error(request, "Vous n'avez pas encore défini de matière pour vos cours.")
+            # return redirect('compte_prof')
+
+        # Prépare les formats de cours en fonction des choix du prof sélectionné
+        formats = {
+            'a_domicile': 'Cours à domicile',
+            'webcam': 'Cours par webcam',
+            'stage': 'Stage pendant les vacances',
+            'stage_webcam': 'Stage par webcam'
+        }
+        selected_formats = {key: value for key, value in formats.items() if getattr(format_cour, key)}
+
+        # Récupère les prix horaires existants
+        prix_heure_qs = Prix_heure.objects.filter(user_id=user_prof_select_id)
+
+        # Prépare la liste des enregistrements pour le template
+        for format_key, format_label in selected_formats.items():
+            for prof_mat_niveau in prof_mat_niv:
+                prix_heure = prix_heure_qs.filter(
+                    prof_mat_niv=prof_mat_niveau.id, format=format_label).first()
+                prix_heure_value = str(prix_heure.prix_heure) if prix_heure else ""
+                liste_enregistrements.append(
+                    (prof_mat_niveau.id, prof_mat_niveau.matiere, prof_mat_niveau.niveau, prix_heure_value, format_key)
+                )
+    else:
+        # Pas de format de cours défini pour ce professeur
+        messages.info(request, "Vous n'avez pas encore défini de format pour vos cours. (Obligatoire)")
+
+
+ 
+    experience_cathegories = Experience_cathegorie.objects.all()
+    diplome_cathegories = Diplome_cathegorie.objects.all()
+    matieres = Matiere.objects.all()
+    niveaus = Niveau.objects.all()
+    # Préparer les données du contexte
+    context = {
+        'user_profs': user_profs,
+        'user_prof_select': user_prof_select,
+        'experiences': experiences,
+        'prof_mat_nivs': prof_mat_nivs,
+        'zone_lists': zone_lists,
+        'prof_doc_telecharges': prof_doc_telecharges,
+        'liste_format': list(selected_formats.keys()),
+        'liste_enregistrements': liste_enregistrements,
+        'prof_diplomes_count': prof_diplomes_count, # pour paramétrer ID et Name des date_début et date_fin des expériences
+        'diplomes': diplomes,
+        'diplome_cathegories': diplome_cathegories,
+        'matieres': matieres,
+        'niveaus': niveaus,
+        'experience_cathegories': experience_cathegories,
+        'user_id':user_id,
+    }
+        
+
+    # Rendre la page avec les données
+    return render(request, 'pages/admin_compte_prof.html', context)
+
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_email_recu(request, email_id):
+    """ Afficher le contenu de l'email """
+
+    email = Email_telecharge.objects.filter(id=email_id).first()  # envoyé par l'élève
+    
+    # Vérifier si l'email existe
+    if not email:
+        return HttpResponse("Email introuvable", status=404)
+
+    # Conversion de la date au format jj/mm/aaaa
+    date_telechargement = email.date_telechargement.strftime('%d/%m/%Y') if email.date_telechargement else "Non spécifiée"
+
+    text_email = f"""
+        Date de réception : {date_telechargement}
+
+        Envoyé par : {email.user.first_name} {email.user.last_name}
+
+        Email d'envoie : {email.email_telecharge}
+
+        Sujet de l'email : {email.sujet}
+
+        Contenu de l'email :
+        {email.text_email}
+        """
+    context = {'text_email': text_email}
+
+    if request.method == 'POST' and 'btn_fermer' in request.POST:
+        return redirect('compte_administrateur')
+    return render(request, 'pages/admin_email_recu.html', context)
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_doc_recu(request, doc_id):
+    """ Afficher le contenu de l'email """
+
+    prof_doc_telecharge = Prof_doc_telecharge.objects.filter(id=doc_id).first()  # envoyé par l'élève
+    
+    # Vérifier si l'email existe
+    if not prof_doc_telecharge:
+        return HttpResponse("Document introuvable", status=404)
+
+    # Conversion de la date au format jj/mm/aaaa
+    date_telechargement = prof_doc_telecharge.date_telechargement.strftime('%d/%m/%Y') if prof_doc_telecharge.date_telechargement else "Non spécifiée"
+
+    doc_telecharge = prof_doc_telecharge.doc_telecharge
+    context = {'doc_telecharge': doc_telecharge}
+
+    
+    return render(request, 'pages/admin_doc_recu.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_compte_eleve(request, user_id=0):
+    """
+    Vue permettant d'afficher tous les utilisateurs ayant un compte de élève.
+    Accessible uniquement par les administrateurs actifs.
+    """
+    # si le bouton 'btn_fermer' est activé revenir au template 'compte_administrateur'
+    if request.method == 'POST' and 'btn_fermer' in request.POST:
+        return redirect('compte_administrateur')
+
+    # Filtrer les utilisateurs liés au rôle de élève et trier par prénom puis nom
+    user_eleves = User.objects.filter(eleve__isnull=False).order_by('first_name', 'last_name')
+
+    # Vérifier si la liste est vide et ajouter un message d'erreur
+    if not user_eleves.exists():
+        messages.error(request, "Aucun élève trouvé.")
+        return render(request, 'pages/admin_compte_eleve.html')
+    
+    # Définir l'ID de l'élève sélectionné (valeur par défaut : dernier élève enregistré)
+    user_eleve_last = User.objects.filter(eleve__isnull=False).last()
+    user_eleve_select_id = request.POST.get('user_prof_select_id', user_eleve_last.id)
+
+    if user_id != 0:
+        user_eleve_select_id = user_id
+        user_eleve_last = User.objects.filter(id=user_id).last()
+
+    # Convertir l'ID sélectionné en entier avec gestion des erreurs
+    try:
+        user_eleve_select_id = int(user_eleve_select_id)
+    except (ValueError, TypeError):
+        user_eleve_select_id = user_eleve_last.id  # Utiliser l'ID du dernier élève enregistré par défaut
+
+    # Récupérer l'utilisateur sélectionné ou lever une erreur 404 si non trouvé
+    user_eleve_select = get_object_or_404(User, id=user_eleve_select_id, eleve__isnull=False)
+
+
+    teste = True # pour autoriser l'enregistrement si tous les condition sont respectées
+
+    # Modifier l'enregistrement électionné dans la table user
+    if request.method == 'POST' and 'btn_enr_user_eleve' in request.POST:
+        # récupérer les données du template
+        username = request.POST.get('username', user_eleve_select.username).strip()
+        first_name = request.POST.get('first_name', user_eleve_select.first_name).strip()
+        last_name = request.POST.get('last_name', user_eleve_select.last_name).strip()
+        email = request.POST.get('email', user_eleve_select.email).strip()
+
+        if not first_name.strip() or not last_name.strip() or not email.strip() or not username.strip():
+            messages.error(request, "Les champs email, first_name, last_name et username sont obligatoires de la table user.")
+            teste = False
+        
+        # si l'email a été changé et que le nouveau email existe déjà
+        if email != user_eleve_select.email and User.objects.filter(email=email).exists():
+            messages.error(request, "L'email est déjà utilisé, donnez un autre email")
+            teste = False
+        
+        # si le user a été changé et que le nouveau user existe déjà
+        if username != user_eleve_select.username and User.objects.filter(username=username).exists():
+            messages.error(request, "Le username est déjà utilisé, donnez un autre username")
+            teste = False
+
+        #tester le format de l'email
+        email_validator = EmailValidator() # Initialiser le validateur d'email
+        # Validation de l'email
+        try:
+            email_validator(email)
+        except ValidationError:
+            messages.error(request, "Le format de l'email est incorrecte.")
+            teste = False
+        
+        if teste: # si tous les données sont valides
+            user_eleve_select.first_name = first_name
+            user_eleve_select.last_name = last_name
+            user_eleve_select.email = email
+            user_eleve_select.username = username
+            user_eleve_select.is_active = 'is_active' in request.POST
+            user_eleve_select.save()
+
+    
+    # Modifier l'enregistrement de l'élève sélectionné dans la table Eleve
+    if request.method == 'POST' and 'btn_enr_eleve' in request.POST:
+        # récupérer les données du template
+        civilite = request.POST.get('civilite', user_eleve_select.eleve.civilite).strip()
+        phone = request.POST.get('phone', user_eleve_select.eleve.numero_telephone).strip()
+        date_naissance = request.POST.get('date_naissance', user_eleve_select.eleve.date_naissance)
+        adresse = request.POST.get('adresse', user_eleve_select.eleve.adresse).strip()
+
+        if date_naissance :
+            #Vérifier le format de la date
+            try:
+                    # si la convertion est réussie
+                    date_naissance_nouveau_01 = datetime.strptime(date_naissance, '%d/%m/%Y') # date_naissance_nouveau_01 est crée juste pour tester le format de la date
+            except ValueError:
+                messages.error(request, "Format de date de naissance invalide. Utilisez jj/mm/aaaa")
+                #date_naissance = user_prof_select.professeur.date_naissance
+                teste = False
+        if teste: # si tous les données sont valides
+            # Mettre à jour les données du professeur 
+            user_eleve_select.eleve.adresse = adresse
+            user_eleve_select.eleve.numero_telephone = phone
+            user_eleve_select.eleve.civilite = civilite
+            user_eleve_select.eleve.set_date_naissance_from_str(date_naissance)
+            user_eleve_select.eleve.save()
+
+    # Modifier l'enregistrement du parent de l'élève sélectionné dans la table Parent
+    if request.method == 'POST' and 'btn_enr_eleve_parent' in request.POST:
+        parent= Parent.objects.filter(user = user_eleve_select).first()
+
+        # récupérer les données du template
+        if parent:
+            civilite_parent = request.POST.get('civilite_parent', user_eleve_select.parent.civilite).strip()
+            prenom_parent = request.POST.get('prenom_parent', user_eleve_select.parent.prenom_parent).strip()
+            nom_parent = request.POST.get('nom_parent', user_eleve_select.parent.nom_parent).strip()
+            telephone_parent = request.POST.get('telephone_parent', user_eleve_select.parent.telephone_parent).strip()
+            email_parent = request.POST.get('email_parent', user_eleve_select.parent.email_parent).strip()
+        else:
+            civilite_parent = request.POST.get('civilite_parent', '').strip()
+            prenom_parent = request.POST.get('prenom_parent', '').strip()
+            nom_parent = request.POST.get('nom_parent', '').strip()
+            telephone_parent = request.POST.get('telephone_parent', '').strip()
+            email_parent = request.POST.get('email_parent', '').strip()
+
+
+        #tester le format de l'email
+        email_validator = EmailValidator() # Initialiser le validateur d'email
+        if email_parent != "":
+            # Validation de l'email_prof
+            try:
+                email_validator(email_parent)
+            except ValidationError:
+                messages.error(request, "Le format de l'email du parent est incorrecte.")
+                teste = False
+        
+        if teste:  # Si toutes les données sont valides
+            # Mettre à jour les données du parent
+            if parent: 
+                # Si un parent existe, mettre à jour ses informations
+                user_eleve_select.parent.prenom_parent = prenom_parent
+                user_eleve_select.parent.nom_parent = nom_parent
+                user_eleve_select.parent.civilite = civilite_parent
+                user_eleve_select.parent.telephone_parent = telephone_parent
+                user_eleve_select.parent.email_parent = email_parent
+                user_eleve_select.parent.save()
+            else:
+                # Si aucun parent n'existe, créer un nouveau parent
+                parent = Parent.objects.create(
+                    prenom_parent=prenom_parent,
+                    nom_parent=nom_parent,
+                    civilite=civilite_parent,
+                    telephone_parent=telephone_parent,
+                    email_parent=email_parent,
+                    user=user_eleve_select  # Associer l'élève au parent
+                )
+                # Associer le parent créé à l'élève
+                user_eleve_select.parent = parent
+                user_eleve_select.save()
+
+    # Gérer l'enregistrement des témoignages
+    if request.method == 'POST' and 'btn_enr_temoignage' in request.POST:
+        # Récupérer tous les témoignage de l'élève sélectionné
+        temoignages = Temoignage.objects.filter(user_eleve_id=user_eleve_select.id)
+        existe_temoignages = temoignages.exists()  # Vérifier si des temoignages existent
+
+        # Obtenir les clés des témoignages dans le formulaire
+        temoignage_keys = [key for key in request.POST.keys() if key.startswith('text_eleve_id_')]
+
+        if existe_temoignages:
+            if not temoignage_keys:  # Tous les témoignages ont été supprimés dans le template
+                messages.info(request, f"Vous avez supprimé tous les témoignages. ({temoignages.count()})")
+                # Supprimer les témoignages
+                temoignages.delete()  # Suppression des enregistrements
+            else:
+                # Supprimer uniquement les témoignages non présents dans les clés du template
+                temoignage_ids_in_template = {
+                    int(key.split('_id_')[1])
+                    for key in temoignage_keys
+                    if '_id_' in key and key.split('_id_')[1].isdigit()
+                }
+                temoignage_ids_to_delete = temoignages.exclude(id__in=temoignage_ids_in_template)
+                if temoignage_ids_to_delete.exists():
+                    messages.info(request, f"{temoignage_ids_to_delete.count()} témoignage(s) supprimé(s).")
+                    temoignage_ids_to_delete.delete()
+                else:
+                    messages.info(request, "Aucun changement dans les témougnage.")
+
+    # Vérifier si la requête est POST et si le bouton 'btn_email' est soumis
+    if request.method == 'POST' and 'btn_email' in request.POST:
+        email_user = request.POST.get('email_user', request.user.email)
+        email_prof = request.POST.get('email_eleve', user_eleve_select.email)
+        sujet = request.POST.get('sujet', 'Sujet non défini')
+        text_email = request.POST.get('text_email')
+        if not text_email:
+            messages.error(request, "Veuillez compléter le contenu de l'email avant de l'envoyer.")
+            teste=False
+
+        # Valider l'adresse e-mail du professeur
+        try:
+            validate_email(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse e-mail de l'élève n'est pas valide.")
+
+        # Valider l'adresse e-mail du email_user
+        try:
+            validate_email(email_prof)
+        except ValidationError:
+            messages.error(request, "L'adresse e-mail du user n'est pas valide.")
+
+        destinations = [email_prof]
+
+        if teste:
+            try:
+                # Envoie l'email à tous les destinataires
+                send_mail(sujet, text_email, email_user, destinations, fail_silently=False)
+                # Message de succès si l'email a été envoyé
+                messages.success(request, "L'email a été envoyé avec succès.")
+            except Exception as e:
+                # Message d'erreur si l'envoi échoue
+                messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
+
+            # Enregistre l'email dans la base de données
+            Email_telecharge.objects.create(
+                user=request.user,
+                email_telecharge=email_prof,
+                text_email=text_email,
+                user_destinataire=user_eleve_select.id,
+                sujet=sujet
+            )
+            messages.success(request, "Email enregistré")
+
+    temoignages = Temoignage.objects.filter(user_eleve=user_eleve_select)
+
+    context = {
+        'user_eleves': user_eleves,
+        'user_eleve_select': user_eleve_select,
+        'temoignages': temoignages,
+        'user_id': user_id,
+    }
+    # Rendre la page avec les données
+    return render(request, 'pages/admin_compte_eleve.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_liste_email_recu(request):
+
+    user_id = request.user.id # ID admin
+
+    # Fonction interne pour récupérer les emails en fonction des critères de filtrage
+    def get_emails(filter_criteria):
+        emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
+        return emails
+
+    # Filtrage par défaut pour les nouveaux emails (emails avec suivi = null)
+    emails = get_emails({})
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if request.method == 'POST':
+        if 'btn_tous' in request.POST:
+            # Filtrer pour tous les emails
+            emails = get_emails({})
+        elif 'btn_nouveau' in request.POST:
+            # Filtrer pour les nouveaux emails (suivi = null)
+            emails = get_emails({'suivi__isnull': True})
+        elif 'btn_attente' in request.POST:
+            # Filtrer pour les emails en attente (suivi = 'Réception confirmée')
+            emails = get_emails({'suivi': 'Réception confirmée'})
+        elif 'btn_repondu' in request.POST:
+            # Filtrer pour les emails répondus (suivi = 'Répondu')
+            emails = get_emails({'suivi': 'Répondu'})
+        elif 'btn_ignore' in request.POST:
+            # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
+            emails = get_emails({'suivi': 'Mis à côté'})
+
+    # Contexte à passer au template
+    context = {
+        'emails': emails
+    }
+    
+    # Rendu de la page avec les emails filtrés
+    return render(request, 'pages/admin_liste_email_recu.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_detaille_email(request, email_id):
+    user = request.user # admin
+    email = Email_telecharge.objects.filter(id=email_id).first() # récupérer l'email
+    
+    
+
+    context = {'email': email, 'email_id': email_id}
+    
+    # Initialiser le validateur d'email
+    email_validator = EmailValidator()
+
+    if 'btn_ignorer' in request.POST: # bouton Ignorer activé
+        email.suivi = 'Mis à côté'
+        email.date_suivi = date.today()
+        email.save() 
+        messages.success(request, "L'email est enregistré en tant qu'email ignoré.")
+        return redirect('admin_liste_email_recu') # Rediriger vers compte admin
+
+    if 'btn_confirmer' in request.POST: # bouton confirmer activé
+        email_expediteur = user.email # émail de l'administrateur
+        email_source = email.email_telecharge
+        sujet = "Confirmation de réception"
+        text_email = f"""
+        J'ai bien reçu votre email
+        Date de réception : {email.date_telechargement.strftime('%d/%m/%Y')}
+        Sujet de l'email : {email.sujet}
+        Contenu de l'email :
+        {email.text_email}
+        """
+        destinations = ['prosib25@gmail.com', email_source]
+
+        # Validation de l'email_prof
+        try:
+            email_validator(email_expediteur)
+        except ValidationError:
+            messages.error(request, "L'adresse email du professeur est invalide.")
+            return render(request, 'pages/admin_detaille_email.html', context)
+
+        # Validation des emails dans destinations
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                return render(request, 'pages/admin_detaille_email.html', context)
+
+        try:
+            send_mail(sujet, text_email, email_expediteur, destinations, fail_silently=False)
+            messages.success(request, "L'email a été envoyé avec succès.")
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        
+        if not  email.user: # dans le cas ou l'expéditeur n'est un client
+            return redirect('admin_liste_email_recu') # car l'expéditeur de l'email n'a pas d'identifiant ID
+
+        email_telecharge = Email_telecharge(
+            user=user,
+            email_telecharge=email_expediteur,
+            text_email=text_email,
+            user_destinataire=email.user.id,
+            sujet=sujet
+        )
+        email_telecharge.save() # Enregistrement de l'email envoyé
+
+        # mis à jour de l'email reçu
+        email.suivi = 'Réception confirmée'
+        email.date_suivi = date.today()
+        email.reponse_email_id = email_telecharge.id
+        email.save() # mis à jour de l'email reçu
+
+        messages.success(request, "Email enregistré")
+        return redirect('admin_liste_email_recu')
+
+    # if 'btn_repondre' in request.POST:
+    #     return redirect('admin_reponse_email', email_id=email_id) # Redirigze ver page  email_id est transmis à reponse_email
+    
+    if 'btn_historique' in request.POST: # bouton historique activé
+        if email.reponse_email_id==None:
+            messages.info(request, "Il n'y a pas de réponse à cet email")
+            return render(request, 'pages/admin_detaille_email.html', context) # rediriger vers la même page
+
+        # rediriger vers la même page mais en changeant l'argument
+        # il faut élaborer une page spéciale pour afficher l'historique des emails
+        return redirect(reverse('admin_detaille_email', args=[email.reponse_email_id])) # -	ça marche très bien
+    
+    
+    if 'btn_voire_eleve' in request.POST: # bouton ajout élève activé
+        return redirect('modifier_mes_eleve', mon_eleve_id=email_id) # Rediriger vers autre page
+
+    return render(request, 'pages/admin_detaille_email.html', context) # Revenir à la même page, le context est nécessaire pout le template
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_reponse_email(request, email_id): 
+    email = Email_telecharge.objects.filter(id=email_id).first() # envoyé par le client
+    user = request.user # admin
+    text_email = f"""
+        Suite à votre email :
+        Date de réception : {email.date_telechargement.strftime('%d/%m/%Y')}
+        Sujet de l'email : {email.sujet}
+        Contenu de l'email :
+        {email.text_email}
+        ---------------------------
+        En réponse à votre email, je vous adresse ce qui suit.
+        De la part de: {user.first_name} {user.last_name}
+        """
+    sujet = "Suite à votre email"
+    email_user = user.email
+    context={'text_email': text_email, 'sujet': sujet, 'email_user': email_user}
+    if 'btn_enr' in request.POST:
+        
+        text_email = request.POST.get('text_email', '').strip()
+        sujet = request.POST.get('sujet', '').strip()
+        email_user = request.POST.get('email_adresse', '').strip() # la priorité est à l'email reçu du POST
+        if not email_user: # si l'email du POST est null ou vide
+            email_user = user.email 
+
+        # Validation de l'email_prof
+        email_validator = EmailValidator() #inicialisation de l'objet EmailValidator
+        try:
+            email_validator(email_user)
+        except ValidationError:
+            messages.error(request, "L'adresse email du professeur est invalide.")
+            context={'text_email': text_email, 'sujet': sujet, 'email_prof': email_user}
+            return render(request, 'accounts/reponse_email.html', context) # revenir à la même page
+
+        sujet = request.POST.get('sujet', '').strip() 
+        if not sujet:  
+            sujet = "Suite à votre email"
+        
+        text_email =  request.POST['text_email']
+        user_destinataire = email.user.id
+        email_destinataire = email.email_telecharge
+        destinations = ['prosib25@gmail.com', email_destinataire]  
+
+        # Validation des emails dans destinations
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
+
+        try:
+            send_mail(
+                sujet,
+                text_email,
+                email_user,
+                destinations,
+                fail_silently=False,
+            )
+            messages.success(request, "La réponse à l'email a été envoyée avec succès.")
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        
+        # enregistrement de l'email
+        email_telecharge = Email_telecharge(
+            user=user, 
+            email_telecharge=email_user, 
+            text_email=text_email, 
+            user_destinataire=user_destinataire, 
+            sujet=sujet
+        )
+        email_telecharge.save()
+        # mise à jour de l'enregistrement de l'email envoyé par l'élève
+        email_reponse_id = email_telecharge.id  
+        email.suivi = 'Répondu'
+        email.date_suivi = timezone.now()
+        email.reponse_email_id = email_reponse_id
+        email.save()  
+        messages.success(request, "Email enregistré")
+        return redirect('admin_liste_email_recu') # Rediriger vers autre page
+    
+    return render(request, 'pages/admin_reponse_email.html', context) # revenir sur la même page

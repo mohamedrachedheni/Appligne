@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Détaille demandes de cours reçues{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container-xxl py-1">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Détaille email</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <!-- Début Form-->
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" >
+                {% csrf_token %}
+            
+                <!-- fichiers prof debut -->
+                <div class="container-xxl py-5 " id="identite">
+                    <div class="container ">
+                        <div class="container bg-light  p-4">
+                            <div class="row justify-content-center">
+                                <div class="col-12 position-relative">
+                                    <label for="date_expedition_id" class="form-label">Date d'expédition</label>
+                                    <input type="text" class="form-control" id="date_expedition_id" name="date_expedition" 
+                                    value="{{email.date_telechargement|date:'d/m/Y'}}" readonly>
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="expediteur_id" class="form-label">Expéditeur</label>
+                                    <input type="text" class="form-control" id="expediteur_id" name="expediteur" 
+                                    value="{{email.user.first_name}} {{email.user.last_name}}" readonly>
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
+                                    <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{email.sujet}}" readonly>
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="source_id" class="form-label">Email de l'expéditeur</label>
+                                    <input type="text" class="form-control" id="source_id" name="source" 
+                                    value="{{email.email_telecharge}}" readonly>
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="text_email_id" class="form-label">Contenu de l'email reçu :</label>
+                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" placeholder="Au besoin, posez vos questions" readonly>{{email.text_email}}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="row d-flex justify-content-center gap-3 mt-3">
+                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
+                                            <button type="submit" class="btn btn-warning w-100" name="btn_ignorer" {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %} >
+                                                Ignorer
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
+                                            <button type="submit" class="btn btn-success w-100" name="btn_confirmer" {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %} >
+                                                Bien reçu
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
+                                            <a class="btn btn-primary w-100 {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %} " name="btn_détaille_{{ email.id }}"
+                                                        href="{% url 'admin_reponse_email' email_id=email.id %}"><span
+                                                            style="color: white;">Répondre </span></a>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
+                                            <button type="submit" class="btn btn-primary w-100" name="btn_historique" {% if not email.reponse_email_id and email.user!=request.user %} disabled {% endif %}>
+                                                Voir réponse
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
+                                            <a class="btn btn-primary w-100 {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %}" 
+                                            name="btn_détaille_{{ email.id }}"
+                                            {% if email.user.professeur %}
+                                                href="{% url 'admin_compte_prof' user_id=email.user.id %}"
+                                            {% elif email.user.eleve %}
+                                                href="{% url 'admin_compte_eleve' user_id=email.user.id %}"
+                                            {% else %}
+                                                href="#"
+                                            {% endif %}
+                                            >
+                                            <span style="color: white;">Voir expéditeur</span>
+                                            </a>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- fichiers prof Fin -->
+            </form>
+
+
+
+
+
+
+            <!-- Fin Form -->
+        </div>
+    </div>
+    <!-- mon compte fin -->
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+    // fonction pour redimentionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+    }
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+{% endblock %}

@@ -519,10 +519,6 @@ def get_communes(request):
         return JsonResponse([], safe=False)
 
 
-from django.contrib import auth
-from django.shortcuts import redirect, render
-from django.contrib import messages
-from .models import Professeur, Eleve  # Importez les modèles Professeur et Eleve
 
 def signin(request):
     user_nom = ""
@@ -533,30 +529,39 @@ def signin(request):
         user = auth.authenticate(username=user_nom, password=mot_pass)
         
         if user is not None:
-            # Si la case souviens_toi n'est pas cochée, la session expire à la fermeture du navigateur
-            if 'souviens_toi' not in request.POST:
-                request.session.set_expiry(0)
+            # Vérifie si l'utilisateur est actif
+            if user.is_active:
+                # Si la case souviens_toi n'est pas cochée, la session expire à la fermeture du navigateur
+                if 'souviens_toi' not in request.POST:
+                    request.session.set_expiry(0)
+                else:
+                    request.session.set_expiry(1209600)  # 2 semaines
+
+                # Authentification réussie, le user est connecté
+                auth.login(request, user)
+
+                # Vérification si l'utilisateur est un professeur
+                if Professeur.objects.filter(user=user).exists():
+                    return redirect('compte_prof')
+                
+                # Vérification si l'utilisateur est un élève
+                elif Eleve.objects.filter(user=user).exists():
+                    return redirect('compte_eleve')
+                
+                # Si l'utilisateur est superuser et staff
+                elif user.is_superuser and user.is_staff:  # à gérer le cas des administrateurs plus tard
+                    return redirect('compte_administrateur')
+                else:
+                    # Message d'erreur si l'utilisateur n'est pas superuser ou staff
+                    messages.error(request, "Vous n'êtes pas autorisé à acceder au compte administrateur.")
             else:
-                request.session.set_expiry(1209600)  # 2 semaines
-
-            # Authentification réussie, le user est connecté
-            auth.login(request, user)
-
-            # Vérification si l'utilisateur est un professeur
-            if Professeur.objects.filter(user=user).exists():
-                return redirect('compte_prof')
-            
-            # Vérification si l'utilisateur est un élève
-            elif Eleve.objects.filter(user=user).exists():
-                return redirect('compte_eleve')
-            
-            # Si l'utilisateur n'est ni professeur ni élève
-            else: # à gérer le cas des administrateurs plus tard
-                return redirect('index')  # Redirection par défaut si aucun rôle trouvé
+                # Message d'erreur si l'utilisateur n'est pas actif
+                messages.error(request, "Votre compte est désactivé. Veuillez contacter l'administrateur.")
         else:
             messages.error(request, "Le nom de l'utilisateur ou le mot de passe est invalide")
             
     return render(request, 'accounts/signin.html', {'user_nom': user_nom, 'mot_pass': mot_pass})
+
 
     
 
@@ -745,14 +750,17 @@ def nouveau_fichier(request):
 def votre_compte(request):
     # Récupérer l'utilisateur actuel
     user = request.user
-    if user.is_authenticated:
+    if user.is_authenticated and user.is_active :
         # messages.success(request, f"Vous etes connecté. {user.first_name}")
         # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur'):
+        if hasattr(user, 'professeur') :
             return redirect('compte_prof')
-        else: 
-            if hasattr(user, 'eleve'):
-                return redirect('compte_eleve')
+        # Vérifier si l'utilisateur a un profil d'élève associé
+        elif hasattr(user, 'eleve'):
+            return redirect('compte_eleve')
+        # Si l'utilisateur est superuser et staff
+        elif user.is_superuser and user.is_staff :  # à gérer le cas des administrateurs plus tard
+            return redirect('compte_administrateur')
     messages.error(request, "Vous devez être connecté pour effectuer cette action.")
     return redirect('signin')
 
@@ -858,7 +866,11 @@ def modifier_compte_prof(request):
             professeur.civilite = civilite
             professeur.set_date_naissance_from_str(date_naissance)
             # s'il y a un changement de photo d'identité
-            if 'photo' in request.FILES: professeur.photo = request.FILES['photo']  
+            if 'photo' in request.FILES:
+                # Si l'ancienne photo d'identité existe son ficher est supprimé
+                if professeur.photo:
+                    professeur.photo.delete(save=False)
+                professeur.photo = request.FILES['photo']  # sésir la nouvelle photo d'identité
             professeur.save()
             # auth.login(request, user)
             messages.success(request, "Les informations ont été mises à jour avec succès.")
@@ -873,16 +885,7 @@ def modifier_compte_prof(request):
         'date_naissance':date_naissance,
         'adresse':adresse}
     return render(request, 'accounts/modifier_compte_prof.html', context)
-    # voire l'interet de ce code alternative
-    # # Rendre la réponse en utilisant le template 'pages/index.html'
-    # response = render(request, 'accounts/modifier_compte_prof.html', context)
-    # # Ajouter les en-têtes pour empêcher la mise en cache de la page
-    # # Cela garantit que le navigateur récupère toujours les données les plus récentes
-    # response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  # HTTP 1.1.
-    # response['Pragma'] = 'no-cache'  # HTTP 1.0.
-    # response['Expires'] = '0'  # Proxies.
-    # # Retourner la réponse
-    # return response
+   
 
 
 
@@ -1363,14 +1366,14 @@ def modifier_zone(request):
 
         # Si le formulaire de modification est soumis
         if request.method == 'POST' and 'btn_enr' in request.POST:
-            # Liste des matières dans le template
+            # Liste des zones dans le template
             zone_keys = [key for key in request.POST.keys() if key.startswith('zone_')]
             # messages.info(request, f"Nombre de zone : {len(zone_keys)}")
             if not zone_keys:
-                messages.error(request, "Vous avez supprimé toutes les zones.")
+                messages.info(request, "Vous avez supprimé toutes les zones.")
                 prof_zones.delete()
                 return redirect('compte_prof')
-            prof_zones.delete()
+            prof_zones.delete() # pour les remplacer par les nouvelles
             # Boucle sur les matières soumises via le formulaire
             for zone_key in zone_keys:
                 i = int(zone_key.split('_')[1])
@@ -1804,7 +1807,7 @@ def nouveau_prix_heure(request):
         liste_prix_mat_niv_for = []
 
         for prix_key, prix in request.POST.items():
-            if prix_key.startswith('prix_heure-') and prix:
+            if prix_key.startswith('prix_heure-') and prix: # Si le prix est défini
                 try:
                     prix_dec = Decimal(prix[:-4]).quantize(Decimal('0.00'))
                 except (InvalidOperation, ValueError):

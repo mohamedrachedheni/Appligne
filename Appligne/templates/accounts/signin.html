@@ -21,8 +21,8 @@
                     <a class="text-primary" href="{% url 'compte_prof' %}"> en tant que professeur</a>
                 {% elif request.user.eleve %}
                     <a class="text-primary" href="{% url 'compte_eleve' %}"> en tant qu'élève</a>
-                {% else %}
-                    <a class="text-primary" href="#"> en tant qu'administrateur</a>
+                {% elif user.is_staff %}
+                    <a class="text-primary" href="{% url 'compte_administrateur' %}"> en tant qu'administrateur</a> 
                 {% endif %}
             </h4>
             <h5 class="alert alert-warning text-center" ><a class="text-primary" href="{% url 'logout' %}">Se déconnecter</a></h5>

@@ -5,6 +5,9 @@ from django.contrib.auth.hashers import make_password # pour crypter des champs
 from django.core.exceptions import ValidationError
 
 
+
+
+
 # Create your models here.
 
 class Eleve(models.Model):
@@ -56,8 +59,6 @@ class Parent(models.Model):
             self.code_carte = make_password(code_carte_plain)
             
 
-from django.db import models
-from django.contrib.auth.models import User
 
 class Temoignage(models.Model):
     # Définition des différentes évaluations

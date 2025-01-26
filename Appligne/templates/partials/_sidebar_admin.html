@@ -1,0 +1,45 @@
+{% load static %}
+<!-- début sidebar -->
+<nav id="sidebar">
+    <div class="p-4 pt-5">
+        <ul class="list-unstyled components mb-5">
+            <li >
+                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Gérer comptes clients</strong></a>
+                <ul class="collapse list-unstyled" id="homeSubmenu">
+                    <li>
+                        <a class="nav-link" href="{% url 'admin_compte_prof' user_id=0 %}"><strong>Compte prof</strong></a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_compte_eleve' user_id=0 %}" class="dropdown-item"  >Compte élève</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_liste_email_recu' %}" class="dropdown-item"  >Emails reçus</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Gérer les paiements</strong></a>
+                <ul class="collapse list-unstyled" id="pageSubmenu">
+                    <li>
+                        <a href="#" class="dropdown-item"  >Nouvelle déclaration de cours</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#pageSubmenu_eleve" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Autres outils</strong></a>
+                <ul class="collapse list-unstyled" id="pageSubmenu_eleve">
+                    <li>
+                        <a href="#" class="dropdown-item"  >Nouveau email</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                {% if user.is_staff %}
+                    <a class="nav-link" href="/admin/"><strong>Administration système</strong></a>
+                {% endif %}
+
+            </li>
+        </ul>
+    </div>
+</nav>
+<!-- fin sidebar -->

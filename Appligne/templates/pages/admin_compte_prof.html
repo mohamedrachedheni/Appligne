@@ -1,0 +1,996 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mathfilters %}
+{% block title %} | Home{% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Consulter compte prof</h6>
+                        <h1 class="mb-5">Détailles par table</h1>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+                {% csrf_token %}
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+
+                    <!-- Liste prof début -->
+                     {% if user_id == 0 %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light">
+                                <div class="row g-3 p-3">
+                                    <div class="col-lg-4 position-relative">
+                                        <label class="form-label" for="professeurs">Choisir un professeur</label>
+                                        <div class="input-group">
+                                            <!-- Input pour la recherche de professeurs -->
+                                            <input type="text" 
+                                                class="form-control form-control-autre" 
+                                                id="professeurs" 
+                                                name="professeurs" 
+                                                value="{{ user_prof_select.first_name }} {{ user_prof_select.last_name }}"
+                                                placeholder="Rechercher un professeur...">
+                                            
+                                            <!-- Dropdown pour afficher les professeurs -->
+                                            <ul class="dropdown-menu" 
+                                                aria-labelledby="professeurs" 
+                                                style="max-height: 300px; overflow-y: auto;">
+                                                {% for professeur in user_profs %}
+                                                    <li>
+                                                        <a class="dropdown-item dropdown-prof" 
+                                                        href="#" 
+                                                        data-id="{{ professeur.id }}" 
+                                                        data-value="{{ professeur.first_name }} {{ professeur.last_name }}">
+                                                        {{ professeur.first_name }} {{ professeur.last_name }} (id= {{ professeur.id }})
+                                                        </a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                            <!-- Champ caché pour stocker la sélection -->
+                                            <input type="hidden" id="selected_professeur" name="user_prof_select_id" value="{{ user_prof_select.id }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <!-- Liste prof fin -->
+
+                    <!-- Table auth_user début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3 ">
+                                    <h6>Table auth_user</h6>
+                                    <div class="col-lg-4 position-relative ">
+                                        <label for="prof_username_id" class="form-label">Nom de l'utilisateur / username</label>
+                                        <!-- autocomplete="off" ne marche pas ?? -->
+                                        <input type="text" class="form-control" id="prof_username_id" name="username" required
+                                            title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{ user_prof_select.username }}" autocomplete="off" >
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_prenom_id" class="form-label">Prénom / first_name</label>
+                                        <input type="text" class="form-control" id="prof_prenom_id" name="first_name" required value="{{user_prof_select.first_name}}" autocomplete="off">
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_nom_id" class="form-label">Nom / last_name</label>
+                                        <input type="text" class="form-control" id="prof_nom_id" name="last_name" required value="{{user_prof_select.last_name}}" >
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_email_id" class="form-label">Email </label>
+                                        <div class="input-group has-validation">
+                                            <span class="input-group-text">@</span>
+                                            <input type="text" class="form-control" id="prof_email_id"
+                                                aria-describedby="validationTooltipUseremailPrepend" name="email" required value="{{user_prof_select.email}}" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_last_login_id" class="form-label">Dernière connection / last_login</label>
+                                        <!-- autocomplete="off" ne marche pas ?? -->
+                                        <input type="text" class="form-control" id="prof_last_login_id" name="last_login" required
+                                            value="{{user_prof_select.last_login}}" autocomplete="off" disabled>
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_date_joined_id" class="form-label">Date d'inscription / date_joined</label>
+                                        <!-- autocomplete="off" ne marche pas ?? -->
+                                        <input type="text" class="form-control" id="prof_date_joined_id" name="date_joined" required
+                                            title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{user_prof_select.date_joined}}" autocomplete="off" disabled>
+                                    </div>
+                                    <div class="col-lg-8 position-relative g-2 p-3">     
+                                        <input class="form-check-input check-pricipal" type="checkbox"  id="prof_is_active" name="is_active" {% if user_prof_select.is_active %} checked {% endif %} title="Un prof désactivé ne peut plus accéder à son compte" >
+                                        <label class="form-label" >Est actif / is_active  ( Un prof désactivé ne peut plus accéder à son compte )</label>
+                                    </div>
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_user_prof">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <!-- <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-danger" name="btn_supp_user_prof">
+                                                Supprimer
+                                            </button>
+                                        </div> -->
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table auth_user fin -->
+                    
+                    <!-- Table accounts_professeur début -->
+                    <div class="container-xxl py-5 ">
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3 ">
+                                    <h6>Table accounts_professeur</h6>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="civilite_id" class="form-label">Civilité</label>
+                                        <select class="form-select" id="civilite_id" name="civilite">
+                                            <option value="Homme" {% if user_prof_select.professeur.civilite == 'Homme' %}selected{% endif %}>Monsieur</option>
+                                            <option value="Femme" {% if user_prof_select.professeur.civilite == 'Femme' %}selected{% endif %}>Madame</option>
+                                            <option value="Autre" {% if user_prof_select.professeur.civilite == 'Autre' %}selected{% endif %}>Autre</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label class="form-label" for="phone_id">Numéro de téléphone :</label>
+                                        <input type="text" class="form-control" id="numero_telephone_id" name="phone"
+                                            pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00"
+                                            required value="{{ user_prof_select.professeur.numero_telephone }}" >
+                                    </div>
+                                    <div class="col-lg-4 position-relative ">
+                                        <label for="date_id_1" class="form-label">Date de naissance</label>
+                                        <input type="text" class="form-control form-control-date" id="date_id_1" placeholder="Sélectionnez une date"
+                                          name="date_naissance" required value="{{ user_prof_select.professeur.date_naissance|date:'d/m/Y' }}">
+                                    </div>
+                                    <div class=" col-lg-4   position-relative">
+                                        <label for="adresse_id" class="form-label">Adresse</label>
+                                        <input type="text" class="form-control" id="adresse_id" name="adresse" required value="{{user_prof_select.professeur.adresse}}" autocomplete="off">
+                                    </div>
+                                    <div class="col-lg-4 position-relative">
+                                        <label for="prof_photo_id" class="form-label">Photo d'identité</label>
+                                        <input type="file" accept="image/*" capture="camera" class="form-control" id="photo_id" name="photo" >
+                                    </div>
+                                    
+                                    <div class="col-lg-4 position-relative">
+                                        <div class="row justify-content-between g-2 p-3">
+                                            {% if user_prof_select.professeur.photo.url %}
+                                                <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ user_prof_select.professeur.photo.url }}" style="width: 75px; height: 75px;" alt="Photo du professeur">
+                                            {% else %}
+                                                <!-- <img class="border rounded-circle p-2 mx-auto mb-3" src="{% static 'images/default_prof.png' %}" style="width: 75px; height: 75px;" alt="Photo par défaut"> -->
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_prof">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Table accounts_professeur fin -->
+
+                    <!-- Table accounts_diplome début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3" >
+                                    <h6>Table accounts_diplome</h6>
+                                    {% for diplome in diplomes %}
+                                        <div class="row  ajout-dipl p3" id="supprimerDivDiplome_{{ forloop.counter }}" >
+                                            <div class="col-md-1 position-relative align-self-center p-4">
+                                                
+                                                <input class="form-check-input" type="checkbox" id="principal_diplome_id_{{ forloop.counter }}" name="principal_diplome_{{ forloop.counter }}" {% if diplome.principal %}checked{% endif %}>
+                                                <label class="form-label" for="principal_diplome_id_{{ forloop.counter }}">Principal</label>
+                                            </div>                     
+                                            <div class="col-md-4 col-sm-12 position-relative">
+                                                <label class="form-label" for="diplome_input_id_{{ forloop.counter }}">Diplôme</label>
+                                                <div class="dropdown">
+                                                    <div class="input-group ">
+                                                        <input type="text" class="form-control form-control-autre" id="diplome_input_id_{{ forloop.counter }}" name="diplome_{{ forloop.counter }}" value="{{ diplome.diplome_cathegorie }}" autocomplete="off" >
+                                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_{{ forloop.counter }}" style="max-height: 300px; overflow-y:auto;" id="prof_diplome_ul_dropdown_{{ forloop.counter }}" >
+                                                            {% for cathegorie in diplome_cathegories %}
+                                                            <li><a class="dropdown-item" href="#" data-value="{{ cathegorie.dip_cathegorie }}"  >{{ cathegorie.dip_cathegorie }}</a></li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                        <input type="hidden" id="selected_diplome_{{ forloop.counter }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 col-sm-12 position-relative">
+                                                <label for="date_id_{{ forloop.counter }}" class="form-label">Optenu</label>
+                                                <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter|add:1 }}"  name="date_obtenu_{{ forloop.counter }}" placeholder="Sélectionnez une date" value="{{ diplome.obtenu|date:'d/m/Y'  }}" autocomplete="off">
+                                            </div>
+                                            <div class="col-lg-5 col-md-3 col-sm-12 position-relative">
+                                                <label for="prof_diplome_intitule_id_{{ forloop.counter }}" class="form-label">Intitulé</label>
+                                                <div class="row">
+                                                    <div class="col-lg-10 col-md-6 col-sm-6 position-relative">
+                                                        <input type="text" class="form-control form-control-intitule" id="prof_diplome_intitule_id_{{ forloop.counter }}" name="intitule_{{ forloop.counter }}" value="{{ diplome.intitule }}" autocomplete="off">                   
+                                                    </div>
+                                                    <div class="col-lg-2 col-md-6 col-sm-6 d-flex justify-content-center">
+                                                        <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivDiplome_{{ forloop.counter }}')">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                                                <path
+                                                                    d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                                                </path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if diplomes %}
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_diplome">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                        </div>
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                        <p>Aucun diplôme n'est enregistré. (Non obligatoire)</p>
+                                {% endif %}
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_diplome fin -->
+
+                    <!-- Table accounts_experience début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_experience</h6>
+                                    
+                                    {% for experience in experiences %}
+                                        <div class="row   ajout-exper p-3" id="supprimer_div_experience_{{ forloop.counter }}">
+                                            <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
+                                                <input class="form-check-input check-pricipal" type="checkbox"
+                                                    id="principal_experience_id_{{ forloop.counter }}" name="principal_experience_{{ forloop.counter }}"
+                                                    {% if experience.principal %}checked{% endif %}>
+                                                <label class="form-label">Principal</label>
+                                            </div>
+                                            <div class="col-lg-3 col-md-10 col-sm-10 position-relative">
+                                                <label class="form-label">Type</label>
+                                                <div class="dropdown"  >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-autre"
+                                                            id="experience_input_id_{{ forloop.counter }}"
+                                                            name="experience_{{ forloop.counter }}" value="{{ experience.type }}" autocomplete="off">
+                                                        <ul class="dropdown-menu"
+                                                            id="prof_experience_ul_dropdown_{{ forloop.counter }}"
+                                                            style="max-height: 300px; overflow-y:auto; width: 220px;" 
+                                                            aria-labelledby="dropdownMenuButton_{{ forloop.counter }}">
+                                                            {% for experience in experience_cathegories %}
+                                                            <li><a class="dropdown-item" href="#"
+                                                                    data-value="{{ experience.exp_cathegorie }}">{{ experience.exp_cathegorie }}</a></li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                        <input type="hidden" id="selected_experience_{{ forloop.counter }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                                                <label class="form-label">Début</label>
+                                                <input type="text" class="form-control form-control-date"
+                                                    id="date_id_{{ forloop.counter|add:forloop.counter|add:prof_diplomes_count}}"  name="date_debut_{{ forloop.counter|add:forloop.counter|add:prof_diplomes_count}}"
+                                                    value="{{ experience.debut|date:'d/m/Y' }}" autocomplete="off" >
+                                            </div>
+                                            <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
+                                                <label class="form-label">Fin</label>
+                                                <input type="text" class="form-control form-control-date"
+                                                    id="date_id_{{ forloop.counter|add:forloop.counter|add:prof_diplomes_count|add:1}}" name="date_fin_{{ forloop.counter|add:forloop.counter|add:prof_diplomes_count|add:1}}"
+                                                    value="{{ experience.fin|date:'d/m/Y' }}" autocomplete="off" >
+                                            </div>
+                                            <div class="col-lg-2 col-md-4 col-sm-6 g-3 ">
+                                                <div class="row">
+                                                    <div class="col-12 d-flex justify-content-center " >
+                                                        <label class="form-check-label">Actuellement</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12  " >
+                                                    <div class="form-check form-switch switch-column d-flex justify-content-center">
+                                                        <input class="form-check-input mg-checkbox" type="checkbox" role="switch"
+                                                                id="act_id_{{ forloop.counter }}" {% if experience.actuellement %}checked{% endif %}
+                                                                 style="margin-right: -5px;" name="act_{{ forloop.counter }}"  >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-md-8 col-sm-6 position-relative" >
+                                                <label class="form-label">Commentaires</label>
+                                                <div class="row" >
+                                                    <div class="col-lg-8 col-md-6 col-sm-6 position-relative">
+                                                        <input type="text" class="form-control form-control-comm"
+                                                            id="comm_id_{{ forloop.counter }}" name="comm_{{ forloop.counter }}"
+                                                            value="{{ experience.commentaire }}" autocomplete="off">
+                                                    </div>
+                                                    <div class="col-lg-4 col-md-6 col-sm-6 d-flex justify-content-center">
+                                                        <button class="btn btn-sup" onclick="supprimerDiv('supprimer_div_experience_{{ forloop.counter }}')">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                                                <path
+                                                                    d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                                                </path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                    {% endfor %}
+                                    {% if experiences %}
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_experience">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                        </div>
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                        <p>Aucune expérience n'est enregistrée. (Non obligatoire)</p>
+                                    {% endif %}
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_experience fin -->
+                    
+                    <!-- Table accounts_format_cour début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_format_cour</h6>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="chk_a_domicile_id" name="chk_a_domicile"  {% if user_prof_select.format_cour.a_domicile %}checked{% endif %} >
+                                            <label class="form-check-label" for="chk_a_domicile_id">
+                                                Cours individuels chez l'éléve
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"  id="chk_webcam_id" name="chk_webcam" {% if user_prof_select.format_cour.webcam %}checked{% endif %} >
+                                            <label class="form-check-label" for="chk_webcam_id">
+                                                Cours individuels par webcam
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="chk_stage_id" name="chk_stage" {% if user_prof_select.format_cour.stage %}checked{% endif %} >
+                                            <label class="form-check-label" for="chk_stage_id">
+                                                Stages intensifs pendant les vacances scolaires en présentiel
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="chk_stage_webcam_id" name="chk_stage_webcam"  {% if user_prof_select.format_cour.stage_webcam %}checked{% endif %} >
+                                            <label class="form-check-label" for="chk_stage_webcam_id">
+                                                Cours en petits groupes par webcam
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_format_cours">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                        </div>
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_forma_cour fin -->
+
+                    <!-- Table accounts_prof_mat_niv début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light  ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_prof_mat_niv</h6>
+                                {% for prof_mat_niv in prof_mat_nivs %}
+                                <div class="row ajout-matiere" id="supprimerDivMatiere_{{ forloop.counter }}">
+                                    <div class="col-md-1  position-relative">
+                                        <input class="form-check-input" type="checkbox"  id="principal_matiere_id_{{ forloop.counter }}" name="principal_matiere_{{ forloop.counter }}"
+                                        {% if prof_mat_niv.principal %}checked{% endif %}>
+                                        <label class="form-label" >Principal</label>
+                                    </div>
+                                    <div class="col-lg-6 col-md-10 col-sm-10 position-relative">
+                                        <label class="form-label">Matière</label>
+                                        <div class="dropdown"  >
+                                            <div class="input-group">
+                                                <input type="text" class="form-control"
+                                                    id="matiere_id_{{ forloop.counter }}"
+                                                    name="matiere_{{ forloop.counter }}" value="{{ prof_mat_niv.matiere.matiere  }}" readonly >
+                                                <ul class="dropdown-menu"
+                                                    id="dropdownMenuButton_{{ forloop.counter }}"
+                                                    style="max-height: 300px; overflow-y:auto; width: 220px;" 
+                                                    aria-labelledby="dropdownMenuButton_{{ forloop.counter }}">
+                                                    {% for matiere in matieres %}
+                                                    <li><a class="dropdown-item" href="#"
+                                                            data-value="{{ matiere.matiere }}">{{ matiere.matiere }}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="selected_experience_{{ forloop.counter }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-10 col-sm-10 position-relative">
+                                        <label class="form-label">Niveau</label>
+                                        <div class="dropdown"  >
+                                            <div class="input-group">
+                                                <input type="text" class="form-control form-control-autre"
+                                                    id="niveau_id_{{ forloop.counter }}"
+                                                    name="niveau_{{ forloop.counter }}" value="{{ prof_mat_niv.niveau.niveau }}" readonly >
+                                                <ul class="dropdown-menu"
+                                                    id="dropdownMenuButton_{{ forloop.counter }}"
+                                                    style="max-height: 300px; overflow-y:auto; width: 220px;" 
+                                                    aria-labelledby="dropdownMenuButton_{{ forloop.counter }}">
+                                                    {% for niveau in niveaus %}
+                                                    <li><a class="dropdown-item" href="#"
+                                                            data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="selected_experience_{{ forloop.counter }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-1 position-relative p-2 g-4 d-flex justify-content-center ">
+                                        <button class="btn  btn-sup " onclick="supprimerDiv('supprimerDivMatiere_{{ forloop.counter }}')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                                <path
+                                                    d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% if prof_mat_nivs %}
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_mat_niv">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                        </div>
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p>Aucune liste de matière trouvée, (Données obligatoires)</p>
+                                {% endif %}
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_prof_mat_niv fin -->
+                    
+                    <!-- Table accounts_prof_prix_heure début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light   ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_prix_heure</h6>
+                                        {% for format in liste_format %}
+                                            <div class="container bg-light p-4">
+                                                <div class="row">
+                                                    <div class="col-lg-12 position-relative">
+                                                        <label class="form-label font-weight-bold">
+                                                            {% if format == 'a_domicile' %}
+                                                            Cours à domicile
+                                                            {% elif format == 'webcam' %}
+                                                            Cours par webcam
+                                                            {% elif format == 'stage' %}
+                                                            Stage pendant les vacances
+                                                            {% elif format == 'stage_webcam' %}
+                                                            Stage par webcam
+                                                            {% else %}
+                                                            Cours en groupe par webcam
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                            
+                                                    {% for id, matiere, niveau, prix_heure, format_key in liste_enregistrements %}
+                                                        {% if format == format_key %}
+                                                        <div class="col-lg-6">
+                                                            {% if forloop.counter == 1 %}
+                                                            <label for="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">Matière</label>
+                                                            {% endif %}
+                                                            <input type="text" class="form-control" id="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                name="matiere_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ matiere }}" readonly disabled>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            {% if forloop.counter == 1 %}
+                                                            <label for="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">Niveau</label>
+                                                            {% endif %}
+                                                            <input type="text" class="form-control" id="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                name="niveau_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ niveau }}" readonly disabled>
+                                                        </div>
+                                                        <div class="col-lg-2">
+                                                            {% if forloop.counter == 1 %}
+                                                            <label for="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">Prix par heure: &euro;/h</label>
+                                                            {% endif %}
+                                                            <input type="text" class="form-control form-control-intitule prix-heure text-center" id="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                name="prix_heure-{{id}}__{{ format }}" value="{{ prix_heure }}">
+                                                        </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        {% if liste_format and liste_enregistrements %}
+                                            <div class="row justify-content-between g-2 p-3 ">
+                                                <div class="col-lg-2 ">
+                                                    <button type="submit" class="btn btn-warning" name="btn_enr_prix">
+                                                        Enregistrer
+                                                    </button>
+                                                </div>   
+                                                <div class="col-lg-2 ">
+                                                </div>
+                                                <div class="col-lg-2 ">
+                                                    <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                        Fermer
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <p>Aucune liste de prix des cours par heure, voire format cours et matière. (Données obligatoires)</p>
+                                        {% endif %}
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_prof_prix_heure fin -->
+
+                    <!-- Table accounts_prof_zone début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light   ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_prof_zone</h6>
+                                    {% for zone_list in zone_lists %}
+                                        <div class="row ajout-matiere" id="supprimerzone_{{ forloop.counter }}">
+                                            <div class="col-lg-10 col-md-10 col-sm-10 position-relative">
+                                                <label class="form-label">Zone d'activité</label>
+                                                <input type="text" class="form-control" id="zone_{{ forloop.counter }}"
+                                                name="zone_{{ forloop.counter }}" value="{{ zone_list }}" readonly >
+                                            </div>
+                                            <div class="col-lg-2 position-relative p-2 g-4 d-flex justify-content-center">
+                                                <button class="btn  btn-sup " onclick="supprimerDiv('supprimerzone_{{ forloop.counter }}')">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
+                                                        <path
+                                                            d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    {% if zone_lists %}
+                                        <div class="row justify-content-between g-2 p-3 ">
+                                            <div class="col-lg-2 ">
+                                                <button type="submit" class="btn btn-warning" name="btn_enr_zone">
+                                                    Enregistrer
+                                                </button>
+                                            </div>   
+                                            <div class="col-lg-2 ">
+                                            </div>
+                                            <div class="col-lg-2 ">
+                                                <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                    Fermer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <p>Aucune zone d'activité trouvée (Non obligatoire si le format cours est à distance).</p>
+                                    {% endif %}
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_prof_zone fin -->
+
+                    <!-- Table accounts_prof_fichier début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light   ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_prof_fichier</h6>
+                                        <!-- Titre de votre fiche debut -->
+                                        <div class="row g-2 ">
+                                            <div class="col-12 position-relative">
+                                                <label for="titre_fiche_id" class="form-label">Titre de votre fiche</label>
+                                                <input type="text" class="form-control" id="titre_fiche_id" required name="titre_fiche"  value="{{user_prof_select.pro_fichier.titre_fiche}}">
+                                            </div>
+                                        </div>
+                                        <!-- Titre de votre fiche fin -->
+                                        <!-- Détaillez votre parcours debut -->
+                                        <div class="row g-2 ">
+                                            <div class="col-12 position-relative">
+                                                <label for="parcours_id" class="form-label">Description</label>
+                                                <textarea class="form-control profil" id="parcours_id" rows="4"
+                                                    name="parcours" aria-valuetext="{{user_prof_select.pro_fichier.parcours}}" >{{user_prof_select.pro_fichier.parcours}}</textarea>
+                                            </div>
+                                        </div>     
+                                        <!-- Détaillez votre parcours fin -->
+                                        <!-- Déroulement et pédagogie de votre cours debut -->
+                                        <div class="row g-2 ">
+                                            <div class="col-12 position-relative">
+                                                <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
+                                                    pédagogie</label>
+                                                <textarea class="form-control profil" id="pedagogie_id" rows="4"
+                                                    name="pedagogie" >{{user_prof_select.pro_fichier.pedagogie}}</textarea>
+                                            </div>
+                                        </div>
+                                        <!-- Déroulement et pédagogie de votre cours fin -->
+                                        <!-- Vidéo de présentation début -->
+                                        <div class="row g-2">
+                                            <div class="col-12 ">
+                                                <label for="video_youtube_url_id" class="form-label">Lien de votre vidéo</label>
+                                            </div>
+                                            <div class="col-12 ">
+                                                <input type="text" class="form-control" id="video_youtube_url_id"
+                                                    placeholder="" name="video_youtube_url" value="{{user_prof_select.pro_fichier.video_youtube_url}}">
+                                            </div>
+                                            <div class="col-12 position-relative d-flex justify-content-center align-items-center">
+                                                <div class="embed-responsive embed-responsive-16by9">
+                                                    <iframe class="embed-responsive-item"
+                                                        id="prof_video_iframe_id"
+                                                        src="{{user_prof_select.pro_fichier.video_youtube_url}}"
+                                                        title="YouTube video player" frameborder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                        allowfullscreen ></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Vidéo de présentation fin -->
+                                    <div class="row justify-content-between g-2 p-3 ">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_enr_fichier">
+                                                Enregistrer
+                                            </button>
+                                        </div>   
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_prof_fichier fin -->
+
+                    <!-- Table accounts_prof_doc_telecharge début -->
+                    <div class="container-xxl py-5 " >
+                        <div class="container ">
+                            <div class="container bg-light   ">
+                                <div class="row g-3">
+                                    <h6>Table accounts_prof_doc_telecharge</h6>
+                                    {% if prof_doc_telecharges %}
+                                        <label  class="form-label">Doccumentd téléchargés</label>
+                                        {% for prof_doc_telecharge in prof_doc_telecharges %}
+                                            <div class="row ajout-matiere mb-3" id="supprimerDocument_{{ forloop.counter }}">
+                                                <!-- Champ de document téléchargé / Email lié -->
+                                                <div class="col-lg-9 position-relative">
+                                                    <input type="text" class="form-control" id="zone_{{ forloop.counter }}"
+                                                        name="doc_telecharge_{{ forloop.counter }}_id_{{prof_doc_telecharge.id}}" value="date: {{ prof_doc_telecharge.date_telechargement|date:'d/m/Y'}}  -- doc: {{prof_doc_telecharge.doc_telecharge}} --- Email: {{prof_doc_telecharge.email_telecharge.sujet}}" readonly>
+                                                </div>
+                                                <!-- Button trigger modal pour voire document -->
+                                                <div class="col-lg-1 d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                                                    data-bs-target="#modalDoc_{{ forloop.counter }}">
+                                                    Doc
+                                                    </button>
+                                                </div>
+                                                <!-- Button trigger modal pour voire Email -->
+                                                <div class="col-lg-1 d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                                                    data-bs-target="#modalEmail_{{ forloop.counter }}">
+                                                    Email
+                                                    </button>
+                                                </div>
+                                                <!-- Bouton supprimer doc -->
+                                                <div class="col-lg-1 d-flex align-items-center justify-content-center">
+                                                    <button type="button" class="btn btn-danger btn-sup"
+                                                            onclick="supprimerDiv('supprimerDocument_{{ forloop.counter }}')"
+                                                            aria-label="Supprimer">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" width="20" height="20">
+                                                            <path d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- Modal fichier téléchargé Début -->
+                                            <div class="modal fade" id="modalDoc_{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h1 class="modal-title fs-5" id="exampleModalLabel2">Document téléchargé: {{ prof_doc_telecharge.doc_telecharge }}</h1>
+                                                            <!-- Bouton Fermer -->
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body d-flex justify-content-center align-items-center" style="height: 100%;">
+                                                            <div class="col-lg-12 position-relative">
+                                                                <div class="row justify-content-center g-2 p-3">
+                                                                    {% if prof_doc_telecharge.doc_telecharge.url %}
+                                                                        <img class="img-fluid" id="image_{{ forloop.counter }}" src="{{ prof_doc_telecharge.doc_telecharge.url }}" alt="Document téléchargé" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                                    {% else %}
+                                                                        <!-- Vous pouvez afficher une image par défaut ici si nécessaire -->
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class=" modal-footer row justify-content-between g-2 p-3 ">
+                                                            <div class="col-lg-4 col-md-4 col-sm-6 d-flex justify-content-center">
+                                                                <a class="btn btn-primary w-100 " href="{% url 'admin_doc_recu' doc_id=prof_doc_telecharge.id %}"  ><span style="color: white;">Voire document</span></a>
+                                                            </div>
+                                                            <div class="col-lg-4 col-md-4 col-sm-6 d-flex justify-content-center">
+                                                                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Fermer</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Modal fichier téléchargé Fin -->
+                                            
+                                            <!-- Modal émail téléchargé Début -->
+                                            <div class="modal fade" id="modalEmail_{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h1 class="modal-title fs-5" id="exampleModalLabel2">Email téléchargé: {{ prof_doc_telecharge.sujet }}</h1>
+                                                            <!-- Bouton Fermer -->
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body d-flex justify-content-center align-items-center" style="height: 100%;">
+                                                            <!-- <div class="col-lg-12 position-relative">
+                                                                <div class="row justify-content-center " style="height: 100%;"> -->
+                                                                    {% if prof_doc_telecharge.email_telecharge_id %}
+                                                                        <!-- <label for="text_email_id" class="form-label">Contenu de l'email envoyé :</label> -->
+                                                                        <textarea class="form-control profil" id="text_email_id" name="text_email" 
+                                                                                  style="width: 100%; height: calc(100% ); resize: none;">
+    Date de réception : {{ prof_doc_telecharge.date_telechargement }}
+    
+    Envoyé par : {{ prof_doc_telecharge.user.first_name }} {{ prof_doc_telecharge.user.last_name }}
+    
+    Email d'envoi : {{ prof_doc_telecharge.email_telecharge.email_telecharge }}
+    
+    Sujet de l'email : {{ prof_doc_telecharge.sujet }}
+    
+    Contenu de l'email :
+    {{ prof_doc_telecharge.text_email }}
+                                                                        </textarea>
+                                                                    {% else %}
+                                                                        <!-- Vous pouvez afficher une image par défaut ici si nécessaire -->
+                                                                    {% endif %}
+                                                        </div>
+                                                        <!-- <div class="modal-footer"> -->
+                                                            <div class=" modal-footer row justify-content-between g-2 p-3 ">
+                                                                <div class="col-lg-4 col-md-4 col-sm-6 d-flex justify-content-center">
+                                                                    <!-- <a class="btn btn-primary w-100 " href="{ url 'admin_email_recu' email_id=prof_doc_telecharge.email_telecharge_id %}"  ><span style="color: white;">Voire Email</span></a> -->
+                                                                    {% if prof_doc_telecharge.email_telecharge_id %}
+                                                                        <a class="btn btn-primary w-100" href="{% url 'admin_email_recu' email_id=prof_doc_telecharge.email_telecharge_id %}">
+                                                                            <span style="color: white;">Voir Email</span>
+                                                                        </a>
+                                                                    {% else %}
+                                                                        <span class="btn btn-secondary w-100 disabled">Email non disponible</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="col-lg-4 col-md-4 col-sm-6 d-flex justify-content-center">
+                                                                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Fermer</button>
+                                                                </div>
+                                                            </div>
+                                                        <!-- </div>                                                                -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Modal émail téléchargé Fin -->
+                                        {% endfor %}
+                                        <div class="row justify-content-between g-2 p-3 ">
+                                            <div class="col-lg-2 ">
+                                                <button type="submit" class="btn btn-warning" name="btn_enr_prof_doc_telecharge">
+                                                    Enregistrer
+                                                </button>
+                                            </div>   
+                                            <div class="col-lg-2 ">
+                                            </div>
+                                            <div class="col-lg-2 ">
+                                                <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                    Fermer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <p>Aucun document justificatif n'est téléchargé. (non obligatoire)</p>
+                                    {% endif %}
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <!-- Table accounts_prof_doc_telecharge fin -->
+
+                    <!-- Email à envoyé début -->
+                    <div class="container-xxl py-5" id="identite">
+                        <div class="container">
+                            <div class="container bg-light ">
+                                <div class="row g-3">
+                                    <h6>Envoyer un email au professeur</h6>
+                                    <div class="col-12 position-relative">
+                                        <label for="email_adresse_id" class="form-label">Votre adresse email</label>
+                                        <input type="email" class="form-control" id="email_adresse_id" name="email_user"
+                                            value="{{ request.user.email }}">
+                                    </div>
+                                    <div class="col-12 position-relative">
+                                        <label for="email_adresse_id" class="form-label">Email du professeur</label>
+                                        <input type="email" class="form-control" id="email_adresse_id" name="email_prof"
+                                            value="{{ user_prof_select.email }}">
+                                    </div>
+                                    <div class="col-12 position-relative">
+                                        <label for="sujet_id" class="form-label">Sujet de l'email</label>
+                                        <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{ sujet }}">
+                                    </div>
+                                    <div class="col-12 position-relative">
+                                        <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
+                                        <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" style="height: 400px;">{{ text_email }}</textarea>
+                                    </div>
+                                    <div class="row justify-content-between g-2 p-3">
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-warning" name="btn_email">
+                                                Envoyer
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-2 ">
+                                            <button type="submit" class="btn btn-primary" name="btn_fermer">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Email à envoyé  Fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+    <!-- <script src="{% static 'js/Code_en_plus_nouveau_compte_prof.js' %}"></script> -->
+    <script src="{% static 'js/Code_en_plus_admin_compte_prof.js' %}"></script>
+    <script>
+        // Attendre que le DOM soit prêt
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sélectionner tous les éléments des menus déroulants
+            const dropdownInputs = document.querySelectorAll('.input-group input[type="text"]');
+            
+            // Ajout d'un événement pour le filtrage des options
+            dropdownInputs.forEach(function (inputField) {
+                inputField.addEventListener('input', function () {
+                    const parentDiv = inputField.closest('.input-group');
+                    if (parentDiv) {
+                        const dropdownMenu = parentDiv.querySelector('.dropdown-menu');
+                        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+    
+                        // Filtrer les éléments en fonction de la saisie
+                        const filterValue = inputField.value.toLowerCase();
+                        dropdownItems.forEach(function (item) {
+                            const itemValue = item.getAttribute('data-value').toLowerCase();
+                            if (itemValue.includes(filterValue)) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+    
+            // Ajouter un événement de clic pour les options des menus déroulants
+            const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+            dropdownItems.forEach(function (dropdownItem) {
+                dropdownItem.addEventListener('click', function (event) {
+                    // Empêcher le comportement par défaut (éviter la navigation)
+                    event.preventDefault();
+    
+                    // Récupérer la valeur sélectionnée
+                    const selectedValue = event.target.getAttribute('data-value');
+    
+                    // Identifier l'input associé
+                    const parentDiv = event.target.closest('.input-group');
+                    if (parentDiv) {
+                        // Trouver l'input et le menu déroulant correspondants
+                        const inputField = parentDiv.querySelector('input[type="text"]');
+                        const hiddenInput = parentDiv.querySelector('input[type="hidden"]');
+                        const dropdownMenu = parentDiv.querySelector('.dropdown-menu');
+    
+                        // Mettre à jour l'input avec la valeur sélectionnée
+                        if (inputField) inputField.value = selectedValue;
+    
+                        // Mettre à jour le champ caché (si nécessaire)
+                        if (hiddenInput) hiddenInput.value = selectedValue;
+    
+                        // Fermer le menu déroulant après sélection
+                        if (dropdownMenu) dropdownMenu.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    
+    
+{% endblock %}

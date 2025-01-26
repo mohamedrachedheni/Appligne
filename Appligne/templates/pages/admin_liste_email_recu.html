@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Home{% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+                {% csrf_token %}
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                
+                    <div class="container-xxl " >
+                        <div class="row justify-content-between g-2 p-3 ">
+                            <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
+                                    Nouveaux
+                                </button>
+                            </div>
+                            <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_attente">
+                                    En attente
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
+                                    Ignorés
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
+                                    Répondus
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_tous">
+                                    Tous
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+
+                    <!-- Liste élèves début -->
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light">
+                                {% if not emails %}
+                                    <div class="col-md-12 position-relative">
+                                        <h4>Il n'y a pas d'email</h4>
+                                    </div>
+                                {% endif %}
+                                {% for email in emails %}
+                                    <div class="row  " style="margin-bottom: 30px;">
+                                        <div class="col-md-2 col-sm-12 position-relative ">
+                                            <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
+                                            <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement|date:'d/m/Y'}}" readonly>
+                                        </div>
+                                        <div class="col-md-4 col-sm-12 position-relative">
+                                            <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
+                                            <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" readonly >
+                                        </div>
+                                        <div class="col-md-3 col-sm-12 position-relative">
+                                            <label for="first_name_id_{{ forloop.counter }}" class="form-label">De la part de:</label>
+                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
+                                                        value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
+                                        </div>
+                                        <div class="col-md-3 col-sm-12 position-relative">
+                                            <div class="row  ">
+                                                <label for="reponse_id_{{ forloop.counter }}" class="form-label">Retour</label>
+                                                <div class="col-md-7 col-sm-12 position-relative mb-3">
+                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi|default:''}}" readonly>
+                                                </div>
+                                                <div class="col-md-5 col-sm-12 d-flex justify-content-center mb-3">
+                                                    <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
+                                                        href="{% url 'admin_detaille_email' email_id=email.id %}"><span
+                                                            style="color: white;">Détaille </span></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Liste élève fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+    <!-- <script src="{% static 'js/Code_en_plus_nouveau_compte_prof.js' %}"></script> -->
+    <script src="{% static 'js/Code_en_plus_admin_compte_eleve.js' %}"></script>
+    <script>
+        // Attendre que le DOM soit prêt
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sélectionner tous les éléments des menus déroulants
+            const dropdownInputs = document.querySelectorAll('.input-group input[type="text"]');
+            
+            // Ajout d'un événement pour le filtrage des options
+            dropdownInputs.forEach(function (inputField) {
+                inputField.addEventListener('input', function () {
+                    const parentDiv = inputField.closest('.input-group');
+                    if (parentDiv) {
+                        const dropdownMenu = parentDiv.querySelector('.dropdown-menu');
+                        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+    
+                        // Filtrer les éléments en fonction de la saisie
+                        const filterValue = inputField.value.toLowerCase();
+                        dropdownItems.forEach(function (item) {
+                            const itemValue = item.getAttribute('data-value').toLowerCase();
+                            if (itemValue.includes(filterValue)) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+    
+            // Ajouter un événement de clic pour les options des menus déroulants
+            const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+            dropdownItems.forEach(function (dropdownItem) {
+                dropdownItem.addEventListener('click', function (event) {
+                    // Empêcher le comportement par défaut (éviter la navigation)
+                    event.preventDefault();
+    
+                    // Récupérer la valeur sélectionnée
+                    const selectedValue = event.target.getAttribute('data-value');
+    
+                    // Identifier l'input associé
+                    const parentDiv = event.target.closest('.input-group');
+                    if (parentDiv) {
+                        // Trouver l'input et le menu déroulant correspondants
+                        const inputField = parentDiv.querySelector('input[type="text"]');
+                        const hiddenInput = parentDiv.querySelector('input[type="hidden"]');
+                        const dropdownMenu = parentDiv.querySelector('.dropdown-menu');
+    
+                        // Mettre à jour l'input avec la valeur sélectionnée
+                        if (inputField) inputField.value = selectedValue;
+    
+                        // Mettre à jour le champ caché (si nécessaire)
+                        if (hiddenInput) hiddenInput.value = selectedValue;
+    
+                        // Fermer le menu déroulant après sélection
+                        if (dropdownMenu) dropdownMenu.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    
+    
+{% endblock %}

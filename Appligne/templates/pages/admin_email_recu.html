@@ -1,78 +1,53 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Réponse Email{% endblock %}
+{% block title %} | Home{% endblock %}
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte élève</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
 
-    <!-- mon compte début -->
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
             <!-- début sidebar -->
-            {% include 'partials/_sidebar.html' %}
+            {% include 'partials/_sidebar_admin.html' %}
             <!-- fin sidebar -->
         </div>
         <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
             <div class="container-xxl py-1" >
                 <div class="container">
                     <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Répondre à email</h6>
+                        <h6 class="section-title bg-white text-center text-primary px-3">Consulter compte prof</h6>
+                        <h1 class="mb-5">Détaille émail</h1>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
             </div>
-            <!-- Début Form-->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off"  >
+            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
                 {% csrf_token %}
-            
-                <!-- fichiers prof debut -->
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                <!-- Début Form-->
                 <div class="container-xxl py-5 " id="identite">
                     <div class="container ">
                         <div class="container bg-light  p-4">
                             <div class="row g-4">
+                                
                                 <div class="col-12 position-relative">
-                                    <label for="email_adresse_id" class="form-label">Votre adresse email</label>
-                                    <input type="text" class="form-control" id="email_adresse_id"
-                                         name="email_adresse" value="{{email_prof}}" >
-                                </div>
-                                <div class="col-12 position-relative">
-                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                    <input type="text" class="form-control" id="sujet_id"
-                                         name="sujet" value="{{sujet}}" >
-                                </div>
-                                <div class="col-12 position-relative">
-                                    <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
+                                    <label for="text_email_id" class="form-label">Contenu de l'émail envoyé :</label>
                                     <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" >
                                             {{text_email}}
-                                        </textarea>
-                                        
-                                        
+                                    </textarea>
                                 </div>
                                 <div class="row justify-content-between g-2 p-3 ">
                                     <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                        <a class="btn btn-primary w-100" href="{% url 'compte_eleve' %}"><span style="color: white;">Votre compte</span></a>
+                                        <a class="btn btn-primary w-100" href="javascript:history.back();"><span style="color: white;">Page précédente</span></a>
                                     </div>
                                     <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                            Envoyez
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_fermer">
+                                            Fermer
                                         </button>
                                     </div>
                                 </div>
@@ -80,16 +55,16 @@
                         </div>
                     </div>
                 </div>
-                <!-- fichiers prof Fin -->
-            </form>
             <!-- Fin Form -->
+                {% endif %}  
+            </form>
         </div>
     </div>
-    <!-- mon compte fin -->
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 {% endblock %}
+
 {% block javascript %}
 <script>
     // http://localhost:8000/profil_prof/2/
