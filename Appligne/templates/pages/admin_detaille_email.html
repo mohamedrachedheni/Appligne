@@ -90,7 +90,14 @@
                                                             style="color: white;">Répondre </span></a>
                                         </div>
                                         <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-primary w-100" name="btn_historique" {% if not email.reponse_email_id and email.user!=request.user %} disabled {% endif %}>
+                                            <button 
+                                                type="submit" 
+                                                class="btn btn-primary w-100" 
+                                                name="btn_historique" 
+                                                {% if not email.reponse_email_id and email.user != request.user %} 
+                                                    disabled 
+                                                {% endif %}
+                                            >
                                                 Voir réponse
                                             </button>
                                         </div>
