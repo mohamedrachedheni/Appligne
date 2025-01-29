@@ -479,38 +479,6 @@ class Detail_demande_paiement(models.Model):  # Demande de paiement
     prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
     horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
 
-class Payment(models.Model):
-    # Définition des différents statuts de paiement
-    EN_ATTENTE = 'pending'
-    APPROUVE = 'approved'
-    ANNULE = 'canceled'
-    INVALIDE = 'invalid'
-
-    # Choix de statuts de paiement
-    STATUS_CHOICES = [
-        (EN_ATTENTE, 'En attente'),
-        (APPROUVE, 'Approuvé'),
-        (ANNULE, 'Annulé'),
-        (INVALIDE, 'Invalide'),
-    ]
-
-    # Champs du modèle Payment
-    model = models.CharField(max_length=255)  # Nom du modèle associé (Table: demande_paiement)
-    model_id = models.IntegerField()  # ID du modèle associé
-    slug = models.CharField(max_length=255)  # Identifiant unique pour le type de paiement envoyé à la passerelle de paiement
-    reference = models.CharField(max_length=255)  # Référence du paiement, identifiant interne de la demande de paiement
-    payment_try = models.IntegerField(default=1)  # Nombre de tentatives de paiement
-    expiration_date = models.DateTimeField()  # Date d'expiration du paiement
-    amount = models.FloatField()  # Montant du paiement
-    currency = models.CharField(max_length=10)  # Devise du paiement
-    source = models.CharField(max_length=255, default='desktop')  # Source du paiement (web / mobile)
-    language = models.CharField(max_length=10)  # Langue utilisée pour le paiement
-    membership_number = models.CharField(max_length=255, null=True, blank=True)  # Numéro d'adhésion, si applicable
-    payment_register_data = models.JSONField(null=True, blank=True)  # Données d'enregistrement du paiement
-    order_id = models.CharField(max_length=255, null=True, blank=True)  # ID de la commande associée
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut du paiement
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date du paiement
-    payment_body = models.JSONField(null=True, blank=True)  # Statut du paiement et autres données après confirmation du client
 
 class Historique_prof(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -524,3 +492,176 @@ class Historique_prof(models.Model):
     nb_reponse_demande_cours = models.IntegerField(default=0)  # Cumul des réponses aux demandes de cours (seule les demande de cours aux quelles le prof à répondu son prises en compte)
     total_cumul_temps_reponse = models.IntegerField(default=0)  # Cumul du temps en secondes écoulé entre la demande de cours et sa réponse
     moyenne_temps_reponse = models.IntegerField(null=True, blank=True)  # Moyenne des cumuls des points d'évaluation
+
+class Payment(models.Model):
+    # Statuts de paiement
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    CANCELED = 'canceled'
+    INVALID = 'invalid'
+
+    STATUS_CHOICES = [
+        (PENDING, 'En attente'),
+        (APPROVED, 'Approuvé'),
+        (CANCELED, 'Annulé'),
+        (INVALID, 'Invalide'),
+    ]
+
+    model = models.CharField(max_length=255)  # Table liée au paiement (ex: Demande_paiement)
+    model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
+    slug = models.CharField(max_length=255)  # Identifiant unique
+    reference = models.CharField(max_length=255)  # Référence interne du paiement
+    payment_attempts = models.PositiveIntegerField(default=1)  # Nombre de tentatives
+    expiration_date = models.DateTimeField()  # Date d'expiration du paiement
+    amount = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Montant du paiement
+    currency = models.CharField(max_length=10)  # Devise
+    source = models.CharField(max_length=255, default='desktop')  # Source (web/mobile)
+    language = models.CharField(max_length=10)  # Langue utilisée
+    membership_number = models.CharField(max_length=255, null=True, blank=True)  # Numéro d'adhésion
+    payment_register_data = models.JSONField(null=True, blank=True)  # Données de la passerelle
+    order_id = models.CharField(max_length=255, null=True, blank=True)  # ID de commande
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
+    payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
+
+    def __str__(self):
+        return f"Payment {self.reference} - {self.status}"
+
+class Reglement(models.Model):
+    # Statuts de règlement
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    CANCELED = 'canceled'
+    INVALID = 'invalid'
+
+    STATUS_CHOICES = [
+        (PENDING, 'En attente'),
+        (APPROVED, 'Approuvé'),
+        (CANCELED, 'Annulé'),
+        (INVALID, 'Invalide'),
+    ]
+
+    model = models.CharField(max_length=255)  # Table liée (Accord_reglement/Accord_remboursement)
+    model_id = models.IntegerField()  # ID dans le modèle lié
+    debitor_account = models.CharField(max_length=255)  # Compte débiteur (-)
+    creditor_account = models.CharField(max_length=255)  # Compte créditeur (+)
+    amount = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Montant
+    currency = models.CharField(max_length=10)  # Devise
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    transaction_date = models.DateTimeField(null=True, blank=True)  # Date de règlement
+    description = models.TextField()  # Libellé du règlement
+
+    def __str__(self):
+        return f"Règlement {self.id} - {self.status}"
+
+
+class AccordReglement(models.Model):
+    # Statuts de l'accord
+    PENDING = 'pending'
+    IN_PROGRESS = 'in_progress'
+    COMPLETED = 'completed'
+    INVALID = 'invalid'
+    CANCELED = 'canceled'
+
+    STATUS_CHOICES = [
+        (PENDING, 'En attente'),
+        (IN_PROGRESS, 'En cours'),
+        (COMPLETED, 'Réalisé'),
+        (INVALID, 'Invalide'),
+        (CANCELED, 'Annulé'),
+    ]
+
+    admin_user = models.ForeignKey(User, on_delete=models.CASCADE)  # Administrateur
+    professeur = models.ForeignKey(Professeur, on_delete=models.PROTECT)  # Professeur lié
+    total_amount = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Montant total
+    email_id = models.IntegerField(null=True, blank=True)  # Email lié
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
+    created_at = models.DateTimeField(auto_now_add=True)  # Date de création
+    updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
+
+    def __str__(self):
+        return f"Accord Règlement - Prof: {self.professeur.id}, Statut: {self.status}"
+
+class DetailAccordReglement(models.Model):
+    accord = models.ForeignKey(AccordReglement, on_delete=models.CASCADE)  # Accord lié
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)  # Paiement lié
+    professor_share = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Part du professeur
+    description = models.TextField()  # Libellé
+
+    def __str__(self):
+        return f"Détail Accord Règlement - Accord ID: {self.accord.id}"
+
+
+class AccordRemboursement(models.Model):
+    # Statuts de l'accord
+    PENDING = 'pending'
+    IN_PROGRESS = 'in_progress'
+    COMPLETED = 'completed'
+    INVALID = 'invalid'
+    CANCELED = 'canceled'
+
+    STATUS_CHOICES = [
+        (PENDING, 'En attente'),
+        (IN_PROGRESS, 'En cours'),
+        (COMPLETED, 'Réalisé'),
+        (INVALID, 'Invalide'),
+        (CANCELED, 'Annulé'),
+    ]
+
+    admin_user = models.ForeignKey(User, on_delete=models.CASCADE)  # Administrateur
+    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # Élève concerné
+    total_amount = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Montant total remboursé
+    email_id = models.IntegerField(null=True, blank=True)  # Email lié
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
+    created_at = models.DateTimeField(auto_now_add=True)  # Date de création
+    updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
+
+    def __str__(self):
+        return f"Accord Remboursement - Élève: {self.eleve.id}, Statut: {self.status}"
+
+class DetailAccordRemboursement(models.Model):
+    accord = models.ForeignKey(AccordRemboursement, on_delete=models.CASCADE)  # Accord lié
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)  # Paiement lié
+    refunded_amount = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )  # Montant remboursé
+    description = models.TextField()  # Libellé
+
+    def __str__(self):
+        return f"Détail Accord Remboursement - Accord ID: {self.accord.id}"
