@@ -21,7 +21,7 @@
                 <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Gérer les paiements</strong></a>
                 <ul class="collapse list-unstyled" id="pageSubmenu">
                     <li>
-                        <a href="#" class="dropdown-item"  >Nouvelle déclaration de cours</a>
+                        <a href="{% url 'admin_payment_en_attente_reglement' %}" class="dropdown-item"  >Liste prof en attente de règlement</a>
                     </li>
                 </ul>
             </li>
@@ -35,7 +35,7 @@
             </li>
             <li>
                 {% if user.is_staff %}
-                    <a class="nav-link" href="/admin/"><strong>Administration système</strong></a>
+                    <a class="nav-link" href="/Mrhssoc22578338admin/"><strong>Administration système</strong></a>
                 {% endif %}
 
             </li>

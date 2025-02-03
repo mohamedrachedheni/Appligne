@@ -444,40 +444,6 @@ class Horaire(models.Model):  # Les horaires des séances du cours planifié par
         else:
             self.duree = 1  # valeur par défaut si les heures ne sont pas définies
 
-class Demande_paiement(models.Model):  # Demande de paiement par le prof
-    # Définition des différents statuts de la séance du cours
-    EN_ATTENTE = 'En attente'
-    EN_COURS = 'En cours'
-    REALISER = 'Réaliser'
-    CONTESTER = 'Contester'
-    ANNULER = 'Annuler'
-
-    # Choix de statuts de la demande de paiement
-    STATUS_CHOICES = [
-        (EN_ATTENTE, 'En attente'),
-        (EN_COURS, 'En cours'),
-        (REALISER, 'Réaliser'),
-        (CONTESTER, 'Contester'),
-        (ANNULER, 'Annuler'),
-    ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
-    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
-    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Eleve
-    montant = models.FloatField()  # Montant à régler
-    email = models.IntegerField(null=True)  # ID de l'email lié à la demande de paiement
-    vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
-    email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
-    statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
-    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
-    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
-    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
-
-
-class Detail_demande_paiement(models.Model):  # Demande de paiement
-    demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
-    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
-    prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
-    horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
 
 
 class Historique_prof(models.Model):
@@ -507,7 +473,7 @@ class Payment(models.Model):
         (INVALID, 'Invalide'),
     ]
 
-    model = models.CharField(max_length=255)  # Table liée au paiement (ex: Demande_paiement)
+    model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement)
     model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
     slug = models.CharField(max_length=255)  # Identifiant unique
     reference = models.CharField(max_length=255)  # Référence interne du paiement
@@ -529,6 +495,10 @@ class Payment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
     payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
     payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
+    approved = models.BooleanField(default=True) # Approuvé par l'élève, Pas de réclamation 
+    accord = models.BooleanField(default=False) # Accord de paiement par l'administrateur 
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
     def __str__(self):
         return f"Payment {self.reference} - {self.status}"
@@ -566,6 +536,42 @@ class Reglement(models.Model):
     def __str__(self):
         return f"Règlement {self.id} - {self.status}"
 
+class Demande_paiement(models.Model):  # Demande de paiement par le prof
+    # Définition des différents statuts de la séance du cours
+    EN_ATTENTE = 'En attente'
+    EN_COURS = 'En cours'
+    REALISER = 'Réaliser'
+    CONTESTER = 'Contester'
+    ANNULER = 'Annuler'
+
+    # Choix de statuts de la demande de paiement
+    STATUS_CHOICES = [
+        (EN_ATTENTE, 'En attente'),
+        (EN_COURS, 'En cours'),
+        (REALISER, 'Réaliser'),
+        (CONTESTER, 'Contester'),
+        (ANNULER, 'Annuler'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
+    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
+    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Eleve
+    montant = models.FloatField()  # Montant à régler
+    email = models.IntegerField(null=True)  # ID de l'email lié à la demande de paiement
+    vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
+    email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
+    statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
+    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
+    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+
+
+class Detail_demande_paiement(models.Model):  # Demande de paiement
+    demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
+    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
+    prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
+    horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
+
 
 class AccordReglement(models.Model):
     # Statuts de l'accord
@@ -597,6 +603,7 @@ class AccordReglement(models.Model):
     reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
+    due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse
 
     def __str__(self):
         return f"Accord Règlement - Prof: {self.professeur.id}, Statut: {self.status}"

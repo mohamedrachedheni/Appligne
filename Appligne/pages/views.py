@@ -1,23 +1,24 @@
 
 from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Professeur, Format_cour, Pro_fichier, Diplome_cathegorie
 from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves, Eleve
-from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune
+from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement
 from eleves.models import Temoignage, Parent
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from django.db.models import OuterRef, Subquery, DecimalField
+from django.db.models import OuterRef, Subquery, DecimalField, Q
 from django.core.validators import  EmailValidator
 from django.core.exceptions import  ValidationError, ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.http import JsonResponse
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from django.core.validators import validate_email, EmailValidator
 from django.urls import reverse
 from django.utils import timezone
+
 
 # Create your views here.
 
@@ -1777,3 +1778,90 @@ def admin_reponse_email(request, email_id):
         return redirect('admin_liste_email_recu') # Rediriger vers autre page
     
     return render(request, 'pages/admin_reponse_email.html', context) # revenir sur la même page
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_payment_en_attente_reglement(request):
+    teste = True
+    
+    # Récupérer les dates du formulaire ou définir les valeurs par défaut
+    date_format = "%d/%m/%Y"
+    date_fin_str = request.POST.get('date_fin', timezone.now().date().strftime(date_format))
+    date_debut_str = request.POST.get('date_debut', (timezone.now().date() - timedelta(days=15)).strftime(date_format))
+
+    # Validation du format des dates
+    try:
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de début de période invalide: {date_debut_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_debut = None
+
+    try:
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de fin de période invalide: {date_fin_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_fin = None
+
+    # Vérification que la date de début est bien avant la date de fin
+    if teste:
+        if date_debut > date_fin:
+            messages.error(request, "La date de début doit être inférieure ou égale à la date de fin de période.")
+            teste = False
+
+    # Fonction interne pour récupérer les paiements en attente de règlement
+    def get_payments(date_debut, date_fin, filter_criteria=None):
+        if filter_criteria is None:
+            filter_criteria = {}
+
+        return Payment.objects.filter(
+            accord=False,
+            model='Demande_paiement',
+            date_creation__range=(date_debut , date_fin + timedelta(days=1)),
+            **filter_criteria
+        ).order_by('-date_creation') # [date_debut , date_fin]
+
+    # Récupérer les paiements en attente
+    payments = get_payments(date_debut, date_fin)
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if request.method == 'POST':
+        if 'btn_tous' in request.POST:
+            # Filtrer pour tous les emails
+            payments = get_payments(date_debut, date_fin)
+        elif 'btn_en_ettente' in request.POST:
+            # Filtrer pour les paiements en attente
+            payments = get_payments(date_debut, date_fin, {'status': 'En attente'})
+        elif 'btn_approuve' in request.POST:
+            # Filtrer pour les paiements approuvés
+            payments = get_payments(date_debut, date_fin, {'status': 'Approuve'})
+        elif 'btn_invalide' in request.POST:
+            # Filtrer pour les paiements invalides
+            payments = get_payments(date_debut, date_fin, {'status': 'Invalide'})
+        elif 'btn_annule' in request.POST:
+            # Filtrer pour les paiements annulés
+            payments = get_payments(date_debut, date_fin, {'status': 'Annulé'})
+        elif 'btn_reclame' in request.POST:
+            # Filtrer pour les paiements réclamés par les élèves
+            payments = get_payments(date_debut, date_fin, {'approved': False})
+
+    # Associer les paiements avec les professeurs
+    paiements = []
+    for payment in payments:
+        try:
+            demande_paiement = Demande_paiement.objects.get(id=payment.model_id)
+            professeur = demande_paiement.user
+            paiements.append((payment, professeur))
+        except Demande_paiement.DoesNotExist:
+            continue  # Ignorer si la demande de paiement n'existe pas
+    
+    # Contexte à passer au template
+    context = {
+        'paiements': paiements,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+    }
+    
+    # Rendu de la page avec les emails filtrés
+    return render(request, 'pages/admin_payment_en_attente_reglement.html', context)

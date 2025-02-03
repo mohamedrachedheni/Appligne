@@ -724,7 +724,7 @@ def detaille_demande_paiement_recu(request, demande_paiement_id):
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
     user = request.user
-    # Vérifier si l'utilisateur a un profil de professeur associé
+    # Vérifier si l'utilisateur a un profil d'élève associé
     if not hasattr(user, 'eleve'):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
@@ -741,7 +741,7 @@ def detaille_demande_paiement_recu(request, demande_paiement_id):
     cours_declares = []
     cours_ids = set()
     for enr in detail_demande_paiements:
-        if enr.cours.id not in cours_ids:
+        if enr.cours.id not in cours_ids: # chaque ID du cours est ajouté une seule foix
             cours_declares.append({'cours': enr.cours})
             cours_ids.add(enr.cours.id)
 
@@ -765,7 +765,7 @@ def detaille_demande_paiement_recu(request, demande_paiement_id):
         if 'btn_contester' in request.POST:
             return handle_contestation(request, context, user, prof, email, demande_paiement)
         elif 'btn_reglement' in request.POST:
-            # Avant de passer à l'enregistrement il faut tester la coformité des enregistrement horaires
+            # Avant de passer à l'enregistrement il faut tester la conformité des enregistrements horaires
             # il faux que tous les enregistrement horaire liés à la demande de paiement sont non 'Annuler' non réglés
             horaires = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
             i=0
@@ -892,7 +892,7 @@ def update_historique_prof(prof, demande_paiement, user):
 
     # historique_prof.nb_eleve_inscrit: désigne le nombre des élève qui ont au moins effectué un règlement
     nb_reglement_eleve = Demande_paiement.objects.filter(user=prof, mon_eleve=mon_eleve, statut_demande='Réaliser').count()
-    if nb_reglement_eleve == 1 and not created:  # Si c'est le premier règlement réalisé pour cet élève 
+    if nb_reglement_eleve == 1 and not created:  # Si c'est le premier règlement réalisé pour cet élève et le prof à un historique
         historique_prof.nb_eleve_inscrit += 1  # Augmenter le nombre d'élèves inscrits
 
     # MAJ nb_heure_declare : Total des heures réglées pour cette demande de paiement
