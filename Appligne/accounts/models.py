@@ -286,6 +286,7 @@ class Pro_fichier(models.Model):
     parcours = models.TextField(null=True, blank=True)
     pedagogie = models.TextField(null=True, blank=True)
     video_youtube_url = models.CharField(max_length=255, null=True, blank=True)
+    rib = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.date_modif}"
@@ -495,46 +496,15 @@ class Payment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
     payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
     payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
-    approved = models.BooleanField(default=True) # Approuvé par l'élève, Pas de réclamation 
-    accord = models.BooleanField(default=False) # Accord de paiement par l'administrateur 
+    approved = models.BooleanField(default=True) # Approuvé par l'élève, Pas de réclamation
+    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
+    reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accod=rd de règlement est réalisé ou non 
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
     def __str__(self):
         return f"Payment {self.reference} - {self.status}"
 
-class Reglement(models.Model):
-    # Statuts de règlement
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    CANCELED = 'canceled'
-    INVALID = 'invalid'
-
-    STATUS_CHOICES = [
-        (PENDING, 'En attente'),
-        (APPROVED, 'Approuvé'),
-        (CANCELED, 'Annulé'),
-        (INVALID, 'Invalide'),
-    ]
-
-    model = models.CharField(max_length=255)  # Table liée (Accord_reglement/Accord_remboursement)
-    model_id = models.IntegerField()  # ID dans le modèle lié
-    debitor_account = models.CharField(max_length=255)  # Compte débiteur (-)
-    creditor_account = models.CharField(max_length=255)  # Compte créditeur (+)
-    amount = models.DecimalField(
-        max_digits=6, 
-        decimal_places=2, 
-        validators=[MinValueValidator(Decimal('0.01'))], 
-        null=True, 
-        blank=True
-    )  # Montant
-    currency = models.CharField(max_length=10)  # Devise
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    transaction_date = models.DateTimeField(null=True, blank=True)  # Date de règlement
-    description = models.TextField()  # Libellé du règlement
-
-    def __str__(self):
-        return f"Règlement {self.id} - {self.status}"
 
 class Demande_paiement(models.Model):  # Demande de paiement par le prof
     # Définition des différents statuts de la séance du cours
@@ -561,7 +531,8 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
     statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
     payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
-    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
+    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
+    reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accod=rd de règlement est réalisé ou non 
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
@@ -582,11 +553,11 @@ class AccordReglement(models.Model):
     CANCELED = 'canceled'
 
     STATUS_CHOICES = [
-        (PENDING, 'En attente'),
-        (IN_PROGRESS, 'En cours'),
-        (COMPLETED, 'Réalisé'),
-        (INVALID, 'Invalide'),
-        (CANCELED, 'Annulé'),
+        (PENDING, 'En attente'), # Le règlement est planifié mais non encore effectué avec l'intermédière financier
+        (IN_PROGRESS, 'En cours'), # Le règlent est effectué avec l'intermédière financier mais non encore confirmé
+        (COMPLETED, 'Réalisé'), # Le transfère du règlement est achevé
+        (INVALID, 'Invalide'), # Litermédière financier n'a pas validé le transfère
+        (CANCELED, 'Annulé'), # Le règlement a été annulé par l'administrateur
     ]
 
     admin_user = models.ForeignKey(User, on_delete=models.CASCADE)  # Administrateur
@@ -600,10 +571,9 @@ class AccordReglement(models.Model):
     )  # Montant total
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
-    due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse
+    due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
 
     def __str__(self):
         return f"Accord Règlement - Prof: {self.professeur.id}, Statut: {self.status}"
@@ -651,7 +621,6 @@ class AccordRemboursement(models.Model):
     )  # Montant total remboursé
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    reglement = models.ForeignKey(Reglement, on_delete=models.SET_NULL, null=True, blank=True)  # Lien avec le règlement
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
 

@@ -80,47 +80,76 @@
                     <!-- Liste élèves début -->
                     <div class="container-xxl py-5">
                         <div class="container">
-                            <div class="container bg-light">
-                                {% if not paiements %}
-                                    <div class="col-md-12 text-center">
-                                        <h4>Il n'y a pas de paiement pour cette période</h4>
+                            {% for prof in professeurs %}
+                                <div class="container bg-light mb-3">
+                                    {% if not paiements %}
+                                        <div class="col-md-12 text-center">
+                                            <h4>Il n'y a pas de paiement pour cette période</h4>
+                                        </div>
+                                    {% endif %}
+                                    <div class="row  py-3" style="margin-bottom: 30px;">
+                                        <div class="col-12  position-relative">
+                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
+                                        </div>
                                     </div>
-                                {% endif %}
-                                {% for payment, professeur in paiements %}
-                                    <div class="row  " style="margin-bottom: 30px;">
-                                        <div class="col-md-3 col-sm-12 position-relative">
-                                            <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
-                                            <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date</label>
-                                            <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
-                                        </div>
-                                        <div class="col-md-3 col-sm-12 position-relative">
-                                            <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
-                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{professeur.first_name}} {{professeur.last_name}}" readonly >
-                                        </div>
-                                        <div class="col-md-4 col-sm-12 position-relative">
-                                            <div class="row  ">
-                                                <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
-                                                <div class="col-md-4 col-sm-12 position-relative mb-3">
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
+                                    {% for payment, professeur, accordReglement in paiements %}
+                                        {% if professeur == prof %}
+                                            <div class="row  " style="margin-bottom: 10px;">
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
                                                 </div>
-                                                <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                        href="#"><span
-                                                            style="color: white;">Détaille </span></a>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date paiement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
                                                 </div>
-                                                <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
-                                                        href="#"><span
-                                                            style="color: white;">Règlement </span></a>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <div class="row  ">
+                                                        <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
+                                                        <div class="col-md-6 col-sm-12 position-relative ">
+                                                            
+                                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
+                                                                href="#"><span
+                                                                style="color: white;">Détaille </span></a>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                                {% if accordReglement %} 
+                                                <div class="col-md-4 col-sm-12 position-relative">
+                                                    <div class="row  ">
+                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance règlement</label>
+                                                        <div class="col-md-6 col-sm-12 position-relative mb-3">
+                                                            <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{accordReglement.due_date|date:'d/m/Y'}}" readonly>
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
+                                                                href="#"><span
+                                                                    style="color: white;">Accord Règlement </span></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                {% if not accordReglement %} 
+                                                <div class="col-md-4 col-sm-12 position-relative">
+                                                    <div class="row  p-4">
+                                                        <h6>Pas encore d'accord de règlement </h6>
+                                                    </div>
+                                                    
+                                                </div>
+                                                {% endif %}
                                             </div>
-                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
+                                        href="{% url 'admin_payment_accord_reglement' prof_id=prof.id %}"><span
+                                            style="color: white;">Ajouter un nouveau accord de paiemt </span></a>
                                     </div>
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
                     <!-- Liste élève fin -->

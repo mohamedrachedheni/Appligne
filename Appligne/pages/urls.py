@@ -15,5 +15,6 @@ urlpatterns = [
     path('admin_detaille_email/<int:email_id>/', views.admin_detaille_email, name='admin_detaille_email'),
     path('admin_reponse_email/<int:email_id>/', views.admin_reponse_email, name='admin_reponse_email'),
     path( 'admin_payment_en_attente_reglement' , views.admin_payment_en_attente_reglement , name='admin_payment_en_attente_reglement' ),
-    
+    path('admin_payment_accord_reglement/<int:prof_id>/', views.admin_payment_accord_reglement, name='admin_payment_accord_reglement'),
+    path('admin_accord_reglement/<int:prof_id>/', views.admin_accord_reglement, name='admin_accord_reglement'),
 ]

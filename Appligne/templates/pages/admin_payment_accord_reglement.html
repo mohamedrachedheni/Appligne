@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Accord de règlement professeur{% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début titre -->
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves, non encore versés aux professeurs</h6>
+                        <h5 class="text-center ">Fixer les échéances des accords de versements</h5>
+                        <h5 class="text-center ">Décocher les versements non encore accordés</h5>
+                        <h5 class="text-center ">Les versements seront groupés par date d'échéance</h5>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                                <div class="container bg-light mb-3">
+                                    {% if not payments %}
+                                        <div class="col-md-12 text-center">
+                                            <h4>Il n'y a pas de paiement pour cette période</h4>
+                                        </div>
+                                    {% endif %}
+                                    <div class="row  py-3" style="margin-bottom: 30px;">
+                                        <h5>Professeur: {{professeur.user.first_name}} {{professeur.user.last_name}}</h5>
+                                    </div>
+                                    {% for payment in payments %}
+                                            <div class="row  " style="margin-bottom: 10px;">
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
+                                                </div>
+                                                <div class="col-md-4 col-sm-12 position-relative  ">
+                                                    <div class="row  ">
+                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance versement</label>
+                                                    <div class="col-md-6 col-sm-12 position-relative ">
+                                                        <input type="text" class="form-control form-control-date "   placeholder="Sélectionnez une date" name="date_echeance_{{payment.id}}" id="date_ech_{{payment.id}}" value="{{ payment.date_plus_15|date:'d/m/Y' }}" >
+                                                    </div>
+                                                    <div class="col-md-2 position-relative  " >
+                                                        <input class="form-check-input p-3 ms-1 " type="checkbox" name="accord_{{payment.id}}" checked >
+                                                    </div> 
+                                                        <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
+                                                                href="#"><span
+                                                                style="color: white;">Détaille </span></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    {% endfor %}
+                                    <div class="row  " style="margin-bottom: 10px;">
+                                        <div class="col-lg-6 col-sm-12 d-flex justify-content-center  py-3">
+                                            <button type="submit" class="btn btn-warning col-12" name="btn_accord_reglement">
+                                                Passer aux accords de versements
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-6 col-sm-12 d-flex justify-content-center  py-3">
+                                            <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
+                                            href="{% url 'admin_payment_en_attente_reglement' %}"><span
+                                                style="color: white;">Revenir aux paiements non encore versés aux professeurs  </span></a>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <!-- Liste élève fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<script>
+    
+</script>
+    
+    
+    
+{% endblock %}

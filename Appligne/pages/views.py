@@ -1,13 +1,13 @@
 
 from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Professeur, Format_cour, Pro_fichier, Diplome_cathegorie
 from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves, Eleve
-from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement
+from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement
 from eleves.models import Temoignage, Parent
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from django.db.models import OuterRef, Subquery, DecimalField, Q
+from django.db.models import OuterRef, Subquery, DecimalField, Q, F, DurationField
 from django.core.validators import  EmailValidator
 from django.core.exceptions import  ValidationError, ObjectDoesNotExist
 from django.core.paginator import Paginator
@@ -18,6 +18,8 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from django.core.validators import validate_email, EmailValidator
 from django.urls import reverse
 from django.utils import timezone
+
+
 
 
 # Create your views here.
@@ -677,6 +679,7 @@ def admin_compte_prof(request, user_id=0):
         titre_fiche  = request.POST.get('titre_fiche','')
         parcours  = request.POST.get('parcours','')
         pedagogie  = request.POST.get('pedagogie','')
+        rib  = request.POST.get('rib','')
         video_youtube_url = request.POST.get('video_youtube_url','')
         # Récupérer l'enregistrement existant
         ancien_enregistrement = Pro_fichier.objects.filter(user=user_prof_select).first()
@@ -686,6 +689,7 @@ def admin_compte_prof(request, user_id=0):
             ancien_enregistrement.titre_fiche = titre_fiche
             ancien_enregistrement.parcours = parcours
             ancien_enregistrement.pedagogie = pedagogie
+            ancien_enregistrement.rib = rib
             ancien_enregistrement.video_youtube_url = video_youtube_url
             ancien_enregistrement.save()
         else:
@@ -695,6 +699,7 @@ def admin_compte_prof(request, user_id=0):
                 titre_fiche=titre_fiche,
                 parcours=parcours,
                 pedagogie=pedagogie,
+                rib=rib,
                 video_youtube_url=video_youtube_url
             )
 
@@ -707,6 +712,7 @@ def admin_compte_prof(request, user_id=0):
         # Modifier l'enregistrement du prof électionné dans la table Diplome
         # Liste des diplômes dans le request dont le nom commence par: diplome_
         diplome_keys = [key for key in request.POST.keys() if key.startswith('diplome_')]
+        
         if not diplome_keys:
             messages.error(request, "Il faut donner au moins un diplôme  ")
             teste = False
@@ -1782,10 +1788,17 @@ def admin_reponse_email(request, email_id):
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def admin_payment_en_attente_reglement(request):
-    teste = True
-    
-    # Récupérer les dates du formulaire ou définir les valeurs par défaut
-    date_format = "%d/%m/%Y"
+    """
+    affiche les paiement effectués par les élèves 
+    dont l'accord de règlement des professeurs
+    n'est pas encore réalisé (Statut!='Réalisé'), le formulaire permet 
+    de passer à un nouveau accord de règlement pour le  professeur,
+    de visualiser les détailles de la demande de règlement du professeur liée au paiement,
+    et de l'accord de règlement déja enregistré lié au paiement
+    """
+    teste = True # pour controler les validations
+    date_format = "%d/%m/%Y" # Format date
+    # début et fin de période de tri [date_debut_str , date_fin_str]
     date_fin_str = request.POST.get('date_fin', timezone.now().date().strftime(date_format))
     date_debut_str = request.POST.get('date_debut', (timezone.now().date() - timedelta(days=15)).strftime(date_format))
 
@@ -1816,13 +1829,13 @@ def admin_payment_en_attente_reglement(request):
             filter_criteria = {}
 
         return Payment.objects.filter(
-            accord=False,
-            model='Demande_paiement',
+            model='Demande_paiement', # l'enregistrement est lié à la Demande_payment
+            reglement_realise=False, # l'accord du règlement du prof non encore Réalisé (Statut!='Réalisé')
             date_creation__range=(date_debut , date_fin + timedelta(days=1)),
             **filter_criteria
         ).order_by('-date_creation') # [date_debut , date_fin]
 
-    # Récupérer les paiements en attente
+    # Récupérer tous les paiements en attente
     payments = get_payments(date_debut, date_fin)
 
     # Vérification du type de requête et application des filtres en fonction du bouton cliqué
@@ -1846,22 +1859,248 @@ def admin_payment_en_attente_reglement(request):
             # Filtrer pour les paiements réclamés par les élèves
             payments = get_payments(date_debut, date_fin, {'approved': False})
 
-    # Associer les paiements avec les professeurs
+    # Associer les paiements avec les professeurs, créer une liste professeur sans doublons
     paiements = []
+    professeurs = set()  # Utilisation d'un set pour éviter les doublons
+
     for payment in payments:
         try:
             demande_paiement = Demande_paiement.objects.get(id=payment.model_id)
             professeur = demande_paiement.user
-            paiements.append((payment, professeur))
-        except Demande_paiement.DoesNotExist:
+            # detailAccordReglement = DetailAccordReglement.objects.filter(payment=payment).first() # à chaque boucle il y a un premier tri tri, 
+            # accordReglement = AccordReglement.objects.filter(id=detailAccordReglement.accord.id).first() # à chaque boucle il y a un deuxième tri
+            if payment.accord_reglement_id:
+                accordReglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()  # Peut être None si non trouvé, il y a un seul tri dans ce cas
+            else: accordReglement = None
+            paiements.append((payment, professeur, accordReglement))
+            professeurs.add(professeur)  # Ajouter le professeur à la liste sans doublon
+        except demande_paiement.DoesNotExist:
             continue  # Ignorer si la demande de paiement n'existe pas
+
+    # Convertir le set en liste si nécessaire
+    professeurs = list(professeurs)
+
     
     # Contexte à passer au template
     context = {
         'paiements': paiements,
+        'professeurs': professeurs,
         'date_debut': date_debut,
         'date_fin': date_fin,
     }
     
     # Rendu de la page avec les emails filtrés
     return render(request, 'pages/admin_payment_en_attente_reglement.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_payment_accord_reglement(request, prof_id):
+    """
+    Affiche les paiements dont l'accord de  règlement 
+    non encore réalisé (Statut!='Réalisé'), pour le professeur sélectionné, 
+    de passer aux nouveausx accords de règlement pour le professeur 
+    après avoire défini la date de règlement et cocher les paiements sélectionnés
+    """
+    date_format = "%d/%m/%Y" # format date
+
+    # Récupérer le professeur
+    professeur = get_object_or_404(Professeur, user_id=prof_id)
+
+    # Récupérer les ID des demandes de paiements liées au professeur  encore règlée
+    demande_paiement_ids = Demande_paiement.objects.filter(user_id=prof_id, reglement_realise=False).values_list('id', flat=True)
+
+    # Récupérer les paiements non encore accordés liés aux demandes de paiement
+    payments = Payment.objects.filter(
+        accord_reglement_id = None, # pas d'accord de règlements réservé
+        reglement_realise = False, # pas d'accord de  règlement réalisé (Statut!='Réalisé')
+        model='Demande_paiement',
+        model_id__in=demande_paiement_ids # seulement les paiements du professeur sélectionné
+    ).annotate(
+        date_plus_15=F('date_creation') + timedelta(days=15) # date_plus_15: est un champs calculé pour définir échéance de règlement par défaut
+    ).order_by('-date_creation')
+
+    # Contexte pour le template
+    context = {
+        'professeur': professeur,
+        'payments': payments,
+    }
+
+    if 'btn_accord_reglement' in request.POST:
+        # Récupérer les paiements cochés
+        payment_keys = [key for key in request.POST.keys() if key.startswith('accord_')]
+        if not payment_keys:
+            messages.error(request, "Il faut au moins cocher un paiement")
+            return render(request, 'pages/admin_payment_accord_reglement.html', context)
+
+        payment_requests = []
+
+        for payment_key in payment_keys:
+            i = payment_key.split('_')[1] # récupérer ID du payment
+            date_reglement_str = request.POST.get(f'date_echeance_{i}') # récupérer la date d'échéance du règlement
+            
+            if not date_reglement_str:
+                continue  # Ignorer si aucune date n'est renseignée
+
+            # Récupérer l'objet Payment correspondant
+            payment = payments.filter(id=i).first()
+            if payment:
+                payment_id = payment.id
+                payment_requests.append((date_reglement_str,payment_id))  # Stocker l'ID du paiement et la date de versement
+
+        if not payment_requests:
+            messages.error(request, "Il faut au moins définir une date d'échéance de versement")
+            return render(request, 'pages/admin_payment_accord_reglement.html', context)
+
+        # Stocker dans la session (en convertissant la date en string)
+        request.session['payment_requests'] = payment_requests
+
+        return redirect('admin_accord_reglement', prof_id=prof_id)
+
+    return render(request, 'pages/admin_payment_accord_reglement.html', context)
+
+
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_accord_reglement(request, prof_id):
+    """
+    Enregistre les accords de règlement, relatifs aux paiements sélectionnés, 
+    en les groupant par date d'échéance, pour le professeur 
+    séclectionnéenvoie, un email pour chaque accord est enregistre 
+    et les emails sont envoyées
+    en fin la mise à jour des paiements sélectionnés (accord_reglement_id=accord_reglement_id)
+    pour différencier les paiements sans accord de règlement (accord_reglement_id=None)
+    """
+    date_format = "%d/%m/%Y" # format de la date
+    msg = "" # pour grouper les messages info dans un message final
+    # Récupérer le professeur ou renvoyer une erreur 404 s'il n'existe pas
+    professeur = get_object_or_404(Professeur, user_id=prof_id)
+    # récupérer date_reglement_str,payment_id de la session
+    payment_requests = request.session.get('payment_requests')
+    if not payment_requests:
+        messages.info(request, "Il n'y apas de règlement à enregistrer")
+        return redirect('admin_payment_accord_reglement', prof_id=prof_id)
+    date_requests=set() # pour grouper les dates
+    totaux = [] # pour calculer date, totaux_payement, totaux_versement par date de groupement
+    
+    # la date_versement est la même que la date_request
+    payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
+    textes = [] # 
+    for date_reglement_str,payment_id in payment_requests:
+        payment = Payment.objects.filter(id=payment_id).first()
+        # c'est une requette qui lie la table Demande_paiement avec Eleve avec User
+        demande_paiement = Demande_paiement.objects.select_related('eleve__user').get(id=payment.model_id)
+        user_eleve = demande_paiement.eleve.user
+
+        try:
+                date_versement = datetime.strptime(date_reglement_str, date_format).date()
+                payments.append((date_versement, payment, user_eleve))
+                date_request=date_versement # pour les différencier dans le templae
+                date_requests.add(date_request) # groupement des date de règlement (versement)
+                
+        except ValueError:
+            continue
+
+    for date in date_requests: # groupement des dates de règlements
+        totaux_payement=0
+        for date_versement, payment, user_eleve in payments: # la date de versement est la même que date de règlement
+            if date==date_versement: 
+                totaux_payement += payment.amount
+        totaux_versement = (totaux_payement * 2 ) / 3
+        totaux.append((date, totaux_payement, totaux_versement))
+    if 'btn_accord_enregistrement' in request.POST:
+        # envoyer l'email
+        user = request.user # admin
+        email_user = user.email
+        email_destinataire = professeur.user.email
+        destinations = ['prosib25@gmail.com', email_destinataire]
+        
+        # Validation des emails dans destinations
+        for destination in destinations:
+            email_validator = EmailValidator() #inicialisation de l'objet EmailValidator
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
+        
+        # mise en forme du text_email et du sujet de l'email
+        for date_request in date_requests:
+            texte = f"\nRèglement prévu le:\t\t{date_request.strftime('%d/%m/%Y')}\n\nListe des paiements des élèves:\nElève\t\t\t\t\tDate paiement\tPaiement\n"
+            for date_versement, payment, user_eleve in payments:
+                if date_versement==date_request:
+                    texte += f"{user_eleve.first_name} {user_eleve.last_name}\t\t\t\t{payment.date_creation.strftime('%d/%m/%Y')}\t\t{payment.amount:.2f}€\n"
+            
+            texte_totaux =""
+            for date, totaux_payement, totaux_versement in totaux:
+                if date == date_request:
+                    texte_totaux = f"\nMontant payé\t\tMontant à règler\n{totaux_payement:.2f}€\t\t\t\t\t{totaux_versement:.2f}€"
+                    texte_fin= texte + texte_totaux
+                    sujet = f"Accord de règlement de: {totaux_payement:.2f}€, pour le: {date}"
+                    textes.append((date,texte_fin ))
+                
+            #envoie de l'email
+            text_email = texte_fin
+            try:
+                send_mail(
+                    sujet,
+                    text_email,
+                    email_user,
+                    destinations,
+                    fail_silently=False,
+                )
+                msg += str(f"L'email a été envoyée avec succès relatif à l'accord de règlement du {date_request}.\n")
+                # messages.success(request, "L'email a été envoyée avec succès.")
+            except Exception as e:
+                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+            
+            # enregistrement de l'email
+            email_telecharge = Email_telecharge(
+                user=user, 
+                email_telecharge=email_user, 
+                text_email=text_email, 
+                user_destinataire=professeur.user.id,
+                sujet=sujet
+            )
+            email_telecharge.save()
+            msg += str(f"L'email a été enregistré avec succès relatif à l'accord de règlement du {date_request}.\n")
+            # messages.success(request, "L'email a été enregistré avec succès.")
+
+            # Enregistrement des accords de règlements
+            for date, totaux_payement, totaux_versement in totaux:
+                if date == date_request:
+                    accord_reglement = AccordReglement(admin_user=user, professeur=professeur, total_amount=totaux_versement, email_id=email_telecharge.id, status="En attente", due_date=date)
+                    accord_reglement.save()
+                    # Enregistrement des détailles des accords de règlements
+                    for date_versement, payment, user_eleve in payments:
+                        if date_versement == date_request: # car les accords de règlements sont groupés par date de règlement
+                            detaille_accord_reglement = DetailAccordReglement(
+                                accord=accord_reglement, 
+                                payment=payment, 
+                                professor_share=(payment.amount * 2) / 3, 
+                                description="Elève: " + user_eleve.first_name + " " + user_eleve.last_name +
+                                            ", Date paiement: " + payment.date_creation.strftime('%d/%m/%Y') +
+                                            ", Montant payé: " + str(payment.amount) + "€"
+                            )
+                            detaille_accord_reglement.save()
+                            payment.accord_reglement_id=accord_reglement.id # mise à jour de l'enregistrement payment
+                            payment.save()
+
+                            msg += str(f"L'accord de règlement a été enregistré avec succès du {date_versement}.\n\n")
+        messages.success(request, msg.replace("\n", "<br>") )
+        # vider payment_requests de la session
+        request.session.pop('payment_requests', None)
+        return redirect('admin_payment_accord_reglement', prof_id=prof_id)
+
+    # Contexte à passer au template
+    context = {
+        'professeur': professeur,
+        'payments': payments,
+        'date_requests': date_requests,
+        'totaux': totaux,
+        'textes':textes,
+    }
+
+    # Rendu de la page avec les données filtrées
+    return render(request, 'pages/admin_accord_reglement.html', context)
+
+# fin révision code le 12/02/2025
