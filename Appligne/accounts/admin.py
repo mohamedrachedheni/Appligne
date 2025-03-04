@@ -27,6 +27,10 @@ from .models import Horaire
 from .models import Demande_paiement
 from .models import Detail_demande_paiement
 from .models import Historique_prof
+from .models import AccordReglement
+from .models import DetailAccordReglement
+from .models import Coordonnees_bancaires
+
 
 
 
@@ -69,3 +73,7 @@ admin.site.register(Horaire)
 admin.site.register(Demande_paiement)
 admin.site.register(Detail_demande_paiement)
 admin.site.register(Historique_prof)
+admin.site.register(AccordReglement)
+admin.site.register(DetailAccordReglement)
+admin.site.register(Coordonnees_bancaires)
+

@@ -13,7 +13,6 @@ from eleves.models import Eleve
 from datetime import date, datetime
 # from datetime import timedelta
 
-
 class Pays(models.Model):
     nom_pays = models.CharField(max_length=100, unique=True)
     drapeau = models.ImageField(upload_to='photos/%y/%m/%d/')
@@ -46,7 +45,6 @@ class Professeur(models.Model):
     def set_date_naissance_from_str(self, date_naissance_str):
         if date_naissance_str:
             self.date_naissance = datetime.strptime(date_naissance_str, '%d/%m/%Y').date()
-
 
 
 
@@ -90,11 +88,9 @@ class Diplome(models.Model):
 
 
 
-
 class Experience_cathegorie(models.Model):
     nom_pays = models.ForeignKey(Pays, on_delete=models.CASCADE)
     exp_cathegorie  = models.CharField(max_length=100)
-
 
     def __str__(self):
         return f"{self.exp_cathegorie}"
@@ -139,7 +135,6 @@ class Experience(models.Model):
 
 
 
-
 class Format_cour(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     a_domicile = models.BooleanField(default=False)
@@ -152,7 +147,6 @@ class Format_cour(models.Model):
 
     class Meta:
         ordering = ['user','-a_domicile', '-webcam']
-
 
 
 class Region(models.Model):
@@ -170,7 +164,6 @@ class Region(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['nom_pays', 'region'], name='unique_pays_region')
         ]
-
 
 class Departement(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
@@ -204,7 +197,6 @@ class Commune(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['departement', 'commune', 'code_postal'], name='unique_departement_commune_postal)')
         ]
-
 
 class Prof_zone(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -286,14 +278,13 @@ class Pro_fichier(models.Model):
     parcours = models.TextField(null=True, blank=True)
     pedagogie = models.TextField(null=True, blank=True)
     video_youtube_url = models.CharField(max_length=255, null=True, blank=True)
-    rib = models.CharField(max_length=255, null=True, blank=True)
+    
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.date_modif}"
 
     class Meta:
         ordering = ['-date_modif']
-
 
 
 class Email_telecharge(models.Model):
@@ -339,7 +330,6 @@ class Email_detaille(models.Model):
     format_cours =models.CharField(max_length=255, null=True, blank=True) 
 
 
-
 class Prix_heure(models.Model):
     FORMAT_COUR = [
         ('a_domicile', 'Cours à domicile'),
@@ -363,7 +353,6 @@ class Prix_heure(models.Model):
             models.UniqueConstraint(fields=['user', 'prof_mat_niv', 'format'], name='prof_mat_niv_format')
         ]
 
-
 class Mes_eleves(models.Model):  # Mes élèves 
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # ID user professeur
     eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE)  # Relation un à plusieurs avec les élèves
@@ -382,7 +371,6 @@ class Mes_eleves(models.Model):  # Mes élèves
 
 
 
-
 class Cours(models.Model):  # Les cours planifiés par le prof pour l'élève
     user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
     mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.CASCADE)  # ID de l'élève inscrit dans la table Mes_eleve
@@ -395,7 +383,6 @@ class Cours(models.Model):  # Les cours planifiés par le prof pour l'élève
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
     def date_modification_formatee(self):
         return self.date_modification.strftime('%d%m%y')
-
 
 
 class Horaire(models.Model):  # Les horaires des séances du cours planifié par le prof pour l'élève
@@ -444,7 +431,6 @@ class Horaire(models.Model):  # Les horaires des séances du cours planifié par
             self.duree = round(duree.total_seconds() / 3600, 2)
         else:
             self.duree = 1  # valeur par défaut si les heures ne sont pas définies
-
 
 
 class Historique_prof(models.Model):
@@ -505,9 +491,8 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment {self.reference} - {self.status}"
 
-
 class Demande_paiement(models.Model):  # Demande de paiement par le prof
-    # Définition des différents statuts de la séance du cours
+    # Définition des différents statuts de la demande de paiement
     EN_ATTENTE = 'En attente'
     EN_COURS = 'En cours'
     REALISER = 'Réaliser'
@@ -516,11 +501,11 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
 
     # Choix de statuts de la demande de paiement
     STATUS_CHOICES = [
-        (EN_ATTENTE, 'En attente'),
-        (EN_COURS, 'En cours'),
-        (REALISER, 'Réaliser'),
-        (CONTESTER, 'Contester'),
-        (ANNULER, 'Annuler'),
+        (EN_ATTENTE, 'En attente'), # Enregistré par le prof et en attente de la confirmation de l'élève
+        (EN_COURS, 'En cours'), # L'élève a confgirmé la demande par un paiement mais la passerelle de paiement est en cours de confirmation(c'est le temps nécessaire pour que la passerelle confirme le paiement)
+        (REALISER, 'Réaliser'), # la passerelle a confirmé le paiement
+        (CONTESTER, 'Contester'), # l'élève a contesté la demande de paiement avant même de passer au paiement
+        (ANNULER, 'Annuler'), # l'élève à commencé dans la procédure de paiement puis il a annulé
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
     mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
@@ -530,19 +515,17 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
     email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
     statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
-    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
-    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
-    reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accod=rd de règlement est réalisé ou non 
+    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
+    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut)
+    reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
-
 
 class Detail_demande_paiement(models.Model):  # Demande de paiement
     demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
     cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
     prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
     horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
-
 
 class AccordReglement(models.Model):
     # Statuts de l'accord
@@ -571,6 +554,8 @@ class AccordReglement(models.Model):
     )  # Montant total
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfère de l'argent
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
@@ -592,7 +577,6 @@ class DetailAccordReglement(models.Model):
 
     def __str__(self):
         return f"Détail Accord Règlement - Accord ID: {self.accord.id}"
-
 
 class AccordRemboursement(models.Model):
     # Statuts de l'accord
@@ -641,3 +625,18 @@ class DetailAccordRemboursement(models.Model):
 
     def __str__(self):
         return f"Détail Accord Remboursement - Accord ID: {self.accord.id}"
+
+
+class Coordonnees_bancaires(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    nom_banque = models.CharField(max_length=255)
+    iban = models.CharField(max_length=34, unique=True)
+    bic = models.CharField(max_length=11, unique=True)
+    numero_compte = models.CharField(max_length=50, unique=True)
+    titulaire_compte = models.CharField(max_length=255)
+    date_ajout = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Coordonnées bancaires de {self.user.username}"
+
+

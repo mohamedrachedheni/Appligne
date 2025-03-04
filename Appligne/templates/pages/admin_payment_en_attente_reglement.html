@@ -19,6 +19,7 @@
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                         <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves, non encore versés aux professeurs</h6>
+                        <h6 class=" bg-white text-center text-secondary px-3">Seuls les paiements approuvés, qui ne font pas déjà partie d'un accord de paiement, peuvent être inclus dans un nouvel accord de paiement.</h6>
                     </div>
                     
                     <div class="col-md-12">
@@ -72,6 +73,43 @@
                                 Tous
                             </button>
                         </div>
+                        {% if status_str == 'En attente' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements en attente correspondent aux transactions effectuées par les élèves qui n'ont pas encore été confirmées par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Approuvé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements approuvés correspondent aux transactions effectuées par les élèves qui ont été confirmées par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Réclamé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements réclamés sont des transactions confirmées par la passerelle de paiement, mais ultérieurement contestées par l'élève.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Invalide' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiement invalides sont les transfères non validés par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Annulé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements annulés correspondent aux transactions interrompues par l'élève avant leur finalisation.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Réclamé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements réclamés sont ceux approuvés par la passerelle de paiement, mais pour lesquels l'élève a ensuite déposé une réclamation.
+                            </h6>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- boutons fin -->
@@ -96,7 +134,7 @@
                                         {% if professeur == prof %}
                                             <div class="row  " style="margin-bottom: 10px;">
                                                 <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut du paiement</label>
                                                     <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
                                                 </div>
                                                 <div class="col-md-2 col-sm-12 position-relative ">
@@ -127,7 +165,7 @@
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
                                                             <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
                                                                 href="#"><span
-                                                                    style="color: white;">Accord Règlement </span></a>
+                                                                    style="color: white;">Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %} </span></a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -146,7 +184,7 @@
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
                                         href="{% url 'admin_payment_accord_reglement' prof_id=prof.id %}"><span
-                                            style="color: white;">Ajouter un nouveau accord de paiemt </span></a>
+                                        style="color: white;">Ajouter d'autres accords de règlement </span></a>
                                     </div>
                                 </div>
                             {% endfor %}

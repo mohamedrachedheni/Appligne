@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Etat règlement professeur{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Suivi des règlements des professeurs par période et échéance</h6>
+                        {% if accord_reglement_approveds %}
+                            <h5 class="text-center ">Sélectionner les accords de règlement à modifier</h5>
+                            <h5 class="text-center ">Définir le nouveau statut et la date de l'opération</h5>
+                            <h5 class="text-center ">Passer à l'enregistrement des modifications apportées</h5>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+                <!-- boutons début -->
+                <div class="container-xxl bg-light" >
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_1" class="form-label">Début période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
+                        </div>
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_2" class="form-label">Fin période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
+                        </div>                           
+                    </div>
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
+                                En attente
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
+                                En cours
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_realiser">
+                                Réalisé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
+                                Annulé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
+                                Invalide
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12  justify-content-center">
+                            <div class="row  ">
+                                <div class="col-md-10 col-sm-12 position-relative ">
+                                    <button type="submit" class="btn btn-primary w-100" name="btn_tous">Tous</button>
+                                </div>
+                                <div class="col-md-2 col-sm-12 position-relative  ">
+                                    <input class="form-check-input p-3 ms-1 " type="checkbox" name="checkbox_tous" checked id="checkbox_tous_id" >
+                                </div>
+                            </div>  
+                        </div>
+                        {% if statut == 'En attente' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de règlement en attente sont confirmés, mais le transfert au professeur n’a pas encore été effectué par l’administrateur.
+                            </h6>
+                        </div>
+                        {% elif statut == 'En cours' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de règlement en cours sont enregistrés après confirmation des paiements et en attente de validation bancaire pour le transfert, effectué par l'administrateur, au professeur.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Réalisé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de règlement réalisés sont enregistrés après confirmation des paiements et validés une fois le transfert au professeur approuvé par la banque.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Invalide' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de règlement invalides concernent des paiements d’élèves confirmés, mais dont le transfert au professeur est refusé par la banque pour un vice de transfert. Une explication est alors envoyée au professeur.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Annulé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de règlement annulés concernent des paiements d’élèves confirmés et enregistrés par l’administrateur, qui annule ensuite l’accord sans effectuer de transfert bancaire. Une explication est alors envoyée au professeur.
+                            </h6>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- boutons fin -->
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light mb-3">
+                                {% if not accord_reglement_approveds %}
+                                    <div class="col-md-12 text-center">
+                                        <h4>Il n'y a pas de règlements pour cette période</h4>
+                                    </div>
+                                {% endif %}
+                                {% for accord_reglement , approved in accord_reglement_approveds %}
+                                    <div class="row  g-2 p-3 " style="margin-bottom: 10px;">
+                                        <div class="col-md-8 col-sm-12 position-relative">
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{accord_reglement.status}}" readonly name="status_accord_id{{accord_reglement.id}}" >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="due_date_id_{{ forloop.counter }}" class="form-label">Echéance</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_reglement.id}}" >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Règlement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_reglement.id}}" >
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly name="prof_accord_id{{accord_reglement.id}}" >
+                                                </div>
+                                                {% if  accord_reglement.status != 'Réalisé' and accord_reglement.status != 'Annulé' %}
+                                                    <div class="col-md-3 position-relative">
+                                                        <label for="nouv_status_id" class="form-label">Nouveau statut</label>
+                                                        <select class="form-select" id="nouv_status_id" name="nouv_status_accord_id{{accord_reglement.id}}">
+                                                            <!-- conditions logique entre accord_reglement.status et la valeur de  nouv_status_accord  -->
+                                                            <option value="Non défini" selected >Non défini</option>
+                                                            <!-- {% if accord_reglement.status != 'En attente' and accord_reglement.status != 'En cours' %}<option value="En attente" >En attente</option>{% endif %} -->
+                                                            {% if accord_reglement.status != 'En cours' %}<option value="En cours"  >En cours</option>{% endif %}
+                                                            {% if accord_reglement.status != 'Réalisé' %}<option value="Réalisé"  >Réalisé</option>{% endif %}
+                                                            {% if accord_reglement.status != 'Annulé' and accord_reglement.status != 'En cours' %}<option value="Annulé" >Annulé</option>{% endif %}
+                                                            {% if accord_reglement.status != 'Invalide' %}<option value="Invalide" >Invalide</option>{% endif %}
+                                                        </select>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                            <div class="col-md-4 col-sm-12">
+
+                                                
+                                                <div class="row ">
+                                                    {% if  accord_reglement.status != 'Réalisé' and accord_reglement.status != 'Annulé' %}
+                                                    <label for="date_id_{{ forloop.counter|add:2 }}" class="form-label">Date d'opération</label>
+                                                    <div class="col-md-6 col-sm-12  ">
+                                                        <input type="text" class="form-control form-control-date " required name="date_operation_reglement_id{{ accord_reglement.id }}" placeholder="Sélectionnez une date" value="{{ date_now|date:'d/m/Y' }}" id="date_id_{{ forloop.counter|add:2 }}" >
+                                                    </div>
+                                                    <div class="col-md-1 col-sm-12 text-center  ">
+                                                        <input class="form-check-input p-3 checkbox_tous " type="checkbox" name="checkbox_reglement_id{{ accord_reglement.id }}" checked >
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="col-md-5 col-sm-12 {% if  accord_reglement.status == 'Réalisé' or accord_reglement.status == 'Annulé' %} p-4 g-2 {% endif %} ">
+                                                        <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_detaille_reglement_id{{ accord_reglement.id }}">
+                                                            {% if approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        
+                                    </div>
+                                {% endfor %}
+                                <div class="row  " style="margin-bottom: 10px;">
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_enr">
+                                            Passer à l'enregistrement les modificatios apportées
+                                    </div>
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-primary col-12" name="btn_etat">
+                                            Afficher l'état des accords de règlements
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
+<script>
+    
+</script>
+{% endblock %}

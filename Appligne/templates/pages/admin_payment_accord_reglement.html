@@ -18,9 +18,11 @@
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                         <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves, non encore versés aux professeurs</h6>
-                        <h5 class="text-center ">Fixer les échéances des accords de versements</h5>
-                        <h5 class="text-center ">Décocher les versements non encore accordés</h5>
-                        <h5 class="text-center ">Les versements seront groupés par date d'échéance</h5>
+                        {% if payments %}
+                            <h5 class="text-center ">Fixer les échéances des accords de versements</h5>
+                            <h5 class="text-center ">Décocher les versements non encore accordés</h5>
+                            <h5 class="text-center ">Les versements seront groupés par date d'échéance</h5>
+                        {% endif %}
                     </div>
                     
                     <div class="col-md-12">
@@ -37,7 +39,8 @@
                                 <div class="container bg-light mb-3">
                                     {% if not payments %}
                                         <div class="col-md-12 text-center">
-                                            <h4>Il n'y a pas de paiement pour cette période</h4>
+                                            <h4>Il n'y a pas de paiement approuvé (réalisé)</h4>
+                                            <h6>Seuls les paiements approuvés, qui ne font pas déjà partie d'un accord de paiement, peuvent être inclus dans un nouvel accord de paiement.</h6>
                                         </div>
                                     {% endif %}
                                     <div class="row  py-3" style="margin-bottom: 30px;">
@@ -64,7 +67,7 @@
                                                         <input type="text" class="form-control form-control-date "   placeholder="Sélectionnez une date" name="date_echeance_{{payment.id}}" id="date_ech_{{payment.id}}" value="{{ payment.date_plus_15|date:'d/m/Y' }}" >
                                                     </div>
                                                     <div class="col-md-2 position-relative  " >
-                                                        <input class="form-check-input p-3 ms-1 " type="checkbox" name="accord_{{payment.id}}" checked >
+                                                        <input class="form-check-input p-3 ms-1 checkbox_tous " type="checkbox" name="accord_{{payment.id}}" checked >
                                                     </div> 
                                                         <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
                                                             <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
@@ -76,15 +79,25 @@
                                             </div>
                                     {% endfor %}
                                     <div class="row  " style="margin-bottom: 10px;">
-                                        <div class="col-lg-6 col-sm-12 d-flex justify-content-center  py-3">
-                                            <button type="submit" class="btn btn-warning col-12" name="btn_accord_reglement">
+                                        <div class="col-lg-4 col-sm-12 d-flex justify-content-center  py-3">
+                                            <button type="submit" class="btn btn-warning col-12" name="btn_accord_reglement" {% if not payments %} disabled {% endif %}>
                                                 Passer aux accords de versements
                                             </button>
                                         </div>
-                                        <div class="col-lg-6 col-sm-12 d-flex justify-content-center  py-3">
-                                            <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
-                                            href="{% url 'admin_payment_en_attente_reglement' %}"><span
-                                                style="color: white;">Revenir aux paiements non encore versés aux professeurs  </span></a>
+                                        <div class="col-lg-8 col-sm-12  justify-content-center py-3 ">
+                                            <div class="row  ">
+                                                <div class="col-md-11 col-sm-12 position-relative ">
+                                                    <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
+                                                    href="{% url 'admin_payment_en_attente_reglement' %}"><span
+                                                        style="color: white;">Revenir aux paiements non encore versés aux professeurs  </span>
+                                                    </a>
+                                                </div>
+                                                
+                                            <div class="col-md-1 col-sm-12 position-relative  ">
+                                                <input class="form-check-input p-3 ms-1 " type="checkbox" name="checkbox_tous" checked id="checkbox_tous_id" >
+                                            </div>
+                                            </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -106,6 +119,7 @@
 <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
 <script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
 <script>
+    
     
 </script>
     

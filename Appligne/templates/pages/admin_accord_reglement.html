@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Accords de règlements{% endblock %}
+{% block title %} | Enregistrementdes accords de règlements du professeur {% endblock %}
 
 {% block content %}
 
@@ -17,7 +17,7 @@
                 <div class="container  ">
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Accords de règlements</h6>
+                        <h6 class="section-title bg-white text-center text-primary px-3">Enregistrement des accords de règlements en attente pour le professeur</h6>
                     </div>
                     
                     <div class="col-md-12">
@@ -56,26 +56,6 @@
                                                         <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
                                                         <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
                                                     </div>
-                                                    <!-- <div class="col-md-2 col-sm-12 position-relative ">
-                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance versement</label>
-                                                        <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{date_versement|date:'d/m/Y'}}" readonly>
-                                                    </div> -->
-                                                    <!-- <div class="col-md-4 col-sm-12 position-relative  ">
-                                                        <div class="row  ">
-                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance versement</label>
-                                                        <div class="col-md-6 col-sm-12 position-relative ">
-                                                            <input type="text" class="form-control form-control-date "   placeholder="Sélectionnez une date" name="date_echeance_{{payment.id}}" id="date_ech_{{payment.id}}" value="{{ payment.date_plus_15|date:'d/m/Y' }}" >
-                                                        </div>
-                                                        <div class="col-md-2 position-relative  " >
-                                                            <input class="form-check-input p-3 ms-1 " type="checkbox" id="principal_id_{{ forloop.counter }}" name="principal_{{ forloop.counter }}" checked >
-                                                        </div> 
-                                                            <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
-                                                                <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                                    href="#"><span
-                                                                    style="color: white;">Détaille </span></a>
-                                                            </div>
-                                                        </div>
-                                                    </div> -->
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -84,6 +64,7 @@
                                             <h6>Date de versement prévue: {{date_request}} </h6>
                                             <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
                                             <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
+                                            <h6>Statut accord de règlemen: <strong>En attente</strong></h6>
                                             
                                             {% endif %}
                                         {% endfor %}
@@ -105,7 +86,7 @@
                                     <div class="row  " style="margin-bottom: 10px;">
                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                             <button type="submit" class="btn btn-warning col-12" name="btn_accord_enregistrement">
-                                                Enregistrer les accords de règlements
+                                                Enregistrer les accords de règlements <strong>En attente</strong>
                                             </button>
                                         </div>
                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">

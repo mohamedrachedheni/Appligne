@@ -835,13 +835,13 @@ def handle_contestation(request, context, user, prof, email, demande_paiement):
 
 def handle_reglement(request, demande_paiement, prof, user):
 
-    # création enregistrement payment (à réviser)
+    # création enregistrement payment (à réviser après l'intégration de la passerelle de paiement)
     payment = Payment.objects.create(
         status='Approuvé',
         model="demande_paiement",
         model_id=demande_paiement.id,
         slug=f"Dd{demande_paiement.id}Prof{prof.id}Elv{user.id}",
-        reference=demande_paiement.id,
+        reference=demande_paiement.id, # à modifier avec l'intégration de la passerelle de paiement
         expiration_date=timezone.now(),
         amount=demande_paiement.montant,
         currency="Euro",
