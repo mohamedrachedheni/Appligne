@@ -19,4 +19,5 @@ urlpatterns = [
     path('admin_accord_reglement/<int:prof_id>/', views.admin_accord_reglement, name='admin_accord_reglement'),
     path( 'admin_reglement' , views.admin_reglement , name='admin_reglement' ),
     path( 'admin_reglement_email' , views.admin_reglement_email , name='admin_reglement_email' ),
+    path('admin_reglement_detaille/<int:accord_id>/', views.admin_reglement_detaille, name='admin_reglement_detaille'),
 ]

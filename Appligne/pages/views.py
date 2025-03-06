@@ -2466,3 +2466,42 @@ def admin_reglement_email(request):
         if teste: return redirect('admin_reglement')
 
     return render(request, 'pages/admin_reglement_email.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+# from django.shortcuts import get_object_or_404, render
+# from django.contrib.auth.decorators import user_passes_test
+# from .models import AccordReglement, DetailAccordReglement
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_reglement_detaille(request, accord_id):
+    """
+    Vue permettant d'afficher les détails d'un accord de règlement.
+
+    - Seuls les utilisateurs staff et actifs peuvent accéder à cette page.
+    - Récupère l'accord de règlement ainsi que ses détails associés.
+    - Optimise les requêtes en utilisant `select_related` et `values_list`.
+    """
+
+    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    accord_reglement = get_object_or_404(AccordReglement, id=accord_id)
+    
+    # Récupération optimisée de l'email 
+    email = Email_telecharge.objects.filter(id=accord_reglement.email_id).only('sujet', 'text_email').first()
+    texte_email = f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
+    
+    # Récupération optimisée des détails de l'accord, avec accès direct aux attributs nécessaires
+    detaille = list(
+        DetailAccordReglement.objects
+        .filter(accord=accord_reglement)
+        .select_related('payment')  # Optimisation pour éviter des requêtes supplémentaires
+        .values_list('payment__id', 'description', 'professor_share', 'payment__approved')
+    )
+
+    # Passage des données au template
+    context = {
+        'accord_reglement': accord_reglement,
+        'texte_email': texte_email,
+        'detaille': detaille,
+    }
+    
+    return render(request, 'pages/admin_reglement_detaille.html', context)

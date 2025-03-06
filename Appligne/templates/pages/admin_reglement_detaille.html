@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Détaille accord reglement{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light mb-3">
+                                <div class="row  g-2 ">
+                                    <div class="col-md-2 col-sm-12 position-relative">
+                                        <label for="admin_id" class="form-label">Administrateur</label>
+                                        <input type="text" class="form-control form-control-intitule" id="admin_id" value="{{accord_reglement.admin_user.first_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-2 col-sm-12 position-relative">
+                                        <label for="prof_id" class="form-label">Professeur</label>
+                                        <input type="text" class="form-control form-control-intitule" id="prof_id" value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-2 col-sm-12 position-relative">
+                                        <label for="statut_id" class="form-label">Statut de l'accord</label>
+                                        <input type="text" class="form-control form-control-intitule" id="statut_id" value="{{accord_reglement.status}}" readonly >
+                                    </div>
+                                    <div class="col-md-2 col-sm-12 position-relative">
+                                        <label for="mnt_ttl_id" class="form-label">Total à règler</label>
+                                        <input type="text" class="form-control form-control-intitule" id="mnt_ttl_id" value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly >
+                                    </div>
+                                    <div class="col-md-2 col-sm-12 position-relative ">
+                                        <label for="due_date_id" class="form-label">Echéance</label>
+                                        <input type="text" class="form-control form-control-intitule" id="due_date_id"  value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly >
+                                    </div>
+                                    <div class="col-md-2 col-sm-12 position-relative ">
+                                        <label for="transfere_id" class="form-label">Transfère</label>
+                                        <input type="text" class="form-control form-control-intitule" id="transfere_id" {% if accord_reglement.date_trensfere %} value="{{accord_reglement.date_trensfere|date:'d/m/Y'}} / id= {{accord_reglement.transfere_id}}" {% else %} value="Pas de transfère" {% endif %} readonly >
+                                    </div>
+                                </div>
+                                <br>
+                                <hr>
+                                {% for id, description, professor_share, approved  in detaille %}
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-8 col-sm-12 position-relative">
+                                                    <label for="description_id_{{ id }}" class="form-label">description</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="description_id_{{ id }}"  value="{{description}}" readonly >
+                                                </div>
+                                                <div class="col-md-4 col-sm-12 position-relative">
+                                                    <label for="professor_share{{ id }}" class="form-label">Montant à règler</label>
+                                                    <div class="row  g-2 ">
+                                                        <div class="col-md-6 col-sm-12 position-relative">
+                                                            <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-12 position-relative">
+                                                            <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement{{ id }}">
+                                                                {% if approved %}Détaille paiement{% else %}Non approuvé{% endif %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                {% endfor %}
+                                <hr>
+                                <div class="col-lg-12">
+                                    <label for="text_email" class="form-label"><strong>Message lié à l'accord de règlement</strong></label>
+                                    <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
+                                </div>
+                                <div class="row  " style="margin-bottom: 10px;">
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_enr" {% if accord_reglement.status == 'Réalisé'  %} disabled {% endif %} >
+                                            Modifier l'accord de règlement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+const textareas = document.getElementsByClassName('form-control profil');
+
+for (let i = 0; i < textareas.length; i++) {
+    const textarea = textareas[i];
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+}
+}
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+{% endblock %}
