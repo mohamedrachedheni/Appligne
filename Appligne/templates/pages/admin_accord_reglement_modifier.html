@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Enregistrementdes accords de règlements du professeur {% endblock %}
+{% block title %} | modifier l'accords de règlements du professeur {% endblock %}
 
 {% block content %}
 
@@ -17,7 +17,7 @@
                 <div class="container  ">
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Enregistrement des accords de règlements en attente pour le professeur</h6>
+                        <h6 class="section-title bg-white text-center text-primary px-3">modifier l'accord de règlement pour le professeur</h6>
                     </div>
                     
                     <div class="col-md-12">
@@ -83,6 +83,14 @@
                                         
                                         {% endfor %}
                                     {% endfor %}
+                                    <div class="col-lg-12">
+                                        <label for="text_email" class="form-label"><strong>Nouveau message lié à l'accord de règlement modifier</strong></label>
+                                        <textarea class="form-control profil" id="text_email"  readonly>{{text_email}}</textarea>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <label for="text_email_plus" class="form-label"><strong>Ajoutez un texte de plus au besoin</strong></label>
+                                        <textarea class="form-control profil" id="text_email_plus" name="text_email_plus" ></textarea>
+                                    </div>
                                     <div class="row  " style="margin-bottom: 10px;">
                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                             <button type="submit" class="btn btn-warning col-12" name="btn_accord_enregistrement">

@@ -12,6 +12,10 @@
         <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
             <div class="container-xxl py-1" >
                 <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Détails de l'accord de règlement pour le professeur</h6>
+                    </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
@@ -65,9 +69,7 @@
                                                             <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 position-relative">
-                                                            <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement{{ id }}">
-                                                                {% if approved %}Détaille paiement{% else %}Non approuvé{% endif %}
-                                                            </button>
+                                                            <a class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" href="{% url 'admin_payment_demande_paiement' payment_id=id  %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">{% if approved %}Détaille paiement{% else %}Non approuvé{% endif %}</span></a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -80,9 +82,7 @@
                                 </div>
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <button type="submit" class="btn btn-warning col-12" name="btn_enr" {% if accord_reglement.status == 'Réalisé'  %} disabled {% endif %} >
-                                            Modifier l'accord de règlement
-                                        </button>
+                                        <a class="btn btn-warning w-100" href="{% url 'admin_reglement_modifier' accord_id=accord_reglement.id   %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">Passez à la modification de l'accord de règlement</span></a>
                                     </div>
                                 </div>
                             </div>

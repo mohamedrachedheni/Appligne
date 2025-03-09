@@ -37,6 +37,9 @@
                             <label for="date_id_1" class="form-label">Début période</label>
                             <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
                         </div>
+                        <div class="col-md-6 col-sm-12 position-relative text-center">
+                            <h1>Paiements Elèves</h1>
+                        </div>
                         <div class="col-md-3 col-sm-12 position-relative ">
                             <label for="date_id_2" class="form-label">Fin période</label>
                             <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
@@ -150,7 +153,7 @@
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
                                                             <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="#"><span
+                                                                href="{% url 'admin_payment_demande_paiement' payment_id=payment.id  %}"><span
                                                                 style="color: white;">Détaille </span></a>
                                                         </div>
                                                     </div>
@@ -164,7 +167,7 @@
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
                                                             <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="#"><span
+                                                                href="{% url 'admin_reglement_detaille' accord_id=accordReglement.id  %}"><span
                                                                     style="color: white;">Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %} </span></a>
                                                         </div>
                                                     </div>

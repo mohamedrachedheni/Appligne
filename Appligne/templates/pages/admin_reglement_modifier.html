@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Modifier l'accord de reglement{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Modification de l'accord de règlement pour le professeur</h6>
+                        
+                            <h5 class="text-center ">Les champs actifs peuvent être modifiés.</h5>
+                            <h5 class="text-center ">Cochez ou décochez les paiements à inclure ou exclure.</h5>
+                            <h5 class="text-center ">Un accord de règlement doit inclure au moins un paiement sélectionné.</h5>
+                        
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light mb-3">
+                                <div class="row  g-2 ">
+                                    <div class="col-md-4 col-sm-12 position-relative">
+                                        <label for="admin_id" class="form-label">Administrateur</label>
+                                        <input type="text" class="form-control form-control-intitule" id="admin_id" value="{{accord_reglement.admin_user.first_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 position-relative">
+                                        <label for="prof_id" class="form-label">Professeur</label>
+                                        <input type="text" class="form-control form-control-intitule" id="prof_id" value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 position-relative">
+                                        <label for="mnt_ttl_id" class="form-label">Ancien total à règler</label>
+                                        <input type="text" class="form-control form-control-intitule" id="mnt_ttl_id" value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly >
+                                    </div>
+                                    <div class="col-md-3 position-relative">
+                                        <label for="status_id" class="form-label">Nouveau statut</label>
+                                        <select class="form-select" id="status_id" name="status">
+                                            <option value="En attente" {% if accord_reglement.status == "En attente"  %} selected {% endif %} >En attente</option>
+                                            <option value="En cours" {% if accord_reglement.status == "En cours"  %} selected {% endif %} >En cours</option>
+                                            <option value="Réalisé" {% if accord_reglement.status == "Réalisé"  %} selected {% endif %} >Réalisé</option>
+                                            <option value="Annulé" {% if accord_reglement.status == "Annulé"  %} selected {% endif %} >Annulé</option>
+                                            <option value="Invalide" >Invalide</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 position-relative">
+                                        <label for="due_date_id" class="form-label">Echéance du règlement</label>
+                                        <input type="text" class="form-control form-control-date "  name="date_echeance" placeholder="Sélectionnez une date" value="{{ accord_reglement.due_date|date:'d/m/Y' }}" id="due_date_id" required >
+                                    </div>
+                                    {% if accord_reglement.status == "Réalisé"  %}
+                                    <div class="col-md-3 col-sm-12 position-relative">
+                                        <label for="transfere_id" class="form-label">ID du transfère</label>
+                                        <input type="text" class="form-control form-control-intitule" id="transfere_id" value="{{accord_reglement.transfere_id}}" name="transfere_id" >
+                                    </div>
+                                    <div class="col-md-3 position-relative">
+                                        <label for="date_trensfere_id" class="form-label">Date transfère</label>
+                                        <input type="text" class="form-control form-control-date "  name="date_trensfere" placeholder="Sélectionnez une date" value="{{ accord_reglement.date_trensfere|date:'d/m/Y' }}" id="date_trensfere_id" >
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <br>
+                                <hr>
+                                {% for id, description, professor_share, approved  in detaille %}
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-9 col-sm-12 position-relative">
+                                                    <label for="description_{{ id }}" class="form-label">Ancienne description</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="description_{{ id }}"  value="{{description}}" readonly >
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="professor_share{{ id }}" class="form-label">Ancien montant à règler</label>
+                                                    <div class="row  g-2 ">
+                                                        <div class="col-md-10 col-sm-12 position-relative">
+                                                            <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
+                                                        </div>
+                                                        <div class="col-md-2 col-sm-12 position-relative  ">
+                                                            <input class="form-check-input p-3 ms-1 " type="checkbox" name="accord_{{ id }}" checked id="checkbox_{{id}}" >
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                {% endfor %}
+                                <hr>
+                                {% for id, description, professor_share, approved  in paiements_sans_accord %}
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-9 col-sm-12 position-relative">
+                                                    <label for="description_{{ id }}" class="form-label">Nouvelle description</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="description_{{ id }}"  value="{{description}}" readonly >
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="professor_share{{ id }}" class="form-label">Nouveau montant à règler</label>
+                                                    <div class="row  g-2 ">
+                                                        <div class="col-md-10 col-sm-12 position-relative">
+                                                            <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
+                                                        </div>
+                                                        <div class="col-md-2 col-sm-12 position-relative  ">
+                                                            <input class="form-check-input p-3 ms-1 " type="checkbox" name="accord_{{ id }}"  id="checkbox_{{id}}" >
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                {% endfor %}
+                                <div class="col-lg-12">
+                                    <label for="text_email" class="form-label"><strong>Ancien message lié à l'accord de règlement</strong></label>
+                                    <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
+                                </div>
+                                <div class="row  " style="margin-bottom: 10px;">
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_enr" >
+                                            Modifier l'accord de règlement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_reglement_modifier.js' %}"></script>
+<script>
+    // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+const textareas = document.getElementsByClassName('form-control profil');
+
+for (let i = 0; i < textareas.length; i++) {
+    const textarea = textareas[i];
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+}
+}
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+{% endblock %}

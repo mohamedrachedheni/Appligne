@@ -71,7 +71,7 @@
                                                     </div> 
                                                         <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
                                                             <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="#"><span
+                                                                href="{% url 'admin_payment_demande_paiement' payment_id=payment.id  %}"><span
                                                                 style="color: white;">Détaille </span></a>
                                                         </div>
                                                     </div>
