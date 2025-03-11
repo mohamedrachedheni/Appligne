@@ -484,7 +484,7 @@ class Payment(models.Model):
     payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
     approved = models.BooleanField(default=True) # Approuvé par l'élève, Pas de réclamation
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
-    reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accod=rd de règlement est réalisé ou non 
+    reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
@@ -539,7 +539,7 @@ class AccordReglement(models.Model):
         (PENDING, 'En attente'), # Le règlement est planifié mais non encore effectué avec l'intermédière financier
         (IN_PROGRESS, 'En cours'), # Le règlent est effectué avec l'intermédière financier mais non encore confirmé
         (COMPLETED, 'Réalisé'), # Le transfère du règlement est achevé
-        (INVALID, 'Invalide'), # Litermédière financier n'a pas validé le transfère
+        (INVALID, 'Invalide'), # L'intermédière financier n'a pas validé le transfère
         (CANCELED, 'Annulé'), # Le règlement a été annulé par l'administrateur
     ]
 

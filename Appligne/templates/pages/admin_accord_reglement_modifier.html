@@ -40,9 +40,9 @@
                                     <div class="row  py-3" style="margin-bottom: 30px;">
                                         <h5>Professeur: {{professeur.user.first_name}} {{professeur.user.last_name}}</h5>
                                     </div>
-                                    {% for date_request in date_requests %}
-                                        {% for date_versement, payment, user_eleve in payments %}
-                                            {% if date_request == date_versement %}
+                                    
+                                        {% for  payment, user_eleve in payments %}
+                                            
                                                 <div class="row  " style="margin-bottom: 10px;">
                                                     <div class="col-md-3 col-sm-12 position-relative">
                                                         <label for="statut_id_{{ forloop.counter }}" class="form-label">Elève</label>
@@ -57,35 +57,20 @@
                                                         <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
                                                     </div>
                                                 </div>
-                                            {% endif %}
                                         {% endfor %}
-                                        {% for date, totaux_payement, totaux_versement in totaux %}
-                                            {% if date == date_request %}
-                                            <h6>Date de versement prévue: {{date_request}} </h6>
-                                            <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
-                                            <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
-                                            <h6>Statut accord de règlemen: <strong>En attente</strong></h6>
-                                            
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% for date,texte_fin in textes %}
-                                        {% if date == date_request %}
-                                        <div class="row  " style="margin-bottom: 10px;">
-                                            <div class="col-12 position-relative">
-                                                <label for="text_email_id" class="form-label">Contenu de l'émail envoyé :</label>
-                                                <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" >
-                                                        {{texte_fin}}
-                                                </textarea>
-                                            </div>
-                                        </div>
-                                        <hr>
+                                        <h6>Date de versement prévue: {{date_reglement}} </h6>
+                                        <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
+                                        <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
+                                        <h6>Ancien statut accord de règlemen: <strong>{{accord_reglement.status}}</strong></h6>
+                                        <h6>Nouveau statut accord de règlemen: <strong>{{status}}</strong></h6>
+                                        {% if status == 'Réalisé' %}
+                                            <h6>Nouvelle date de transfère: <strong>{{date_trensfere}}</strong></h6>
+                                            <h6>Nouveau ID de transfère: <strong>{{transfere_id}}</strong></h6>
                                         {% endif %}
-                                        
-                                        {% endfor %}
-                                    {% endfor %}
+                                        <hr>
                                     <div class="col-lg-12">
                                         <label for="text_email" class="form-label"><strong>Nouveau message lié à l'accord de règlement modifier</strong></label>
-                                        <textarea class="form-control profil" id="text_email"  readonly>{{text_email}}</textarea>
+                                        <textarea class="form-control profil" id="text_email"  readonly>{{texte_fin}}</textarea>
                                     </div>
                                     <div class="col-lg-12">
                                         <label for="text_email_plus" class="form-label"><strong>Ajoutez un texte de plus au besoin</strong></label>
@@ -97,11 +82,6 @@
                                                 Enregistrer les accords de règlements <strong>En attente</strong>
                                             </button>
                                         </div>
-                                        <!-- <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                            <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
-                                            href="{% url 'admin_payment_accord_reglement' prof_id=professeur.user.id %}"><span
-                                                style="color: white;">Revenir aux paiements non encore versés au professeur </span></a>
-                                        </div> -->
                                     </div>
                                 </div>
                         </div>
@@ -122,8 +102,25 @@
 <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
 <script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
 <script>
-    
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+<script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+
 </script>
+    
+
     
     
     

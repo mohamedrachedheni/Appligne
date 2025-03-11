@@ -82,8 +82,13 @@
                                 </div>
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <a class="btn btn-warning w-100" href="{% url 'admin_reglement_modifier' accord_id=accord_reglement.id   %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">Passez à la modification de l'accord de règlement</span></a>
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement">
+                                            Passez à la modification de l'accord de règlement
+                                        </button>
                                     </div>
+                                    <!-- <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <a class="btn btn-warning w-100" href="{% url 'admin_reglement_modifier'  %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">Passez à la modification de l'accord de règlement</a>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
