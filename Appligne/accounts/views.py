@@ -1440,14 +1440,18 @@ def demande_cours_recu_eleve(request, email_id):
         return redirect('demande_cours_recu') # Rediriger vers la page précédente
     
     eleve = Eleve.objects.filter( user_id=email.user.id).first() # récupérer l'élève
-    if not eleve:
-        messages.error(request, "Il n'y a pas d'élève expéditeur d'email envoyé.")
+    user_expediteur = User.objects.filter(id=email.user.id).first()
+    if not user_expediteur:
+        messages.error(request, "Il n'y a pas d'expéditeur d'email envoyé.")
         return redirect('compte_prof')
 
-    mon_eleve_exists = Mes_eleves.objects.filter(eleve=eleve, user=user).exists() # Voire si c'est mon élève
-    if mon_eleve_exists: mon_eleve_id= Mes_eleves.objects.filter(eleve=eleve, user=user).first().id # Récupérer l'ID de mon èmève
-    context = {'email': email, 'email_id': email_id, 'mon_eleve_exists': mon_eleve_exists}
-    
+    if eleve:
+        mon_eleve_exists = Mes_eleves.objects.filter(eleve=eleve, user=user).exists() # Voire si c'est mon élève
+        if mon_eleve_exists: mon_eleve_id= Mes_eleves.objects.filter(eleve=eleve, user=user).first().id # Récupérer l'ID de mon èmève
+        context = {'email': email, 'email_id': email_id, 'mon_eleve_exists': mon_eleve_exists}
+    else: 
+        admin = f"{user_expediteur.first_name} {user_expediteur.last_name} " 
+        context = {'email': email, 'email_id': email_id, 'mon_eleve_exists': True, 'admin': admin }
     # Initialiser le validateur d'email
     email_validator = EmailValidator()
 

@@ -69,7 +69,9 @@
                                                             <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 position-relative">
-                                                            <a class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" href="{% url 'admin_payment_demande_paiement' payment_id=id  %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">{% if approved %}Détaille paiement{% else %}Non approuvé{% endif %}</span></a>
+                                                            <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
+                                                                {% if approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>

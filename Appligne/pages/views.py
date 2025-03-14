@@ -1896,6 +1896,29 @@ def admin_payment_en_attente_reglement(request):
         paiements.append((payment, professeur, accord_reglement))
         professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
 
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['payment_id'] = paiement_ids[0]
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = int(accord_ids[0])
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
     # Préparation du contexte pour l'affichage dans le template
     context = {
         'paiements': paiements,
@@ -1948,6 +1971,17 @@ def admin_payment_accord_reglement(request, prof_id):
         'professeur': professeur,
         'payments': payments,
     }
+
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['payment_id'] = paiement_ids[0]
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
 
     # Vérification si le formulaire a été soumis pour accorder un règlement
     if 'btn_accord_reglement' in request.POST:
@@ -2261,6 +2295,21 @@ def admin_reglement(request):
                 approved = False
                 break
         accord_reglement_approveds.append((accord_reglement , approved))
+    
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = int(accord_ids[0])
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+
+
 
     
     context = {
@@ -2328,6 +2377,7 @@ def admin_reglement(request):
 def admin_reglement_email(request):
     date_format = "%d/%m/%Y" # Format date
     reglement_requests = request.session.get('reglement_requests')
+
     
     accord_reglement_modifs=[]
     for id, approved, date_operation_reglement_str, nouv_status_accord in reglement_requests:
@@ -2357,6 +2407,10 @@ def admin_reglement_email(request):
     }
     teste = False
     if "btn_accord_enregistrement" in request.POST:
+        # Condition nécessaire de l'activation du template
+        if not reglement_requests:
+            messages.info(request, "Il n'y a pas de règlement à enregistrer")
+            return redirect('compte_administrateur')
         for accord_reglement, date_operation_reglement, nouv_status_accord, approved, text_email, sujet in accord_reglement_modifs:
             # Récupérer les accords de règlement
             reglement_keys = [key for key in request.POST.keys() if key.startswith('sujet_')]
@@ -2456,7 +2510,7 @@ def admin_reglement_email(request):
                         Payment.objects.filter(id__in=payment_ids).update(accord_reglement_id=accord_reglement.id, reglement_realise=1)
                         messages.success(request, "Mise à jour payment")
                         # Supprimer reglement_requests de la session après l'enregistrement
-                        del request.session['reglement_requests'] # à réviser
+                        request.session['reglement_requests']=None # à réviser
                         request.session.modified = True  # Force la mise à jour de la session, à réviser avec Salma
             if l==0: 
                 messages.info(request, "Aucun changement dans les enregistrements des accords de règlement")
@@ -2472,7 +2526,7 @@ def admin_reglement_email(request):
 # from .models import AccordReglement, DetailAccordReglement
 
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_reglement_detaille(request, accord_id):
+def admin_reglement_detaille(request):
     """
     Vue permettant d'afficher les détails d'un accord de règlement.
 
@@ -2482,6 +2536,13 @@ def admin_reglement_detaille(request, accord_id):
     """
 
     # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    accord_id = request.session.get('accord_id')
+    
+    # Condition nécessaire de l'activation du template
+    if not accord_id:
+        messages.info(request, "Il n'y a pas de règlement à enregistrer")
+        return redirect('compte_administrateur')
+    
     accord_reglement = get_object_or_404(AccordReglement, id=accord_id)
     
     # Récupération optimisée de l'email 
@@ -2500,6 +2561,18 @@ def admin_reglement_detaille(request, accord_id):
         # Stockage l'ID de l'accord de règlement dans la session avant redirection
         request.session['accord_id'] = accord_id
         return redirect('admin_reglement_modifier')
+    
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['payment_id'] = paiement_ids[0]
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
 
     # Passage des données au template
     context = {
@@ -2521,12 +2594,21 @@ def is_admin_active(user):
     return user.is_staff and user.is_active
 
 @user_passes_test(is_admin_active, login_url='/login/')
-def admin_payment_demande_paiement(request, payment_id):
+def admin_payment_demande_paiement(request):
     """
     Vue d'administration permettant d'afficher les détails du paiement d'un élève,
     liés à une demande de paiement faite par un professeur.
     Accessible uniquement aux administrateurs actifs.
     """
+
+    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    payment_id = request.session.get('payment_id')
+    
+    # Condition nécessaire de l'activation du template
+    if not payment_id:
+        messages.info(request, "Il n'y a pas de paiement")
+        return redirect('compte_administrateur')
+    
     # Récupération du paiement lié à une demande de paiement
     payment = get_object_or_404(Payment, id=payment_id, model="demande_paiement")
     
@@ -2590,7 +2672,16 @@ def admin_reglement_modifier(request):
     de modifier l'enregistrement.
     Accessible uniquement aux administrateurs actifs.
     """
+
+    
+    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
     accord_id = request.session.get('accord_id')
+
+    # Condition nécessaire de l'activation du template
+    if not accord_id:
+        messages.info(request, "Il n'y a pas de règlement à enregistrer")
+        return redirect('compte_administrateur')
+    
     date_format = "%d/%m/%Y" # Format date
     # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
     accord_reglement = get_object_or_404(AccordReglement, id=accord_id)
@@ -2738,10 +2829,11 @@ def admin_accord_reglement_modifier(request):
     envoie un email pour le professeur et l'enregistrer
     en fin la mise à jour des paiements selon le statut initial et final
     """
+    
     date_format = "%d/%m/%Y" # format de la date
     msg = "" # pour grouper les messages info dans un message final
     
-    # récupérer des paramètres de la session
+    # Récupérer des paramètres de la session
     payment_requests = request.session.get('payment_modifier')
     date_reglement_str = request.session.get('date_reglement_str')
     accord_id = request.session.get('accord_id')
@@ -2750,6 +2842,12 @@ def admin_accord_reglement_modifier(request):
     date_trensfere = request.session.get('date_trensfere')
     transfere_id = request.session.get('transfere_id')
     ancien_payment_accords = request.session.get('ancien_payment_accords')
+
+    # Condition nécessaire de l'activation du template
+    if not accord_id:
+        messages.info(request, "Il n'y a pas de règlement à enregistrer")
+        return redirect('compte_administrateur')
+
     # Récupérer le professeur ou renvoyer une erreur 404 s'il n'existe pas
     professeur = get_object_or_404(Professeur, user_id=prof_id)
 
@@ -2906,8 +3004,17 @@ def admin_accord_reglement_modifier(request):
 
             msg += str(f"L'accord de règlement a été enregistré avec succès du {demande_paiement}.\n")
         messages.success(request, msg.replace("\n", "<br>") )
-        # vider payment_requests de la session
-        request.session.pop('payment_requests', None)
+
+        # Vider les paramètres de la session
+        keys_to_delete = [
+            'payment_modifier', 'date_reglement_str', 'accord_id', 'prof_id', 
+            'status', 'date_trensfere', 'transfere_id', 'ancien_payment_accords'
+        ]
+
+        for key in keys_to_delete:
+            if key in request.session:
+                del request.session[key]
+
         return redirect('compte_administrateur')
 
     # Contexte à passer au template

@@ -68,11 +68,11 @@
                                                     </div>
                                                     <div class="col-md-2 position-relative  " >
                                                         <input class="form-check-input p-3 ms-1 checkbox_tous " type="checkbox" name="accord_{{payment.id}}" checked >
-                                                    </div> 
+                                                    </div>
                                                         <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="{% url 'admin_payment_demande_paiement' payment_id=payment.id  %}"><span
-                                                                style="color: white;">Détaille </span></a>
+                                                            <button type="submit" class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{ payment.id }}" >
+                                                                {% if payment.approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>

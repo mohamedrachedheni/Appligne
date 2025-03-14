@@ -172,8 +172,10 @@
                                                         <input class="form-check-input p-3 checkbox_tous " type="checkbox" name="checkbox_reglement_id{{ accord_reglement.id }}" checked >
                                                     </div>
                                                     {% endif %}
-                                                    <div class="col-md-5 col-sm-12 {% if  accord_reglement.status == 'Réalisé' or accord_reglement.status == 'Annulé' %} p-4 g-2 {% endif %} ">
-                                                        <a class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" href="{% url 'admin_reglement_detaille' accord_id=accord_reglement.id  %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">{% if approved %}Détaille{% else %}Non approuvé{% endif %}</span></a>
+                                                    <div class="col-md-5 col-sm-12 {% if  accord_reglement.status == 'Réalisé' or accord_reglement.status == 'Annulé' %} p-4 g-2  {% endif %} ">
+                                                        <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100 " name="btn_detaille_reglement_id{{ accord_reglement.id }}" >
+                                                            {% if approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -183,7 +185,7 @@
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <button type="submit" class="btn btn-warning col-12" name="btn_enr">
-                                            Passer à l'enregistrement les modificatios apportées
+                                            Passer à la modification des accord de règlement
                                     </div>
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <button type="submit" class="btn btn-primary col-12" name="btn_etat">

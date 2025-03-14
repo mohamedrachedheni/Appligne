@@ -152,9 +152,9 @@
                                                             <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <a class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="{% url 'admin_payment_demande_paiement' payment_id=payment.id  %}"><span
-                                                                style="color: white;">Détaille </span></a>
+                                                            <button type="submit" class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
+                                                                {% if payment.approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -166,9 +166,9 @@
                                                             <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{accordReglement.due_date|date:'d/m/Y'}}" readonly>
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="{% url 'admin_reglement_detaille' accord_id=accordReglement.id  %}"><span
-                                                                    style="color: white;">Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %} </span></a>
+                                                            <button type="submit" class="btn btn-primary w-100" name="btn_detaille_reglement_id{{ accordReglement.id }}" >
+                                                                Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>

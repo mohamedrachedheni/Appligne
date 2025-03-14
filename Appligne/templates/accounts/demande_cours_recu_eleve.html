@@ -49,6 +49,9 @@
                     <div class="container ">
                         <div class="container bg-light  p-4">
                             <div class="row justify-content-center">
+                                {% if admin %}
+                                <h6>De la part de l'administration</h6>
+                                {% endif %}
                                 <div class="col-12 position-relative">
                                     <label for="sujet_id" class="form-label">Sujet de l'email</label>
                                     <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{email.sujet}}" readonly>
@@ -81,6 +84,7 @@
                                                 Voir réponse
                                             </button>
                                         </div>
+                                        {% if not admin %}
                                         <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
                                             <button type="submit" class="btn btn-primary w-100" name="btn_ajout_eleve" {% if mon_eleve_exists %} disabled {% endif %}>
                                                 Ajout élève
@@ -91,6 +95,7 @@
                                                 Voir mon élève
                                             </button>
                                         </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

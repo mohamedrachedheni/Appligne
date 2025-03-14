@@ -41,7 +41,7 @@
                                     <!-- for date_request in date_requests -->
                                         {% for accord_reglement, date_operation_reglement, nouv_status_accord, approved, text_email, sujet in accord_reglement_modifs %}
                                             <div class="row  py-2" style="margin-bottom: 30px;">
-                                                <h6>Professeur: {{accord_reglement.professeur}} ( {% if not approved %} <strong style="color: red;"><a class="text" href="{% url 'admin_reglement_detaille' accord_id=accord_reglement.id  %}">Il y a un paiement au moins contesté par l'élève voire détaille</a></strong> {% else %} <strong style="color: blue;"><a class="text" href="{% url 'admin_reglement_detaille' accord_id=accord_reglement.id  %}">Voire détaille de l'accord de règlement</a></strong> {% endif %} ) </h6>
+                                                <h6>Professeur: {{accord_reglement.professeur}} ( {% if not approved %} <strong style="color: red;"><a class="text" href="{% url 'admin_reglement_detaille' %}">Il y a un paiement au moins contesté par l'élève voire détaille</a></strong> {% else %} <strong style="color: blue;"><a class="text" href="{% url 'admin_reglement_detaille'  %}">Voire détaille de l'accord de règlement</a></strong> {% endif %} ) </h6>
                                                 {% if nouv_status_accord == "Réalisé" %}
                                                     <div class="col-md-3 col-sm-12 position-relative">
                                                         <label for="prodate_id_{{ accord_reglement.id }}" class="form-label">Date d'opération</label>
