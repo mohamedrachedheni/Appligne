@@ -19,7 +19,7 @@ from django.core.validators import validate_email, EmailValidator
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Min, Max
-from cryptography.fernet import Fernet # pour chifrer et déchifrer les ID
+
 
 
 
