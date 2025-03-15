@@ -41,6 +41,16 @@
                                         <h5>Professeur: {{professeur.user.first_name}} {{professeur.user.last_name}}</h5>
                                     </div>
                                     {% for date_request in date_requests %}
+                                        
+                                        {% for date, totaux_payement, totaux_versement in totaux %}
+                                            {% if date == date_request %}
+                                            <h6>Date de versement prévue: {{date_request}} </h6>
+                                            <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
+                                            <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
+                                            <h6>Statut accord de règlemen: <strong>En attente</strong></h6>
+                                            
+                                            {% endif %}
+                                        {% endfor %}
                                         {% for date_versement, payment, user_eleve in payments %}
                                             {% if date_request == date_versement %}
                                                 <div class="row  " style="margin-bottom: 10px;">
@@ -59,29 +69,7 @@
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
-                                        {% for date, totaux_payement, totaux_versement in totaux %}
-                                            {% if date == date_request %}
-                                            <h6>Date de versement prévue: {{date_request}} </h6>
-                                            <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
-                                            <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
-                                            <h6>Statut accord de règlemen: <strong>En attente</strong></h6>
-                                            
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% for date,texte_fin in textes %}
-                                        {% if date == date_request %}
-                                        <div class="row  " style="margin-bottom: 10px;">
-                                            <div class="col-12 position-relative">
-                                                <label for="text_email_id" class="form-label">Contenu de l'émail envoyé :</label>
-                                                <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" >
-                                                        {{texte_fin}}
-                                                </textarea>
-                                            </div>
-                                        </div>
                                         <hr>
-                                        {% endif %}
-                                        
-                                        {% endfor %}
                                     {% endfor %}
                                     <div class="row  " style="margin-bottom: 10px;">
                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
@@ -89,11 +77,6 @@
                                                 Enregistrer les accords de règlements <strong>En attente</strong>
                                             </button>
                                         </div>
-                                        <!-- <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                            <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
-                                            href="{% url 'admin_payment_accord_reglement' prof_id=professeur.user.id %}"><span
-                                                style="color: white;">Revenir aux paiements non encore versés au professeur </span></a>
-                                        </div> -->
                                     </div>
                                 </div>
                         </div>

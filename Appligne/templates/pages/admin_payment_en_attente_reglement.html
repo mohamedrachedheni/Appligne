@@ -153,7 +153,7 @@
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
                                                             <button type="submit" class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
-                                                                {% if payment.approved %}Détaille{% else %}Non approuvé{% endif %}
+                                                                {% if payment.approved %}Détaille{% else %}Contesté{% endif %}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -185,9 +185,9 @@
                                         {% endif %}
                                     {% endfor %}
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <a class="btn btn-primary  w-100" name="btn_détaille_{{ email.id }}"
-                                        href="{% url 'admin_payment_accord_reglement' prof_id=prof.id %}"><span
-                                        style="color: white;">Ajouter d'autres accords de règlement </span></a>
+                                        <button type="submit" class="btn btn-primary  w-100" name="btn_détaille_{{ prof.id }}" >
+                                            {% if payment.approved %}Détaille{% else %}Nouveaux accords de règlement{% endif %}
+                                        </button>
                                     </div>
                                 </div>
                             {% endfor %}

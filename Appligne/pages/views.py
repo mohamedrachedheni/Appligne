@@ -19,6 +19,7 @@ from django.core.validators import validate_email, EmailValidator
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Min, Max
+from cryptography.fernet import Fernet # pour chifrer et déchifrer les ID
 
 
 
@@ -517,6 +518,7 @@ def compte_administrateur(request):
     keys_to_delete = [key for key in request.session.keys() if key not in keys_to_keep]
     for key in keys_to_delete:
         del request.session[key]
+    
         
     return render(request, 'pages/compte_administrateur.html')
 
@@ -1893,6 +1895,7 @@ def admin_payment_en_attente_reglement(request):
             accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
 
         # Ajout des informations collectées à la liste des paiements
+        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
         paiements.append((payment, professeur, accord_reglement))
         professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
 
@@ -1918,6 +1921,18 @@ def admin_payment_en_attente_reglement(request):
         elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_administrateur')
+    
+    # Extraction de l'ID du professeur choisi dans le formulaire
+    prof_ids = [key.split('btn_détaille_')[1] for key in request.POST.keys() if key.startswith('btn_détaille_')]
+    if prof_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(prof_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['prof_id'] = int(prof_ids[0])
+            return redirect('admin_payment_accord_reglement')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
 
     # Préparation du contexte pour l'affichage dans le template
     context = {
@@ -1934,7 +1949,7 @@ def admin_payment_en_attente_reglement(request):
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_payment_accord_reglement(request, prof_id):
+def admin_payment_accord_reglement(request):
     """
     Vue permettant d'afficher et de gérer les paiements en attente d'accord de règlement 
     pour un professeur donné.
@@ -1944,6 +1959,8 @@ def admin_payment_accord_reglement(request, prof_id):
     - Permettre à l'administrateur de sélectionner les paiements à inclure dans un accord de règlement.
     - Assurer la validation de la date d’échéance avant d’ajouter les paiements à l’accord.
     """
+    # récupérer les paramètres de session
+    prof_id = request.session.get('prof_id')
 
     # Format de la date utilisé pour la conversion des dates saisies
     date_format = "%d/%m/%Y"
@@ -2031,13 +2048,13 @@ def admin_payment_accord_reglement(request, prof_id):
         # Stockage des paiements validés dans la session avant redirection
         request.session['payment_requests'] = payment_requests
 
-        return redirect('admin_accord_reglement', prof_id=prof_id)
+        return redirect('admin_accord_reglement')
 
     return render(request, 'pages/admin_payment_accord_reglement.html', context)
 
 
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_accord_reglement(request, prof_id):
+def admin_accord_reglement(request):
     """
     Enregistre les accords de règlement (statut en attente), relatifs aux paiements sélectionnés, 
     en les groupant par date d'échéance, pour le professeur 
@@ -2046,6 +2063,11 @@ def admin_accord_reglement(request, prof_id):
     en fin la mise à jour des paiements sélectionnés (accord_reglement_id=accord_reglement_id)
     pour différencier les paiements sans accord de règlement (accord_reglement_id=None)
     """
+
+    # récupérer date_reglement_str,payment_id de la session
+    payment_requests = request.session.get('payment_requests')
+    prof_id = request.session.get('prof_id')
+
     date_format = "%d/%m/%Y" # format de la date
     msg = "" # pour grouper les messages info dans un message final
     # Récupérer le professeur ou renvoyer une erreur 404 s'il n'existe pas
@@ -2115,6 +2137,7 @@ def admin_accord_reglement(request, prof_id):
                     texte_fin= texte + texte_totaux
                     sujet = f"Accord de règlement de: {totaux_payement:.2f}€, pour le: {date}"
                     textes.append((date,texte_fin ))
+                    
                 
             #envoie de l'email
             text_email = texte_fin
@@ -2174,7 +2197,7 @@ def admin_accord_reglement(request, prof_id):
         messages.success(request, msg.replace("\n", "<br>") )
         # vider payment_requests de la session
         request.session.pop('payment_requests', None)
-        return redirect('admin_payment_accord_reglement', prof_id=prof_id)
+        return redirect('admin_payment_accord_reglement')
 
     # Contexte à passer au template
     context = {
@@ -2513,7 +2536,7 @@ def admin_reglement_email(request):
                         request.session['reglement_requests']=None # à réviser
                         request.session.modified = True  # Force la mise à jour de la session, à réviser avec Salma
             if l==0: 
-                messages.info(request, "Aucun changement dans les enregistrements des accords de règlement")
+                messages.info(request, "Aucun nouvel accord de règlement n'a été sélectionné.")
                 teste=False
             if l<k: messages.info(request, f"Il y a {k-l} enregistrement(s) ignoré(s).")
         if teste: return redirect('admin_reglement')
