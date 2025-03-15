@@ -3353,6 +3353,12 @@ def liste_payment(request):
     # Vérification du nombre d'IDs extraits
     if paiement_ids:
         if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
+            if professeur:
+                paiement = Payment.objects.filter(id=paiement_ids[0]).first() # il faut que le paiement est pour le professeur
+                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
+                    messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paiement_ids[0]}")
+                    return redirect('compte_prof')
             request.session['payment_id'] = paiement_ids[0]
             return redirect('admin_payment_demande_paiement')
         elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
@@ -3364,6 +3370,12 @@ def liste_payment(request):
     if accord_ids:
         # Vérification du nombre d'IDs extraits
         if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
+            if professeur:
+                reglement = AccordReglement.objects.filter(id=accord_ids[0], professeur = professeur).first() # il faut que le règlement est pour le professeur
+                if professeur and not reglement: # Si non il y a eu une manipulation des données du template
+                    messages.error(request, f"le règlement sélectionné n'est pas attrubuté au professeur, règlement_id= {accord_ids[0]}")
+                    return redirect('compte_prof')
             request.session['accord_id'] = int(accord_ids[0])
             return redirect('admin_reglement_detaille')
 
@@ -3508,6 +3520,12 @@ def liste_reglement(request):
     if accord_ids:
         # Vérification du nombre d'IDs extraits
         if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
+            if professeur:
+                reglement = AccordReglement.objects.filter(id=accord_ids[0], professeur = professeur).first() # il faut que le règlement est pour le professeur
+                if professeur and not reglement: # Si non il y a eu une manipulation des données du template
+                    messages.error(request, f"le règlement sélectionné n'est pas attrubuté au professeur, règlement_id= {accord_ids[0]}")
+                    return redirect('compte_prof')
             request.session['accord_id'] = int(accord_ids[0])
             return redirect('admin_reglement_detaille')
 
