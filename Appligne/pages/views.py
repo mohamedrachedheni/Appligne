@@ -2283,7 +2283,6 @@ def admin_reglement(request):
     accord_reglements = get_reglements(date_debut, date_fin)
 
     # Vérification du type de requête et application des filtres en fonction du bouton cliqué
-    
     if 'btn_tous' in request.POST:
         # Filtrer pour tous les emails
         accord_reglements = get_reglements(date_debut, date_fin)
@@ -2548,7 +2547,7 @@ def admin_reglement_email(request):
 # from django.contrib.auth.decorators import user_passes_test
 # from .models import AccordReglement, DetailAccordReglement
 
-@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+# @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def admin_reglement_detaille(request):
     """
     Vue permettant d'afficher les détails d'un accord de règlement.
@@ -2616,7 +2615,7 @@ def is_admin_active(user):
     """
     return user.is_staff and user.is_active
 
-@user_passes_test(is_admin_active, login_url='/login/')
+# @user_passes_test(is_admin_active, login_url='/login/')
 def admin_payment_demande_paiement(request):
     """
     Vue d'administration permettant d'afficher les détails du paiement d'un élève,

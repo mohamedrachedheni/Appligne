@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Liste des paiements des élèves {% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+                {% csrf_token %}
+
+                <!-- boutons début -->
+                <div class="container-xxl bg-light" >
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_1" class="form-label">Début période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
+                        </div>
+                        <div class="col-md-6 col-sm-12 position-relative text-center">
+                            <h1>Paiements Elèves</h1>
+                        </div>
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_2" class="form-label">Fin période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
+                        </div>                           
+                    </div>
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
+                                En attente
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_approuve">
+                                Approuvé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
+                                Invalide
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
+                                Annulé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_reclame">
+                                Réclamé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_sans_accord">
+                                Sans accord
+                            </button>
+                        </div>
+                        {% if status_str == 'En attente' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements en attente correspondent aux transactions effectuées par les élèves qui n'ont pas encore été confirmées par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Approuvé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements approuvés correspondent aux transactions effectuées par les élèves qui ont été confirmées par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Réclamé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements réclamés sont des transactions confirmées par la passerelle de paiement, mais ultérieurement contestées par l'élève.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Invalide' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiement invalides sont les transfères non validés par la passerelle de paiement.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Annulé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements annulés correspondent aux transactions interrompues par l'élève avant leur finalisation.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Réclamé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements réclamés sont ceux approuvés par la passerelle de paiement, mais pour lesquels l'élève a ensuite déposé une réclamation.
+                            </h6>
+                        </div>
+                        {% elif status_str == 'Sans accord' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les paiements sans accord n'ont pas encore reçu d'accord de règlement de l'administration.
+                            </h6>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- boutons fin -->
+
+                {% if request.user.is_authenticated and request.user.is_active and request.user.professeur %}
+                    <!-- Liste élèves début -->
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <!--  for prof in professeurs  -->
+                                <div class="container bg-light mb-3">
+                                    {% if not paiements %}
+                                        <div class="col-md-12 text-center">
+                                            <h4>Il n'y a pas de paiement pour cette période</h4>
+                                        </div>
+                                    {% endif %}
+                                    <!-- <div class="row  py-3" style="margin-bottom: 30px;">
+                                        <div class="col-12  position-relative">
+                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
+                                        </div>
+                                    </div> -->
+                                    {% for payment,  accordReglement in paiements %}
+                                        <!--  if professeur == prof  -->
+                                            <div class="row  " style="margin-bottom: 10px;">
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut du paiement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date paiement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <div class="row  ">
+                                                        <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
+                                                        <div class="col-md-6 col-sm-12 position-relative ">
+                                                            
+                                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <button type="submit" class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
+                                                                {% if payment.approved %}Détaille{% else %}Contesté{% endif %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% if accordReglement %} 
+                                                <div class="col-md-4 col-sm-12 position-relative">
+                                                    <div class="row  ">
+                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance règlement</label>
+                                                        <div class="col-md-6 col-sm-12 position-relative mb-3">
+                                                            <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{accordReglement.due_date|date:'d/m/Y'}}" readonly>
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
+                                                            <button type="submit" class="btn btn-primary w-100" name="btn_detaille_reglement_id{{ accordReglement.id }}" >
+                                                                Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                {% if not accordReglement %} 
+                                                <div class="col-md-4 col-sm-12 position-relative">
+                                                    <div class="row  p-4">
+                                                        <h6>Pas encore d'accord de règlement </h6>
+                                                    </div>
+                                                    
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        <!--  endif  -->
+                                    {% endfor %}
+                                </div>
+                            <!--  endfor  -->
+                        </div>
+                    </div>
+                    <!-- Liste élève fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<script>
+    
+</script>
+    
+    
+    
+{% endblock %}

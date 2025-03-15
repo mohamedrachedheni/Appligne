@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRe
 from django.contrib import messages, auth
 from django.contrib.auth.models import User
 from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie
-from .models import Email_telecharge, Email_detaille, Prix_heure, Mes_eleves, Cours, Eleve, Horaire, Demande_paiement, Detail_demande_paiement, Historique_prof, Payment
-from datetime import date, datetime
+from .models import Email_telecharge, Email_detaille, Prix_heure, Mes_eleves, Cours, Eleve, Horaire, Demande_paiement, Detail_demande_paiement, Historique_prof, Payment, AccordReglement , DetailAccordReglement
+from datetime import date, datetime, timedelta
 # from datetime import timedelta
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -20,8 +20,7 @@ from django.urls import reverse
 from googleapiclient.discovery import build
 from decouple import config
 from eleves.models import Eleve, Parent, Temoignage
-from django.db.models import F, Value, CharField
-from django.db.models import F, Value, CharField
+from django.db.models import F, Value, CharField, Q
 from django.db.models import Func
 from django.db.models import Sum, F, ExpressionWrapper, DurationField, FloatField, fields, DecimalField
 from django.db.models.functions import Concat
@@ -32,6 +31,7 @@ import os
 import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe)
 import hashlib # convertir le suffixe en une chaîne d'octets
 from django.core.paginator import Paginator
+from django.db.models import Min, Max
 
 
 def is_password_compromised(password):
@@ -3222,3 +3222,304 @@ def temoignages_partial(request, id_user):
     temoignages = paginator.get_page(page)
 
     return render(request, 'partials/temoignages.html', {'temoignages': temoignages})
+
+
+
+def liste_payment(request):
+    """
+        Vue permettant d'afficher les paiements des élèves.
+
+    Fonctionnalités :
+    - Filtrer les paiements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut du paiement (en attente, approuvé, annulé, etc.).
+    - Associer chaque paiement à sa demande de paiement et à un éventuel accord de règlement.
+    """
+    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
+
+
+    # Récupérer les demandes de paiement du professeur et les paiements associés
+    demande_paiement = Demande_paiement.objects.filter(user=user)
+    if not demande_paiement:
+        messages.error(request, "Vous n'avez pas encore effectuer Des demande de paiement.")
+        return redirect('compte_prof')
+
+    # Récupérer les paiements liés aux demandes de paiement
+    paiement = Payment.objects.filter(
+        model='demande_paiement',
+        model_id__in=demande_paiement.values_list('id', flat=True)
+    )
+
+    # Récupération des dates minimales et maximales depuis les paiements associés aux demandes du professeur
+    dates = paiement.aggregate(
+        min_date=Min('date_creation'), 
+        max_date=Max('date_creation')
+    )
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    try:
+        # Conversion des dates en objets de type date
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        # Vérification de la cohérence des dates
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+
+    except ValueError as e:
+        # Gestion des erreurs en cas de format de date invalide
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'accounts/compte_prof.html', {
+            'paiements': [], 
+            'professeurs': [], 
+            'date_debut': date_debut_str,  # Renvoi des valeurs sous forme de chaîne en cas d'erreur
+            'date_fin': date_fin_str
+        })
+
+    # Définition des critères de filtrage des paiements
+    filters = {
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
+    }
+
+    # Correspondance des boutons de filtrage aux statuts de paiement
+    status_filter = {
+        'btn_en_ettente': 'En attente',
+        'btn_approuve': 'Approuvé',
+        'btn_invalide': 'Invalide',
+        'btn_annule': 'Annulé',
+    }
+
+    # Application du filtre de statut en fonction du bouton cliqué
+    status_str = None
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['status'] = status
+            status_str = status
+            break
+
+    # Filtrage des paiements contestés (réclamation)
+    if 'btn_reclame' in request.POST:
+        filters['approved'] = False  # Paiements contestés par l'élève
+        status_str = "Réclamé"
+
+    # Filtrage des paiements sans accord de règlement
+    if 'btn_sans_accord' in request.POST:
+        filters['accord_reglement_id'] = None  # Paiements contestés par l'élève
+        status_str = "Sans accord"
+
+    # Récupération des paiements en fonction des filtres
+    payments = paiement.filter(**filters).order_by('-date_creation')
+
+    # Initialisation des listes pour stocker les résultats
+    paiements = []
+
+    # Parcours des paiements récupérés pour associer les informations nécessaires
+    for payment in payments:
+        # Récupération de la demande de paiement associée
+        demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
+        if not demande_paiement: continue  # Ignorer les paiements sans demande associée
+
+        
+        accord_reglement = None
+
+        # Vérification et récupération de l'accord de règlement associé
+        if payment.accord_reglement_id:
+            accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
+
+        # Ajout des informations collectées à la liste des paiements
+        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
+        paiements.append((payment, accord_reglement))
+
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['payment_id'] = paiement_ids[0]
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_prof')
+
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = int(accord_ids[0])
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_prof')
+        
+
+    # Préparation du contexte pour l'affichage dans le template
+    context = {
+        'paiements': paiements,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+    
+    return render(request, 'accounts/liste_payment.html', context)
+
+
+
+def liste_reglement(request):
+    """
+        Vue permettant d'afficher les paiements des élèves.
+
+    Fonctionnalités :
+    - Filtrer les règlements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut des règlements (en attente, approuvé, annulé, etc.).
+    - Associer chaque règlement à sa demande de paiement et à paiement.
+    """
+
+    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
+    teste = True # pour controler les validations
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil de professeur associé
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        return redirect('signin')
+    
+
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = AccordReglement.objects.filter(
+        ~Q(status='Réalisé'),  # Exclure les enregistrements avec status='Réalisé'
+        transfere_id__isnull=True,
+        date_trensfere__isnull=True
+    ).aggregate(
+        min_date=Min('due_date'),
+        max_date=Max('due_date')
+    )
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    # # début et fin de période de tri [date_debut_str , date_fin_str]
+    # date_fin_str = request.POST.get('date_fin', timezone.now().date().strftime(date_format))
+    # date_debut_str = request.POST.get('date_debut', (timezone.now().date() - timedelta(days=15)).strftime(date_format))
+    statut=""
+
+    # Validation du format des dates
+    try:
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de début de période invalide: {date_debut_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_debut = None
+
+    try:
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de fin de période invalide: {date_fin_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_fin = None
+
+    # Vérification que la date de début est bien avant la date de fin
+    if teste:
+        if date_debut > date_fin:
+            messages.error(request, "La date de début doit être inférieure ou égale à la date de fin de période.")
+            teste = False
+
+    # Fonction interne pour récupérer les paiements en attente de règlement
+    def get_reglements(date_debut, date_fin, filter_criteria=None):
+        if filter_criteria is None:
+            filter_criteria = {}
+
+        return AccordReglement.objects.filter(
+            due_date__range=(date_debut , date_fin + timedelta(days=1)), professeur=user.professeur,
+            **filter_criteria
+        ).order_by('due_date') # [date_debut , date_fin]
+
+    # Récupérer tous les accords de reglements
+    accord_reglements = get_reglements(date_debut, date_fin)
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if 'btn_tous' in request.POST:
+        # Filtrer pour tous les emails
+        accord_reglements = get_reglements(date_debut, date_fin)
+    elif 'btn_en_ettente' in request.POST:
+        # Filtrer pour les paiements en attente
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En attente'})
+        statut = "En attente"
+    elif 'btn_en_cours' in request.POST:
+        # Filtrer pour les paiements approuvés
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En cours'})
+        statut = "En cours"
+    elif 'btn_invalide' in request.POST:
+        # Filtrer pour les paiements invalides
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Invalide'})
+        statut = "Invalide"
+    elif 'btn_annule' in request.POST:
+        # Filtrer pour les paiements annulés
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Annulé'})
+        statut = "Annulé"
+    elif 'btn_realiser' in request.POST:
+        # Filtrer pour les paiements réclamés par les élèves
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Réalisé'})
+        statut = "Réalisé"
+
+    accord_reglement_approveds = []
+    for accord_reglement in accord_reglements:
+        payments = Payment.objects.filter(id__in=DetailAccordReglement.objects.filter(accord=accord_reglement).values_list('payment_id', flat=True))
+        # si un des paiement est non approuvé par l'élève alors approved = False
+        approved =True
+        for payment in payments:
+            if not payment.approved: 
+                approved = False
+                break
+        accord_reglement_approveds.append((accord_reglement , approved))
+    
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = int(accord_ids[0])
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+    
+    context = {
+        'accord_reglement_approveds': accord_reglement_approveds,
+        'date_fin':date_fin,
+        'date_debut':date_debut,
+        'statut': statut,
+    }
+
+    return render(request, 'accounts/liste_reglement.html', context)

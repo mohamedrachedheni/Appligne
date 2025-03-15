@@ -5,9 +5,11 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+            {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
             {% include 'partials/_sidebar_admin.html' %}
-            <!-- fin sidebar -->
+            {% else %}
+            {% include 'partials/_sidebar.html' %}
+            {% endif %}
         </div>
         <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
             <div class="container-xxl py-1" >
@@ -24,10 +26,10 @@
             <form method="POST" enctype="multipart/form-data" >
                 {% csrf_token %}
 
-                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                {% if  request.user.is_authenticated and request.user.is_active %}
                     <div class="container-xxl py-5">
                         <div class="container">
-                            <div class="container bg-light mb-3">
+                            <div class="container bg-light mb-3 py-5">
                                 <div class="row  g-2 ">
                                     <div class="col-md-2 col-sm-12 position-relative">
                                         <label for="admin_id" class="form-label">Administrateur</label>
@@ -82,16 +84,15 @@
                                     <label for="text_email" class="form-label"><strong>Message lié à l'accord de règlement</strong></label>
                                     <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
                                 </div>
+                                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement">
                                             Passez à la modification de l'accord de règlement
                                         </button>
                                     </div>
-                                    <!-- <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <a class="btn btn-warning w-100" href="{% url 'admin_reglement_modifier'  %}" name="btn_detaille_reglement_id{{ accord_reglement.id }} ><span style="color: white;">Passez à la modification de l'accord de règlement</a>
-                                    </div> -->
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

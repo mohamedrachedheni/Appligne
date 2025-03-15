@@ -48,6 +48,7 @@ urlpatterns = [
     path('obtenir_parametres_cours', views.obtenir_parametres_cours, name='obtenir_parametres_cours'),
     path('obtenir_liste_department', views.obtenir_liste_department, name='obtenir_liste_department'),
     path('temoignages_partial/<int:id_user>/', views.temoignages_partial, name='temoignages_partial'),
-
+    path('liste_payment', views.liste_payment, name='liste_payment'),
+    path('liste_reglement', views.liste_reglement, name='liste_reglement'),
 ]
 
