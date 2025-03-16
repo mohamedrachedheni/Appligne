@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Liste des paiements des élèves {% endblock %}
+{% block title %} | Liste des paiements de l'élève {% endblock %}
 
 {% block content %}
 
@@ -8,7 +8,7 @@
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
             <!-- début sidebar -->
-            {% include 'partials/_sidebar.html' %}
+            {% include 'partials/_sidebar_eleve.html' %}
             <!-- fin sidebar -->
         </div>
         <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
@@ -18,7 +18,7 @@
                 <div class="container  ">
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves</h6>
+                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements de l'élève</h6>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
@@ -36,7 +36,7 @@
                             <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
                         </div>
                         <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h1>Paiements Elèves</h1>
+                            <h1>Paiements Elève</h1>
                         </div>
                         <div class="col-md-3 col-sm-12 position-relative ">
                             <label for="date_id_2" class="form-label">Fin période</label>
@@ -121,7 +121,7 @@
                 </div>
                 <!-- boutons fin -->
 
-                {% if request.user.is_authenticated and request.user.is_active and request.user.professeur %}
+                {% if request.user.is_authenticated and request.user.is_active and request.user.eleve %}
                     <!-- Liste élèves début -->
                     <div class="container-xxl py-5">
                         <div class="container">
@@ -137,12 +137,12 @@
                                             <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
                                         </div>
                                     </div> -->
-                                    {% for eleve, payment,  accordReglement in paiements %}
+                                    {% for professeur, payment,  accordReglement in paiements %}
                                         <!--  if professeur == prof  -->
                                             <div class="row  " style="margin-bottom: 10px;">
                                                 <div class="col-md-2 col-sm-12 position-relative">
-                                                    <label for="eleve_id_{{ forloop.counter }}" class="form-label">Elève</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="eleve_id_{{ forloop.counter }}"  value="{{eleve.first_name}} {{eleve.last_name}} " readonly >
+                                                    <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{professeur.first_name}} {{professeur.last_name}} " readonly >
                                                 </div>
                                                 <div class="col-md-2 col-sm-12 position-relative">
                                                     <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut du paiement</label>
@@ -170,13 +170,8 @@
                                                 <div class="col-md-3 col-sm-12 position-relative">
                                                     <div class="row  ">
                                                         <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance règlement</label>
-                                                        <div class="col-md-6 col-sm-12 position-relative mb-3">
+                                                        <div class="col-md-8 col-sm-12 position-relative mb-3">
                                                             <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{accordReglement.due_date|date:'d/m/Y'}}" readonly>
-                                                        </div>
-                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn btn-primary w-100" name="btn_detaille_reglement_id{{ accordReglement.id }}" >
-                                                                Accord {% if accordReglement.status == "En attente" %} En attente {% elif accordReglement.status == "Annulé" %} Annulé {% elif accordReglement.status == "Invalide" %} Invalide {% elif accordReglement.status == "En cours" %} En cours {% endif %}
-                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -186,7 +181,6 @@
                                                     <div class="row  p-4">
                                                         <h6>Pas encore d'accord de règlement </h6>
                                                     </div>
-                                                    
                                                 </div>
                                                 {% endif %}
                                             </div>

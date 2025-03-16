@@ -13,4 +13,5 @@ urlpatterns = [
     path('demande_paiement_recu', views.demande_paiement_recu, name='demande_paiement_recu'),
     path('detaille_demande_paiement_recu/<int:demande_paiement_id>/', views.detaille_demande_paiement_recu, name='detaille_demande_paiement_recu'),
     path('temoignage_eleve', views.temoignage_eleve, name='temoignage_eleve'),
+    path('liste_paiement_eleve', views.liste_paiement_eleve, name='liste_paiement_eleve'),
 ]

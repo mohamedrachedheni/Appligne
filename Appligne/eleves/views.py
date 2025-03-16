@@ -2,10 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404 #dans le cas ou
 from django.contrib import messages, auth
 from django.contrib.auth.models import User
 from .models import Eleve, Parent, Temoignage
-from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment
+from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement
 from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement
 import re
-from datetime import date
+from datetime import date, timedelta, datetime
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.db.models import OuterRef, Subquery, DecimalField, Sum
@@ -17,6 +17,7 @@ from django.utils import timezone
 from decimal import Decimal
 from django.core.validators import validate_email, EmailValidator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Min, Max
 
 
 
@@ -1007,8 +1008,157 @@ def temoignage_eleve(request):
 
 
 
+def liste_paiement_eleve(request):
+    """
+        Vue permettant d'afficher les paiements de l'élève.
+
+    Fonctionnalités :
+    - Filtrer les paiements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut du paiement (en attente, approuvé, annulé, etc.).
+    - Associer chaque paiement à sa demande de paiement et à une éventuellle date d'accord de règlement.
+    """
+    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    user = request.user
+    # Vérifier si l'utilisateur a un profil d'élève associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
 
 
+    # Récupérer les demandes de paiement du professeur et les paiements associés
+    demande_paiement = Demande_paiement.objects.filter(eleve=user.eleve)
+    if not demande_paiement:
+        messages.error(request, "Vous n'avez pas encore reçu de demande de paiement.")
+        return redirect('compte_eleve')
+
+    # Récupérer les paiements liés aux demandes de paiement
+    paiement = Payment.objects.filter(
+        model='demande_paiement',
+        model_id__in=demande_paiement.values_list('id', flat=True)
+    )
+
+    # Récupération des dates minimales et maximales depuis les paiements associés aux demandes du professeur
+    dates = paiement.aggregate(
+        min_date=Min('date_creation'), 
+        max_date=Max('date_creation')
+    )
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    try:
+        # Conversion des dates en objets de type date
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        # Vérification de la cohérence des dates
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+
+    except ValueError as e:
+        # Gestion des erreurs en cas de format de date invalide
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'accounts/compte_prof.html', {
+            'paiements': [], 
+            'professeurs': [], 
+            'date_debut': date_debut_str,  # Renvoi des valeurs sous forme de chaîne en cas d'erreur
+            'date_fin': date_fin_str
+        })
+
+    # Définition des critères de filtrage des paiements
+    filters = {
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
+    }
+
+    # Correspondance des boutons de filtrage aux statuts de paiement
+    status_filter = {
+        'btn_en_ettente': 'En attente',
+        'btn_approuve': 'Approuvé',
+        'btn_invalide': 'Invalide',
+        'btn_annule': 'Annulé',
+    }
+
+    # Application du filtre de statut en fonction du bouton cliqué
+    status_str = None
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['status'] = status
+            status_str = status
+            break
+
+    # Filtrage des paiements contestés (réclamation)
+    if 'btn_reclame' in request.POST:
+        filters['approved'] = False  # Paiements contestés par l'élève
+        status_str = "Réclamé"
+
+    # Filtrage des paiements sans accord de règlement
+    if 'btn_sans_accord' in request.POST:
+        filters['accord_reglement_id'] = None  # Paiements contestés par l'élève
+        status_str = "Sans accord"
+
+    # Récupération des paiements en fonction des filtres
+    payments = paiement.filter(**filters).order_by('-date_creation')
+
+    # Initialisation des listes pour stocker les résultats
+    paiements = []
+
+    # Parcours des paiements récupérés pour associer les informations nécessaires
+    for payment in payments:
+        # Récupération de la demande de paiement associée
+        demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
+        if not demande_paiement: continue  # Ignorer les paiements sans demande associée
+
+        # Récupérer le professeur
+        professeur = demande_paiement.user
+        
+        accord_reglement = None
+
+        # Vérification et récupération de l'accord de règlement associé
+        if payment.accord_reglement_id:
+            accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
+
+        # Ajout des informations collectées à la liste des paiements
+        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
+        paiements.append((professeur, payment, accord_reglement))
+
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            eleve = Eleve.objects.filter(user=request.user).first() # Si le user est un professeur
+            if eleve:
+                paiement = Payment.objects.filter(id=paiement_ids[0]).first() # il faut que le paiement est de l'éléve
+                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, eleve=eleve).exists(): # Si non il y a eu une manipulation des données du template
+                    messages.error(request, f"le paiement sélectionné n'est pas de l'élève, paiement_id= {paiement_ids[0]}")
+                    return redirect('compte_eleve')
+            request.session['payment_id'] = paiement_ids[0] # passer le paramètre au formulaire
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_eleve')
+
+    # Préparation du contexte pour l'affichage dans le template
+    context = {
+        'paiements': paiements,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+    
+    return render(request, 'eleves/liste_payment_eleve.html', context)
 
 
 

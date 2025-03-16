@@ -3251,7 +3251,7 @@ def liste_payment(request):
     # Récupérer les demandes de paiement du professeur et les paiements associés
     demande_paiement = Demande_paiement.objects.filter(user=user)
     if not demande_paiement:
-        messages.error(request, "Vous n'avez pas encore effectuer Des demande de paiement.")
+        messages.error(request, "Vous n'avez pas encore effectuer Des demandes de paiement.")
         return redirect('compte_prof')
 
     # Récupérer les paiements liés aux demandes de paiement
@@ -3337,6 +3337,8 @@ def liste_payment(request):
         demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
         if not demande_paiement: continue  # Ignorer les paiements sans demande associée
 
+        # Récupérer l'élève
+        eleve = demande_paiement.eleve.user
         
         accord_reglement = None
 
@@ -3346,7 +3348,7 @@ def liste_payment(request):
 
         # Ajout des informations collectées à la liste des paiements
         # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
-        paiements.append((payment, accord_reglement))
+        paiements.append((eleve, payment, accord_reglement))
 
     # Extraction de l'ID du paiement choisi dans le formulaire
     paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
