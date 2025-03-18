@@ -125,20 +125,13 @@
                     <!-- Liste élèves début -->
                     <div class="container-xxl py-5">
                         <div class="container">
-                            <!--  for prof in professeurs  -->
                                 <div class="container bg-light mb-3">
                                     {% if not paiements %}
                                         <div class="col-md-12 text-center">
                                             <h4>Il n'y a pas de paiement pour cette période</h4>
                                         </div>
                                     {% endif %}
-                                    <!-- <div class="row  py-3" style="margin-bottom: 30px;">
-                                        <div class="col-12  position-relative">
-                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
-                                        </div>
-                                    </div> -->
                                     {% for professeur, payment,  accordReglement in paiements %}
-                                        <!--  if professeur == prof  -->
                                             <div class="row  " style="margin-bottom: 10px;">
                                                 <div class="col-md-2 col-sm-12 position-relative">
                                                     <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
@@ -168,11 +161,8 @@
                                                 </div>
                                                 {% if accordReglement %} 
                                                 <div class="col-md-3 col-sm-12 position-relative">
-                                                    <div class="row  ">
-                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Echéance règlement</label>
-                                                        <div class="col-md-8 col-sm-12 position-relative mb-3">
-                                                            <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{accordReglement.due_date|date:'d/m/Y'}}" readonly>
-                                                        </div>
+                                                    <div class="row p-4 ">
+                                                        <h6>Règlement le: {{accordReglement.due_date|date:'d/m/Y'}} / {{accordReglement.status}} </h6>
                                                     </div>
                                                 </div>
                                                 {% endif %}
@@ -184,10 +174,8 @@
                                                 </div>
                                                 {% endif %}
                                             </div>
-                                        <!--  endif  -->
                                     {% endfor %}
                                 </div>
-                            <!--  endfor  -->
                         </div>
                     </div>
                     <!-- Liste élève fin -->
