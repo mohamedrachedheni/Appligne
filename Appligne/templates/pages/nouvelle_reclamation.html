@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Nouvelle réclamation{% endblock %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <!-- header Start -->
+                    <div class="container ">
+                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+                            <h2 class="text-center text-white">Créer une nouvelle réclamation</h2>
+                        </div>
+                    </div>
+                    <!-- header end -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- mon compte début -->
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% if request.user.is_authenticated %}
+                {% if request.user.eleve %}
+                    {% include 'partials/_sidebar_eleve.html' %}
+                {% else %}
+                    {% include 'partials/_sidebar.html' %}
+                {% endif %}
+            {% endif %}
+
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" >
+                {% csrf_token %}
+                <div class="container-xxl py-5 " id="identite">
+                    <div class="container ">
+                        <div class="container bg-light  p-4">
+                            <div class="row g-4">
+                                <div class="col-12 position-relative">
+                                    <label class="form-label">Type de réclamation</label>
+                                    <select class="form-select" required name="categorie" id="categorieSelect">
+                                        {% for categorie in categories %}
+                                            <option value="{{ categorie.nom }}" data-description="{{ categorie.description }}" {% if cathegorie and categorie.nom == cathegorie  %} selected {% elif categorie.nom == 'Autre'  %} selected {% endif %} >
+                                                {{ categorie.nom }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="descriptionContainer" class="info-bulle" style="display: none; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ccc; border-radius: 5px;">
+                                        <p id="descriptionText" style="margin: 0;"></p>
+                                    </div>
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="titre" class="form-label">Titre</label>
+                                    <input type="text" class="form-control" id="titre"
+                                         name="titre" required value="{{titre}}" >
+                                </div>
+                                <div class="col-12 position-relative">
+                                    <label for="messsage" class="form-label">Contenu de votre réclamation :</label>
+                                    <textarea class="form-control profil" id="message" rows="4"
+                                        name="message" required  > {{message}} </textarea>
+                                </div>
+                                <div class="col-md-12 position-relative">
+                                    <label for="fichiers_id" class="form-label">Pièces justificatives ou autres documents scannés :</label>
+                                    <input type="file" accept="image/*" capture="camera" class="form-control" id="fichiers_id"
+                                        name="fichiers_list" multiple >
+                                    <!-- L'attribut "accept" avec la valeur "image/*" acceptera tous les types d'images -->
+                                    <!-- L'attribut "capture" avec la valeur "camera" ouvrira la caméra sur les appareils mobiles -->
+                                </div>
+                                <div class="row justify-content-between g-2 p-3  ">
+                                    <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_enr">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+{% block javascript %}
+    <script>
+        // http://localhost:8000/nouvelle_reclamation/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+    <script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let selectElement = document.getElementById("categorieSelect");
+            let descriptionContainer = document.getElementById("descriptionContainer");
+            let descriptionText = document.getElementById("descriptionText");
+    
+            function updateDescription() {
+                let selectedOption = selectElement.options[selectElement.selectedIndex];
+                let description = selectedOption.getAttribute("data-description");
+                
+                if (description && description.trim() !== "") {
+                    descriptionText.textContent = description;
+                    descriptionContainer.style.display = "block";
+                } else {
+                    descriptionContainer.style.display = "none";
+                }
+            }
+            
+            selectElement.addEventListener("change", updateDescription);
+            
+            // Mettre à jour la description lors du chargement de la page
+            updateDescription();
+        });
+    </script>
+
+{% endblock %}

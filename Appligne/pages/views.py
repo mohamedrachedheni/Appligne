@@ -3,6 +3,7 @@ from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Pro
 from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves,Detail_demande_paiement, Horaire, Cours
 from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement
 from eleves.models import Temoignage, Parent
+from .models import Reclamation, ReclamationCategorie, PieceJointeReclamation, MessageReclamation
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
@@ -19,6 +20,7 @@ from django.core.validators import validate_email, EmailValidator
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Min, Max
+from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
 
 
 
@@ -3062,3 +3064,262 @@ def admin_accord_reglement_modifier(request):
 
     # Rendu de la page avec les données filtrées
     return render(request, 'pages/admin_accord_reglement_modifier.html', context)
+
+
+
+# 
+def reclamation(request):
+    """
+    Vue pour d'administration, professeur et élève permettant 
+    d'afficher les détails de la réclamation,
+    l'historique des messages, d'ajouter un nouveau message, 
+    ou de modifier le statut, la priorité et la 
+    cathégorie de la réclamation selon le type d'utilisateur
+    """
+    reclamation_id = request.session.get('reclamation_id')
+    
+    if not reclamation_id:
+        messages.info(request, "Il n'y a pas de réclamation")
+        if  hasattr(user, 'eleve'):return redirect('compte_eleve')
+        elif  hasattr(user, 'professeur'):return redirect('compte_prof')
+        else: return redirect('compte_administrateur')
+    
+    reclamation = get_object_or_404(Reclamation.objects.select_related('user'), id=reclamation_id)
+    # Marquer le dernier message comme lu
+    message_reclamation = MessageReclamation.objects.filter(reclamation=reclamation).last()
+    if message_reclamation.user != request.user: # si le user du dernier message est différent du user actuel(à développer plus tard s'il y à plusieur super_user)
+        message_reclamation.lu=True
+        message_reclamation.save()
+    
+    # Récupération des messages et des pièces jointes en une seule requête optimisée
+    messages_reclamation = MessageReclamation.objects.filter(
+        reclamation=reclamation
+    ).select_related('user').prefetch_related('pieces_jointes').order_by('date_creation')
+    
+    # Génération directe du contexte avec les messages et leurs pièces jointes
+    messages_pieces = [(msg, msg.pieces_jointes.all()) for msg in messages_reclamation]
+    
+    if 'btn_modif' in request.POST:
+        reclamation_categorie_id = int(request.POST.get('reclamation_categorie'))
+        try:
+            reclamation_categorie = ReclamationCategorie.objects.get(id=reclamation_categorie_id)
+        except ReclamationCategorie.DoesNotExist:
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            if  hasattr(user, 'eleve'):return redirect('compte_eleve')
+            elif  hasattr(user, 'professeur'):return redirect('compte_prof')
+            else: return redirect('compte_administrateur')
+
+        priorite = request.POST.get('priorite')
+        statut = request.POST.get('statut')
+        reclamation.categorie = reclamation_categorie
+        if priorite: reclamation.priorite = priorite # dans le cas si le user est un admin le champ est activé
+        if statut: reclamation.statut = statut # dans le cas si le user est un admin le champ est activé
+        reclamation.save()
+    
+    if 'btn_enr' in request.POST:
+        user = request.user
+        titre = request.POST.get('titre', "").strip()
+        message = request.POST.get('message', "").strip()
+        if titre and message:
+            # Création du  message de réponse
+            message_reclamation = MessageReclamation.objects.create(
+                user=user,
+                reclamation=reclamation,
+                titre=titre,
+                message=message
+            )
+
+            # Gestion des fichiers
+            fichiers_list = request.FILES.getlist('fichiers_list')
+            for fichier in fichiers_list:
+                form = PieceJointeReclamationForm(files={'fichier': fichier})
+                if form.is_valid():
+                    piece_jointe = form.save(commit=False)
+                    piece_jointe.message_reclamation = message_reclamation
+                    piece_jointe.save()
+                else:
+                    messages.error(request, f"Erreur avec le fichier {fichier.name}: {form.errors['fichier']}")
+
+            messages.success(request, 'Message enregistré.')
+            if  hasattr(user, 'eleve'):return redirect('compte_eleve')
+            elif  hasattr(user, 'professeur'):return redirect('compte_prof')
+            else: return redirect('compte_administrateur')
+
+        else:
+            messages.error(request, "Vous devez remplir les champs titre et message.")
+
+        
+
+    categories = ReclamationCategorie.objects.all()
+
+    context = {
+        'categories': categories,
+        'messages_pieces': messages_pieces,
+        'reclamation': reclamation,
+    }
+    return render(request, 'pages/reclamation.html', context)
+
+
+
+def nouvelle_reclamation(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')
+
+    user = request.user
+    titre = request.POST.get('titre', "").strip()
+    message = request.POST.get('message', "").strip()
+    categorie_nom = request.POST.get('categorie', "").strip()
+
+    if 'btn_enr' in request.POST:
+        if titre and message and categorie_nom:
+            # Vérifier si la catégorie existe
+            categorie = ReclamationCategorie.objects.filter(nom=categorie_nom).first()
+            if not categorie:
+                messages.error(request, "La catégorie sélectionnée est invalide.")
+                return redirect('nouvelle_reclamation')
+
+            # Création de la réclamation
+            reclamation = Reclamation.objects.create(
+                user=user,
+                categorie=categorie,
+                statut='en_attente',
+                priorite='moyenne'
+            )
+
+            # Création du premier message de réclamation
+            message_reclamation = MessageReclamation.objects.create(
+                user=user,
+                reclamation=reclamation,
+                titre=titre,
+                message=message
+            )
+
+            # Gestion des fichiers
+            fichiers_list = request.FILES.getlist('fichiers_list')
+            for fichier in fichiers_list:
+                form = PieceJointeReclamationForm(files={'fichier': fichier})
+                if form.is_valid():
+                    piece_jointe = form.save(commit=False)
+                    piece_jointe.message_reclamation = message_reclamation
+                    piece_jointe.save()
+                else:
+                    messages.error(request, f"Erreur avec le fichier {fichier.name}: {form.errors['fichier']}")
+
+            messages.success(request, 'Réclamation enregistrée.')
+            if  hasattr(user, 'eleve'): return redirect('compte_eleve')
+            if  hasattr(user, 'professeur'): return redirect('compte_prof')
+
+        else:
+            messages.error(request, "Vous devez remplir les champs obligatoires.")
+
+    categories = ReclamationCategorie.objects.all()
+    context = {
+        'categories': categories,
+        'titre': titre,
+        'message': message,
+        'categorie': categorie_nom,
+    }
+    return render(request, 'pages/nouvelle_reclamation.html', context)
+
+
+
+def reclamations(request):
+    """
+    Afficher toutes les réclamations de la période 
+    liées à l'éléve (et / ou) au professeur selon 
+    le user(élève, professeur, admin)
+    """
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+    
+    
+    date_format = "%d/%m/%Y"
+    status_str = ""
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = Reclamation.objects.exclude(statut__in=['resolue', 'fermee']).aggregate(
+        min_date=Min('date_creation'), 
+        max_date=Max('date_creation')
+    )
+
+    # Valeurs par défaut si aucune réclamation n'existe
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des dates depuis le formulaire ou valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    try:
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+    
+    except ValueError as e:
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'pages/reclamations.html', {
+            'reclamations': [],  
+            'date_debut': date_debut, 
+            'date_fin': date_fin
+        })
+
+    # Définition des filtres
+    filters = { 
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))
+    }
+
+    # Correspondance des boutons de filtrage aux statuts des réclamations
+    status_filter = {
+        'btn_en_attente': 'en_attente',
+        'btn_en_cours': 'en_cours',
+        'btn_resolue': 'resolue',
+        'btn_fermee': 'fermee',
+    }
+
+    # Application du filtre en fonction du bouton cliqué
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['statut'] = status
+            status_str = status
+            break
+
+    # Filtrer les réclamations ayant le prmier message non lu
+    # le tri des non lues est fait dans le template
+    if 'btn_non_lu' in request.POST:
+        status_str = "non_lu"
+
+    if  hasattr(user, 'eleve') or hasattr(user, 'professeur'):filters['user'] = user  # Ajout du filtre utilisateur pour élève ou professeur
+
+    # Récupération des réclamations (le tri ne distingue pas les messages lu et non lu c'est dans le template que la séparation est faite)
+    reclamations = Reclamation.objects.filter(**filters).order_by('-priorite','-date_creation')
+    
+        
+
+    # Extraction de l'ID de la réclamation choisi dans le formulaire
+    reclamation_ids = [key.split('btn_reclamation_id')[1] for key in request.POST.keys() if key.startswith('btn_reclamation_id')]
+    # Vérification du nombre d'IDs extraits
+    if reclamation_ids:
+        if len(reclamation_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            # afficher détaille de la réclamation
+            request.session['reclamation_id'] = reclamation_ids[0]
+            return redirect('reclamation')
+        elif len(reclamation_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            if  hasattr(user, 'eleve'):return redirect('compte_eleve')
+            elif  hasattr(user, 'professeur'):return redirect('compte_prof')
+            else: return redirect('compte_administrateur')
+
+    # Rendu de la page avec le contexte
+    context = {
+        'reclamations': reclamations,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+    return render(request, 'pages/reclamations.html', context)

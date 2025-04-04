@@ -23,5 +23,8 @@ urlpatterns = [
     path('admin_payment_demande_paiement', views.admin_payment_demande_paiement, name='admin_payment_demande_paiement'),
     path('admin_reglement_modifier', views.admin_reglement_modifier, name='admin_reglement_modifier'),
     path('admin_accord_reglement_modifier', views.admin_accord_reglement_modifier, name='admin_accord_reglement_modifier'),
+    path('reclamation', views.reclamation, name='reclamation'),
+    path('nouvelle_reclamation', views.nouvelle_reclamation, name='nouvelle_reclamation'),
+    path('reclamations', views.reclamations, name='reclamations'),
 
 ]

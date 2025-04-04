@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from .models import Eleve, Parent, Temoignage
 from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement
 from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement
+from pages.models import ReclamationCategorie, PieceJointeReclamation, Reclamation, MessageReclamation
 import re
 from datetime import date, timedelta, datetime
 from django.core.paginator import Paginator
@@ -18,7 +19,8 @@ from decimal import Decimal
 from django.core.validators import validate_email, EmailValidator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Min, Max
-
+import os
+from pages.forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
 
 
 # Create your views here.
@@ -1159,8 +1161,6 @@ def liste_paiement_eleve(request):
     }
     
     return render(request, 'eleves/liste_payment_eleve.html', context)
-
-
 
 
 
