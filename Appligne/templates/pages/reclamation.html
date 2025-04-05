@@ -70,7 +70,7 @@
                                 </div>
                                 <div class="col-md-2 col-sm-12 position-relative ">
                                     <label for="statutSelect" class="form-label">Statut</label>
-                                    <select class="form-select"  name="statut" id="statutSelect" {% if not request.user.is_superuser or not request.user.is_staff %} disabled {% endif %} >
+                                    <select class="form-select"  name="statut" id="statutSelect" {% if  not request.user.is_staff %} disabled {% endif %} >
                                         <option value="en_attente"  {% if reclamation.statut == 'en_attente'  %} selected {% endif %} >En attente</option>
                                         <option value="en_cours"  {% if reclamation.statut == 'en_cours'  %} selected {% endif %} >En cours</option>
                                         <option value="resolue"  {% if reclamation.statut == 'resolue'  %} selected {% endif %} >Résolue</option>
@@ -82,7 +82,7 @@
                                     <label for="prioriteSelect" class="form-label">Priorité</label>
                                     <div class="row g-2 ">
                                         <div class="col-md-7 col-sm-12 position-relative ">
-                                            <select class="form-select"  name="priorite" id="prioriteSelect" {% if not request.user.is_superuser or not request.user.is_staff %} disabled {% endif %} >
+                                            <select class="form-select"  name="priorite" id="prioriteSelect" {% if not request.user.is_staff %} disabled {% endif %} >
                                                 <option value="priorite_1"  {% if reclamation.priorite == 'priorite_1'  %} selected {% endif %} >Basse</option>
                                                 <option value="priorite_2"  {% if reclamation.priorite == 'priorite_2'  %} selected {% endif %} >Moyenne</option>
                                                 <option value="priorite_3"  {% if reclamation.priorite == 'priorite_3'  %} selected {% endif %} >Haute</option>

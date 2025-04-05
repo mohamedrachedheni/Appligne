@@ -446,7 +446,7 @@ def nous_contacter(request):
     # Sélectionnez le premier utilisateur qui est superuser, staff et actif
     # par defaux pour eviter erreur de la base de donnée user-id can not be null
     # car le visiteur n'a pas de compt user
-    # user = User.objects.filter(is_superuser=True, is_staff=True, is_active=True).first()
+    # user = User.objects.filter( is_staff=True, is_active=True).first()
     teste = True
     if request.method == 'POST' and 'btn_enr' in request.POST:
         if not text_email:
@@ -464,7 +464,7 @@ def nous_contacter(request):
                 teste = False
             
         # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
-        user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
+        user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_staff=1).first() # à gérer le cas de plusieur staff plus tard
         user_destinataire_id = user_destinataire.id
         
         

@@ -707,7 +707,7 @@ def nouveau_fichier(request):
                 email_prof = user.email # si le format de l'email est éronné on reprond l'email du user
 
             # Sélectionner le premier enregistrement des superusers qui est dans ce cas le destinataire de l'Email
-            user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_superuser=1).first()
+            user_destinataire = User.objects.filter(is_staff=1, is_active=1, is_staff=1).first() # à gérer le cas de plusieur staff plus tard
             user_destinataire_id = user_destinataire.id
             
             # traitement de l'envoie de l'email
@@ -759,7 +759,7 @@ def votre_compte(request):
         elif hasattr(user, 'eleve'):
             return redirect('compte_eleve')
         # Si l'utilisateur est superuser et staff
-        elif user.is_superuser and user.is_staff :  # à gérer le cas des administrateurs plus tard
+        elif  user.is_staff :  # à gérer le cas des administrateurs plus tard
             return redirect('compte_administrateur')
     messages.error(request, "Vous devez être connecté pour effectuer cette action.")
     return redirect('signin')

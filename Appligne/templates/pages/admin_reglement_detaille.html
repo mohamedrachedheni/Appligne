@@ -5,7 +5,7 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
-            {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+            {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
             {% include 'partials/_sidebar_admin.html' %}
             {% else %}
             {% include 'partials/_sidebar.html' %}
@@ -84,7 +84,7 @@
                                     <label for="text_email" class="form-label"><strong>Message lié à l'accord de règlement</strong></label>
                                     <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
                                 </div>
-                                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement">

@@ -113,7 +113,7 @@
                     </div>
                 </div>
                 <!-- boutons fin -->
-                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
                     <div class="container-xxl py-5">
                         <div class="container">
                             <div class="container bg-light mb-3">

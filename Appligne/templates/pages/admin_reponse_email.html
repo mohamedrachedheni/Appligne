@@ -27,7 +27,7 @@
             </div>
             <form method="POST" enctype="multipart/form-data" id="professeurForm" >
                 {% csrf_token %}
-                {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
 
                     <!-- Liste élèves début -->
                     <div class="container-xxl py-5">
