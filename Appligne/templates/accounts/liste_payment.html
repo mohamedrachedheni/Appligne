@@ -146,7 +146,7 @@
                                                 </div>
                                                 <div class="col-md-2 col-sm-12 position-relative">
                                                     <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut du paiement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if not payment.approved %} - Elv: Contesté {% endif %} " readonly >
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if  payment.reclamation %} - Elv: Contesté {% endif %} " readonly >
                                                 </div>
                                                 <div class="col-md-2 col-sm-12 position-relative ">
                                                     <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date paiement</label>
@@ -160,8 +160,8 @@
                                                             <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn {% if payment.approved %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
-                                                                {% if payment.approved %}Détaille{% else %}Contesté{% endif %}
+                                                            <button type="submit" class="btn {% if not payment.reclamation %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
+                                                                {% if not payment.reclamation %}Détaille{% else %}Contesté{% endif %}
                                                             </button>
                                                         </div>
                                                     </div>

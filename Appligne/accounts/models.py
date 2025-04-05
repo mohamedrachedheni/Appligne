@@ -11,6 +11,7 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 from eleves.models import Eleve
 from datetime import date, datetime
+from pages.models import Reclamation
 # from datetime import timedelta
 
 class Pays(models.Model):
@@ -482,7 +483,7 @@ class Payment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
     payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
     payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
-    approved = models.BooleanField(default=True) # Approuvé par l'élève, Pas de réclamation
+    reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance

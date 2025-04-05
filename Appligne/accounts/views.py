@@ -549,7 +549,7 @@ def signin(request):
                     return redirect('compte_eleve')
                 
                 # Si l'utilisateur est superuser et staff
-                elif user.is_superuser and user.is_staff:  # à gérer le cas des administrateurs plus tard
+                elif  user.is_staff:  # à gérer le cas des administrateurs plus tard
                     return redirect('compte_administrateur')
                 else:
                     # Message d'erreur si l'utilisateur n'est pas superuser ou staff
@@ -3317,7 +3317,7 @@ def liste_payment(request):
 
     # Filtrage des paiements contestés (réclamation)
     if 'btn_reclame' in request.POST:
-        filters['approved'] = False  # Paiements contestés par l'élève
+        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
         status_str = "Réclamé"
 
     # Filtrage des paiements sans accord de règlement
@@ -3512,7 +3512,7 @@ def liste_reglement(request):
         # si un des paiement est non approuvé par l'élève alors approved = False
         approved =True
         for payment in payments:
-            if not payment.approved: 
+            if  payment.reclamation: 
                 approved = False
                 break
         accord_reglement_approveds.append((accord_reglement , approved))

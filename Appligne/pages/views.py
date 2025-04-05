@@ -510,7 +510,7 @@ def compte_administrateur(request):
         return redirect('signin')   
     user = request.user
     # Vérifier si l'utilisateur a un profil de staff associé
-    if not user.is_superuser and not user.is_staff:
+    if  not user.is_staff:
         messages.error(request, "Vous n'êtes pas autorisé à acceder au compte administrateur.")
         return redirect('signin')
 
@@ -1874,7 +1874,7 @@ def admin_payment_en_attente_reglement(request):
 
     # Filtrage des paiements contestés (réclamation)
     if 'btn_reclame' in request.POST:
-        filters['approved'] = False  # Paiements contestés par l'élève
+        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
         status_str="Réclamé"
 
     # Récupération des paiements en fonction des filtres
@@ -2315,7 +2315,7 @@ def admin_reglement(request):
         # si un des paiement est non approuvé par l'élève alors approved = False
         approved =True
         for payment in payments:
-            if not payment.approved: 
+            if payment.reclamation: 
                 approved = False
                 break
         accord_reglement_approveds.append((accord_reglement , approved))
@@ -2381,7 +2381,7 @@ def admin_reglement(request):
             # si un des paiement est non approuvé par l'élève alors approved = False
             approved =True
             for payment in payments:
-                if not payment.approved: 
+                if payment.reclamation: 
                     approved = False
                     break
             reglement_requests.append((accord_reglement.id, approved, date_operation_reglement_str, nouv_status_accord ))
@@ -2578,7 +2578,7 @@ def admin_reglement_detaille(request):
         DetailAccordReglement.objects
         .filter(accord=accord_reglement)
         .select_related('payment')  # Optimisation pour éviter des requêtes supplémentaires
-        .values_list('payment__id', 'description', 'professor_share', 'payment__approved')
+        .values_list('payment__id', 'description', 'professor_share', 'payment__reclamation_id')
     )
 
     if 'btn_detaille_reglement' in request.POST:
@@ -2683,6 +2683,18 @@ def admin_payment_demande_paiement(request):
         
         cours_prix_publics.append((cours, prix_public))
     
+    # Passer à la création d'une nouvelle réclamation
+    if 'btn_nouvelle_reclamation' in request.POST:
+        request.session['reclamation_payment_id'] = payment_id
+        return redirect('nouvelle_reclamation')
+    
+    # Voire lae détaille de la réclamation
+    if 'btn_reclamation' in request.POST:
+        if payment.reclamation.id:
+            request.session['reclamation_id'] = payment.reclamation.id
+            return redirect('reclamation')
+        else: messages.error(request, "Il n'y a pas de réclamation liée au paiement")
+
     # Passage des données au template
     context = {
         'payment': payment,
@@ -2726,7 +2738,7 @@ def admin_reglement_modifier(request):
         DetailAccordReglement.objects
         .filter(accord=accord_reglement)
         .select_related('payment')  # Optimisation pour éviter des requêtes supplémentaires
-        .values_list('payment__id', 'description', 'professor_share', 'payment__approved')
+        .values_list('payment__id', 'description', 'professor_share', 'payment__reclamation_id')
     )
 
     # sauvegarder les anciens paiement liés à l'accord de règlement
@@ -2754,7 +2766,7 @@ def admin_reglement_modifier(request):
         if not payment: continue
         description="Elève: " + demande_paiement.eleve.user.first_name + " " + demande_paiement.eleve.user.last_name + ", Date paiement: " + payment.date_creation.strftime('%d/%m/%Y') + ", Montant payé: " + str(payment.amount) + "€" if payment else ""
         professor_share=(payment.amount * 2) / 3 if payment else 0
-        paiements_sans_accord.append((payment.id if payment else 0, description, professor_share, payment.approved if payment else ""))
+        paiements_sans_accord.append((payment.id if payment else 0, description, professor_share, payment.reclamation if payment else ""))
 
     # Passage des données au template
     context = {
@@ -3205,6 +3217,20 @@ def nouvelle_reclamation(request):
                     piece_jointe.save()
                 else:
                     messages.error(request, f"Erreur avec le fichier {fichier.name}: {form.errors['fichier']}")
+
+            # Si la réclamation et liée à un paiement
+            # Récupération sécurisée du paiement si 
+            # le user est un élève qui veut ajouter une 
+            # réclamation à partir un paiement prés déterminé
+            if  hasattr(user, 'eleve'):
+                payment_id = request.session.get('reclamation_payment_id')
+                if payment_id:
+                    payment = Payment.objects.get(id=payment_id)
+                    if not payment: messages.error(request, "Il n'y a pas de paiement lié à la reclamation")
+                    else: 
+                        payment.reclamation=reclamation
+                        payment.save()
+                        messages.success(request, 'Le paiement est mis à jour.')
 
             messages.success(request, 'Réclamation enregistrée.')
             if  hasattr(user, 'eleve'): return redirect('compte_eleve')

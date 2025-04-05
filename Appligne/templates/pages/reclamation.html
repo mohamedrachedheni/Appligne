@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-md-3 col-sm-12 position-relative">
                                     <label for="categorieSelect" class="form-label">Type de réclamation</label>
-                                    <select class="form-select" name="reclamation_categorie" id="categorieSelect">
+                                    <select class="form-select" name="reclamation_categorie" id="categorieSelect" {% if not reclamation.user == request.user and  not request.user.is_staff  %} disabled {% endif %} >
                                         {% for categorie in categories %}
                                             <option value="{{ categorie.id }}" {% if categorie.id == reclamation.categorie.id %} selected {% endif %}>
                                                 {{ categorie.nom }}
@@ -89,7 +89,7 @@
                                             </select>
                                         </div>
                                         <div class="col-md-5 col-sm-12 d-flex justify-content-center mb-3">
-                                            <button type="submit" class="btn btn-primary  w-100" name="btn_modif" >
+                                            <button type="submit" class="btn btn-primary  w-100" name="btn_modif" {% if not reclamation.user == request.user and  not request.user.is_staff  %} disabled {% endif %} >
                                                 Modifier
                                             </button>
                                         </div>

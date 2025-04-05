@@ -5,10 +5,14 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
-            {% if  request.user.is_authenticated and request.user.is_superuser and request.user.is_staff and request.user.is_active %}
-            {% include 'partials/_sidebar_admin.html' %}
-            {% else %}
-            {% include 'partials/_sidebar.html' %}
+            {% if request.user.is_authenticated %}
+                {% if request.user.eleve %}
+                    {% include 'partials/_sidebar_eleve.html' %}
+                {% elif request.user.professeur %}
+                    {% include 'partials/_sidebar.html' %}
+                {% else %}
+                    {% include 'partials/_sidebar_admin.html' %}
+                {% endif %}
             {% endif %}
         </div>
         <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
@@ -127,6 +131,14 @@
                                     <div class="col-lg-6 col-sm-12">
                                         <label for="text_email_eleve" class="form-label"><strong>Message de l'élève</strong></label>
                                         <textarea class="form-control profil" id="text_email_eleve"  readonly>{{texte_email_eleve}}</textarea>
+                                    </div>
+                                </div>
+                                <div class="row justify-content-between g-2 p-3">
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  payment.reclamation %} disabled {% endif %} >Voire réclamation</button>
+                                    </div>
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_nouvelle_reclamation" {% if  payment.reclamation %} disabled {% endif %} >Ajouter une réclamation liée au paiement</button>
                                     </div>
                                 </div>
                             </div>

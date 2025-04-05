@@ -1102,7 +1102,7 @@ def liste_paiement_eleve(request):
 
     # Filtrage des paiements contestés (réclamation)
     if 'btn_reclame' in request.POST:
-        filters['approved'] = False  # Paiements contestés par l'élève
+        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
         status_str = "Réclamé"
 
     # Filtrage des paiements sans accord de règlement

@@ -58,7 +58,7 @@
                                 </div>
                                 <br>
                                 <hr>
-                                {% for id, description, professor_share, approved  in detaille %}
+                                {% for id, description, professor_share, reclamation  in detaille %}
                                             <div class="row  g-2 ">
                                                 <div class="col-md-8 col-sm-12 position-relative">
                                                     <label for="description_id_{{ id }}" class="form-label">description</label>
@@ -71,8 +71,8 @@
                                                             <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 position-relative">
-                                                            <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
-                                                                {% if approved %}Détaille{% else %}Contesté{% endif %}
+                                                            <button type="submit" class="btn {% if not reclamation %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
+                                                                {% if not reclamation %}Détaille{% else %}Contesté{% endif %}
                                                             </button>
                                                         </div>
                                                     </div>
