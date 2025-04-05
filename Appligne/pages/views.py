@@ -3248,14 +3248,26 @@ def nouvelle_reclamation(request):
     }
     return render(request, 'pages/nouvelle_reclamation.html', context)
 
+import logging
+from datetime import datetime
+import os
 
+# Configuration du logger avec le nom du module actuel
+logger = logging.getLogger(__name__)
 
 def reclamations(request):
     """
     Afficher toutes les réclamations de la période 
-    liées à l'éléve (et / ou) au professeur selon 
-    le user(élève, professeur, admin)
+    liées à l'élève (et / ou) au professeur selon 
+    le user (élève, professeur, admin)
     """
+
+    # Enregistrement des logs
+    logger.debug("Page visitée")
+    logger.info("Action utilisateur")
+    logger.warning("Attention à un truc")
+    logger.error("Une erreur est survenue")
+
     # Récupérer le user
     user = request.user
     if not user.is_authenticated:

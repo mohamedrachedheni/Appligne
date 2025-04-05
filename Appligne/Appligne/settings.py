@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
-import datetime
-
+import os
+from datetime import datetime
 
 
 
@@ -188,8 +188,80 @@ EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
 EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
 
 # Configurer les paramètres JWT
-import datetime
 PASSWORD_JWT = config('PASSWORD_JWT') # Récupération du mot de passe PASSWORD_JWT depuis le fichier .env
 JWT_SECRET = PASSWORD_JWT # your_secret_key
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 3600  # Token expiration time (e.g., 1 hour)
+
+
+
+# entregistrement de message logs
+today = datetime.now()
+log_dir = os.path.join(BASE_DIR, 'logs', today.strftime("%Y"), today.strftime("%m"))
+os.makedirs(log_dir, exist_ok=True)
+log_filename = os.path.join(log_dir, today.strftime("%Y-%m-%d") + '.log')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s.%(funcName)s:%(lineno)d - %(message)s',
+        },
+    },
+
+    'handlers': {
+        'myapp_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': log_filename,
+            'formatter': 'standard',
+        },
+    },
+
+    'loggers': {
+        # Logger racine qui capte tout par défaut
+        '': {
+            'handlers': ['myapp_file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'myapp': {
+            'handlers': ['myapp_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        'django': {
+            'handlers': ['myapp_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['myapp_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['myapp_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['myapp_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['myapp_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.utils.autoreload': {
+            'handlers': ['myapp_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    }
+}
