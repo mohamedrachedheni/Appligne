@@ -1,0 +1,4 @@
+2025-04-05 16:48:55,347 [DEBUG] pages.views.reclamations:3266 - Page visitée
+2025-04-05 16:48:55,349 [INFO] pages.views.reclamations:3267 - Action utilisateur
+2025-04-05 16:48:55,349 [WARNING] pages.views.reclamations:3268 - Attention à un truc
+2025-04-05 16:48:55,350 [ERROR] pages.views.reclamations:3269 - Une erreur est survenue
