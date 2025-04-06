@@ -265,3 +265,6 @@ LOGGING = {
         },
     }
 }
+
+# Générer une clé de chiffrement
+SECRET_ENCRYPTION_KEY = config('PASSWORD_CRYPTO')

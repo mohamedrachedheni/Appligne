@@ -64,12 +64,12 @@
                     <div class="container-xxl py-5">
                         <div class="container">
                             <div class="container bg-light">
-                                {% if not emails %}
+                                {% if not list_email %}
                                     <div class="col-md-12 position-relative">
                                         <h4>Il n'y a pas d'email</h4>
                                     </div>
                                 {% endif %}
-                                {% for email in emails %}
+                                {% for email, id in list_email %}
                                     <div class="row  " style="margin-bottom: 30px;">
                                         <div class="col-md-2 col-sm-12 position-relative ">
                                             <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
@@ -91,9 +91,9 @@
                                                     <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi|default:''}}" readonly>
                                                 </div>
                                                 <div class="col-md-5 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
-                                                        href="{% url 'admin_detaille_email' email_id=email.id %}"><span
-                                                            style="color: white;">Détaille </span></a>
+                                                    <button type="submit" class="btn btn-primary w-100" name="btn_detaille_email_{{id}}">
+                                                        Détaille
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

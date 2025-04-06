@@ -24,3 +24,22 @@ def generate_jwt_token(user_id):
     
     # Retourne le token JWT encodé
     return token
+
+
+from cryptography.fernet import Fernet
+from django.conf import settings
+
+# Clé Fernet
+fernet = Fernet(settings.SECRET_ENCRYPTION_KEY.encode())
+
+def encrypt_id(value):
+    """Chiffre un ID et retourne la chaîne sécurisée."""
+    return fernet.encrypt(str(value).encode()).decode()
+
+def decrypt_id(encrypted_value):
+    """Déchiffre un ID sécurisé et retourne sa valeur d'origine."""
+    try:
+        return int(fernet.decrypt(encrypted_value.encode()).decode())
+    except Exception:
+        return None
+

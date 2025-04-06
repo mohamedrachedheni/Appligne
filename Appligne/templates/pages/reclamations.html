@@ -118,12 +118,12 @@
                     <div class="container-xxl py-5">
                         <div class="container">
                             <div class="container bg-light  p-3 ">
-                                {% if not reclamations %}
+                                {% if not reclamation_list %}
                                     <div class="col-md-12 text-center">
                                         <h4>Il n'y a pas de réclamations pour cette période</h4>
                                     </div>
                                 {% endif %}
-                                {% for reclamation in reclamations %}
+                                {% for reclamation , reclamation_id in reclamation_list %}
                                 <!-- le tri du view ne tient pas compte des réclamatioms lues ou non lues -->
                                 {% if not status_str == 'non_lu' %}
                                     <div class="row g-2 " style="margin-bottom: 10px;">
@@ -155,7 +155,7 @@
                                                     <input type="text" class="form-control form-control-intitule" id="vue_id{{ reclamation.id }}"  value="{% if reclamation.messages.last.lu %} Oui {% else %} Non {% endif %}" readonly>
                                                 </div>
                                                 <div class="col-md-7 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation.id}}" >
+                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation_id}}" >
                                                         Détaille
                                                     </button>
                                                 </div>
@@ -164,7 +164,7 @@
                                     </div>
                                 {%  endif %}
                                 {% endfor %}
-                                {% for reclamation in reclamations %}
+                                {% for reclamation , reclamation_id in reclamation_list %}
                                 <!-- dans ce cas seul les réclamations non lues sont affichées grasse à la commande last qui ne tient compte que du dernier message lié à la  réclamation -->
                                 {% if status_str == 'non_lu' and not reclamation.messages.last.lu  %}
                                     <div class="row g-2 " style="margin-bottom: 10px;">
@@ -196,7 +196,7 @@
                                                     <input type="text" class="form-control form-control-intitule" id="vue_id{{ reclamation.id }}"  value="{% if reclamation.messages.last.lu %} Oui {% else %} Non {% endif %}" readonly>
                                                 </div>
                                                 <div class="col-md-7 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation.id}}" >
+                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation_id}}" >
                                                         Détaille
                                                     </button>
                                                 </div>

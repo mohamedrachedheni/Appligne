@@ -21,8 +21,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Min, Max
 from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
-
-
+from .utils import decrypt_id
+from .utils import encrypt_id
+import logging
+# Configuration du logger avec le nom du module actuel
+logger = logging.getLogger(__name__)
 
 
 
@@ -1578,55 +1581,61 @@ def admin_compte_eleve(request, user_id=0):
     # Rendre la page avec les données
     return render(request, 'pages/admin_compte_eleve.html', context)
 
+
+
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def admin_liste_email_recu(request):
+    user_id = request.user.id
 
-    user_id = request.user.id # ID admin
-
-    # Fonction interne pour récupérer les emails en fonction des critères de filtrage
-    def get_emails(filter_criteria):
-        emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
-        return emails
-
-    # Filtrage par défaut pour les nouveaux emails (emails avec suivi = null)
-    emails = get_emails({})
-
-    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
-    if request.method == 'POST':
-        if 'btn_tous' in request.POST:
-            # Filtrer pour tous les emails
-            emails = get_emails({})
-        elif 'btn_nouveau' in request.POST:
-            # Filtrer pour les nouveaux emails (suivi = null)
-            emails = get_emails({'suivi__isnull': True})
-        elif 'btn_attente' in request.POST:
-            # Filtrer pour les emails en attente (suivi = 'Réception confirmée')
-            emails = get_emails({'suivi': 'Réception confirmée'})
-        elif 'btn_repondu' in request.POST:
-            # Filtrer pour les emails répondus (suivi = 'Répondu')
-            emails = get_emails({'suivi': 'Répondu'})
-        elif 'btn_ignore' in request.POST:
-            # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
-            emails = get_emails({'suivi': 'Mis à côté'})
-
-    # Contexte à passer au template
-    context = {
-        'emails': emails
+    # Dictionnaire des boutons et critères associés
+    filtre_suivi = {
+        'btn_tous': {},
+        'btn_nouveau': {'suivi__isnull': True},
+        'btn_attente': {'suivi': 'Réception confirmée'},
+        'btn_repondu': {'suivi': 'Répondu'},
+        'btn_ignore': {'suivi': 'Mis à côté'},
     }
-    
-    # Rendu de la page avec les emails filtrés
-    return render(request, 'pages/admin_liste_email_recu.html', context)
+
+    # Fonction pour filtrer les emails + crypter les IDs
+    def get_list_email(filter_criteria):
+        emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
+        return [(email, encrypt_id(email.id)) for email in emails]
+
+    # Par défaut : tous les emails
+    list_email = get_list_email({})
+
+    if request.method == 'POST':
+        # Cherche quel bouton de filtre est cliqué
+        for btn, criteria in filtre_suivi.items():
+            if btn in request.POST:
+                list_email = get_list_email(criteria)
+                break  # on sort dès qu'on trouve le bouton cliqué
+
+        # Gestion des boutons de détails
+        email_ids = [key.split('btn_detaille_email_')[1] for key in request.POST if key.startswith('btn_detaille_email_')]
+        if email_ids:
+            
+            if len(email_ids) == 1:
+                request.session['email_id'] = decrypt_id(email_ids[0])
+                return redirect('admin_detaille_email')
+            else:
+                messages.error(request, "Erreur système, veuillez contacter le support technique.")
+                return redirect('compte_administrateur')
+
+
+    return render(request, 'pages/admin_liste_email_recu.html', {'list_email': list_email})
+
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_detaille_email(request, email_id):
+def admin_detaille_email(request):
     user = request.user # admin
+    email_id = request.session.get('email_id')
     email = Email_telecharge.objects.filter(id=email_id).first() # récupérer l'email
-    
-    
 
-    context = {'email': email, 'email_id': email_id}
+    email_id_cript = encrypt_id(email_id)
+    context = {'email': email, 'email_id': email_id_cript}
     
     # Initialiser le validateur d'email
     email_validator = EmailValidator()
@@ -1703,17 +1712,29 @@ def admin_detaille_email(request, email_id):
 
         # rediriger vers la même page mais en changeant l'argument
         # il faut élaborer une page spéciale pour afficher l'historique des emails
-        return redirect(reverse('admin_detaille_email', args=[email.reponse_email_id])) # -	ça marche très bien
+        request.session['email_id'] = email.reponse_email_id
+        return redirect('admin_detaille_email') # -	ça marche très bien
     
     
     if 'btn_voire_eleve' in request.POST: # bouton ajout élève activé
         return redirect('modifier_mes_eleve', mon_eleve_id=email_id) # Rediriger vers autre page
+    # Gestion des boutons btn_repondre_email_
+    email_ids = [key.split('btn_repondre_email_')[1] for key in request.POST if key.startswith('btn_repondre_email_')]
+    if email_ids:
+        
+        if len(email_ids) == 1:
+            request.session['email_id'] = decrypt_id(email_ids[0])
+            return redirect('admin_reponse_email')
+        else:
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
 
     return render(request, 'pages/admin_detaille_email.html', context) # Revenir à la même page, le context est nécessaire pout le template
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_reponse_email(request, email_id): 
+def admin_reponse_email(request):
+    email_id = request.session.get('email_id')
     email = Email_telecharge.objects.filter(id=email_id).first() # envoyé par le client
     user = request.user # admin
     text_email = f"""
@@ -1897,7 +1918,6 @@ def admin_payment_en_attente_reglement(request):
             accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
 
         # Ajout des informations collectées à la liste des paiements
-        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
         paiements.append((payment, professeur, accord_reglement))
         professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
 
@@ -1959,7 +1979,7 @@ def admin_payment_accord_reglement(request):
     Fonctionnalités :
     - Récupérer les paiements non encore régularisés (Statut != "Réalisé").
     - Permettre à l'administrateur de sélectionner les paiements à inclure dans un accord de règlement.
-    - Assurer la validation de la date d’échéance avant d’ajouter les paiements à l’accord.
+    - Assurer la validation de la date d’échéance avant d'ajouter les paiements à l’accord.
     """
     # récupérer les paramètres de session
     prof_id = request.session.get('prof_id')
@@ -3079,7 +3099,7 @@ def admin_accord_reglement_modifier(request):
 
 
 
-# 
+
 def reclamation(request):
     """
     Vue pour d'administration, professeur et élève permettant 
@@ -3088,7 +3108,11 @@ def reclamation(request):
     ou de modifier le statut, la priorité et la 
     cathégorie de la réclamation selon le type d'utilisateur
     """
+    user = request.user
+
     reclamation_id = request.session.get('reclamation_id')
+    if not reclamation_id: 
+        return redirect('compte_administrateur')
     
     if not reclamation_id:
         messages.info(request, "Il n'y a pas de réclamation")
@@ -3248,12 +3272,6 @@ def nouvelle_reclamation(request):
     }
     return render(request, 'pages/nouvelle_reclamation.html', context)
 
-import logging
-from datetime import datetime
-import os
-
-# Configuration du logger avec le nom du module actuel
-logger = logging.getLogger(__name__)
 
 def reclamations(request):
     """
@@ -3261,13 +3279,13 @@ def reclamations(request):
     liées à l'élève (et / ou) au professeur selon 
     le user (élève, professeur, admin)
     """
-
+    
     # Enregistrement des logs
     logger.debug("Page visitée")
     logger.info("Action utilisateur")
     logger.warning("Attention à un truc")
     logger.error("Une erreur est survenue")
-
+    # messages.info(request, f'key = {Fernet.generate_key()}')
     # Récupérer le user
     user = request.user
     if not user.is_authenticated:
@@ -3336,18 +3354,21 @@ def reclamations(request):
 
     # Récupération des réclamations (le tri ne distingue pas les messages lu et non lu c'est dans le template que la séparation est faite)
     reclamations = Reclamation.objects.filter(**filters).order_by('-priorite','-date_creation')
-    
+    reclamation_list = []
+    for reclamation in reclamations:
+        reclamation_list.append((reclamation, encrypt_id(reclamation.id))) # cripter ID de la réclamation
+        
+    if request.POST:
+        # Extraction de l'ID de la réclamation choisi dans le formulaire
+        reclamation_keys = [key for key in request.POST.keys() if key.startswith('btn_reclamation_id')]
+        reclamation_key = [key.split('btn_reclamation_id')[1] for key in reclamation_keys][0]
         
 
-    # Extraction de l'ID de la réclamation choisi dans le formulaire
-    reclamation_ids = [key.split('btn_reclamation_id')[1] for key in request.POST.keys() if key.startswith('btn_reclamation_id')]
-    # Vérification du nombre d'IDs extraits
-    if reclamation_ids:
-        if len(reclamation_ids) == 1:  # Un seul ID trouvé, on le stocke en session
-            # afficher détaille de la réclamation
-            request.session['reclamation_id'] = reclamation_ids[0]
-            return redirect('reclamation')
-        elif len(reclamation_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+        # Vérification du nombre d'IDs extraits
+        if reclamation_key:
+                request.session['reclamation_id'] = decrypt_id(reclamation_key) # décripter ID de la réclamation
+                return redirect('reclamation')
+        else:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             if  hasattr(user, 'eleve'):return redirect('compte_eleve')
             elif  hasattr(user, 'professeur'):return redirect('compte_prof')
@@ -3355,7 +3376,7 @@ def reclamations(request):
 
     # Rendu de la page avec le contexte
     context = {
-        'reclamations': reclamations,
+        'reclamation_list': reclamation_list,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'status_str': status_str,

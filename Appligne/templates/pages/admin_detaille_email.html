@@ -85,9 +85,9 @@
                                             </button>
                                         </div>
                                         <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <a class="btn btn-primary w-100 {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %} " name="btn_détaille_{{ email.id }}"
-                                                        href="{% url 'admin_reponse_email' email_id=email.id %}"><span
-                                                            style="color: white;">Répondre </span></a>
+                                            <button type="submit" class="btn btn-primary w-100" name="btn_repondre_email_{{email_id}}" {% if not email.user.professeur and not email.user.eleve %}disabled{% endif %} >
+                                                Répondre
+                                            </button>
                                         </div>
                                         <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
                                             <button 
