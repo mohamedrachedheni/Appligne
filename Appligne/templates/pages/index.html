@@ -298,6 +298,54 @@
 </div>
 <!-- Devenir Prof fin -->
 
+<!-- FAQs début -->
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="container">
+        <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
+        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+            <h1>Foire Aux Questions</h1>
+        </div>
+    <div class="col-md-12">
+        {% include 'partials/_alerts.html' %}
+    </div>
+        <div class="container bg-light" >
+            <div class="row justify-content-between g-2 p-3 " >
+                <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                    <label for="role" class="form-label" >Filtrer par public :</label>
+                </div>
+                <div class="col-lg-6 col-sm-12 d-flex justify-content-center">
+                    <select id="role" name="role" class="form-select" >
+                        {% if not request.user.eleve and not request.user.professeur and request.user.is_authenticated %}
+                        <option value="staff">Staff</option>
+                        {% endif %}
+                        {% if not request.user.professeur and request.user.is_authenticated %}
+                        <option value="eleve">Élève</option>
+                        {% endif %}
+                        {% if not request.user.eleve and request.user.is_authenticated %}
+                        <option value="prof">Professeur</option>
+                        {% endif %}
+                        
+                        <option value="visiteur">Visiteur</option>
+                        <option value="tous">Tous les utilisateurs confondus</option>
+                        {% if not request.user.eleve and not request.user.professeur and request.user.is_authenticated %}
+                        <option value="">Tous</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
+                    <input type="text" id="keyword" name="keyword" placeholder="Mot-clé..." class="form-control" />
+                </div>
+                <div id="faq-container"  >
+                    {% include 'pages/faq_items.html' %}
+                </div>
+                <div id="faq-pagination">
+                    {% include 'pages/faq_pagination.html' %}
+                </div>
+            </div>
+        </div>                   
+    </div>
+</div>
+<!--FAQs fin-->
 <!-- Testimonial Start -->
 <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
     <div class="container">
@@ -348,6 +396,7 @@
 
 {% endblock %}
 {% block javascript %}
-<script src="{% static 'js/Code_en_plus_liste_prof.js' %}"></script>
+<script src="{% static 'js/Code_en_plus_liste_prof.js' %}"></script>*
+<script src="{% static 'js/faq.js' %}"></script>
 
 {% endblock %}

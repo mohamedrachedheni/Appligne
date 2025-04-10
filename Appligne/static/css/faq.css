@@ -1,0 +1,32 @@
+.faq-question {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    transition: background 0.3s ease;
+}
+
+.faq-question:hover {
+    background: #eef7ff;
+}
+
+.toggle-icon {
+    margin-right: 10px;
+    font-size: 18px;
+    width: 20px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.faq-answer {
+    padding: 10px;
+    background: #fff;
+    border-left: 4px solid #007BFF;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    display: none;
+}

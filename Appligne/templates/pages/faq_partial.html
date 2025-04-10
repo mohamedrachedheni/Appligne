@@ -1,0 +1,17 @@
+{% for faq in page_obj %}
+<div class="faq-item" data-role="{{ faq.public_cible }}">
+    <div class="faq-question">
+        <span class="accordion-icon">➕</span>
+        <h6>{{ faq.question }}</h6>
+    </div>
+    <div class="faq-answer" style="display: none;">
+        <div class="answer-content">
+            {{ faq.reponse|linebreaks }}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="no-results fade-in">
+    <p>Aucun résultat trouvé pour ces critères</p>
+</div>
+{% endfor %}

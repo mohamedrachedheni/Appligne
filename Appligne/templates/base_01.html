@@ -46,7 +46,9 @@
     <link href="{% static 'css/styleplus.css' %}" rel="stylesheet">
 
     
-
+    <!-- date picker -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <!-- <link rel="stylesheet" href="/resources/demos/style.css"> -->
 
     
     <!-- Inclure Pikaday CSS depuis un CDN -->
@@ -59,12 +61,12 @@
     <!-- Inclure inputmask heure -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.7-beta.0/inputmask.min.js"></script> -->
     <link rel="stylesheet" href="{% static 'css/faq.css' %}">
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 </head>
 
 <body>
-    {% include 'partials/_navbar_2.html' %}
+    {% include 'partials/_navbar.html' %}
     
     {% block content %}
 

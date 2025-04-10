@@ -27,6 +27,7 @@ import logging
 # Configuration du logger avec le nom du module actuel
 logger = logging.getLogger(__name__)
 
+from .models import FAQ 
 
 
 # Create your views here.
@@ -40,94 +41,90 @@ def get_or_none(model, **kwargs):
 
 
 def index(request):
-    # les paramètres par défaut pour les champs de recherche prof
+    # Paramètres de recherche par défaut
     radio_name = "a_domicile"
     matiere_defaut = "Maths"
     niveau_defaut = "Terminale Générale"
     region_defaut = "ILE-DE-FRANCE"
     departement_defaut = "PARIS"
 
-    # Récupère toutes les matières, niveaux, régions et départements pour les listes déroulentes
     matieres = Matiere.objects.all()
     niveaux = Niveau.objects.all()
     regions = Region.objects.filter(nom_pays__nom_pays='France')
     departements = Departement.objects.filter(region__region=region_defaut)
 
-    # Gérer la pagination des témoignages avec les 4 meilleurs témoignages (Très bien, Excellent)
+    # Témoignages triés
     temoignage_tris = []
     eleve_temoignage = set()
     prof_temoignage = set()
-
-    # Récupérer les témoignages avec une évaluation égale ou supérieure à 4 (Très bien, Excellent)
     temoignages = Temoignage.objects.filter(evaluation_eleve__gte=4)
-
-    # Boucle pour filtrer les témoignages uniques par élève et professeur, et limiter à 4 résultats
     for temoignage in temoignages:
         if temoignage.user_eleve not in eleve_temoignage and temoignage.user_prof not in prof_temoignage:
             eleve_temoignage.add(temoignage.user_eleve)
             prof_temoignage.add(temoignage.user_prof)
             temoignage_tris.append(temoignage)
-            if len(temoignage_tris) >3:
+            if len(temoignage_tris) > 3:
                 break
 
+    # --------- LOGIQUE DES FAQ ----------
+    # Déterminer le rôle utilisateur
+    if hasattr(request.user, 'eleve'):
+        role = 'eleve'
+    elif hasattr(request.user, 'professeur'):
+        role = 'prof'
+    elif request.user.is_staff:
+        role = 'staff'
+    else:
+        role = 'visiteur'
 
-    context = {
-        'matieres': matieres,
-        'niveaux': niveaux,
-        'regions': regions,
-        'departements': departements,
-        'radio_name': radio_name,
-        'matiere_defaut': matiere_defaut,
-        'niveau_defaut': niveau_defaut,
-        'region_defaut': region_defaut,
-        'departement_defaut': departement_defaut,
-        'temoignage_tris': temoignage_tris,
-    }
+    filtre_role = request.GET.get('role')
+    if filtre_role is not None:
+        role = filtre_role
 
-    if 'region' in request.POST: # si la page et actiée par input name='region'
-        # celà se produit lorsque  JS  actualiser laliste deroulente Région suite au changement de l'option 
-        # sélectionnéée dans la liste déroulente département
-        # récupérer matiere_defaut, niveau_defaut, region_defaut
-        matiere_defaut = request.POST['matiere'] # les derniers paramètres sélectionnés
+    keyword = request.GET.get('keyword', '').strip()
+
+    faqs = FAQ.objects.filter(actif=True)
+    if role :
+        faqs = faqs.filter(public_cible=role)
+    if keyword:
+        faqs = faqs.filter(
+            Q(question__icontains=keyword) |
+            Q(reponse__icontains=keyword)
+        )
+
+    paginator = Paginator(faqs.order_by('ordre'), 5)  # 5 FAQs par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render(request, 'pages/faq_items.html', {'page_obj': page_obj}).content.decode('utf-8')
+        pagination_html = render(request, 'pages/faq_pagination.html', {'page_obj': page_obj}).content.decode('utf-8')
+        return JsonResponse({'html': html, 'pagination': pagination_html})
+
+    # --------- FIN LOGIQUE DES FAQ ----------
+
+    # Si requête AJAX par formulaire (région)
+    if 'region' in request.POST:
+        matiere_defaut = request.POST['matiere']
         niveau_defaut = request.POST['niveau']
         region_defaut = request.POST['region']
 
-        # récupérer format cours
-        if request.POST.get('a_domicile', None):
+        if request.POST.get('a_domicile'):
             radio_name = "a_domicile"
-        if request.POST.get('webcam', None):
+        if request.POST.get('webcam'):
             radio_name = "webcam"
-        if request.POST.get('stage', None):
+        if request.POST.get('stage'):
             radio_name = "stage"
-        if request.POST.get('stage_webcam', None):
+        if request.POST.get('stage_webcam'):
             radio_name = "stage_webcam"
 
-        # actualiser la liste des départements selon la région sélectionnée
-        # est définir par défaut le premier département de la liste comme: departement_defaut
-        departements = Departement.objects.filter(region__region=region_defaut) # la nouvelle liste des départements pour la liste déroulente département
-        departement_defaut = Departement.objects.filter(region__region=region_defaut).first() # le premier de la liste des départements pour le champ input
-        
-        context.update({ # pour metre à jour les éléments susseptibles d'etre modifiés
-            'departements': departements, # liste data
-            'radio_name': radio_name,
-            'matiere_defaut': matiere_defaut,
-            'niveau_defaut': niveau_defaut,
-            'region_defaut': region_defaut,
-            'departement_defaut': departement_defaut, # paramètre du champ input
-            'temoignages': temoignages,
-        })
-        
-    if request.method == 'POST' and 'btn_rechercher' in request.POST:
-        # Annuler les données précédentes dans la session
-        keys_to_clear = [
-            'radio_name', 'radio_name_text', 
-            'matiere_defaut', 'niveau_defaut', 
-            'region_defaut', 'departement_defaut'
-        ]
-        for key in keys_to_clear:
-            request.session.pop(key, None)  # Supprime si existe, sinon rien
+        departements = Departement.objects.filter(region__region=region_defaut)
+        departement_defaut = departements.first()
 
-        # Mettre à jour les données de la session pour une nouvelle recherche
+    if request.method == 'POST' and 'btn_rechercher' in request.POST:
+        for key in ['radio_name', 'radio_name_text', 'matiere_defaut', 'niveau_defaut', 'region_defaut', 'departement_defaut']:
+            request.session.pop(key, None)
+
         if request.POST.get('a_domicile'):
             request.session['radio_name'] = "a_domicile"
             request.session['radio_name_text'] = "Cours à domicile"
@@ -141,26 +138,29 @@ def index(request):
             request.session['radio_name'] = "stage_webcam"
             request.session['radio_name_text'] = "Stage par webcam"
 
-        # Stocker les filtres dans la session pour persistance
         request.session['matiere_defaut'] = request.POST.get('matiere', 'Non spécifié')
         request.session['niveau_defaut'] = request.POST.get('niveau', 'Non spécifié')
         request.session['region_defaut'] = request.POST.get('region', 'Non spécifié')
         request.session['departement_defaut'] = request.POST.get('departement', 'Non spécifié')
-
-        # # Ajout du message informatif
-        # messages.info(
-        #     request,
-        #     f"radio_name = {request.session.get('radio_name', 'Non spécifié')}; "
-        #     f"radio_name_text = {request.session.get('radio_name_text', 'Non spécifié')}; "
-        #     f"matiere_defaut = {request.session.get('matiere_defaut', 'Non spécifié')}; "
-        #     f"niveau_defaut = {request.session.get('niveau_defaut', 'Non spécifié')}; "
-        #     f"region_defaut = {request.session.get('region_defaut', 'Non spécifié')}; "
-        #     f"departement_defaut = {request.session.get('departement_defaut', 'Non spécifié')}."
-        # )
-
         return redirect('liste_prof')
 
+    # Contexte général
+    context = {
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'regions': regions,
+        'departements': departements,
+        'radio_name': radio_name,
+        'matiere_defaut': matiere_defaut,
+        'niveau_defaut': niveau_defaut,
+        'region_defaut': region_defaut,
+        'departement_defaut': departement_defaut,
+        'temoignage_tris': temoignage_tris,
+        'page_obj': page_obj,  # Ajouté ici
+    }
+
     return render(request, 'pages/index.html', context)
+
 
 def liste_prof(request):
     if request.method == 'POST' and 'btn_rechercher' in request.POST:
@@ -3382,3 +3382,53 @@ def reclamations(request):
         'status_str': status_str,
     }
     return render(request, 'pages/reclamations.html', context)
+
+
+
+
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.db.models import Q
+
+def admin_faq(request):
+    if hasattr(request.user, 'eleve'):
+        role = 'eleve'
+    elif hasattr(request.user, 'professeur'):
+        role = 'prof'
+    elif request.user.is_staff:
+        role = 'staff'
+    else:
+        role = 'visiteur'
+
+    filtre_role = request.GET.get('role')
+    if filtre_role is not None:
+        role = filtre_role
+
+    keyword = request.GET.get('keyword', '').strip()
+
+    faqs = FAQ.objects.filter(actif=True)
+    if role :
+        faqs = faqs.filter(public_cible=role)
+    if keyword:
+        faqs = faqs.filter(
+            Q(question__icontains=keyword) |
+            Q(reponse__icontains=keyword)
+        )
+
+    paginator = Paginator(faqs.order_by('ordre'), 5)  # 5 FAQs par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render(request, 'pages/faq_items.html', {'page_obj': page_obj}).content.decode('utf-8')
+        pagination_html = render(request, 'pages/faq_pagination.html', {'page_obj': page_obj}).content.decode('utf-8')
+        return JsonResponse({'html': html, 'pagination': pagination_html})
+
+    return render(request, 'pages/admin_faq.html', {
+        'page_obj': page_obj,
+    })
+
+
+
+

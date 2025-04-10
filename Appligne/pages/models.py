@@ -118,3 +118,44 @@ class PieceJointeReclamation(models.Model):
 
     def __str__(self):
         return f"{self.fichier.name}"
+
+
+
+class FAQ(models.Model):
+    class Role(models.TextChoices):
+        VISITEUR = 'visiteur', 'Visiteur'
+        ELEVE = 'eleve', 'Élève'
+        PROF = 'prof', 'Professeur'
+        STAFF = 'staff', 'Staff'
+        TOUS = 'tous', 'Tous'  # Affiché pour tous
+
+    question = models.CharField(
+        max_length=300,
+        verbose_name="Question"
+    )
+    reponse = models.TextField(
+        verbose_name="Réponse"
+    )
+    public_cible = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.TOUS,
+        verbose_name="Public cible"
+    )
+    ordre = models.PositiveIntegerField(
+        default=0,
+        help_text="Définit l'ordre d'affichage"
+    )
+    actif = models.BooleanField(
+        default=True,
+        verbose_name="Est actif",
+        help_text="Détermine si cette FAQ est visible"
+    )
+
+    class Meta:
+        ordering = ['ordre']
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+
+    def __str__(self):
+        return f"[{self.get_public_cible_display()}] {self.question}"

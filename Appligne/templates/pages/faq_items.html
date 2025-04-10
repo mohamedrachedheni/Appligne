@@ -1,0 +1,12 @@
+{% for faq in page_obj %}
+<div class="faq-item">
+    <div class="faq-question">
+        <span class="toggle-icon">➕</span> {{ faq.question }}
+    </div>
+    <div class="faq-answer" style="display:none;">
+        {{ faq.reponse|linebreaks }}
+    </div>
+</div>
+{% empty %}
+<p>Aucune FAQ trouvée.</p>
+{% endfor %}

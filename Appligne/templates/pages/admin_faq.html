@@ -1,0 +1,97 @@
+{% extends 'base_01.html' %}
+{% load static %}
+{% block title %} | FAQs{% endblock %}
+
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% if request.user.is_authenticated %}
+                {% if request.user.eleve %}
+                    {% include 'partials/_sidebar_eleve.html' %}
+                {% elif request.user.professeur %}
+                    {% include 'partials/_sidebar.html' %}
+                {% else %}
+                    {% include 'partials/_sidebar_admin.html' %}
+                {% endif %}
+            {% endif %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début page -->
+            <!-- formulaire créer compte prof début -->
+            <div class="container-xxl py-1" >
+                <div class="container">
+                    <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h1>Foire Aux Questions</h1>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="role-filter-form">
+                {% csrf_token %}
+                    <!--  template principale  début-->
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light" >
+                                <div class="row justify-content-between g-2 p-3 " >
+                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                                        <label for="role" class="form-label" >Filtrer par public :</label>
+                                    </div>
+                                    <div class="col-lg-6 col-sm-12 d-flex justify-content-center">
+                                        <select id="role" name="role" class="form-select" >
+                                            {% if not request.user.eleve and not request.user.professeur and request.user.is_authenticated %}
+                                            <option value="staff">Staff</option>
+                                            {% endif %}
+                                            
+                                            {% if not request.user.professeur and request.user.is_authenticated %}
+                                            <option value="eleve">Élève</option>
+                                            {% endif %}
+                                            {% if not request.user.eleve and request.user.is_authenticated %}
+                                            <option value="prof">Professeur</option>
+                                            {% endif %}
+                                            
+                                            <option value="visiteur">Visiteur</option>
+                                            <option value="tous">Tous les utilisateurs confondus</option>
+                                            {% if not request.user.eleve and not request.user.professeur and request.user.is_authenticated %}
+                                            <option value="">Tous</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
+                                        <input type="text" id="keyword" name="keyword" placeholder="Mot-clé..." class="form-control" />
+                                    </div>
+                                    <div id="faq-container"  >
+                                        {% include 'pages/faq_items.html' %}
+                                    </div>
+                                    <div id="faq-pagination">
+                                        {% include 'pages/faq_pagination.html' %}
+                                    </div>
+                                </div>
+                            
+                            <!--  template principale fin -->
+                            </div>
+                        </div>
+                    </div>
+                
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/faq.js' %}"></script>
+    
+    <script>
+        
+    </script>
+{% endblock %}

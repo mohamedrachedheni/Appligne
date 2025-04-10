@@ -26,5 +26,6 @@ urlpatterns = [
     path('reclamation', views.reclamation, name='reclamation'),
     path('nouvelle_reclamation', views.nouvelle_reclamation, name='nouvelle_reclamation'),
     path('reclamations', views.reclamations, name='reclamations'),
+    path('admin_faq', views.admin_faq, name='admin_faq'),
 
 ]
