@@ -606,8 +606,11 @@ class AccordRemboursement(models.Model):
     )  # Montant total remboursé
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
+    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfère de l'argent
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
+    due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
 
     def __str__(self):
         return f"Accord Remboursement - Élève: {self.eleve.id}, Statut: {self.status}"

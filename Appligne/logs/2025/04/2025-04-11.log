@@ -1,1 +1,13 @@
 2025-04-11 02:27:00,479 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 07:55:35,331 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 08:03:38,662 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 08:07:31,548 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 08:08:09,258 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 08:08:44,610 [DEBUG] pages.views.reclamations:3284 - Page visitée
+2025-04-11 08:08:44,610 [INFO] pages.views.reclamations:3285 - Action utilisateur
+2025-04-11 08:08:44,610 [WARNING] pages.views.reclamations:3286 - Attention à un truc
+2025-04-11 08:08:44,610 [ERROR] pages.views.reclamations:3287 - Une erreur est survenue
+2025-04-11 08:08:48,008 [DEBUG] pages.views.reclamations:3284 - Page visitée
+2025-04-11 08:08:48,008 [INFO] pages.views.reclamations:3285 - Action utilisateur
+2025-04-11 08:08:48,009 [WARNING] pages.views.reclamations:3286 - Attention à un truc
+2025-04-11 08:08:48,009 [ERROR] pages.views.reclamations:3287 - Une erreur est survenue
