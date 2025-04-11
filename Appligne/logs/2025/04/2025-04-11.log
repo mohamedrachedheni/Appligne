@@ -1,0 +1,1 @@
+2025-04-11 02:27:00,479 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
