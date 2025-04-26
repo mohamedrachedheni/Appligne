@@ -1,0 +1,209 @@
+2025-04-16 16:52:50,509 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 17:13:31,992 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 18:18:03,911 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_accord_rembourcement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3697, in admin_payment_accord_rembourcement
+    return render(request, 'pages/admin_payment_accord_rembourcement.html', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\backends\django.py", line 33, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    return parser.parse()
+           ^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\defaulttags.py", line 960, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\defaulttags.py", line 860, in do_for
+    nodelist_loop = parser.parse(
+                    ^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 481, in parse
+    raise self.error(token, e)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 479, in parse
+    filter_expression = self.compile_filter(token.contents)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 597, in compile_filter
+    return FilterExpression(token, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 698, in __init__
+    raise TemplateSyntaxError(
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '(payment.amount)' from 'str(payment.amount)'
+2025-04-16 18:18:03,920 [ERROR] django.server.log_message:212 - "GET /admin_payment_accord_rembourcement HTTP/1.1" 500 272852
+2025-04-16 18:26:42,011 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 18:27:52,399 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 18:51:21,961 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:25,660 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:31,292 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:39,895 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:44,347 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:49,108 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:53,599 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:37:58,976 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:08,910 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:21,028 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:30,190 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:37,818 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:41,642 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:51,494 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:38:57,102 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:07,351 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:13,684 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:19,036 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:22,791 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:29,122 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:39:33,714 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:40:01,180 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:40:05,932 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:40:13,820 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:42:04,000 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:43:38,492 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:43:44,269 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:43:48,083 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:43:52,005 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:46:08,091 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 19:46:14,651 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:07:28,895 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:07:36,425 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:07:46,951 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:08:02,097 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:08:09,078 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:08:15,398 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:09:20,152 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:09:27,438 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:09:34,211 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:10:01,625 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:10:09,734 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:10:16,807 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:10:24,235 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:10:32,423 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-16 20:12:11,361 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3603, in admin_payment_eleve_remboursement
+    return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: pages/admin_payment_eleve_remboursement.html
+2025-04-16 20:12:11,367 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 108994
+2025-04-16 20:13:04,392 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3603, in admin_payment_eleve_remboursement
+    return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: pages/admin_payment_eleve_remboursement.html
+2025-04-16 20:13:04,401 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 109131
+2025-04-16 20:13:30,323 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3603, in admin_payment_eleve_remboursement
+    return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: pages/admin_payment_eleve_remboursement.html
+2025-04-16 20:13:30,326 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 108994

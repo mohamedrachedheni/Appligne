@@ -486,6 +486,8 @@ class Payment(models.Model):
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
+    accord_remboursement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
+    remboursement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
@@ -517,8 +519,8 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
     statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
     payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
-    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut)
-    reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non
+    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement
+    reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
@@ -616,7 +618,7 @@ class AccordRemboursement(models.Model):
         return f"Accord Remboursement - Élève: {self.eleve.id}, Statut: {self.status}"
 
 class DetailAccordRemboursement(models.Model):
-    accord = models.ForeignKey(AccordRemboursement, on_delete=models.CASCADE)  # Accord lié
+    accord = models.ForeignKey(AccordRemboursement, on_delete=models.CASCADE,  related_name="details")  # Accord lié
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)  # Paiement lié
     refunded_amount = models.DecimalField(
         max_digits=6, 

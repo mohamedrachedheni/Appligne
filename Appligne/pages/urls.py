@@ -27,5 +27,7 @@ urlpatterns = [
     path('nouvelle_reclamation', views.nouvelle_reclamation, name='nouvelle_reclamation'),
     path('reclamations', views.reclamations, name='reclamations'),
     path('admin_faq', views.admin_faq, name='admin_faq'),
-
+    path( 'admin_payment_eleve_remboursement' , views.admin_payment_eleve_remboursement , name='admin_payment_eleve_remboursement' ),
+    path('admin_payment_accord_remboursement', views.admin_payment_accord_remboursement, name='admin_payment_accord_remboursement'),
+    path('admin_accord_remboursement', views.admin_accord_remboursement, name='admin_accord_remboursement'),
 ]

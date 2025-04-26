@@ -1,8 +1,8 @@
 
 from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Professeur, Format_cour, Pro_fichier, Diplome_cathegorie
 from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves,Detail_demande_paiement, Horaire, Cours
-from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement
-from eleves.models import Temoignage, Parent
+from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement, DetailAccordRemboursement, AccordRemboursement
+from eleves.models import Temoignage, Parent, Eleve
 from .models import Reclamation, ReclamationCategorie, PieceJointeReclamation, MessageReclamation
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -21,11 +21,17 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Min, Max
 from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
-from .utils import decrypt_id
-from .utils import encrypt_id
+from collections import defaultdict
+from .utils import decrypt_id, encrypt_id
 import logging
 # Configuration du logger avec le nom du module actuel
 logger = logging.getLogger(__name__)
+
+# Enregistrement des logs
+    # logger.debug("Page visitée")
+    # logger.info("Action utilisateur")
+    # logger.warning("Attention à un truc")
+    # logger.error("Une erreur est survenue") 
 
 from .models import FAQ 
 
@@ -1837,8 +1843,8 @@ def admin_payment_en_attente_reglement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = Payment.objects.filter(
         model='demande_paiement',
-        model_id__isnull=False,
-        accord_reglement_id__isnull=True
+        model_id__isnull=False, # ID de la demande de paiement liée au paiement
+        accord_reglement_id__isnull=True # Il n'y a pas encore d'accord de règlement
     ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
 
     # Définition des valeurs par défaut
@@ -1952,7 +1958,7 @@ def admin_payment_en_attente_reglement(request):
             request.session['prof_id'] = int(prof_ids[0])
             return redirect('admin_payment_accord_reglement')
 
-        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+        elif len(prof_ids) != 1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_administrateur')
 
@@ -2060,7 +2066,7 @@ def admin_payment_accord_reglement(request):
                     continue  # Ignorer ce paiement
 
                 # Ajout du paiement et de sa date d’échéance à la liste
-                payment_requests.append((date_reglement_str, payment.id))
+                payment_requests.append((date_reglement_str, payment.id)) # à cripter les ID
 
         # Vérification que des paiements valides ont bien été sélectionnés
         if not payment_requests:
@@ -2094,11 +2100,11 @@ def admin_accord_reglement(request):
     msg = "" # pour grouper les messages info dans un message final
     # Récupérer le professeur ou renvoyer une erreur 404 s'il n'existe pas
     professeur = get_object_or_404(Professeur, user_id=prof_id)
-    # récupérer date_reglement_str,payment_id de la session
-    payment_requests = request.session.get('payment_requests')
+    # # récupérer date_reglement_str,payment_id de la session
+    # payment_requests = request.session.get('payment_requests')
     if not payment_requests:
         messages.info(request, "Il n'y apas de règlement à enregistrer")
-        return redirect('admin_payment_accord_reglement', prof_id=prof_id)
+        return redirect('admin_payment_accord_reglement')
     date_requests=set() # pour grouper les dates
     totaux = [] # pour calculer date, totaux_payement, totaux_versement par date de groupement
     
@@ -2928,7 +2934,7 @@ def admin_accord_reglement_modifier(request):
     
     if not payment_requests:
         messages.info(request, "Il n'y a pas de règlement à enregistrer")
-        return redirect('admin_payment_accord_reglement', prof_id=prof_id)
+        return redirect('admin_payment_accord_reglement')
     
     payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
 
@@ -3280,11 +3286,7 @@ def reclamations(request):
     le user (élève, professeur, admin)
     """
     
-    # Enregistrement des logs
-    logger.debug("Page visitée")
-    logger.info("Action utilisateur")
-    logger.warning("Attention à un truc")
-    logger.error("Une erreur est survenue")
+    
     # messages.info(request, f'key = {Fernet.generate_key()}')
     # Récupérer le user
     user = request.user
@@ -3430,5 +3432,584 @@ def admin_faq(request):
     })
 
 
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_payment_eleve_remboursement(request):
+    """
+    Vue permettant d'afficher les paiements d'élèves pas encore payés aux profs.
+    et qui ne sont pas sujet d'un rembourcement précédent
+    Fonctionnalités :
+    - Filtrer les paiements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut du paiement (en attente, approuvé, annulé, etc.).
+    - Associer chaque paiement à son élève .
+    - permettre de passer au remboursement après sélection des paiements consernés
+    - seul les paiement approuvé et réclamés peuvent être sélectionner
+    """
+
+    # Format utilisé pour l'affichage et la conversion des dates
+    date_format = "%d/%m/%Y"
+    status_str=""
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = Payment.objects.filter(
+        model='demande_paiement',
+        model_id__isnull=False, # ID de la demande de paiement liée au paiement
+        reglement_realise=False, # Même si l'accord de règlement existe il doit être non réalisé
+        accord_remboursement_id__isnull=True, # Il n'y a pas d'accord de remboursement lié au paiement
+    ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    # Initialisation des variables date_debut et date_fin
+    date_debut, date_fin = None, None
+
+    try:
+        # Conversion des dates en objets de type date
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        # Vérification de la cohérence des dates
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+    
+    except ValueError as e:
+        # Gestion des erreurs en cas de format de date invalide
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'pages/admin_payment_eleve_remboursement.html', {
+            'paiements': [], 
+            'eleves': [], 
+            'date_debut': date_debut, 
+            'date_fin': date_fin
+        })
+
+    # Définition des critères de filtrage des paiements
+    # Dictionnaire des fitres obligatoires
+    filters = {
+        'model': 'Demande_paiement',  # Filtrer uniquement les paiements liés aux demandes de paiement
+        'model_id__isnull': False, # il faut que ID de la Demande de paiement soit défini
+        'reglement_realise': False,  # Seuls les paiements en attente de règlement
+        'accord_remboursement_id__isnull': True,  # Seuls les paiements non liés à un rembourcement
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
+    }
+
+    # Correspondance des boutons de filtrage aux statuts de paiement
+    status_filter = {
+        'btn_en_ettente': 'En attente',   # Paiements en attente
+        'btn_approuve': 'Approuvé',    # Paiements approuvés
+        'btn_invalide': 'Invalide',     # Paiements invalidés
+        'btn_annule': 'Annulé',      # Paiements annulés
+    }
+
+    # Application du filtre de statut en fonction du bouton cliqué
+    # filtre optionnel selon le cas qui j'ajoute au dictionnaire des filtres obligatoires
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['status'] = status
+            status_str=status # pour afficher dans le template le role du bouton activé
+            break
+
+    # Filtrage des paiements contestés (réclamation) filtre optionnel selon le cas qui j'ajoute au dictionnaire des filtres obligatoires
+    if 'btn_reclame' in request.POST:
+        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
+        status_str="Réclamé"
+
+    # Récupération des paiements en fonction des filtres
+    # **filters est une opération de décompression (ou unpacking) 
+    # du dictionnaire. Cela permet de passer chaque paire clé/valeur 
+    # du dictionnaire comme des arguments nommés dans un filtre
+    payments = Payment.objects.filter(**filters).order_by('-date_creation')
+
+    # Initialisation des listes pour stocker les résultats
+    paiements, eleves = [], set()
+
+    # Parcours des paiements récupérés pour associer les informations nécessaires
+    for payment in payments:
+        # Récupération de la demande de paiement associée (à chaque paiement correspond une seule demande de paiement)
+        demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
+        if not demande_paiement: continue  # Ignorer les paiements sans demande associée
+
+        professeur = demande_paiement.user  # Récupération du professeur lié au paiement
+        eleve = demande_paiement.eleve.user # récupérer le user de l'élève
+        accord_reglement = None
+        accord_reglement_id = 0
+
+        # Vérification et récupération de l'accord de règlement associé
+        if payment.accord_reglement_id:
+            accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
+            accord_reglement_id = accord_reglement.id
+
+        # Ajout des informations collectées à la liste des paiements
+        paiements.append((payment, encrypt_id(payment.id), eleve, professeur, accord_reglement, encrypt_id(accord_reglement_id)))
+        eleves.add(eleve )  # Utilisation d'un set() pour éviter les doublons
+    
+    # liste eleve ID elve sans doublon pour l'élève car  eleves.add(eleve, encrypt_id(eleve)) est faux puisque
+    #  encrypt_id(eleve) change à chaque foix donc les tuples sont unique mais eleve va être répéter
+    # en d'autre termes même si l'eleve se répète la valeur : encrypt_id(eleve) ne se répète pas
+    # d'ou le code : eleves.add(eleve, encrypt_id(eleve)) donne des répétition d'eleve
+    liste_eleve_id =[]
+    for eleve in list(eleves):
+        liste_eleve_id.append((eleve, encrypt_id(eleve.id)))
+    
+        
+    # Extraction de l'ID du paiement choisi dans le formulaire
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['payment_id'] = decrypt_id(paiement_ids[0])
+            return redirect('admin_payment_demande_paiement')
+        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            logger.error("Il devrait exister un seul ID pour le paiement")
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = decrypt_id((accord_ids[0]))
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            logger.error("Il devrait exister un seul ID pour l'accord de règlement")
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+    
+    
+    # Extraction l'ID d'élève à partir des boutons du formulaire
+    eleve_ids = [
+        key.removeprefix('btn_détaille_') 
+        for key in request.POST 
+        if key.startswith('btn_détaille_')
+    ]
+
+    # Vérification qu'un seul ID a été soumis
+    if len(eleve_ids) == 1:
+        eleve_id_encrypted = eleve_ids[0]
+        # eleve_id = decrypt_id(eleve_id_encrypted) if eleve_id_encrypted else None
+        request.session['eleve_id'] = eleve_id_encrypted
+        # messages.info(request, f"eleve_id_encrypted = {eleve_id_encrypted}  -- eleve_id = {eleve_id} ")
+
+        # Extraction des IDs de paiements cochés pour cet élève
+        # on utilise checkbox_eleve_id{eleve_id} pour ne prendre que les paiement cochés du même éléve
+        # voire template:name="checkbox_eleve_id{{eleve_id}}_payment_id{{ payment_id }}"
+        prefix_checkbox = f'checkbox_eleve_id{eleve_id_encrypted}_payment_id'
+        liste_payment_remboursement = [
+            key.removeprefix(prefix_checkbox) 
+            for key in request.POST 
+            if key.startswith(prefix_checkbox)
+        ]
+
+        # Stockage en session
+        request.session['liste_payment_rembourcement'] = liste_payment_remboursement
+
+        # Redirection vers la vue suivante
+        return redirect('admin_payment_accord_remboursement')
+
+    
+
+    # Préparation du contexte pour l'affichage dans le template
+    context = {
+        'paiements': paiements,
+        'eleves': liste_eleve_id,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+
+    # Affichage de la page avec les paiements en attente de règlement
+    return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
+
+from django.contrib.admin.views.decorators import staff_member_required
+
+# J'ai remplacé LE décorateur lambda par @staff_member_required pour plus de clarté.
+@staff_member_required(login_url='/login/')
+def admin_payment_accord_remboursement(request):
+    """
+    Vue d'administration permettant de gérer les remboursements liés à un élève :
+    - Affiche les paiements sélectionnés.
+    - Prépare les montants et dates de remboursement.
+    """
+
+    # --- Récupération et déchiffrement de l'ID de l'élève ---
+    eleve_id_encrypted = request.session.get('eleve_id')
+    try:
+        eleve_id = decrypt_id(eleve_id_encrypted)
+    except Exception as e:
+        logger.error(f"Erreur de déchiffrement de l'ID élève : {e}")
+        messages.error(request, "Erreur système : impossible de lire l'identifiant de l'élève.")
+        return redirect('compte_administrateur')
+
+    # --- Récupération de l'élève ---
+    eleve = get_object_or_404(Eleve, user_id=eleve_id)
+
+    # --- Récupération des paiements à rembourser depuis la session ---
+    liste_payment_encrypted = request.session.get('liste_payment_rembourcement', [])
+    try:
+        payment_ids = [decrypt_id(pid) for pid in liste_payment_encrypted if pid]
+    except Exception as e:
+        logger.error(f"Erreur de déchiffrement d'ID de paiement : {e}")
+        messages.error(request, "Erreur système : identifiant de paiement invalide.")
+        return redirect('compte_administrateur')
+
+    # --- Requête des paiements à afficher ---
+    payments = Payment.objects.filter(id__in=payment_ids).annotate(
+        date_plus_15=F('date_creation') + timedelta(days=15)
+    ).order_by('-date_creation')
+
+    if not payments.exists():
+        logger.error("Aucun paiement valide trouvé après déchiffrement.")
+        messages.error(request, "Aucun paiement valide n'a pu être trouvé.")
+        return redirect('compte_administrateur')
+
+    # --- Format de date et liste pour affichage ---
+    date_format = "%d/%m/%Y"
+    liste_payments = [
+        (
+            payment,
+            encrypt_id(payment.id),
+            (payment.date_creation + timedelta(days=15)).date().strftime(date_format),
+            payment.amount
+        )
+        for payment in payments
+    ]
+
+    # --- Contexte à transmettre au template ---
+    context = {
+        'liste_payments': liste_payments,
+        'eleve': eleve,
+    }
+
+    # Extraction de l'ID du paiement choisi dans le formulaire is btn_paiement_id activé
+    paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
+    # Vérification du nombre d'IDs extraits
+    if paiement_ids:
+        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            decripted_paiement_id = decrypt_id(paiement_ids[0])
+            if decripted_paiement_id:
+                request.session['payment_id'] = decripted_paiement_id
+                return redirect('admin_payment_demande_paiement')
+        
+        logger.error("La valeur de ID du paiement n'a pas pu être décripter, erreur système")
+        messages.error(request, "La valeur de ID du paiement n'a pas pu être décripter, erreur système")
+        return redirect('compte_administrateur')
+        
+
+    # Vérification si le formulaire a été soumis pour accorder un remboursement
+    if 'btn_accord_remboursement' in request.POST:
+        # Récupération des IDs non décryptés des paiements depuis les clés du formulaire
+        uncrypted_paiement_ids = [
+            key.split('date_payment_')[1]
+            for key in request.POST.keys()
+            if key.startswith('date_payment_')
+        ]
+        # On parcourt tous les IDs récupérés
+        liste_payments = [] # réinitialisation de la liste
+        for payment in payments:
+            default_date = (payment.date_creation + timedelta(days=15)).date()
+            montant_remboursement_str = ""
+            for paiement_id_encripted in uncrypted_paiement_ids:
+                paiement_id_decripted = decrypt_id(paiement_id_encripted)
+                # On compare l'ID du paiement courant avec l'ID déchiffré du formulaire
+                if payment.id == paiement_id_decripted:
+                    # Si c'est bien le paiement correspondant, on récupère la date de remboursement saisie dans le formulaire
+                    # Sinon, on garde la date par défaut
+                    date_rebours = request.POST.get(
+                        f'date_remboursement_{paiement_id_encripted}',
+                        default_date.strftime(date_format)
+                    )
+                    
+                    # Récupération brute du champ
+                    montant_remboursement_str = request.POST.get(f'remboursement_{paiement_id_encripted}', '')
+
+                    # Suppression du symbole "€" et des espaces autour (si présents)
+                    montant_remboursement_str = montant_remboursement_str.replace('€', '').strip()
+                    
+                    # On ajoute les infos à la liste : l'objet payment, l'ID chiffré, et la date (saisie ou par défaut)
+                    liste_payments.append((payment, encrypt_id(payment.id), date_rebours, Decimal(montant_remboursement_str)))
+
+        context['liste_payments'] = liste_payments  # mettre à jour le contexte pour le template
+
+        liste_remboursement = []
+        for uncrypted_id in uncrypted_paiement_ids:
+            try:
+                paiement_id = decrypt_id(uncrypted_id)
+                paiement = Payment.objects.filter(id=paiement_id).first()
+                
+
+                if not paiement or not paiement.date_creation or not paiement.amount:
+                    messages.error(request, "Aucun paiement trouvé. Une erreur système s’est produite. Veuillez contacter le développeur.")
+                    logger.error("Aucun paiement trouvé. Une erreur système s’est produite. Veuillez contacter le développeur.")
+                    return redirect('compte_administrateur')
+
+                # Récupération des champs du formulaire pour ce paiement
+                date_remboursement_str = request.POST.get(f'date_remboursement_{uncrypted_id}')
+                
+                # Récupération brute du champ
+                montant_remboursement_str = request.POST.get(f'remboursement_{uncrypted_id}', '')
+
+                # Suppression du symbole "€" et des espaces autour (si présents)
+                montant_remboursement_str = montant_remboursement_str.replace('€', '').strip()
+                
+                try:
+                    montant_decimal = Decimal(montant_remboursement_str)
+                except InvalidOperation:
+                    messages.error(request, f"Le montant '{montant_remboursement_str}' est invalide. Veuillez entrer un montant correct.")
+                    logger.error(f"Le montant '{montant_remboursement_str}' est invalide. Veuillez entrer un montant correct.")
+                    return render(request, 'pages/admin_payment_accord_remboursement.html', context)
+
+                if montant_decimal > paiement.amount:
+                    messages.error(request, f"Le montant du remboursement ({montant_decimal}) ne peut pas dépasser le montant initial payé ({paiement.amount}).")
+                    logger.error(f"Le montant du remboursement ({montant_decimal}) ne peut pas dépasser le montant initial payé ({paiement.amount}).")
+                    return render(request, 'pages/admin_payment_accord_remboursement.html', context)
 
 
+                if not date_remboursement_str or not montant_remboursement_str:
+                    messages.error(request, "Il faut définir la date de remboursement et le montant à rembourser.")
+                    logger.error("Il faut définir la date de remboursement et le montant à rembourser.")
+                    return render(request, 'pages/admin_payment_accord_remboursement.html', context)
+
+
+                try:
+                    # Conversion de la date de remboursement
+                    date_remboursement = datetime.strptime(date_remboursement_str, date_format).date()
+
+                    # Vérification de la cohérence des dates
+                    if date_remboursement < paiement.date_creation.date():
+                        raise ValueError(f"La date de remboursement ({date_remboursement_str}) doit être postérieure ou égale à la date du paiement.")
+
+                except ValueError as e:
+                    messages.error(request, f"Erreur de date : {e}")
+                    return render(request, 'pages/admin_payment_accord_remboursement.html', context)
+
+                # les conditions requises pour  valider un remboursement lié à un paiement
+                if paiement.status !='Approuvé' or paiement.reglement_realise  or paiement.accord_remboursement_id:
+                    messages.error(request, f"Erreur système : un  paiement, ou plus, ne remplit pas les conditions requises pour être validé.\n paiement.status = {paiement.status},\n paiement.reglement_realise = {paiement.reglement_realise}\n paiement.accord_remboursement_id = {paiement.accord_remboursement_id}")
+                    logger.error(f"Erreur système : un  paiement, ou plus, ne remplit pas les conditions requises pour être validé.\n paiement.status = {paiement.status},\n paiement.reglement_realise = {paiement.reglement_realise}\n paiement.accord_remboursement_id = {paiement.accord_remboursement_id}")
+                    return redirect('compte_administrateur')
+                if DetailAccordRemboursement.objects.filter(payment=paiement).exists():
+                    messages.error(request, f"Erreur système : un paiement, ou plus existe dans la table DetailAccordRemboursement = {DetailAccordRemboursement.objects.filter(payment=paiement).first()}")
+                    logger.error(f"Erreur système : un paiement, ou plus existe dans la table DetailAccordRemboursement = {DetailAccordRemboursement.objects.filter(payment=paiement).first()}")
+                    return redirect('compte_administrateur')
+                accord=DetailAccordReglement.objects.filter(payment=paiement).first()
+                if accord and AccordReglement.objects.filter(id=accord.id, status='Réalisé').exists():
+                    messages.error(request, f"Erreur système : un paiement est déjà lié à un accord de règlement réalisé. ID= {AccordReglement.objects.first(accord=accord, status='Réalisé').first} ")
+                    logger.error(f"Erreur système : un paiement est déjà lié à un accord de règlement réalisé. ID= {AccordReglement.objects.first(accord=accord, status='Réalisé').first} ")
+                    return redirect('compte_administrateur')
+                # Tous les conditions sont validées
+                liste_remboursement.append((encrypt_id(paiement_id), date_remboursement_str, montant_remboursement_str))
+
+            except Exception as e:
+                messages.error(request, f"Une erreur inattendue s’est produite, ou l'ID du paiement n'a pas pu être décripter : {e}")
+                logger.error(f"Une erreur inattendue s’est produite, ou l'ID du paiement n'a pas pu être décripter : {e}")
+                return redirect('compte_administrateur')
+            
+        # Stockage en session
+        request.session['liste_remboursement'] = liste_remboursement
+        return redirect('admin_accord_remboursement')
+
+    return render(request, 'pages/admin_payment_accord_remboursement.html', context)
+
+
+
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_accord_remboursement(request):
+    """
+    Vue Django permettant :
+    - De récupérer les remboursements sélectionnés pour un élève.
+    - De regrouper les paiements par date de remboursement.
+    - D'envoyer les emails d'accord de remboursement.
+    - D'enregistrer l'accord et de mettre à jour les paiements.
+    """
+
+    textes = []  # Stocke les textes des emails envoyés
+
+    # --- 1. Récupération et déchiffrement sécurisé de l'ID élève ---
+    eleve_id_encrypted = request.session.get('eleve_id')
+    if not eleve_id_encrypted:
+        messages.error(request, "Aucun élève sélectionné.")
+        return redirect('admin_payment_accord_remboursement')
+
+    try:
+        eleve_id = decrypt_id(eleve_id_encrypted)
+    except Exception as e:
+        logger.error(f"Erreur de déchiffrement de l'ID élève : {e}")
+        messages.error(request, "Erreur système : impossible de lire l'identifiant de l'élève.")
+        return redirect('admin_payment_accord_remboursement')
+
+    # --- 2. Récupération de l'élève ---
+    eleve = get_object_or_404(Eleve, user_id=eleve_id)
+
+    # --- 3. Récupération et vérification de la liste des paiements à rembourser ---
+    liste_remboursement = request.session.get('liste_remboursement', [])
+    if not liste_remboursement:
+        messages.info(request, "Il n'y a pas de remboursement à enregistrer.")
+        return redirect('admin_payment_accord_remboursement')
+
+    # --- 4. Traitement et regroupement des paiements par date ---
+    regroupement_par_date = defaultdict(list)
+    payments_list = []
+
+    for paiement_id_enc, date_remboursement_str, montant_remboursement_str in liste_remboursement:
+        try:
+            paiement_id = decrypt_id(paiement_id_enc)
+        except Exception as e:
+            logger.error(f"Erreur de déchiffrement d'un ID de paiement : {e}")
+            continue  # Ignore cet enregistrement et passe au suivant
+
+        payment = Payment.objects.filter(id=paiement_id).first()
+        if payment:
+            montant_remboursement = Decimal(montant_remboursement_str)
+            payments_list.append((date_remboursement_str, payment, montant_remboursement))
+            regroupement_par_date[date_remboursement_str].append((payment, montant_remboursement))
+        else:
+            logger.warning(f"Paiement introuvable pour l'ID : {paiement_id}")
+
+    # --- 5. Calcul des totaux par date de remboursement ---
+    totaux = []
+    for date_str, paiements in regroupement_par_date.items():
+        total_remboursement = sum(remboursement for _, remboursement in paiements)
+        total_paiement = sum(payment.amount for payment, _ in paiements)
+        totaux.append((date_str, total_paiement, total_remboursement))
+
+    if 'btn_accord_enregistrement' in request.POST:
+        # --- 6. Initialisation de l'envoi d'email ---
+        user = request.user  # Admin connecté
+        email_user = user.email
+        email_destinataire = eleve.user.email
+        destinations = ['prosib25@gmail.com', email_destinataire]
+
+        # --- 7. Validation des adresses email ---
+        email_validator = EmailValidator()
+        for destination in destinations:
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                # Remarque : on continue malgré l'erreur, l'envoi n'est pas bloquant.
+
+        # --- 8. Parcours des dates pour création du texte et envoi des emails ---
+        for date_request in regroupement_par_date.keys():
+            msg = ""  # Message d'information par date
+            # Construction du texte de l'email
+            texte = (
+                f"\nRemboursement prévu le :\t{date_request}\n\n"
+                f"Liste des paiements de l'élève à rembourser :\n"
+                f"Date paiement\tPaiement\n"
+            )
+
+            # Ajouter les paiements correspondant à cette date
+            for date_versement, payment, amount in payments_list:
+                if date_versement == date_request:
+                    texte += f"{payment.date_creation.strftime('%d/%m/%Y')}\t\t{payment.amount:.2f}€\n"
+
+            # Ajout des totaux pour la date
+            texte_totaux = ""
+            for date, total_paiement, total_remboursement in totaux:
+                if date == date_request:
+                    texte_totaux = (
+                        f"\nMontant payé\t\tMontant à rembourser\n"
+                        f"{total_paiement:.2f}€\t\t\t\t{total_remboursement:.2f}€\n"
+                        f"Statut accord de remboursement : En attente"
+                    )
+                    sujet = f"Accord de remboursement de {total_remboursement:.2f}€, prévu le {date}"
+                    break  # On a trouvé, pas besoin de continuer
+
+            # Texte final de l'email
+            texte_fin = texte + texte_totaux
+            textes.append((date_request, texte_fin))
+
+            # --- 9. Envoi de l'email ---
+            try:
+                send_mail(
+                    sujet,
+                    texte_fin,
+                    email_user,
+                    destinations,
+                    fail_silently=False,
+                )
+                msg += f"L'email a été envoyé avec succès pour l'accord de remboursement du {date_request}.\n"
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
+
+            # --- 10. Enregistrement de l'email envoyé ---
+            try:
+                email_enregistre = Email_telecharge(
+                    user=user,
+                    email_telecharge=email_user,
+                    text_email=texte_fin,
+                    user_destinataire=eleve.user.id,
+                    sujet=sujet
+                )
+                email_enregistre.save()
+                msg += f"L'email a été enregistré avec succès pour l'accord de remboursement du {date_request}.\n"
+            except Exception as e:
+                logger.error(f"Erreur lors de l'enregistrement de l'email : {e}")
+                messages.error(request, "Erreur lors de l'enregistrement de l'email.")
+            
+
+            # Enregistrement des accords de rembourcement
+            for date, totaux_payement, totaux_remboursement in totaux:
+                if date == date_request:
+                    try:
+                        due_date = datetime.strptime(date_request, "%d/%m/%Y").date()
+                        accord_remboursement = AccordRemboursement(
+                            admin_user=user, 
+                            eleve=eleve, 
+                            total_amount=Decimal(totaux_remboursement), 
+                            email_id=email_enregistre.id, # On relie à l'email sauvegardé
+                            status="pending", 
+                            due_date=due_date )
+                        accord_remboursement.save()
+
+                        # Enregistrement des détailles des accords de remboursement
+                        for date_versement, payment, amount in payments_list:
+                            if date_versement == date_request: # car les accords de remboursements sont groupés par date de règlement
+                                detaille_accord_remboursement = DetailAccordRemboursement(
+                                    accord=accord_remboursement, 
+                                    payment=payment, 
+                                    refunded_amount=amount, 
+                                    description=(
+                                        f"Date paiement : {payment.date_creation.strftime('%d/%m/%Y')}, "
+                                        f"Montant payé : {payment.amount:.2f}€"
+                                    )
+                                )
+                                detaille_accord_remboursement.save()
+
+                                # mise à jour de l'enregistrement payment
+                                payment.accord_remboursement_id=detaille_accord_remboursement.id 
+                                payment.save()
+                                
+                                # je n'est pas besoin de créer des champs dans la table Demande_paiement
+                                # pour lier les rembousements aux demande de paiement car pour chaque 
+                                # demande de paiement correspond un seul paiement et les paiement sont déjà liés aux remboursements
+
+                                msg += str(f"L'accord de remboursement a été enregistré avec succès du {date_versement}.\n\n")
+                    except Exception as e:
+                        logger.error(f"Erreur lors de l'enregistrement de l'accord de remboursement : {e}")
+                        messages.error(request, "Erreur lors de l'enregistrement de l'accord de remboursement.")
+                            
+            # afficher l'ensmble des messages pour chaque accord de remboursement
+            messages.success(request, msg.replace("\n", "<br>") )
+
+        # vider les variables  de la session
+        request.session.pop('liste_remboursement', None)
+        request.session.pop('eleve_id', None)
+        request.session.pop('liste_payment_rembourcement', None)
+        return redirect('admin_payment_eleve_remboursement')
+
+    context = {
+        'eleve': eleve,
+        'date_requests': regroupement_par_date.keys(),
+        'totaux': totaux,
+        'payments_list': payments_list,
+    }
+    return render(request, 'pages/admin_accord_remboursement.html', context)

@@ -11,3 +11,14 @@
 2025-04-11 08:08:48,008 [INFO] pages.views.reclamations:3285 - Action utilisateur
 2025-04-11 08:08:48,009 [WARNING] pages.views.reclamations:3286 - Attention à un truc
 2025-04-11 08:08:48,009 [ERROR] pages.views.reclamations:3287 - Une erreur est survenue
+2025-04-11 11:22:21,250 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:22:41,559 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:22:48,360 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:23:11,625 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:23:19,572 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:02,663 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:27,885 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:37,594 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:41,754 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:45,869 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-11 11:24:51,729 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0

@@ -1,0 +1,401 @@
+2025-04-23 12:18:17,052 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 12:28:11,057 [DEBUG] pages.views.reclamations:3284 - Page visitée
+2025-04-23 12:28:11,057 [INFO] pages.views.reclamations:3285 - Action utilisateur
+2025-04-23 12:28:11,057 [WARNING] pages.views.reclamations:3286 - Attention à un truc
+2025-04-23 12:28:11,057 [ERROR] pages.views.reclamations:3287 - Une erreur est survenue
+2025-04-23 14:16:16,733 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 14:16:22,290 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 14:17:07,542 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 14:27:36,985 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 14:29:09,956 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:11:57,841 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:20:36,467 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:20:48,086 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:20:53,671 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:20:59,897 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:21:06,779 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:16,700 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:21,581 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:30,254 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:36,256 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:42,966 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:48,137 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:52,913 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:30:58,634 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:31:47,094 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:31:59,474 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:32:05,722 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:32:17,013 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:32:20,430 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:32:24,966 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:33:45,194 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:33:50,956 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3594, in admin_payment_eleve_remboursement
+    messages.info(request, f"eleves = {eleves[1]}")
+                                       ~~~~~~^^^
+TypeError: 'set' object is not subscriptable
+2025-04-23 17:33:50,958 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 82174
+2025-04-23 17:34:10,985 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:34:11,456 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3594, in admin_payment_eleve_remboursement
+    messages.info(request, f"eleves = {eleves[0]}")
+                                       ~~~~~~^^^
+TypeError: 'set' object is not subscriptable
+2025-04-23 17:34:11,476 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 82174
+2025-04-23 17:34:38,600 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:34:52,116 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:37:00,681 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:37:08,941 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:37:26,838 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:37:35,473 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:39:54,405 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:40:31,934 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:40:38,823 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:40:43,832 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:41:01,482 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3594, in admin_payment_eleve_remboursement
+    messages.info(request, f"eleves = {list(eleves)[0].first_name}")
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'tuple' object has no attribute 'first_name'
+2025-04-23 17:41:01,486 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 82356
+2025-04-23 17:42:41,465 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:44:52,524 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:45:03,004 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:48:41,871 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:48:47,595 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:48:52,118 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:48:57,429 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:51:24,921 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:51:27,682 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3595, in admin_payment_eleve_remboursement
+    messages.info(request, f"Élèves = {', '.join(noms_eleves)}")
+                                   ^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, int found
+2025-04-23 17:51:27,689 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 82508
+2025-04-23 17:51:39,025 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3595, in admin_payment_eleve_remboursement
+    messages.info(request, f"Élèves = {', '.join(noms_eleves)}")
+                                   ^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, int found
+2025-04-23 17:51:39,027 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 82371
+2025-04-23 17:53:20,175 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:53:43,184 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:53:57,877 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:54:02,546 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:56:28,871 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 17:56:33,562 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:01:19,166 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:01:25,099 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:01:50,345 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:01:56,401 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:02,187 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:06,892 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:11,338 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:32,824 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:39,568 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:45,053 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:50,682 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:02:59,215 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:06,520 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:23,514 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:28,602 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:33,116 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:40,317 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:50,963 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:03:55,759 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:04:02,456 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:04:08,846 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:03,911 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:28,959 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:33,942 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:39,180 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:46,791 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:05:54,680 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:06:00,498 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:06:07,065 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:06:11,604 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:06:17,047 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:06:32,252 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:07:34,162 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:07:51,165 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:07:56,939 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:02,704 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:28,614 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:39,337 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:43,981 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:51,933 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:08:57,174 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:02,892 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:07,649 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:23,326 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:29,011 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:34,071 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:44,576 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:09:53,629 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:10:16,849 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:10:50,420 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:10:57,191 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:11:09,746 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:11:15,866 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:11:20,640 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:11:27,022 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:11:41,403 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_payment_eleve_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3612, in admin_payment_eleve_remboursement
+    return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\defaulttags.py", line 325, in render
+    return nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\template\defaulttags.py", line 229, in render
+    raise ValueError(
+ValueError: Need 2 values to unpack in for loop; got 1. 
+2025-04-23 18:11:41,420 [ERROR] django.server.log_message:212 - "GET /admin_payment_eleve_remboursement HTTP/1.1" 500 244680
+2025-04-23 18:12:18,049 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:16:11,199 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:08,270 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:17,806 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:22,254 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:27,308 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:32,840 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:37,013 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:17:56,444 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:18:01,433 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:18:08,234 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:18:26,332 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:18:31,504 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:19:02,005 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:19:18,510 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:19:26,150 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:19:32,302 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:23:12,090 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_accord_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3832, in admin_accord_remboursement
+    email_destinataire = eleve.user.email
+                         ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'user'
+2025-04-23 18:23:12,093 [ERROR] django.server.log_message:212 - "POST /admin_accord_remboursement HTTP/1.1" 500 79413
+2025-04-23 18:25:12,781 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:25:17,833 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_accord_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3832, in admin_accord_remboursement
+    email_destinataire = eleve.email
+                         ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'email'
+2025-04-23 18:25:17,837 [ERROR] django.server.log_message:212 - "POST /admin_accord_remboursement HTTP/1.1" 500 79409
+2025-04-23 18:25:33,564 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:25:38,042 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:32:28,610 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:36:58,632 [ERROR] django.request.log_response:241 - Internal Server Error: /admin_accord_remboursement
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\pages\views.py", line 3833, in admin_accord_remboursement
+    email_destinataire = eleve.user.email
+                         ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'user'
+2025-04-23 18:36:58,636 [ERROR] django.server.log_message:212 - "POST /admin_accord_remboursement HTTP/1.1" 500 79305
+2025-04-23 18:38:34,046 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:39:33,524 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:39:38,303 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:39:43,650 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:39:48,822 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:39:54,477 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:00,882 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:24,575 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:29,170 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:45,652 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:50,347 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:40:55,074 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:41:06,182 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:41:12,208 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 18:42:07,291 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:44:54,189 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:44:59,807 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:45:06,438 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:45:11,218 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:45:20,068 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:45:24,853 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:45:36,667 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:46:13,282 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:47:51,043 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:51:33,695 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:52:45,874 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:53:16,000 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:53:21,348 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:53:40,115 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:55:42,340 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:07,829 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:12,874 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:18,809 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:23,744 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:27,514 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:39,077 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:56:45,570 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:57:16,793 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:57:37,568 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 19:57:44,959 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:15:03,885 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:15:18,293 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:27:05,093 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:27:29,680 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:28:22,548 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:28:26,796 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:29:49,188 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:32:57,611 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:33:06,551 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:34:25,972 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:35:02,773 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:35:06,778 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:42:35,359 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:42:56,861 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:44:08,815 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:44:15,110 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:44:21,107 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:44:29,232 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:44:38,324 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-04-23 20:50:54,141 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0

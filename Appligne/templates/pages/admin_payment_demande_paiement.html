@@ -138,7 +138,7 @@
                                         <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  payment.reclamation %} disabled {% endif %} >Voire réclamation</button>
                                     </div>
                                     <div class="col-lg-4 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_nouvelle_reclamation" {% if  payment.reclamation %} disabled {% endif %} >Ajouter une réclamation liée au paiement</button>
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_nouvelle_reclamation" {% if  payment.reclamation or not request.user.eleve %} disabled {% endif %} >Ajouter une réclamation liée au paiement</button>
                                     </div>
                                 </div>
                             </div>
