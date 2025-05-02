@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Etat remboursement élève{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Suivi des règlements des professeurs par période et échéance</h6>
+                        {% if accord_reglement_approveds %}
+                            <h5 class="text-center ">Sélectionner les accords de remboursements à modifier</h5>
+                            <h5 class="text-center ">Définir le nouveau statut et la date de l'opération</h5>
+                            <h5 class="text-center ">Passer à l'enregistrement des modifications apportées</h5>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+                <!-- boutons début -->
+                <div class="container-xxl bg-light" >
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_1" class="form-label">Début période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
+                        </div>
+                        <div class="col-md-6 col-sm-12 position-relative text-center">
+                            <h1>Remboursement Elève</h1>
+                        </div>
+                        <div class="col-md-3 col-sm-12 position-relative ">
+                            <label for="date_id_2" class="form-label">Fin période</label>
+                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
+                        </div>                           
+                    </div>
+                    <div class="row justify-content-between g-2 p-3 ">
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
+                                En attente
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
+                                En cours
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_realiser">
+                                Réalisé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
+                                Annulé
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
+                                Invalide
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-sm-12  justify-content-center">
+                            <div class="row  ">
+                                <div class="col-md-10 col-sm-12 position-relative ">
+                                    <button type="submit" class="btn btn-primary w-100" name="btn_tous">Tous</button>
+                                </div>
+                                <div class="col-md-2 col-sm-12 position-relative  ">
+                                    <input class="form-check-input p-3 ms-1 " type="checkbox" name="checkbox_tous" checked id="checkbox_tous_id" >
+                                </div>
+                            </div>  
+                        </div>
+                        {% if statut == 'En attente' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de remboursement ont été validés, mais le transfert des fonds à l'élève reste en attente de traitement par l'administrateur.
+                            </h6>
+                        </div>
+                        {% elif statut == 'En cours' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de remboursement en cours sont en attente de validation bancaire avant que l'administrateur puisse finaliser l'opération.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Réalisé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de remboursement réalisés sont enregistrés après confirmation des paiements et validés une fois le transfert approuvé par la banque et effectué vers l'élève.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Invalide' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de remboursement invalides concernent des paiements validés, mais dont le transfert de remboursement a été rejeté par la banque pour cause d'irrégularité. Une notification explicative est ensuite adressée à l'élève.
+                            </h6>
+                        </div>
+                        {% elif statut == 'Annulé' %}
+                        <div class="col-12 text-center  p-4  ">
+                            <h6>
+                                Les accords de remboursement annulés concernent des remboursements d’élèves validés et enregistrés par l’administrateur, mais dont l’accord est ensuite annulé sans qu’aucun transfert bancaire ne soit effectué. Une explication est alors communiquée à l'élève.
+                            </h6>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- boutons fin -->
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light mb-3">
+                                {% if not accord_remboursement_approveds %}
+                                    <div class="col-md-12 text-center">
+                                        <h4>Il n'y a pas de remboursements pour cette période</h4>
+                                    </div>
+                                {% endif %}
+                                {% for accord_remboursement , accord_id_uncrypted in accord_remboursement_approveds %}
+                                    <div class="row  g-2 p-3 " style="margin-bottom: 10px;">
+                                        <div class="col-md-8 col-sm-12 position-relative">
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{ accord_remboursement.get_status_display }}" readonly name="status_accord_id{{accord_id_uncrypted}}" >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative ">
+                                                    <label for="due_date_id_{{ forloop.counter }}" class="form-label">Echéance</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_remboursement.due_date|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_id_uncrypted}}" >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Règlement</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_remboursement.total_amount|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_id_uncrypted}}" >
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="prof_id_{{ forloop.counter }}" class="form-label">Elève</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{accord_remboursement.eleve.user.first_name}} {{accord_remboursement.eleve.user.last_name}}" readonly name="eleve_accord_id{{accord_id_uncrypted}}" >
+                                                </div>
+                                                {% if  accord_remboursement.get_status_display != 'Réalisé' and accord_remboursement.get_status_display != 'Annulé' %}
+                                                    <div class="col-md-3 position-relative">
+                                                        <label for="nouv_status_id" class="form-label">Nouveau statut</label>
+                                                        <select class="form-select" id="nouv_status_id" name="nouv_status_accord_id{{accord_id_uncrypted}}">
+                                                            <!-- conditions logique entre accord_remboursement.get_status_display et la valeur de  nouv_status_accord  -->
+                                                            <option value="Non défini" selected >Non défini</option>
+                                                            <!-- {% if accord_remboursement.get_status_display != 'En attente' and accord_remboursement.get_status_display != 'En cours' %}<option value="En attente" >En attente</option>{% endif %} -->
+                                                            {% if accord_remboursement.get_status_display != 'En cours' %}<option value="in_progress"  >En cours</option>{% endif %}
+                                                            {% if accord_remboursement.get_status_display != 'Réalisé' %}<option value="completed"  >Réalisé</option>{% endif %}
+                                                            {% if accord_remboursement.get_status_display != 'Annulé' and accord_remboursement.get_status_display != 'En cours' %}<option value="canceled" >Annulé</option>{% endif %}
+                                                            {% if accord_remboursement.get_status_display != 'Invalide' %}<option value="invalid" >Invalide</option>{% endif %}
+                                                        </select>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                            <div class="col-md-4 col-sm-12">
+                                                <div class="row ">
+                                                    {% if  accord_remboursement.get_status_display != 'Réalisé' and accord_remboursement.get_status_display != 'Annulé' %}
+                                                    <label for="date_id_{{ forloop.counter|add:2 }}" class="form-label">Date d'opération</label>
+                                                    <div class="col-md-6 col-sm-12  ">
+                                                        <input type="text" class="form-control form-control-date " required name="date_operation_remboursement_id{{ accord_id_uncrypted }}" placeholder="Sélectionnez une date" value="{{ date_now|date:'d/m/Y' }}" id="date_id_{{ forloop.counter|add:2 }}" >
+                                                    </div>
+                                                    <div class="col-md-1 col-sm-12 text-center  ">
+                                                        <input class="form-check-input p-3 checkbox_tous " type="checkbox" name="checkbox_remboursement_id{{ accord_id_uncrypted }}" checked >
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="col-md-5 col-sm-12 {% if  accord_remboursement.get_status_display == 'Réalisé' or accord_remboursement.get_status_display == 'Annulé' %} p-4 g-2  {% endif %} ">
+                                                        <button type="submit" class="btn  btn-primary  w-100 " name="btn_detaille_remboursement_id{{ accord_id_uncrypted }}" >
+                                                            Détaille
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        
+                                    </div>
+                                {% endfor %}
+                                <div class="row  " style="margin-bottom: 10px;">
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_enr">
+                                            Passer à la modification des accord de remboursement
+                                    </div>
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-primary col-12" name="btn_etat">
+                                            Afficher l'état des accords de remboursement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
+<script>
+    
+</script>
+{% endblock %}

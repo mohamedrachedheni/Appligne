@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Accords Remboursement Changement Statut {% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début titre -->
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Enregistrement des nouveaux statuts des  accords de règlements pour les professeurs</h6>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data"  >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-2">
+                        <div class="container">
+                                <div class="container bg-light mb-2">
+                                    {% if not accord_remboursement_modifs %}
+                                        <div class="col-md-12 text-center">
+                                            <h4>Il n'y a pas de changement des statuts des accords de règlement</h4>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- for date_request in date_requests -->
+                                        {% for id, accord_remboursement, date_operation_remboursement, nouv_status_accord, approved, text_email, sujet in accord_remboursement_modifs %}
+                                            <div class="row  py-2" style="margin-bottom: 30px;">
+                                                <h6>Elève: {{accord_remboursement.eleve}} ( {% if not approved %} <strong style="color: red;"><a class="text" href="{% url 'admin_remboursement_detaille' %}">Il y a un paiement au moins contesté par l'élève voire détaille</a></strong> {% else %} <strong style="color: blue;"><a class="text" href="{% url 'admin_remboursement_detaille'  %}">Voire détaille de l'accord de règlement</a></strong> {% endif %} ) </h6>
+                                                {% if nouv_status_accord == "completed" %}
+                                                    <div class="col-md-3 col-sm-12 position-relative">
+                                                        <label for="prodate_id_{{ accord_remboursement.id }}" class="form-label">Date d'opération</label>
+                                                        <input type="text" class="form-control form-control-date" id="date_id_{{ accord_remboursement.id }}"  value="{{date_operation_remboursement|date:'d/m/Y' }}"  name="date_operation_{{id}}" >
+                                                    </div>
+                                                    <div class="col-md-3 col-sm-12 position-relative">
+                                                        <label for="operation_id_{{ accord_remboursement.id }}" class="form-label">ID de l'opération</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="operation_id_{{ accord_remboursement.id }}"  value=""  name="operation_{{id}}" >
+                                                    </div>
+                                                {% endif %}
+                                                <div class="row ">
+                                                    <div class="col-12 position-relative">
+                                                        <label for="sujet_id_{{ accord_remboursement.id }}" class="form-label">Sujet de l'email: Accord de règlement  <strong {% if nouv_status_accord == "canceled" or nouv_status_accord == "invalid" %} style="color: red;" {% elif nouv_status_accord == "completed" %} style="color: green;" {% endif %} > {% if nouv_status_accord == 'in_progress' %}En attente {% elif nouv_status_accord == 'completed' %}Réalisé {% elif nouv_status_accord == 'canceled' %}Annulé{% elif nouv_status_accord == 'invalid' %}Invalide {% endif %}   </strong> </label>
+                                                        <input type="text" class="form-control" id="sujet_id_{{ accord_remboursement.id }}" name="sujet_{{ id }}" value="{{ sujet }}" readonly>
+                                                    </div>
+                                                    <div class="col-12 position-relative ">
+                                                        <label for="text_email_id_{{ accord_remboursement.id }}" class="form-label">Contenu :</label>
+                                                        <textarea class="form-control profil" id="text_email_id_{{ accord_remboursement.id }}" rows="4" name="text_email_{{ id }}" style="height: 400px;" readonly>{{ text_email }}</textarea>
+                                                        {% if nouv_status_accord != "Annulé" and nouv_status_accord != "Invalide" %}<hr>{% endif %}
+                                                    </div>
+                                                    {% if nouv_status_accord == "canceled" or nouv_status_accord == "invalid" %}
+                                                    <div class="col-12 position-relative ">
+                                                        <label for="text_plus_email_id_{{ accord_remboursement.id }}" class="form-label">Texte explicatif : {% if nouv_status_accord == "Annulé" or nouv_status_accord == "Invalide" %} <strong style="color: red;">Ajoutez un texte explicatif</strong> {% endif %} </label>
+                                                        <textarea class="form-control profil" id="text_plus_email_id_{{ accord_remboursement.id }}" rows="4" name="text_plus_email_{{ id }}" style="height: 400px;">Texte explicatif :</textarea>
+                                                        <hr>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                            </div>
+                                            
+                                        {% endfor %}
+                                    <div class="row  " style="margin-bottom: 10px;">
+                                        <div class="col-md-2 col-sm-12 d-flex justify-content-center  py-3">
+                                            <button type="submit" class="btn btn-warning col-12" name="btn_accord_enregistrement" >
+                                                Enregistrer
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                            <a class="btn btn-primary  w-100" 
+                                            href="{% url 'admin_remboursement' %}"><span
+                                                style="color: white;">Revenir aux accords de remboursement</span></a>
+                                        </div>
+                                        <div class="col-md-4 col-sm-12 d-flex justify-content-center py-3">
+                                            <a class="btn btn-primary w-100"  href="javascript:history.back();">
+                                                <span style="color: white;">Page précédente</span>
+                                            </a>
+                                        </div>                                        
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <!-- Liste élève fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<script>
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+<script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+
+</script>
+    
+
+    
+    
+    
+{% endblock %}

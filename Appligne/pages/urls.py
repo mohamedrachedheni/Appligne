@@ -30,4 +30,7 @@ urlpatterns = [
     path( 'admin_payment_eleve_remboursement' , views.admin_payment_eleve_remboursement , name='admin_payment_eleve_remboursement' ),
     path('admin_payment_accord_remboursement', views.admin_payment_accord_remboursement, name='admin_payment_accord_remboursement'),
     path('admin_accord_remboursement', views.admin_accord_remboursement, name='admin_accord_remboursement'),
+    path( 'admin_remboursement' , views.admin_remboursement , name='admin_remboursement' ),
+    path('admin_remboursement_detaille', views.admin_remboursement_detaille, name='admin_remboursement_detaille'),
+    path( 'admin_remboursement_email' , views.admin_remboursement_email , name='admin_remboursement_email' ),
 ]
