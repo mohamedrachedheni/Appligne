@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Modifier Accords Rembourcement Elève {% endblock %}
+
+{% block content %}
+
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <!-- Début titre -->
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">modifier l'accord de remboursement de l'élève</h6>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data"  >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                                <div class="container bg-light mb-3">
+                                    {% if not payments %}
+                                        <div class="col-md-12 text-center">
+                                            <h4>Il n'y a pas de paiement pour cette période</h4>
+                                        </div>
+                                    {% endif %}
+                                    <div class="row  py-3" style="margin-bottom: 30px;">
+                                        <h5>Elève: {{eleve.user.first_name}} {{eleve.user.last_name}}</h5>
+                                    </div>
+                                    
+                                        {% for  payment, user_eleve, refunded_amount_str in payments %}
+                                            
+                                                <div class="row  " style="margin-bottom: 10px;">
+                                                    <div class="col-md-3 col-sm-12 position-relative">
+                                                        <label for="statut_id_{{ forloop.counter }}" class="form-label">Elève</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{user_eleve.first_name}} {{user_eleve.last_name}}" readonly >
+                                                    </div>
+                                                    <div class="col-md-2 col-sm-12 position-relative ">
+                                                        <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date paiement</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
+                                                    </div>
+                                                    <div class="col-md-2 col-sm-12 position-relative ">
+                                                        <label for="amount{{ forloop.counter }}" class="form-label">Paiement</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="amount{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
+                                                    </div>
+                                                    <div class="col-md-2 col-sm-12 position-relative ">
+                                                        <label for="refunded_amount_str{{ forloop.counter }}" class="form-label">Remboursement</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="refunded_amount_str{{ forloop.counter }}"  value="{{refunded_amount_str|default:''|floatformat:2}} €" readonly>
+                                                    </div>
+                                                </div>
+                                        {% endfor %}
+                                        <h6>Date de versement prévue: {{date_remboursement}} </h6>
+                                        <h6>Total montant payé: {{totaux_payement|default:''|floatformat:2}} € </h6>
+                                        <h6>Total montant à verser: {{totaux_versement|default:''|floatformat:2}} € </h6>
+                                        <h6>Ancien statut accord de règlemen: <strong>{{accord_remboursement.get_status_display}} </strong></h6>
+                                        <h6>Nouveau statut accord de règlemen: <strong> {{status}}  </strong></h6>
+                                        {% if status == 'Réalisé' %}
+                                            <h6>Nouvelle date de transfère: <strong>{{date_trensfere}}</strong></h6>
+                                            <h6>Nouveau ID de transfère: <strong>{{transfere_id}}</strong></h6>
+                                        {% endif %}
+                                        <hr>
+                                    <div class="col-lg-12">
+                                        <label for="text_email" class="form-label">
+                                            <strong>Nouveau message lié à l'accord de règlement modifié</strong>
+                                        </label>
+                                        <div class="form-control profil" style="white-space: pre-wrap;" id="text_email">
+                                            {{ texte_fin|safe }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-12">
+                                        <label for="text_email_plus" class="form-label"><strong>Ajoutez un texte de plus au besoin</strong></label>
+                                        <textarea class="form-control profil" id="text_email_plus" name="text_email_plus" ></textarea>
+                                    </div>
+                                    <div class="row  " style="margin-bottom: 10px;">
+                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                            <button type="submit" class="btn btn-warning col-12" name="btn_accord_enregistrement">
+                                                Enregistrer la modification de l'accord de remboursement
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <!-- Liste élève fin -->
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<script>
+        // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+    const textareas = document.getElementsByClassName('form-control profil');
+
+    for (let i = 0; i < textareas.length; i++) {
+        const textarea = textareas[i];
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+    }
+}
+    </script>
+<script>
+        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+
+</script>
+    
+
+    
+    
+    
+{% endblock %}

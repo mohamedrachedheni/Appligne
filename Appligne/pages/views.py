@@ -2731,8 +2731,8 @@ def admin_reglement_modifier(request):
 
     # sauvegarder les anciens paiement liés à l'accord de règlement
     ancien_payment_accords=[]
-    for detaille in detailles:
-        ancien_payment_accords = [detail[0] for detail in detailles] # Récupérer les ID des anciens payment
+    # for detaille in detailles: # à corriger sans for:
+    ancien_payment_accords = [detail[0] for detail in detailles] # Récupérer les ID des anciens payment
 
     # Récupérer les paiement réalisés et non affectés à des accords de règlement
     paiements_sans_accord=[]
@@ -2741,7 +2741,7 @@ def admin_reglement_modifier(request):
 
     # Récupération des demandes de paiement non réglées pour le professeur sélectionné
     demande_paiements = Demande_paiement.objects.filter(
-        user=prof, reglement_realise=False
+        user=prof, reglement_realise=False, payment_id__isnull=False # il faut que le paiement est realisé mais le règlement non
     )
     for demande_paiement in demande_paiements:
         # Récupération des paiements non encore accordés et non réalisés
@@ -2760,7 +2760,7 @@ def admin_reglement_modifier(request):
     context = {
         'accord_reglement': accord_reglement,
         'texte_email': texte_email,
-        'detaille': detailles,
+        'detailles': detailles,
         'paiements_sans_accord': paiements_sans_accord,
         'date_now':timezone.now().date(), # valeur par défaut pour date transfère
     }
@@ -2791,6 +2791,13 @@ def admin_reglement_modifier(request):
                 # request.session['accord_id'] = accord_id
                 return render(request, 'pages/admin_reglement_modifier.html', context)
             # Teste format date
+            # Validation du format des dates
+            try:
+                date_operation_reglement = datetime.strptime(date_reglement_str, date_format).date()
+            except ValueError:
+                messages.error(request, "Format de la date d'échéance non valide.")
+                return render(request, 'pages/admin_remboursement_modifier.html', context)
+
 
             # Récupération de l'objet Payment correspondant
             paiement = Payment.objects.filter(id=payment_id).first()
@@ -2980,6 +2987,9 @@ def admin_accord_reglement_modifier(request):
         accord_reglement.email_id=email_telecharge.id
         accord_reglement.status=status
         accord_reglement.due_date=date_reglement
+        if status == "Réalisé":
+            accord_reglement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
+            accord_reglement.transfere_id=transfere_id
         accord_reglement.save()
         msg += str(f"Mise à jour de accord de règlement du {date_reglement}.\n")
         
@@ -3504,6 +3514,7 @@ def admin_payment_eleve_remboursement(request):
         # Vérification et récupération de l'accord de règlement associé
         if payment.accord_reglement_id:
             accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
+            if not accord_reglement: continue
             accord_reglement_id = accord_reglement.id
 
         # Ajout des informations collectées à la liste des paiements
@@ -4157,7 +4168,7 @@ def admin_remboursement_detaille(request):
     - Optimise les requêtes en utilisant `select_related` et `values_list`.
     """
 
-    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    # 1. Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
     accord_id_uncrypted = request.session.get('accord_remboursement_id')
     accord_id_decrypted = decrypt_id(accord_id_uncrypted)
     if not accord_id_decrypted:
@@ -4165,20 +4176,26 @@ def admin_remboursement_detaille(request):
         return redirect('compte_administrateur')
     
     
-    accord_remboursement = get_object_or_404(AccordRemboursement, id=accord_id_decrypted)
     
-    # Récupération optimisée de l'email 
+    # 2. Gérer proprement les erreurs de base de données
+    try:
+        accord_remboursement = get_object_or_404(AccordRemboursement, id=accord_id_decrypted)
+    except AccordRemboursement.DoesNotExist:
+        logger.error(f"AccordRemboursement introuvable pour id={accord_id_decrypted}")
+        return redirect('admin_remboursement')
+    
+    # 3. Récupération optimisée de l'email 
     email = Email_telecharge.objects.filter(id=accord_remboursement.email_id).only('sujet', 'text_email').first()
     texte_email = f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
     
-    # 1. On récupère les données sans encrypt
+    # 4. On récupère les données sans encrypt
     details_raw = DetailAccordRemboursement.objects.filter(
         accord=accord_remboursement
     ).select_related('payment').values_list(
         'payment__id', 'description', 'refunded_amount', 'payment__reclamation_id'
     )
 
-    # 2. Ensuite on chiffre payment__id en Python
+    # 5. Ensuite on chiffre payment__id en Python
     details = [
         (
             encrypt_id(payment_id),  # On chiffre ici
@@ -4193,7 +4210,7 @@ def admin_remboursement_detaille(request):
     if 'btn_detaille_remboursement' in request.POST: # reste à terminer
         # Stockage l'ID de l'accord de règlement dans la session avant redirection
         request.session['accord_id'] = accord_id_decrypted
-        return redirect('admin_reglement_modifier')
+        return redirect('admin_remboursement_modifier')
     
     if request.POST: # achevé
         # Extraction de l'ID du paiement choisi dans le formulaire
@@ -4396,12 +4413,16 @@ def admin_remboursement_email(request):
 
             # 10. Si accord réalisé, ajouter les transferts et mettre à jour les paiements liés
             if new_status == 'completed':
+                messages.info(request, f"new_status = {new_status}")
                 date_str = request.POST.get(f'date_operation_{enc_id}', '')
+                messages.info(request, f"date_str = {date_str} ")
                 try:
-                    accord.date_transfere = datetime.strptime(date_str, '%d/%m/%Y').date()
+                    accord.date_trensfere = datetime.strptime(date_str, '%d/%m/%Y').date()
+                    messages.info(request, f"accord.date_transfere = {datetime.strptime(date_str, '%d/%m/%Y').date()} ")
                 except ValueError:
                     logger.warning(f"accord.date_transfere: datetime.strptime(date_str, '%d/%m/%Y').date() = {datetime.strptime(date_str, '%d/%m/%Y').date()}")
-                    accord.date_transfere = date.today()  # Date actuelle si la date saisie est invalide
+                    accord.date_trensfere = date.today()  # Date actuelle si la date saisie est invalide
+                    messages.info(request, f"date_str = {date.today()} ")
 
                 accord.transfere_id = request.POST.get(f'operation_{enc_id}', '')
 
@@ -4435,3 +4456,413 @@ def admin_remboursement_email(request):
         return redirect('admin_payment_eleve_remboursement')
 
     return render(request, 'pages/admin_remboursement_email.html', context)
+
+@user_passes_test(is_admin_active, login_url='/login/')
+def admin_remboursement_modifier(request):
+    """
+    Vue d'administration permettant d'afficher les détails du réglement d'un professeur,
+    de modifier l'enregistrement.
+    Accessible uniquement aux administrateurs actifs.
+    """
+
+    date_format = "%d/%m/%Y" # Format date
+
+    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    accord_id = request.session.get('accord_id')
+
+    # 1. Condition nécessaire de l'activation du template
+    if not accord_id:
+        messages.error(request, "Il n'y a pas de remboursement à modifier")
+        return redirect('compte_administrateur')
+    
+
+
+    # 2. Gérer proprement les erreurs de base de données
+    accord_remboursement = AccordRemboursement.objects.filter(id=accord_id).first()
+    if not accord_remboursement:
+        logger.error(f"AccordRemboursement introuvable pour id={accord_id}")
+        return redirect('admin_remboursement')
+    
+    
+    
+    # 3. Récupération optimisée de l'email pour le template
+    email = Email_telecharge.objects.filter(id=accord_remboursement.email_id).only('sujet', 'text_email').first()
+    texte_email = f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
+    
+    # 4. Récupération optimisée des détails de l'accord, avec accès direct aux attributs nécessaires pour le template
+    detailles_data = list(
+        DetailAccordRemboursement.objects
+        .filter(accord=accord_remboursement)
+        .select_related('payment')  # Optimisation pour éviter des requêtes supplémentaires
+        .values_list('payment__id', 'description', 'refunded_amount', 'payment__reclamation_id')
+    )
+
+    # 4.1 Extraction des données pertinentes : seulement l'ID du paiement et la description
+    detailles = [(encrypt_id(payment_id), description, refunded_amount) for payment_id, description, refunded_amount, _ in detailles_data]
+
+
+    # 5. récupérer les paiement liés à l'accord de remboursement pour le template admin_accord_remboursement_modifier
+    ancien_payment_accords = [detail[0] for detail in detailles]
+
+    # 6. Récupérer les paiement réalisés et non affectés à des accords de règlement réalisé ou à des remboursements
+    paiements_sans_accord=[]
+    # Récupération de l"élève concerné
+    eleve = AccordRemboursement.objects.filter(id=accord_id).first().eleve
+
+    # Récupération des demandes de paiement non réglées pour l'élève sélectionné
+    demande_paiements = Demande_paiement.objects.filter(
+        eleve=eleve,
+        reglement_realise=False,
+        payment_id__isnull=False
+    )
+    for demande_paiement in demande_paiements:
+        # Récupération des paiements non encore accordés et non réalisés
+        payment = Payment.objects.filter(
+            accord_remboursement_id=None,  # Aucun accord de règlement associé
+            remboursement_realise=False, # le remboursement n'est pas realisé pour plus de sécurité
+            reglement_realise=False,  # Paiements non encore réglés
+            reclamation__isnull=False, # Un remboursement n’est possible que pour les paiements réclamés par les élèves.
+            model='demande_paiement',
+            model_id=demande_paiement.id  # Filtrer uniquement les paiements du professeur sélectionné
+        ).first()
+        if not payment: continue
+        description="Elève: " + demande_paiement.eleve.user.first_name + " " + demande_paiement.eleve.user.last_name + ", Date paiement: " + payment.date_creation.strftime('%d/%m/%Y') + ", Montant payé: " + str(payment.amount) + "€" if payment else ""
+        refunded_amount=payment.amount  if payment else 0
+        paiements_sans_accord.append((encrypt_id(payment.id) if payment else 0, description, refunded_amount, payment.reclamation if payment else ""))
+    
+
+    # Vérification si le formulaire a été soumis pour accorder un remboursement
+    if 'btn_enr' in request.POST: # la modification de l'accord de remboursement est activée
+
+        # Récupération des paiements cochés dans le formulaire (anciens ou / et nouvaux)
+        encrypted_payment_keys = [key.split('accord_')[1] for key in request.POST.keys() if key.startswith('accord_')]
+
+        
+
+        # Vérification si au moins un paiement a été sélectionné
+        if not encrypted_payment_keys:
+            messages.error(request, "Veuillez sélectionner au moins un paiement.")
+            return redirect('admin_remboursement_modifier')
+        
+        # récupérer la date de remboursement
+        date_remboursement_str = request.POST.get('date_echeance')  # Date d’échéance
+        # Conversion de la date de remboursement en objet datetime si possible
+        try:
+            date_remboursement = datetime.strptime(date_remboursement_str, date_format).date()
+        except ValueError:
+            messages.error(request, "le format de la date de remboursement est incorrecte")
+            return redirect('admin_remboursement_modifier')
+
+        
+        
+        payment_modifier = []
+        for key in encrypted_payment_keys:
+            
+            # valider la non corruption du criptage
+            try:
+                decrypted_key = decrypt_id(key)
+            except Exception as e:
+                logger.error(f"Erreur lors du decrypt_id de {key}: {e}")
+                return redirect('compte_administrateur')
+            
+            # éxtraire le paiement correspondant
+            paiement = Payment.objects.filter(id=decrypted_key).first()
+            if not paiement:
+                return redirect('admin_remboursement_modifier')
+
+            # Vérification que la date de règlement est au moins 7 jours après la date de création du paiement
+            if (paiement.date_creation.date() + timedelta(days=7)) > date_remboursement:
+                date_min = paiement.date_creation.date() + timedelta(days=8)
+                messages.info(
+                    request,
+                    f"La date de remboursement ({date_remboursement}) doit être au moins 7 jours après "
+                    f"la date de création du paiement ({paiement.date_creation.date()}).<br>"
+                    "Modifiez la date de remboursement. <br>"
+                    f"La date minimum est: {date_min}"
+                )
+                return redirect('admin_remboursement_modifier')
+
+            # éxtraire le remboursement correspondant
+            refunded_amount = request.POST.get(f'refunded_amount_{key}', '')
+
+            # Suppression du symbole "€" et des espaces autour (si présents)
+            refunded_amount_str = refunded_amount.replace('€', '').replace(',', '.').strip()
+
+            # validation du format du montant de remboursement
+            try:
+                montant_decimal = Decimal(refunded_amount_str)
+            except InvalidOperation:
+                messages.error(request, f"Le montant: {refunded_amount_str} est invalide. Veuillez entrer un montant correct.")
+                logger.error(f"Le montant {refunded_amount_str} est invalide. Veuillez entrer un montant correct.")
+                return redirect('admin_remboursement_modifier')
+
+            # vaidation du montant de remboursement
+            if montant_decimal > paiement.amount:
+                messages.error(request, f"Le montant du remboursement ({montant_decimal}) ne peut pas dépasser le montant initial payé ({paiement.amount}).")
+                logger.error(f"Le montant du remboursement ({montant_decimal}) ne peut pas dépasser le montant initial payé ({paiement.amount}).")
+                return redirect('admin_remboursement_modifier')
+            
+            payment_modifier.append((paiement.id , refunded_amount_str ))
+        
+
+
+        # Stockage des paiements validés dans la session avant redirection
+        request.session['payment_modifier'] = payment_modifier
+
+        # Stockage de la date de règlement dans la session avant redirection
+        request.session['date_remboursement_str'] = date_remboursement_str
+
+        # Stockage l'ID de l'élève dans la session avant redirection
+        request.session['eleve_id'] = eleve.id
+
+        # Stockage l'ID de l'accord de règlement dans la session avant redirection
+        request.session['accord_id'] = accord_id
+
+        # Stockage le statut de l'accord de règlement dans la session avant redirection
+        request.session['status'] = request.POST.get('status', '')
+
+        # Stockage le statut de l'accord de règlement dans la session avant redirection (pour mettre à jour les paiements)
+        request.session['ancien_payment_accords'] = ancien_payment_accords
+
+        # Stockage la date de transfère dans la session avant redirection 
+        request.session['date_trensfere'] = request.POST.get('date_trensfere', '')
+
+        # Stockage l'ID de transfère dans la session avant redirection 
+        request.session['transfere_id'] = request.POST.get('transfere_id', '')
+
+        return redirect('admin_accord_remboursement_modifier')
+
+    # Passage des données au template
+    context = {
+        'accord_remboursement': accord_remboursement,
+        'texte_email': texte_email,
+        'detailles': detailles,
+        'paiements_sans_accord': paiements_sans_accord,
+        'date_now':timezone.now().date(), # valeur par défaut pour date transfère
+    }
+
+
+    return render(request, 'pages/admin_remboursement_modifier.html', context)
+
+
+
+
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def admin_accord_remboursement_modifier(request):
+    """
+    Modifier les accords de règlement pour le professeur 
+    (même si le statut est réalisé pour que l'intervention de 
+    l'administrateur soit sans limite),
+    envoie un email pour le professeur et l'enregistrer
+    en fin la mise à jour des paiements selon le statut initial et final
+    """
+    
+    date_format = "%d/%m/%Y" # format de la date
+    msg = "" # pour grouper les messages info dans un message final
+    
+    # Récupérer des paramètres de la session
+    payment_requests = request.session.get('payment_modifier')
+    date_remboursement_str = request.session.get('date_remboursement_str')
+    accord_id = request.session.get('accord_id')
+    eleve_id = request.session.get('eleve_id')
+    status = request.session.get('status')
+    status_mapping = {
+        'pending': "En attente",
+        'in_progress': "En cours",
+        'completed': "Réalisé",
+        'invalid': "Invalide",
+    }
+
+    status_label = status_mapping.get(status, "Annulé") #par défaut c'est Annulé
+
+    date_trensfere = request.session.get('date_trensfere')
+    transfere_id = request.session.get('transfere_id')
+    ancien_payment_accords = request.session.get('ancien_payment_accords')
+
+    # Condition nécessaire de l'activation du template
+    if not accord_id:
+        messages.error(request, "Il n'y a pas de règlement à enregistrer")
+        return redirect('compte_administrateur')
+
+    # Récupérer l'élève ou renvoyer une erreur 404 s'il n'existe pas
+    eleve = get_object_or_404(Eleve, user_id=eleve_id)
+
+    # Récupérer l'ancien l'accord de règlement ou renvoyer une erreur 404 s'il n'existe pas
+    accord_remboursement = get_object_or_404(AccordRemboursement, id=accord_id)
+    
+    # Récupérer la date de règlement
+    try:
+        date_remboursement = datetime.strptime(date_remboursement_str, date_format).date()
+    except ValueError:
+            messages.error(request, f"Le format date de règlement: {date_remboursement_str} n'est pas valide le format doit être jj/mm/aaaa")
+            
+            # Stockage l'ID de l'accord de règlement dans la session avant redirection
+            request.session['accord_id'] = accord_id
+            return redirect('admin_reglement_modifier')
+    
+    if not payment_requests:
+        messages.error(request, "Il n'y a pas de règlement à enregistrer")
+        return redirect('admin_payment_accord_reglement')
+    
+    payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
+
+    for payment_id, refunded_amount_str in payment_requests: # étier les données de la session
+        payment = Payment.objects.filter(id=payment_id).first()
+        # # c'est une requette qui lie la table Demande_paiement avec Eleve avec User
+        # demande_paiement = Demande_paiement.objects.select_related('eleve__user').filter(id=payment.model_id).first()
+        # if not demande_paiement: continue  # Ignorer les paiements sans demande associée (non nécessaire mais par prudence car à chaque paiement correspond un demande préalable)
+        # user_eleve = demande_paiement.eleve.user # pour le template
+        user_eleve = eleve.user # l'élève existe déjà dans le request
+        payments.append(( payment, user_eleve, refunded_amount_str))  # pour le template et le calcul des totaux
+
+    totaux_payement=0
+    totaux_versement=0
+    for  payment, user_eleve, refunded_amount_str in payments:
+        totaux_payement += payment.amount
+        totaux_versement += Decimal(refunded_amount_str)
+    
+
+    # préparer l'envoie de l'email
+    user = request.user # admin
+    email_user = user.email # email admin
+    email_destinataire = eleve.user.email # email destinatère (professeur)
+    destinations = ['prosib25@gmail.com', email_destinataire] # 'prosib25@gmail.com'à enlever dans le site production
+    
+    # Validation des emails dans destinations
+    for destination in destinations:
+        email_validator = EmailValidator() #inicialisation de l'objet EmailValidator
+        try:
+            email_validator(destination)
+        except ValidationError:
+            messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+            # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
+    
+    # mise en forme du text_email et du sujet de l'email
+    texte = f"\nRèglement prévu le:\t\t{date_remboursement.strftime('%d/%m/%Y')}\t\tEléve: {eleve.user.first_name} {eleve.user.last_name}\n\nListe des paiements des élèves:\nDate paiement\t\t\t\tPaiement\t\t\tRemboursement\n"
+    for  payment, user_eleve, refunded_amount_str in payments:
+        texte += f"{payment.date_creation.strftime('%d/%m/%Y')}\t\t\t\t\t{payment.amount:.2f}€\t\t\t\t\t{refunded_amount_str}\n"
+    texte_totaux = (
+        f"\nMontant payé           Montant à régler\n"
+        f"{totaux_payement:.2f}€                     {totaux_versement:.2f}€\n"
+        f"Statut accord de règlement : <strong>{status_label}</strong>"
+    )
+
+    if status_label=="Réalisé": texte_totaux += f"  --  Nouvelle date de transfère: {date_trensfere}  -- Nouveau ID de transfère: {transfere_id}"
+    texte_fin= texte + texte_totaux
+    sujet = f"Accord de remboursement de: {totaux_payement:.2f}€, pour le: {date_remboursement}"
+
+    if 'btn_accord_enregistrement' in request.POST:  # à terminer 04/05/2025
+        #envoie de l'email
+        text_email_plus = request.POST.get('text_email_plus','')
+        text_email = f"{texte_fin}\n\n{text_email_plus}"
+
+        # Validation des emails dans destinations
+        for destination in destinations:
+            email_validator = EmailValidator() #inicialisation de l'objet EmailValidator
+            try:
+                email_validator(destination)
+            except ValidationError:
+                messages.error(request, f"L'adresse email du destinataire {destination} est invalide.")
+                # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
+        try:
+            send_mail(
+                sujet,
+                text_email,
+                email_user,
+                destinations,
+                fail_silently=False,
+            )
+            msg += str(f"L'email a été envoyée avec succès relatif à l'accord de règlement du {date_remboursement}.\n")
+        except Exception as e:
+            messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+        
+        # enregistrement de l'email
+        email_telecharge = Email_telecharge(
+            user=user, 
+            email_telecharge=email_user, 
+            text_email=text_email, 
+            user_destinataire=eleve.user.id,
+            sujet=sujet
+        )
+        email_telecharge.save()
+        msg += str(f"L'email a été enregistré avec succès relatif à l'accord de règlement du {date_remboursement}.\n")
+
+
+        # Mise à jour de accord de règlement
+        accord_remboursement.admin_user=request.user
+        accord_remboursement.total_amount=totaux_versement
+        accord_remboursement.email_id=email_telecharge.id
+        accord_remboursement.status=status
+        accord_remboursement.due_date=date_remboursement
+        if status=="completed":
+            accord_remboursement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
+            accord_remboursement.transfere_id=transfere_id
+        # cas du status Réaliser n'est pas traiter même dans le cas de règlement?
+        accord_remboursement.save()
+        msg += str(f"Mise à jour de accord de remboursement du {date_remboursement}.\n")
+        
+        # Avant la suppression des anciens détailles des accords de règlements 
+        # il faux mettre à jour les enregisrements de Payment liés au ancien détaille de remboursement
+        # comme s'il n'y a pas eu d'accord de remboursement
+        for payment_id in ancien_payment_accords:
+            payment_ancien = Payment.objects.filter(id=decrypt_id(payment_id)).first()
+            if payment_ancien:
+                payment_ancien.accord_remboursement_id=None
+                payment_ancien.remboursement_realise=False
+                payment_ancien.save()
+                msg += str(f"Mettre à jour les anciens enregisrements de Payment.\n")
+
+        # Mise à jour des détailles des accords de remboyrsements
+        # Suppression des anciens détailles des accords de remboursement
+        DetailAccordRemboursement.objects.filter(accord=accord_id).delete()
+        msg += str(f"Suppression des anciens détailles des accords de remboursements.\n")
+
+        # Ajout des nouveaux détailles des accords de règlements
+        for  payment, user_eleve, refunded_amount in payments:
+            detaille_accord_remboursement = DetailAccordRemboursement(
+                accord=accord_remboursement, 
+                payment=payment, 
+                refunded_amount=Decimal(refunded_amount) , 
+                description="Elève: " + user_eleve.first_name + " " + user_eleve.last_name +
+                            ", Date paiement: " + payment.date_creation.strftime('%d/%m/%Y') +
+                            ", Montant payé: " + str(payment.amount) + "€"
+            )
+            detaille_accord_remboursement.save()
+            msg += str(f"Ajout des nouveaux détailles des accords de remboursement id={detaille_accord_remboursement.id}.\n")
+
+            # Mise à jour de l'enregistrement payment
+            payment.accord_reglement_id=accord_remboursement.id
+            if status == "completed": payment.remboursement_realise=True
+            payment.save()
+            msg += str(f"Mise à jour de l'enregistrement payment id={payment.id}.\n")
+
+        messages.success(request, msg.replace("\n", "<br>") )
+
+        # Vider les paramètres de la session
+        keys_to_delete = [
+            'payment_modifier', 'date_remboursement_str', 'accord_id', 'prof_id', 
+            'status', 'date_trensfere', 'transfere_id', 'ancien_payment_accords'
+        ]
+
+        for key in keys_to_delete:
+            if key in request.session:
+                del request.session[key]
+
+        return redirect('compte_administrateur')
+
+    # Contexte à passer au template
+    context = {
+        'eleve': eleve,
+        'payments': payments,
+        'totaux_payement': totaux_payement,
+        'totaux_versement': totaux_versement,
+        'texte_fin': texte_fin,
+        'date_remboursement': date_remboursement,
+        'status': status_label,
+        'accord_remboursement': accord_remboursement,
+        'transfere_id': transfere_id,
+        'date_trensfere': date_trensfere,
+    }
+
+    # Rendu de la page avec les données filtrées
+    return render(request, 'pages/admin_accord_remboursement_modifier.html', context)

@@ -33,4 +33,6 @@ urlpatterns = [
     path( 'admin_remboursement' , views.admin_remboursement , name='admin_remboursement' ),
     path('admin_remboursement_detaille', views.admin_remboursement_detaille, name='admin_remboursement_detaille'),
     path( 'admin_remboursement_email' , views.admin_remboursement_email , name='admin_remboursement_email' ),
+    path('admin_remboursement_modifier', views.admin_remboursement_modifier, name='admin_remboursement_modifier'),
+    path('admin_accord_remboursement_modifier', views.admin_accord_remboursement_modifier, name='admin_accord_remboursement_modifier'),
 ]
