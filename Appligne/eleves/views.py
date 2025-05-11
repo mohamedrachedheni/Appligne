@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404 #dans le cas ou
 from django.contrib import messages, auth
 from django.contrib.auth.models import User
 from .models import Eleve, Parent, Temoignage
-from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement
-from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement
+from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement, AccordRemboursement
+from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement, DetailAccordReglement, DetailAccordRemboursement
 from pages.models import ReclamationCategorie, PieceJointeReclamation, Reclamation, MessageReclamation
 import re
 from datetime import date, timedelta, datetime
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
-from django.db.models import OuterRef, Subquery, DecimalField, Sum
+from django.db.models import OuterRef, Subquery, DecimalField, Sum, Q
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,7 +21,16 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Min, Max
 import os
 from pages.forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
+from pages.utils import decrypt_id, encrypt_id
+import logging
+# Configuration du logger avec le nom du module actuel
+logger = logging.getLogger(__name__)
 
+# Enregistrement des logs
+    # logger.debug("Page visitée")
+    # logger.info("Action utilisateur")
+    # logger.warning("Attention à un truc")
+    # logger.error("Une erreur est survenue") 
 
 # Create your views here.
 
@@ -1163,5 +1172,145 @@ def liste_paiement_eleve(request):
     return render(request, 'eleves/liste_payment_eleve.html', context)
 
 
+def liste_remboursement(request):
+    """
+        Vue permettant d'afficher les remboursement des élèves.
 
+    Fonctionnalités :
+    - Filtrer les remboursements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut des remboursements (en attente, approuvé, annulé, etc.).
+    - Associer chaque remboursement à sa demande de paiement et à paiement.
+    """
+
+    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
+    teste = True # pour controler les validations
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+
+    # Vérifier si l'utilisateur a un profil de eleve associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+    
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = AccordRemboursement.objects.filter(
+        ~Q(status='completed'),  # Exclure les enregistrements avec status='Réalisé'
+        transfere_id__isnull=True,
+        date_trensfere__isnull=True
+    ).aggregate(
+        min_date=Min('due_date'),
+        max_date=Max('due_date')
+    )
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    statut=""
+
+    # Validation du format des dates
+    try:
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de début de période invalide: {date_debut_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_debut = None
+
+    try:
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de fin de période invalide: {date_fin_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_fin = None
+
+    # Vérification que la date de début est bien avant la date de fin
+    if teste:
+        if date_debut > date_fin:
+            messages.error(request, "La date de début doit être inférieure ou égale à la date de fin de période.")
+            teste = False
+
+    # Fonction interne pour récupérer les paiements en attente de règlement
+    def get_remboursements(date_debut, date_fin, filter_criteria=None):
+        if filter_criteria is None:
+            filter_criteria = {}
+
+        return AccordRemboursement.objects.filter(
+            due_date__range=(date_debut , date_fin + timedelta(days=1)), eleve=user.eleve,
+            **filter_criteria
+        ).order_by('due_date') # [date_debut , date_fin]
+
+    # Récupérer tous les accords de remboursements
+    accord_remboursements = get_remboursements(date_debut, date_fin)
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if 'btn_tous' in request.POST:
+        # Filtrer pour tous les emails
+        accord_remboursements = get_remboursements(date_debut, date_fin)
+    elif 'btn_en_ettente' in request.POST:
+        # Filtrer pour les paiements en attente
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'pending'})
+        statut = "En attente"
+    elif 'btn_en_cours' in request.POST:
+        # Filtrer pour les paiements approuvés
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'in_progress'})
+        statut = "En cours"
+    elif 'btn_invalide' in request.POST:
+        # Filtrer pour les paiements invalides
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'invalid'})
+        statut = "Invalide"
+    elif 'btn_annule' in request.POST:
+        # Filtrer pour les paiements annulés
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'canceled'})
+        statut = "Annulé"
+    elif 'btn_realiser' in request.POST:
+        # Filtrer pour les paiements réclamés par les élèves
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'completed'})
+        statut = "Réalisé"
+
+    accord_remboursement_approveds = []
+    for accord_remboursement in accord_remboursements:
+        payments = Payment.objects.filter(id__in=DetailAccordRemboursement.objects.filter(accord=accord_remboursement).values_list('payment_id', flat=True))
+        # si un des paiement est non approuvé par l'élève alors approved = False
+        approved =True
+        for payment in payments:
+            if  payment.reclamation: 
+                approved = False
+                break
+        accord_remboursement_approveds.append((accord_remboursement , approved))
+    
+    # Extraction de l'ID du remboursement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_remboursement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_remboursement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            eleve = Eleve.objects.filter(user=request.user).first() # Si le user est un eleve
+            if eleve:
+                remboursement = AccordRemboursement.objects.filter(id=accord_ids[0], eleve = eleve).first() # il faut que le règlement est pour le eleve
+                if eleve and not remboursement: # Si non il y a eu une manipulation des données du template
+                    messages.error(request, f"le remboursement sélectionné n'est pas attrubuté au eleve, remboursement_id= {accord_ids[0]}")
+                    return redirect('compte_prof')
+            request.session['accord_remboursement_id'] = encrypt_id(accord_ids[0])
+            return redirect('admin_remboursement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_eleve')
+    
+    context = {
+        'accord_remboursement_approveds': accord_remboursement_approveds,
+        'date_fin':date_fin,
+        'date_debut':date_debut,
+        'statut': statut,
+    }
+
+    return render(request, 'eleves/liste_remboursement.html', context)
 

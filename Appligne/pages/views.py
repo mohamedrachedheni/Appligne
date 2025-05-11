@@ -4172,7 +4172,8 @@ def admin_remboursement_detaille(request):
     accord_id_uncrypted = request.session.get('accord_remboursement_id')
     accord_id_decrypted = decrypt_id(accord_id_uncrypted)
     if not accord_id_decrypted:
-        messages.info(request, "L'ID de l'accord de remboursement n'a pas pu être décripter")
+        messages.info(request, f"L'ID de l'accord de remboursement n'a pas pu être . accord_id_uncrypted= {accord_id_uncrypted} ; accord_id_decrypted= {accord_id_decrypted}")
+        if request.user.eleve: return redirect('compte_eleve')
         return redirect('compte_administrateur')
     
     
@@ -4212,21 +4213,43 @@ def admin_remboursement_detaille(request):
         request.session['accord_id'] = accord_id_decrypted
         return redirect('admin_remboursement_modifier')
     
-    if request.POST: # achevé
-        # Extraction de l'ID du paiement choisi dans le formulaire
-        paiement_ids_uncrypted = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
-        # Vérification du nombre d'IDs extraits
-        if paiement_ids_uncrypted:
-            if len(paiement_ids_uncrypted) == 1:  # Un seul ID trouvé, on le stocke en session
-                eleve = Eleve.objects.filter(user=request.user).first() # Si le user est un élève
-                if eleve:
-                    paiement = Payment.objects.filter(id=decrypt_id(paiement_ids_uncrypted[0])).first() # il faut que le paiement est pour le professeur
-                    if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=eleve.user).exists(): # Si non il y a eu une manipulation des données du template
-                        messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {decrypt_id(paiement_ids_uncrypted[0])}")
-                        return redirect('compte_prof')
-                    
-                request.session['payment_id'] = decrypt_id(paiement_ids_uncrypted[0])
+    if request.method == "POST":  # achevé
+        # Extraire l'ID du paiement
+        paiement_id_encrypted = next(
+            (key.split('btn_paiement_id')[1] for key in request.POST if key.startswith('btn_paiement_id')),
+            None
+        )
+
+        if paiement_id_encrypted:
+            paiement_id = decrypt_id(paiement_id_encrypted)
+            paiement = Payment.objects.filter(id=paiement_id).first()
+
+            
+            if not paiement:
+                messages.error(request, f"Le paiement avec l'ID {paiement_id} est introuvable.")
+                return redirect('compte_eleve' if hasattr(request.user, 'eleve') else 'compte_prof' if hasattr(request.user, 'professeur') else 'compte_administrateur')
+
+            # traiter les différents cas: admin, prof, eleve, visiteur
+            # Vérification des droits d'accès
+            if hasattr(request.user, 'eleve') and request.user.is_active:
+                demande_ok = Demande_paiement.objects.filter(id=paiement.model_id, eleve=request.user.eleve).exists()
+                redirection = 'compte_eleve'
+            elif hasattr(request.user, 'professeur') and request.user.is_active:
+                demande_ok = Demande_paiement.objects.filter(id=paiement.model_id, user=request.user).exists()
+                redirection = 'compte_prof'
+            elif request.user.is_staff and request.user.is_active:
+                demande_ok = True
+                redirection = None
+            else:
+                demande_ok = False
+                redirection = 'index'
+
+            if demande_ok:
+                request.session['payment_id'] = paiement_id
                 return redirect('admin_payment_demande_paiement')
+            else:
+                messages.error(request, "Le paiement ne concerne pas l'utilisateur en cours")
+                return redirect(redirection)
 
     # Passage des données au template
     context = {
@@ -4234,8 +4257,8 @@ def admin_remboursement_detaille(request):
         'texte_email': texte_email,
         'details': details,
     }
-    
     return render(request, 'pages/admin_remboursement_detaille.html', context)
+
 
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
@@ -4457,7 +4480,7 @@ def admin_remboursement_email(request):
 
     return render(request, 'pages/admin_remboursement_email.html', context)
 
-@user_passes_test(is_admin_active, login_url='/login/')
+# @user_passes_test(is_admin_active, login_url='/login/')
 def admin_remboursement_modifier(request):
     """
     Vue d'administration permettant d'afficher les détails du réglement d'un professeur,
@@ -4473,6 +4496,7 @@ def admin_remboursement_modifier(request):
     # 1. Condition nécessaire de l'activation du template
     if not accord_id:
         messages.error(request, "Il n'y a pas de remboursement à modifier")
+        if request.user.eleve: return redirect('compte_eleve')
         return redirect('compte_administrateur')
     
 
@@ -4481,6 +4505,7 @@ def admin_remboursement_modifier(request):
     accord_remboursement = AccordRemboursement.objects.filter(id=accord_id).first()
     if not accord_remboursement:
         logger.error(f"AccordRemboursement introuvable pour id={accord_id}")
+        if request.user.eleve: return redirect('liste_remboursement')
         return redirect('admin_remboursement')
     
     
@@ -4532,7 +4557,7 @@ def admin_remboursement_modifier(request):
     
 
     # Vérification si le formulaire a été soumis pour accorder un remboursement
-    if 'btn_enr' in request.POST: # la modification de l'accord de remboursement est activée
+    if 'btn_enr' in request.POST and not request.user.eleve: # la modification de l'accord de remboursement est activée
 
         # Récupération des paiements cochés dans le formulaire (anciens ou / et nouvaux)
         encrypted_payment_keys = [key.split('accord_')[1] for key in request.POST.keys() if key.startswith('accord_')]
@@ -4738,7 +4763,7 @@ def admin_accord_remboursement_modifier(request):
             # même s'il y a erreur l'enregistrement continu car l'envoi de l'email n'est pas obligatoire
     
     # mise en forme du text_email et du sujet de l'email
-    texte = f"\nRèglement prévu le:\t\t{date_remboursement.strftime('%d/%m/%Y')}\t\tEléve: {eleve.user.first_name} {eleve.user.last_name}\n\nListe des paiements des élèves:\nDate paiement\t\t\t\tPaiement\t\t\tRemboursement\n"
+    texte = f"\nRemboursement prévu le:\t\t{date_remboursement.strftime('%d/%m/%Y')}\t\tEléve: {eleve.user.first_name} {eleve.user.last_name}\n\nListe des paiements des élèves:\nDate paiement\t\t\t\tPaiement\t\t\tRemboursement\n"
     for  payment, user_eleve, refunded_amount_str in payments:
         texte += f"{payment.date_creation.strftime('%d/%m/%Y')}\t\t\t\t\t{payment.amount:.2f}€\t\t\t\t\t{refunded_amount_str}\n"
     texte_totaux = (
@@ -4749,7 +4774,7 @@ def admin_accord_remboursement_modifier(request):
 
     if status_label=="Réalisé": texte_totaux += f"  --  Nouvelle date de transfère: {date_trensfere}  -- Nouveau ID de transfère: {transfere_id}"
     texte_fin= texte + texte_totaux
-    sujet = f"Accord de remboursement de: {totaux_payement:.2f}€, pour le: {date_remboursement}"
+    sujet = f"Accord de remboursement de: {totaux_versement:.2f}€, pour le: {date_remboursement}"
 
     if 'btn_accord_enregistrement' in request.POST:  # à terminer 04/05/2025
         #envoie de l'email
