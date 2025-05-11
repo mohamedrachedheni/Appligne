@@ -4685,7 +4685,7 @@ def admin_accord_remboursement_modifier(request):
         return redirect('compte_administrateur')
 
     # Récupérer l'élève ou renvoyer une erreur 404 s'il n'existe pas
-    eleve = get_object_or_404(Eleve, user_id=eleve_id)
+    eleve = get_object_or_404(Eleve, id=eleve_id)
 
     # Récupérer l'ancien l'accord de règlement ou renvoyer une erreur 404 s'il n'existe pas
     accord_remboursement = get_object_or_404(AccordRemboursement, id=accord_id)
