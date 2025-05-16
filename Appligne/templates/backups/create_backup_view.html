@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n admin_urls static %}
+{% block title %} | Création Backup{% endblock %}
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
+    <style>
+        .backup-options {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+        .form-row {
+            margin-bottom: 15px;
+        }
+        .form-row label {
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+        }
+        .form-actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .helptext {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 200px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Suivi des remboursements des élèves par période et échéance</h6>
+                        <h6 class="section-title bg-white text-center text-primary px-3">Un remboursement n’est possible que pour les paiements réclamés par les élèves.</h6>
+                        {% if accord_reglement_approveds %}
+                            <h5 class="text-center ">Création Backup</h5>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+
+                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light mb-3">
+                                <div class="row  g-2 p-3">
+                                    <h2>{% trans "Options de sauvegarde" %}</h2>
+                                    <div class="row ">
+                                        <div class="col-md-12 position-relative  ">     
+                                            <input class="form-check-input" type="checkbox" name="encrypted" id="id_encrypted">
+                                            <label class="form-label" for="id_encrypted">Chiffrement:</label>
+                                        </div>
+                                    </div>
+                                    <div class="row  ">
+                                        <div class="col-md-4 position-relative">
+                                        
+                                        <label for="nouv_status_id" class="form-label">Type de sauvegarde:</label>
+                                        <select class="form-select" name="backup_type" id="id_backup_type">
+                                            <option value="full">{% trans "Complète (toutes les tables)" %}</option>
+                                            <option value="partial">{% trans "Partielle (tables principales)" %}</option>
+                                        </select>
+                                        
+                                    </div>
+
+                                    </div>
+                                    
+                                    <div class="row  ">
+
+                                    </div>
+                                    
+                                    <div class="col-lg-4">
+                                        <label for="text_email" class="form-label">{% trans "Notes:" %}</label>
+                                        <textarea class="form-control profil" name="notes" id="id_notes" rows="3" cols="60" 
+                                                placeholder="{% trans 'Description optionnelle de cette sauvegarde...' %}">{{texte_email}}</textarea>
+                                    </div>
+                                    <div class="row d-flex align-items-start g-2 ">
+                                        <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                            <button type="submit" class="btn btn-primary w-100" name="preview" value="1">
+                                                {% trans "Vérifier les paramètres" %}
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
+                                            <button type="submit" class="btn btn-primary w-100" name="confirm" value="1">
+                                                {% trans "Lancer la sauvegarde" %}
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-1 col-sm-12 d-flex justify-content-center">
+                                            <a href="{% url 'admin:backups_databasebackup_changelist' %}" class="button cancel-link">
+                                                    {% trans "Annuler" %}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Confirmation avant sauvegarde
+        const form = document.getElementById('backup_form');
+        form.addEventListener('submit', function(e) {
+            if (e.submitter.name === 'confirm') {
+                const encrypted = document.getElementById('id_encrypted').checked;
+                if (encrypted) {
+                    if (!confirm("{% trans 'Vous avez activé le chiffrement. Assurez-vous de stocker la clé de chiffrement en lieu sûr. Continuer?' %}")) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                if (!confirm("{% trans 'Cette opération peut prendre plusieurs minutes selon la taille de la base. Continuer?' %}")) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    });
+    
+</script>
+{% endblock %}

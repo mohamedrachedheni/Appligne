@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n admin_urls static %}
+{% block title %} | Création Backup{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Confirmer la restauration</h1>
+    <p>Êtes-vous sûr de vouloir restaurer la sauvegarde <strong>{{ backup.name }}</strong> ?</p>
+    <p><strong>Type:</strong> {{ backup.get_backup_type_display }}</p>
+    <p><strong>Taille:</strong> {{ backup.size }}</p>
+    {% if backup.encrypted %}
+    <div class="alert alert-warning">
+        <strong>Attention:</strong> Cette sauvegarde est chiffrée. La clé de déchiffrement sera utilisée automatiquement.
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <input type="hidden" name="confirm" value="1">
+            <input type="submit" value="Confirmer la restauration" class="btn btn-danger">
+            <a href="{% url 'admin:backups_databasebackup_changelist' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,1091 @@
+2025-05-16 00:13:40,677 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:13:51,777 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:13:55,754 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:13:59,655 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:14:05,912 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:14:22,135 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:14:51,618 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:14:56,673 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:36,854 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:40,705 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:44,153 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:47,913 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:52,868 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:15:57,904 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:16:02,885 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:16:08,867 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:16:46,877 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:16:59,311 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:12,204 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:27,605 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:31,206 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:34,839 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:40,606 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:17:44,892 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:18:37,876 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:18:44,174 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:18:47,944 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:18:55,885 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:27:51,783 [INFO] backups.utils.backup_utils.create_backup:92 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 00:32:43,319 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:33:11,246 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:36:48,341 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:39:16,274 [INFO] backups.utils.backup_utils.create_backup:92 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 00:39:17,238 [INFO] backups.views.create_backup_view:68 - Backup created by heni: backup_full_20250516_003916 (Type: full, Encrypted: False)
+2025-05-16 00:52:14,500 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:54:35,181 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:55:01,252 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:58:43,042 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 00:59:46,731 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:02:08,185 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:02:11,606 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:04:45,716 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:05:48,963 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:05:52,536 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:06:32,953 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:08:24,403 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:16:45,361 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:19:00,513 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:19:58,733 [INFO] backups.utils.backup_utils.create_backup:96 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:19:58,735 [ERROR] backups.views.create_backup_view:91 - Backup failed for heni: cannot access local variable 'backup_path' where it is not associated with a value
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\views.py", line 55, in create_backup_view
+  File "C:\Education\Appligne\div\Appligne\backups\utils\backup_utils.py", line 99, in create_backup
+    with open(backup_path, 'w') as f:
+              ^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'backup_path' where it is not associated with a value
+2025-05-16 01:30:10,477 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:30:14,631 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:30:22,503 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:30:28,788 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:30:32,763 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:31:22,182 [INFO] backups.utils.backup_utils.create_backup:191 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:31:23,180 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_013122 (Type: full, Encrypted: False)
+2025-05-16 01:33:40,975 [INFO] backups.utils.backup_utils.create_backup:191 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:33:41,902 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_013340 (Type: full, Encrypted: False)
+2025-05-16 01:43:18,908 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:43:33,573 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:43:38,728 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:44:46,578 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:44:47,444 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_014446 (Type: full, Encrypted: False)
+2025-05-16 01:47:09,770 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:47:10,643 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_014709 (Type: full, Encrypted: True)
+2025-05-16 01:47:55,282 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 01:47:56,102 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_partial_20250516_014755 (Type: partial, Encrypted: False)
+2025-05-16 01:48:15,952 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 01:48:16,726 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_partial_20250516_014815 (Type: partial, Encrypted: False)
+2025-05-16 01:48:35,292 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 01:48:36,160 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_partial_20250516_014835 (Type: partial, Encrypted: True)
+2025-05-16 01:52:21,974 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:56:03,072 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:56:38,830 [INFO] backups.utils.backup_utils.create_backup:94 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 01:56:39,670 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_015638 (Type: full, Encrypted: False)
+2025-05-16 01:57:10,476 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:57:22,172 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:57:25,668 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:57:30,453 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 01:57:40,383 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:17:06,738 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:17:19,352 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:22:00,342 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:22:16,932 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:28:27,761 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:30:57,684 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:31:50,805 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 02:31:52,062 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_023150 (Type: full, Encrypted: True)
+2025-05-16 02:35:29,219 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:42:29,814 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:45:58,360 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:46:04,645 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:46:09,593 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:47:09,035 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:50:15,448 [INFO] backups.utils.backup_utils.create_backup:55 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 02:50:16,626 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_025015 (Type: full, Encrypted: True)
+2025-05-16 02:51:02,047 [INFO] backups.utils.backup_utils.create_backup:55 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 02:52:54,648 [INFO] backups.utils.backup_utils.create_backup:55 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 02:52:55,578 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_025254 (Type: full, Encrypted: True)
+2025-05-16 02:54:48,733 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:54:55,965 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:55:09,927 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:55:18,079 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:56:20,689 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 02:57:00,420 [INFO] backups.utils.backup_utils.create_backup:55 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 02:57:01,368 [INFO] backups.views.create_backup_view:73 - Backup created by heni: backup_full_20250516_025700 (Type: full, Encrypted: True)
+2025-05-16 02:59:05,513 [INFO] backups.utils.backup_utils.create_backup:55 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 03:10:10,735 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:10:25,309 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:13:00,740 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:13:09,711 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:13:15,471 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:16:18,534 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:17:28,802 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 03:17:29,723 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_031728 (Type: full, Encrypted: True)
+2025-05-16 03:18:30,733 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 03:19:20,331 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 03:20:34,536 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 03:21:13,274 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 03:21:14,134 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_032113 (Type: full, Encrypted: False)
+2025-05-16 03:45:37,714 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:46:16,722 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:47:07,348 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:47:12,362 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:47:33,294 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:49:11,893 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:49:15,694 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:50:03,280 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:50:13,003 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:52:58,290 [ERROR] backups.views.create_backup_view:95 - Backup failed for heni: create_backup() got an unexpected keyword argument 'from_admin'
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\views.py", line 58, in create_backup_view
+    backup = create_backup(
+             ^^^^^^^^^^^^^^
+TypeError: create_backup() got an unexpected keyword argument 'from_admin'
+2025-05-16 03:56:23,764 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:57:42,592 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 03:58:16,552 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:03:15,224 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:04:51,608 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:05:07,982 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:05:53,718 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:08:52,646 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:09:17,543 [ERROR] backups.views.create_backup_view:95 - Backup failed for heni: create_backup() got an unexpected keyword argument 'from_admin'
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\views.py", line 58, in create_backup_view
+    backup = create_backup(
+             ^^^^^^^^^^^^^^
+TypeError: create_backup() got an unexpected keyword argument 'from_admin'
+2025-05-16 04:14:10,042 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:14:25,285 [INFO] backups.utils.backup_utils.create_backup:54 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 04:14:26,178 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_041425 (Type: full, Encrypted: True)
+2025-05-16 04:24:00,803 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:24:09,584 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:28:16,659 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:28:20,161 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:28:23,679 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:28:41,245 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:28:44,681 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:29:23,440 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:31:06,793 [INFO] backups.utils.backup_utils.create_backup:54 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 04:31:07,684 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_043106 (Type: full, Encrypted: True)
+2025-05-16 04:31:35,651 [INFO] backups.utils.backup_utils.create_backup:54 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 04:37:10,449 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:37:22,218 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:38:04,538 [INFO] backups.utils.backup_utils.create_backup:54 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 04:38:05,468 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_043804 (Type: full, Encrypted: True)
+2025-05-16 04:44:09,153 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:44:17,403 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:45:49,186 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 04:49:17,349 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 04:49:18,262 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_044917 (Type: full, Encrypted: True)
+2025-05-16 05:05:03,487 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:05:52,879 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:08:48,265 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:16:08,391 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:16:19,315 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:18:02,658 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:19:23,532 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:21:45,790 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:21:49,785 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:24:52,505 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:25:06,100 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:25:44,966 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:26:38,201 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:27:21,346 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:27:22,382 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/add/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 714, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 1941, in add_view
+    return self.changeform_view(request, None, form_url, extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 1802, in changeform_view
+    return self._changeform_view(request, object_id, form_url, extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 1853, in _changeform_view
+    self.save_model(request, new_object, form, not add)
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 166, in save_model
+    obj.name = backup.name
+               ^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'name'
+2025-05-16 05:27:22,386 [ERROR] django.server.log_message:212 - "POST /Mrhssoc22578338admin/backups/databasebackup/add/ HTTP/1.1" 500 129835
+2025-05-16 05:30:03,955 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:30:19,990 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:31:17,144 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:31:22,524 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:32:57,650 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:36:42,118 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:37:43,616 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:38:10,255 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:38:16,441 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:39:14,427 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:39:54,771 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:40:02,287 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:41:15,568 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:44:01,920 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:48:10,020 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:48:46,623 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:49:34,943 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:49:50,305 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 05:50:40,423 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 05:51:04,426 [INFO] backups.utils.backup_utils.create_backup:57 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 06:34:02,669 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:34:10,788 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:34:21,624 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:35:22,314 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:36:23,420 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:36:34,644 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:38:20,156 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:38:48,904 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:41:13,194 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 06:41:14,208 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_064113 (Type: full, Encrypted: True)
+2025-05-16 06:43:41,950 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 06:43:42,767 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_partial_20250516_064341 (Type: partial, Encrypted: False)
+2025-05-16 06:44:05,694 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 06:44:06,565 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_partial_20250516_064405 (Type: partial, Encrypted: True)
+2025-05-16 06:45:32,990 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 06:45:33,853 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_partial_20250516_064532 (Type: partial, Encrypted: False)
+2025-05-16 06:50:57,338 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 06:50:58,171 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_partial_20250516_065057 (Type: partial, Encrypted: False)
+2025-05-16 06:58:28,813 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:58:32,716 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:58:38,635 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:58:42,629 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:58:54,059 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:58:57,831 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:59:01,701 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:59:54,497 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 06:59:59,195 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:00:02,898 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:00:07,658 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:00:16,428 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:06:55,319 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:07:22,245 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:07:26,544 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:07:31,379 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:08:08,606 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 714, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 141, in changelist_view
+    return super().changelist_view(request, extra_context=extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 2120, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 380, in __len__
+    self._fetch_all()
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 1926, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+2025-05-16 07:08:08,615 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/ HTTP/1.1" 500 211751
+2025-05-16 07:08:20,876 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 714, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 141, in changelist_view
+    return super().changelist_view(request, extra_context=extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 2120, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 380, in __len__
+    self._fetch_all()
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 1926, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+2025-05-16 07:08:20,879 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/ HTTP/1.1" 500 211877
+2025-05-16 07:09:06,573 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:09:19,517 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 714, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 141, in changelist_view
+    return super().changelist_view(request, extra_context=extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 2120, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 380, in __len__
+    self._fetch_all()
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 1926, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+2025-05-16 07:09:19,530 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/ HTTP/1.1" 500 211877
+2025-05-16 07:10:22,623 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 714, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 141, in changelist_view
+    return super().changelist_view(request, extra_context=extra_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\options.py", line 2120, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 380, in __len__
+    self._fetch_all()
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 1926, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\MySQLdb\connections.py", line 257, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'backups_databasebackup.auto_generated' in 'field list'")
+2025-05-16 07:10:22,628 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/ HTTP/1.1" 500 211867
+2025-05-16 07:11:10,322 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:11:28,088 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:13:57,717 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:15:11,906 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:18:58,544 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:19:03,867 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:19:19,476 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:22:32,618 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 07:22:33,623 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_072232 (Type: full, Encrypted: True)
+2025-05-16 07:35:14,052 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:35:26,026 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:35:44,770 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:35:57,386 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:36:06,597 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 07:36:37,830 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 07:36:56,183 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 07:37:39,606 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 07:37:40,512 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_073739 (Type: full, Encrypted: True)
+2025-05-16 08:57:17,084 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 08:59:42,624 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 09:00:53,169 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 09:01:10,073 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 09:02:06,858 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/65/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090110.sql.enc'
+2025-05-16 09:02:06,865 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/65/download/ HTTP/1.1" 500 102287
+2025-05-16 09:04:33,199 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 09:04:43,475 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/66/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090433.sql.enc'
+2025-05-16 09:04:43,475 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/66/download/ HTTP/1.1" 500 102287
+2025-05-16 09:06:12,712 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/66/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090433.sql.enc'
+2025-05-16 09:06:12,712 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/66/download/ HTTP/1.1" 500 102287
+2025-05-16 09:06:20,080 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/66/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090433.sql.enc'
+2025-05-16 09:06:20,081 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/66/download/ HTTP/1.1" 500 102265
+2025-05-16 09:08:07,498 [INFO] backups.utils.backup_utils.create_backup:56 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 09:08:08,312 [INFO] backups.views.create_backup_view:74 - Backup created by heni: backup_full_20250516_090807 (Type: full, Encrypted: True)
+2025-05-16 09:10:39,471 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/67/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090807.sql.enc'
+2025-05-16 09:10:39,471 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/67/download/ HTTP/1.1" 500 103157
+2025-05-16 09:10:47,787 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/67/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090807.sql.enc'
+2025-05-16 09:10:47,787 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/67/download/ HTTP/1.1" 500 103294
+2025-05-16 09:10:56,637 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/67/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090807.sql.enc'
+2025-05-16 09:10:56,637 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/67/download/ HTTP/1.1" 500 103294
+2025-05-16 09:10:57,753 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/67/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090807.sql.enc'
+2025-05-16 09:10:57,753 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/67/download/ HTTP/1.1" 500 103294
+2025-05-16 09:10:58,703 [ERROR] django.request.log_response:241 - Internal Server Error: /Mrhssoc22578338admin/backups/databasebackup/67/download/
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\contrib\admin\sites.py", line 240, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\backups\admin.py", line 94, in download_backup
+    response = FileResponse(backup.backup_file.open('rb'))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\db\models\fields\files.py", line 79, in open
+    self.file = self.storage.open(self.name, mode)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\base.py", line 22, in open
+    return self._open(name, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\core\files\storage\filesystem.py", line 68, in _open
+    return File(open(self.path(name), mode))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne\\div\\Appligne\\media\\backups\\backups\\backup_full_20250516_090807.sql.enc'
+2025-05-16 09:10:58,703 [ERROR] django.server.log_message:212 - "GET /Mrhssoc22578338admin/backups/databasebackup/67/download/ HTTP/1.1" 500 103294
+2025-05-16 10:41:28,496 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:43:32,964 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:43:46,379 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:06,051 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:11,865 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:16,663 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:22,041 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:27,842 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:32,960 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:47:37,696 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:50:26,818 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:50:33,124 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:50:37,065 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:50:43,216 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:51:50,309 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:51:54,955 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:51:59,617 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:04,830 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:13,052 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:17,651 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:21,018 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:24,279 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 10:52:34,644 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:07:25,540 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:07:35,712 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:01,808 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:06,172 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:10,281 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:14,255 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:18,100 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:09:34,075 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:11:23,978 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 11:11:56,069 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 11:11:56,958 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_full_20250516_111156 (Type: full, Encrypted: True)
+2025-05-16 11:22:33,157 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:23:05,448 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:23:37,898 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:23:59,776 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:24:12,377 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:24:32,645 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:25:25,557 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:35:02,954 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:35:44,038 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 11:35:44,896 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_full_20250516_113544 (Type: full, Encrypted: True)
+2025-05-16 11:55:46,531 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:55:55,507 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:56:20,893 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:56:24,567 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:56:28,227 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:56:37,339 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 11:57:22,477 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 11:57:23,392 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_full_20250516_115722 (Type: full, Encrypted: True)
+2025-05-16 12:00:20,262 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:00:55,879 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 12:00:56,783 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_full_20250516_120055 (Type: full, Encrypted: True)
+2025-05-16 12:16:15,470 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:16:22,416 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:16:40,636 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:16:49,843 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:23:06,008 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:23:10,405 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:23:16,446 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:24:43,958 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:24:52,709 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:27:31,789 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:27:43,491 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:28:38,795 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:28:47,307 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:38:44,390 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:39:18,489 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:47:56,214 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:48:11,853 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:48:21,546 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 12:55:03,758 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 13:44:45,952 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 15:23:44,430 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 15:23:45,573 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_full_20250516_152344 (Type: full, Encrypted: True)
+2025-05-16 15:24:02,607 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 15:24:03,437 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_partial_20250516_152402 (Type: partial, Encrypted: False)
+2025-05-16 16:41:15,966 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 16:46:26,605 [INFO] backups.utils.backup_utils.create_backup:58 - Creating backup with command: C:/xampp/mysql/bin/mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06 --ignore-table=Appligne_06.django_session --ignore-table=Appligne_06.django_admin_log
+2025-05-16 16:46:27,732 [INFO] backups.views.create_backup_view:75 - Backup created by heni: backup_partial_20250516_164626 (Type: partial, Encrypted: True)
+2025-05-16 17:12:57,855 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:13:09,316 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:13:17,696 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:13:21,630 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:14:45,317 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:14:58,165 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:21:01,324 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:21:06,706 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 17:40:16,767 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
