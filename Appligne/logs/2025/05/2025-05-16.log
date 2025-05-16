@@ -1089,3 +1089,26 @@ FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Education\\Appligne
 2025-05-16 17:21:01,324 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
 2025-05-16 17:21:06,706 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
 2025-05-16 17:40:16,767 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:25:29,601 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:27:05,268 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:30:19,281 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:33:20,976 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:34:01,593 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 18:34:29,315 [ERROR] backups.utils.backup_utils.create_backup:122 - Backup creation failed: 'Settings' object has no attribute 'MYSQL_PATHS'
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\utils\backup_utils.py", line 41, in create_backup
+    settings.MYSQL_PATHS['mysqldump'],
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\conf\__init__.py", line 91, in __getattr__
+    val = getattr(_wrapped, name)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Settings' object has no attribute 'MYSQL_PATHS'
+2025-05-16 18:35:19,623 [ERROR] backups.utils.backup_utils.create_backup:122 - Backup creation failed: 'Settings' object has no attribute 'MYSQL_PATHS'
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\utils\backup_utils.py", line 41, in create_backup
+    settings.MYSQL_PATHS['mysqldump'],
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\conf\__init__.py", line 91, in __getattr__
+    val = getattr(_wrapped, name)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Settings' object has no attribute 'MYSQL_PATHS'

@@ -28,6 +28,7 @@ urlpatterns = [
     path( ''         , include('pages.urls') ),
     path( 'accounts/' , include('accounts.urls') ),
     path( 'eleves/' , include('eleves.urls') ),
+    path('backups/', include('backups.urls')),  # Assure-toi que c'est bien là
     path('get_departments/', get_departments, name='get_departments'),
     path('get_regions/', get_regions, name='get_regions'),
     path('get_communes/', get_communes, name='get_communes'),

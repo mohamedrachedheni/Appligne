@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'pages.apps.PagesConfig',
     'accounts',
     'eleves',
+    'backups',  # <--- AJOUTE CETTE LIGNE
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
