@@ -1112,3 +1112,36 @@ Traceback (most recent call last):
     val = getattr(_wrapped, name)
           ^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'Settings' object has no attribute 'MYSQL_PATHS'
+2025-05-16 19:48:29,766 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:03:21,925 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:03:44,382 [ERROR] backups.utils.backup_utils.create_backup:122 - Backup creation failed: 'Settings' object has no attribute 'MYSQL_PATHS'
+Traceback (most recent call last):
+  File "C:\Education\Appligne\div\Appligne\backups\utils\backup_utils.py", line 41, in create_backup
+    settings.MYSQL_PATHS['mysqldump'],
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Education\Appligne\div\Appligne\venv\Lib\site-packages\django\conf\__init__.py", line 91, in __getattr__
+    val = getattr(_wrapped, name)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Settings' object has no attribute 'MYSQL_PATHS'
+2025-05-16 20:11:50,953 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:11:54,013 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:17:32,311 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:18:25,876 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:19:59,059 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:20:05,686 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:22:32,666 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:55:40,235 [INFO] googleapiclient.discovery_cache.autodetect:49 - file_cache is only supported with oauth2client<4.0.0
+2025-05-16 20:56:08,492 [INFO] backups.utils.backup_utils.create_backup:30 - Starting backup creation - type: full, encrypted: True
+2025-05-16 20:56:08,493 [DEBUG] backups.utils.backup_utils.create_backup:32 - DB credentials: {'ENGINE': 'django.db.backends.mysql', 'NAME': 'Appligne_06', 'USER': 'root', 'PASSWORD': '', 'HOST': 'localhost', 'PORT': '3306', 'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}, 'ATOMIC_REQUESTS': False, 'AUTOCOMMIT': True, 'CONN_MAX_AGE': 0, 'CONN_HEALTH_CHECKS': False, 'TIME_ZONE': None, 'TEST': {'CHARSET': None, 'COLLATION': None, 'MIGRATE': True, 'MIRROR': None, 'NAME': None}}
+2025-05-16 20:56:08,493 [INFO] backups.utils.backup_utils.create_backup:38 - Backup will be saved to: C:\Education\Appligne\div\Appligne\media\backups\backup_full_20250516_205608.sql
+2025-05-16 20:56:08,493 [INFO] backups.utils.backup_utils.create_backup:60 - Creating backup with command: C:\xampp\mysql\bin\mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 20:56:09,564 [INFO] backups.views.create_backup_view:77 - Backup created by heni: backup_full_20250516_205608 (Type: full, Encrypted: True)
+2025-05-16 20:58:23,945 [INFO] backups.utils.backup_utils.create_backup:30 - Starting backup creation - type: full, encrypted: True
+2025-05-16 20:58:23,945 [DEBUG] backups.utils.backup_utils.create_backup:32 - DB credentials: {'ENGINE': 'django.db.backends.mysql', 'NAME': 'Appligne_06', 'USER': 'root', 'PASSWORD': '', 'HOST': 'localhost', 'PORT': '3306', 'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}, 'ATOMIC_REQUESTS': False, 'AUTOCOMMIT': True, 'CONN_MAX_AGE': 0, 'CONN_HEALTH_CHECKS': False, 'TIME_ZONE': None, 'TEST': {'CHARSET': None, 'COLLATION': None, 'MIGRATE': True, 'MIRROR': None, 'NAME': None}}
+2025-05-16 20:58:23,946 [INFO] backups.utils.backup_utils.create_backup:38 - Backup will be saved to: C:\Education\Appligne\div\Appligne\media\backups\backup_full_20250516_205823.sql
+2025-05-16 20:58:23,946 [INFO] backups.utils.backup_utils.create_backup:60 - Creating backup with command: C:\xampp\mysql\bin\mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06
+2025-05-16 20:58:24,860 [INFO] backups.views.create_backup_view:77 - Backup created by heni: backup_full_20250516_205823 (Type: full, Encrypted: True)
+2025-05-16 21:03:50,024 [INFO] backups.utils.backup_utils.create_backup:30 - Starting backup creation - type: full, encrypted: True
+2025-05-16 21:03:50,024 [DEBUG] backups.utils.backup_utils.create_backup:32 - DB credentials: {'ENGINE': 'django.db.backends.mysql', 'NAME': 'Appligne_06', 'USER': 'root', 'PASSWORD': '', 'HOST': 'localhost', 'PORT': '3306', 'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}, 'ATOMIC_REQUESTS': False, 'AUTOCOMMIT': True, 'CONN_MAX_AGE': 0, 'CONN_HEALTH_CHECKS': False, 'TIME_ZONE': None, 'TEST': {'CHARSET': None, 'COLLATION': None, 'MIGRATE': True, 'MIRROR': None, 'NAME': None}}
+2025-05-16 21:03:50,024 [INFO] backups.utils.backup_utils.create_backup:38 - Backup will be saved to: C:\Education\Appligne\div\Appligne\media\backups\backup_full_20250516_210350.sql
+2025-05-16 21:03:50,024 [INFO] backups.utils.backup_utils.create_backup:60 - Creating backup with command: C:\xampp\mysql\bin\mysqldump.exe --user=root --password= --host=localhost --port=3306 --single-transaction --routines --triggers Appligne_06

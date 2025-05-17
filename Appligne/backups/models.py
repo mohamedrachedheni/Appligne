@@ -10,7 +10,8 @@ from django.core.files.storage import FileSystemStorage
 # backup_storage = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'backups'))
 backup_storage = FileSystemStorage(
     location=os.path.join(settings.MEDIA_ROOT, 'backups'),
-    file_permissions_mode=0o640  # Permissions plus sécurisées
+    file_permissions_mode=0o640,
+    base_url='/media/backups/'  # Ajoutez cette ligne
 )
 
 

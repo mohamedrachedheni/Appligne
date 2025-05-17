@@ -1,3 +1,5 @@
+# Appligne/urls.py
+
 """
 URL configuration for Appligne project.
 
@@ -23,6 +25,7 @@ from decouple import config
 from accounts.views import get_departments, get_regions, get_communes
 
 
+
 urlpatterns = [
     path(config("ADMIN_ROUTE", default='admin/'), admin.site.urls),
     path( ''         , include('pages.urls') ),
@@ -33,3 +36,4 @@ urlpatterns = [
     path('get_regions/', get_regions, name='get_regions'),
     path('get_communes/', get_communes, name='get_communes'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

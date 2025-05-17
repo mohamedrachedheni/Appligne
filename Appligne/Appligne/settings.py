@@ -142,6 +142,13 @@ MEDIA_ROOT = BASE_DIR /  'media'
 
 MEDIA_URL = 'media/'
 
+# Configuration pour mysqldump (sous Windows avec XAMPP)
+MYSQL_PATHS = {
+    'mysqldump': r'C:\xampp\mysql\bin\mysqldump.exe',
+    'mysql': r'C:\xampp\mysql\bin\mysql.exe'
+}
+
+
 # localise l'emplacement des fichiers static du front_end qui vont etre 
 # utiliser par django pour fabriquer le dossier static fonctionnel 
 # dans django et qui contient le repertoire admin

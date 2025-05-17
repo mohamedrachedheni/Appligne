@@ -24,18 +24,28 @@ def get_db_credentials():
 
 
 
+from django.core.files.base import ContentFile
+from cryptography.fernet import Fernet
+import subprocess
+import os
+
+from django.conf import settings
+from django.core.files import File
+import logging
+
+logger = logging.getLogger(__name__)
+
 def create_backup(backup_type, encrypted=False, notes=""):
-    """Crée une sauvegarde de la base de données sans duplication"""
-    credentials = get_db_credentials()
-    backup_filename = generate_backup_filename(backup_type)
-    backup_dir = os.path.join(settings.MEDIA_ROOT, 'backups')
-    
-    # Chemin final unique
-    final_path = os.path.join(backup_dir, backup_filename)
-    
+    """Crée une sauvegarde de la base de données sans duplication sur disque"""
     try:
-        os.makedirs(backup_dir, exist_ok=True)
-        
+        logger.info(f"Starting backup creation - type: {backup_type}, encrypted: {encrypted}")
+        credentials = get_db_credentials()
+        logger.debug(f"DB credentials: {credentials}")
+
+        backup_filename = generate_backup_filename(backup_type)
+        if encrypted:
+            backup_filename += '.enc'
+
         # Construction de la commande mysqldump
         cmd = [
             settings.MYSQL_PATHS['mysqldump'],
@@ -48,95 +58,63 @@ def create_backup(backup_type, encrypted=False, notes=""):
             "--triggers",
             credentials['NAME']
         ]
-        
+
         if backup_type == 'partial':
             cmd.extend([
                 f"--ignore-table={credentials['NAME']}.django_session",
                 f"--ignore-table={credentials['NAME']}.django_admin_log"
             ])
-        
+
         logger.info(f"Creating backup with command: {' '.join(cmd)}")
-        
-        # Écriture directe dans le fichier final
-        with open(final_path, 'w') as f:
-            process = subprocess.Popen(
+
+        # Exécution de la commande avec sortie capturée en mémoire
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False
+        )
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            error_msg = stderr.decode('utf-8') if stderr else "Unknown error"
+            raise subprocess.CalledProcessError(
+                process.returncode,
                 cmd,
-                stdout=f,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-                shell=True
+                error_msg
             )
-            _, stderr = process.communicate()
-            
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    process.returncode,
-                    cmd,
-                    stderr
-                )
-        
-        # Vérification du fichier
-        if os.path.getsize(final_path) == 0:
-            raise Exception("Backup file is empty - no data was dumped")
-        
-        # Gestion du chiffrement
+
+        if not stdout:
+            raise Exception("Backup content is empty")
+
+        # Chiffrement si demandé
         if encrypted:
-            with open(final_path, 'rb') as f:
-                data = f.read()
-            
             key = Fernet.generate_key()
             cipher = Fernet(key)
-            encrypted_data = cipher.encrypt(data)
-            
-            encrypted_path = final_path + '.enc'
-            with open(encrypted_path, 'wb') as f:
-                f.write(encrypted_data)
-                f.write(b'\nKEY:' + key)
-            
-            os.remove(final_path)
-            final_path = encrypted_path
-        
-        # Création de l'objet DatabaseBackup sans recréer le fichier
+            encrypted_data = cipher.encrypt(stdout)
+            final_data = encrypted_data + b'\nKEY:' + key
+        else:
+            final_data = stdout
+
+        # Création de l'objet de sauvegarde
         backup = DatabaseBackup(
-            name=backup_filename.replace('.sql', ''),
+            name=backup_filename.replace('.sql', '').replace('.enc', ''),
             backup_type=backup_type,
             encrypted=encrypted,
             notes=notes,
             successful=True
         )
-        
-        # Associe le fichier existant sans le recréer
-        """
-        backup.backup_file.save(...) enregistre le fichier dans le champ FileField correctement.
-        File(f) donne accès à la méthode .size, qui sera utilisée par get_file_size() dans save().
-        Le save=False permet de retarder la sauvegarde du modèle jusqu’au backup.save() final, ce qui est plus propre.
-        """
-        with open(final_path, 'rb') as f:
-            backup.backup_file.save(os.path.basename(final_path), File(f), save=False)
 
+        # Sauvegarde en mémoire via ContentFile
+        backup.backup_file.save(backup_filename, ContentFile(final_data), save=False)
         backup.save()
-        
+
         return backup
-        
+
     except Exception as e:
-        logger.error(f"Backup creation failed: {str(e)}", exc_info=True)
-        
-        # Nettoyage en cas d'erreur
-        if 'final_path' in locals() and os.path.exists(final_path):
-            os.remove(final_path)
-        
-        # Création d'un objet d'erreur
-        backup = DatabaseBackup(
-            name=backup_filename.replace('.sql', ''),
-            backup_type=backup_type,
-            encrypted=encrypted,
-            notes=notes,
-            successful=False,
-            error_message=str(e),
-            auto_generated = True
-        )
-        backup.save()
-        return backup
+        logger.error(f"Backup failed completely: {str(e)}", exc_info=True)
+        raise
+
 
 
 
