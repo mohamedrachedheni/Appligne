@@ -4,7 +4,7 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime
-from django.conf import settings
+from django.conf import settings # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
 from django.db import connection
 from django.core.files import File
 from cryptography.fernet import Fernet
@@ -32,6 +32,9 @@ import os
 from django.conf import settings
 from django.core.files import File
 import logging
+
+# from django.conf import settings # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
+# mysqldump_path = settings.MYSQL_PATHS['mysqldump'] # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
 
 logger = logging.getLogger(__name__)
 

@@ -142,11 +142,22 @@ MEDIA_ROOT = BASE_DIR /  'media'
 
 MEDIA_URL = 'media/'
 
-# Configuration pour mysqldump (sous Windows avec XAMPP)
-MYSQL_PATHS = {
-    'mysqldump': r'C:\xampp\mysql\bin\mysqldump.exe',
-    'mysql': r'C:\xampp\mysql\bin\mysql.exe'
-}
+
+# adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
+import platform
+import shutil
+
+if platform.system() == "Windows":
+    MYSQL_PATHS = {
+        'mysqldump': r'C:\xampp\mysql\bin\mysqldump.exe',
+        'mysql': r'C:\xampp\mysql\bin\mysql.exe',
+    }
+else:
+    # Sur Linux (PythonAnywhere), on utilise le chemin trouvé dans le PATH ou un chemin classique
+    MYSQL_PATHS = {
+        'mysqldump': shutil.which('mysqldump') or '/usr/bin/mysqldump',
+        'mysql': shutil.which('mysql') or '/usr/bin/mysql',
+    }
 
 
 # localise l'emplacement des fichiers static du front_end qui vont etre 
