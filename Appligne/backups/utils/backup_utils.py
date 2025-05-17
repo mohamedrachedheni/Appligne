@@ -6,10 +6,11 @@ import tempfile
 from datetime import datetime
 from django.conf import settings # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
 from django.db import connection
-from django.core.files import File
+# from django.core.files import File
 from cryptography.fernet import Fernet
 from backups.models import DatabaseBackup
 import logging
+from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
 
@@ -22,21 +23,6 @@ def get_db_credentials():
     """Récupère les credentials de la base de données"""
     return connection.settings_dict
 
-
-
-from django.core.files.base import ContentFile
-from cryptography.fernet import Fernet
-import subprocess
-import os
-
-from django.conf import settings
-from django.core.files import File
-import logging
-
-# from django.conf import settings # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
-# mysqldump_path = settings.MYSQL_PATHS['mysqldump'] # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
-
-logger = logging.getLogger(__name__)
 
 def create_backup(backup_type, encrypted=False, notes=""):
     """Crée une sauvegarde de la base de données sans duplication sur disque"""
