@@ -109,7 +109,7 @@ class DatabaseBackupAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect(reverse('admin:backups_databasebackup_restore', args=[backup_id]))
 
         # Afficher la page de confirmation
-        return render(request, 'templates/backups/confirm_restore.html', {
+        return render(request, 'backups/confirm_restore.html', {
             'backup': backup,
             'opts': self.model._meta,
             'title': 'Confirmer la restauration'

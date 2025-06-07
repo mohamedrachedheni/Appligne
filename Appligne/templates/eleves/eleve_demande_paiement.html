@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Demande de paiement{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2  ">
+            {% include 'partials/_sidebar_eleve.html' %}
+        </div>
+        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+            <div class="container-xxl py-1" >
+                <div class="container  ">
+                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Détails demande de paiement émise par le professeur</h6>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" >
+                {% csrf_token %}
+                {% if  request.user.is_authenticated  and request.user.is_active %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light py-5 " >
+                                <div class="row  g-2 ">
+                                    <div class="col-md-3 col-sm-12 position-relative">
+                                        <label for="eleve_id" class="form-label">Elève</label>
+                                        <input type="text" class="form-control form-control-intitule" id="eleve_id" value="{{demande_paiement.eleve.user.first_name}} {{demande_paiement.eleve.user.last_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-3 col-sm-12 position-relative ">
+                                        <label for="date_paiement_id" class="form-label">Date limite de paiement</label>
+                                        <input type="text" class="form-control form-control-date "  name="echeance" placeholder="Sélectionnez une date" value="{{ date_expiration|default:today|date:'d/m/Y' }}" 
+                                        {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
+                                            disabled
+                                        {% elif demande_paiement.payment_id %}
+                                            disabled
+                                        {% elif date_expiration and  today  <=  date_expiration %}
+                                            disabled
+                                        {% endif %}
+                                         >
+                                    </div>
+                                    <div class="col-md-6 col-sm-12 position-relative">
+                                        <input  class="form-control" id="url_paiement_id" autocomplete="off" name="url_paiement" value="{{demande_paiement.url_paiement}}" type="hidden" >
+                                    </div>
+                                    <div class="col-md-3 col-sm-12 position-relative">
+                                        <label for="prof_id" class="form-label">Professeur</label>
+                                        <input type="text" class="form-control form-control-intitule" id="prof_id" value="{{demande_paiement.user.first_name}} {{demande_paiement.user.last_name}}" readonly >
+                                    </div>
+                                    <div class="col-md-3 col-sm-12 position-relative ">
+                                        <label for="date_demande_id" class="form-label">date demande de paiement</label>
+                                        <input type="text" class="form-control form-control-intitule" id="date_demande_id"  value="{{demande_paiement.date_creation|date:'d/m/Y'}}" readonly >
+                                    </div>
+                                    <div class="col-md-3 col-sm-12 position-relative">
+                                        <label for="mnt_demande_id" class="form-label">Montant demandé</label>
+                                        <input type="text" class="form-control form-control-intitule" id="mnt_demande_id" value="{{demande_paiement.montant|default:'0.00'|floatformat:2}} €" readonly >
+                                    </div>
+                                    <div class="col-md-3 col-sm-12 position-relative">
+                                        <label for="statut_demande_id" class="form-label">Statut de la demande</label>
+                                        <input type="text"
+                                            class="form-control form-control-intitule {% if demande_paiement.statut_demande == 'Contester' %}text-danger{% endif %}"
+                                            id="statut_demande_id"
+                                            value="{{ demande_paiement.statut_demande }}"
+                                            readonly>
+                                    </div>
+                                    <hr>
+                                </div>
+                                
+                                {% for cours, prix_public in cours_prix_publics %}
+                                            <div class="row  g-2 ">
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="format_id_{{ id }}" class="form-label">Format cours</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="format_id_{{ id }}"  value="{{cours.format_cours}}" readonly >
+                                                </div>
+                                                <div class="col-md-3 col-sm-12 position-relative">
+                                                    <label for="matiere_id_{{ id }}" class="form-label">Matière</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="matiere_id_{{ id }}"  value="{{cours.matiere}}" readonly >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="niveau_id_{{ id }}" class="form-label">Niveau</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="niveau_id_{{ id }}"  value="{{cours.niveau}}" readonly >
+                                                </div>
+                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                    <label for="prix_heure_id" class="form-label">Prix/h accordé</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="prix_heure_id" value="{{cours.prix_heure|default:'0.00'|floatformat:2}} €" readonly >
+                                                </div>
+                                                    <div class="col-md-2 col-sm-12 position-relative">
+                                                        <label for="prix_heure_publie_id" class="form-label">Prix/h publié</label>
+                                                        <input type="text" class="form-control form-control-intitule" id="prix_heure_publie_id" value="{{prix_public|default:'0.00'|floatformat:2}} €" readonly >
+                                                    </div>
+                                                <hr>
+                                                {% for cours_paiement, horaire in horaires %}
+                                                    {% if cours == cours_paiement %}
+                                                        <div class="row   d-flex justify-content-end">
+                                                            <div class="col-md-2 col-sm-12 position-relative ">
+                                                                <label for="date_seance_id_{{ id }}" class="form-label">Date séance</label>
+                                                                <input type="text" class="form-control form-control-intitule" id="date_seance_id_{{ id }}"  value="{{horaire.date_cours|date:'d/m/Y'}}" readonly >
+                                                            </div>
+                                                            <div class="col-md-2 col-sm-12 position-relative">
+                                                                <label for="duree_id_{{ id }}" class="form-label">Durée</label>
+                                                                <input type="text" class="form-control form-control-intitule" id="duree_id_{{ id }}"  value="{{horaire.duree}}" readonly >
+                                                            </div>
+                                                            <div class="col-md-4 col-sm-12 position-relative">
+                                                                <label for="contenu_id_{{ id }}" class="form-label">Contenu</label>
+                                                                <input type="text" class="form-control form-control-intitule" id="contenu_id_{{ id }}"  value="{{horaire.contenu}}" readonly >
+                                                            </div>
+                                                            <div class="col-md-2 col-sm-12 position-relative">
+                                                                <label for="statut_seance_id_{{ id }}" class="form-label">Statut séance</label>
+                                                                <input type="text" class="form-control form-control-intitule" id="statut_seance_id_{{ id }}"  value="{{horaire.statut_cours}}" readonly >
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <br>
+                                                <hr>
+                                            </div>
+                                {% endfor %}
+                                
+                                <div class="row  " style="margin-bottom: 10px;">
+                                    <div class="col-lg-6 col-sm-12">
+                                        <label for="text_email_prof" class="form-label"><strong>Message du professeur</strong></label>
+                                        <textarea class="form-control profil" id="text_email_prof"  readonly>{{texte_email_prof}}</textarea>
+                                    </div>
+                                    <div class="col-lg-6 col-sm-12">
+                                        <label for="text_email_eleve" class="form-label"><strong>Message de l'élève</strong></label>
+                                        <textarea class="form-control profil" id="text_email_eleve"  readonly>{{texte_email_eleve}}</textarea>
+                                    </div>
+                                </div>
+                                <div class="row justify-content-between g-2 p-3">
+                                    <div class="col-lg-5 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >Voire réclamation</button>
+                                    </div>
+                                    <div class="col-lg-5 col-md-4 col-sm-6">
+                                        <button type="button" class="btn btn-primary w-100" id="btn_passer_au_paiement" data-url="{{ demande_paiement.url_paiement }}"
+                                            {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
+                                                disabled
+                                            {% elif demande_paiement.payment_id %}
+                                                disabled
+                                            {% elif not date_expiration or not demande_paiement.url_paiement or   date_expiration < today %}
+                                                disabled
+                                            {% endif %}
+                                            >Passer au paiement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+
+<form method="POST" id="paiement_form">
+  {% csrf_token %}
+  <input type="hidden" name="paiement_reponse" id="paiement_reponse_input">
+
+  <div class="modal fade" id="webModal" tabindex="-1" aria-labelledby="webModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 90%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer le paiement</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <div id="paiement_loader" class="text-center my-3" style="display:none;">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p>Chargement de la page de paiement...</p>
+          </div>
+          <div id="paiement_error" class="alert alert-danger d-none" role="alert">
+            La page de paiement est inaccessible. Veuillez réessayer plus tard.
+          </div>
+          <iframe id="iframe_paiement" src="" width="100%" height="500px" style="border:none;"></iframe>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success" id="btn_terminer" onclick="setPaiementResponse(true)">Terminer</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setPaiementResponse(false)">Annuler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+
+
+{% endblock %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script> -->
+<script>
+    // http://localhost:8000/profil_prof/2/
+// fonction pour redimentionner les Textarea selon leur contenu
+function adjustTextareaHeight() {
+const textareas = document.getElementsByClassName('form-control profil');
+
+for (let i = 0; i < textareas.length; i++) {
+    const textarea = textareas[i];
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+}
+}
+</script>
+<script>
+    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
+    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+</script>
+
+<script>
+// setPaiementResponse : enregistre si l'utilisateur a confirmé ou annulé.
+// fetch(..., {method: 'HEAD'}) : vérifie que l’URL est valide sans la charger.
+// iframe.src = url : charge la page de paiement dans une iframe seulement si tout va bien.
+// Gestion du spinner et des erreurs : l’utilisateur voit un chargement, ou un message d’erreur s’affiche.
+
+// Fonction appelée quand l’utilisateur clique sur "Terminer" ou "Annuler"
+function setPaiementResponse(val) {
+    // Met à jour un champ caché pour indiquer si le paiement est confirmé ("True") ou annulé ("False")
+    document.getElementById("paiement_reponse_input").value = val ? "True" : "False";
+}
+
+// Ajoute un écouteur d’événement sur le bouton "Passer au paiement"
+document.getElementById("btn_passer_au_paiement").addEventListener("click", function () {
+    const url = this.dataset.url; // Récupère l’URL de paiement depuis l’attribut data-url du bouton
+    const iframe = document.getElementById("iframe_paiement"); // Iframe où sera chargée la page de paiement
+    const loader = document.getElementById("paiement_loader"); // Élément de chargement (spinner)
+    const errorMsg = document.getElementById("paiement_error"); // Zone de message d’erreur
+    const btnTerminer = document.getElementById("btn_terminer"); // Bouton "Terminer"
+
+    // ------------------- Réinitialisation ------------------- //
+    iframe.src = ""; // Vide l'iframe
+    loader.style.display = "block"; // Affiche le spinner de chargement
+    errorMsg.classList.add("d-none"); // Cache le message d’erreur
+    btnTerminer.disabled = true; // Désactive le bouton "Terminer" tant que l’URL n’est pas validée
+
+    // ------------------- Vérification de l'URL ------------------- //
+    // Envoie une requête HEAD (sans contenu) pour vérifier que l'URL existe et répond
+    fetch(url, { method: 'HEAD' })
+        .then(response => {
+            // Affiche le modal Bootstrap une fois la vérification terminée
+            const modal = new bootstrap.Modal(document.getElementById("webModal"));
+            modal.show();
+
+            if (response.ok) {
+                // Si la réponse HTTP est correcte (status 200–299)
+                iframe.src = url; // Charge l'URL dans l’iframe
+                loader.style.display = "none"; // Cache le loader
+                errorMsg.classList.add("d-none"); // S’assure que le message d’erreur est caché
+                btnTerminer.disabled = false; // Active le bouton "Terminer"
+            } else {
+                // Si la réponse HTTP est invalide (ex: 404, 500…)
+                loader.style.display = "none"; // Cache le loader
+                errorMsg.classList.remove("d-none"); // Affiche le message d’erreur
+                iframe.src = ""; // Vide l’iframe
+                btnTerminer.disabled = true; // Laisse "Terminer" désactivé
+            }
+        })
+        .catch(error => {
+            // Si l’URL est invalide ou inaccessible (erreur réseau)
+            const modal = new bootstrap.Modal(document.getElementById("webModal"));
+            modal.show();
+
+            loader.style.display = "none"; // Cache le loader
+            errorMsg.classList.remove("d-none"); // Affiche le message d’erreur
+            iframe.src = ""; // Vide l’iframe
+            btnTerminer.disabled = true; // Désactive le bouton "Terminer"
+        });
+});
+</script>
+
+
+
+
+{% endblock %}

@@ -1,3 +1,5 @@
+# pages/urls.py
+
 from django.urls import path
 from . import views
 
@@ -35,4 +37,12 @@ urlpatterns = [
     path( 'admin_remboursement_email' , views.admin_remboursement_email , name='admin_remboursement_email' ),
     path('admin_remboursement_modifier', views.admin_remboursement_modifier, name='admin_remboursement_modifier'),
     path('admin_accord_remboursement_modifier', views.admin_accord_remboursement_modifier, name='admin_accord_remboursement_modifier'),
+    path('seconnecter', views.seconnecter, name='seconnecter'),
+    path('contact-admin/', views.contact_admin, name='contact_admin'),
+    path('confirm_email/<str:token>/', views.confirm_email, name='confirm_email'),
+    path('password_reset_request/', views.password_reset_request, name='password_reset_request'),
+    path('password_reset_confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('demande_paiement_admin', views.demande_paiement_admin, name='demande_paiement_admin'),
+    path('admin_demande_paiement', views.admin_demande_paiement, name='admin_demande_paiement'),
+
 ]

@@ -59,6 +59,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+X_FRAME_OPTIONS = 'SAMEORIGIN' # Permet l’affichage de tes propres pages dans une iframe
+
 ROOT_URLCONF = 'Appligne.urls'
 
 TEMPLATES = [
@@ -206,11 +208,52 @@ EMAIL_HOST_USER = 'prosib25@gmail.com'  # Votre adresse Gmail
 EMAIL_HOST_PASSWORD = PASSWORD_EMAIL  # Mot de passe de votre compte Gmail
 EMAIL_USE_TLS = True  # Utiliser TLS (Transport Layer Security)
 
+DEFAULT_FROM_EMAIL = 'no-reply@monsite.com' # email par défaut si l'email de l'expéditeur manque, comme adresse de secours
+ADMIN_EMAIL = 'prosib25@gmail.com' # email de l'administrateur
+
 # Configurer les paramètres JWT
 PASSWORD_JWT = config('PASSWORD_JWT') # Récupération du mot de passe PASSWORD_JWT depuis le fichier .env
 JWT_SECRET = PASSWORD_JWT # your_secret_key
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 3600  # Token expiration time (e.g., 1 hour)
+
+# Configurer les paramètres reCAPTCHA 
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+RECAPTCHA_MIN_SCORE = 0.5  # Seuil de sécurité (0.5-0.9 selon votre tolérance)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name}:{lineno} - {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8',  # ✅ Ici c'est valide
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'eleves': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
 
 
 

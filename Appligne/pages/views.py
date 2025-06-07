@@ -1,44 +1,52 @@
 
 from accounts.models import Prof_zone, Departement, Matiere, Niveau, Region, Professeur, Format_cour, Pro_fichier, Diplome_cathegorie
-from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie, Mes_eleves,Detail_demande_paiement, Horaire, Cours
-from accounts.models import  Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement, DetailAccordRemboursement, AccordRemboursement
+from accounts.models import Diplome, Experience, Prof_doc_telecharge, Pays, Experience_cathegorie,  Detail_demande_paiement
+from accounts.models import Email_telecharge, Prix_heure, Prof_mat_niv, Historique_prof, Commune, Payment, Demande_paiement, DetailAccordReglement, AccordReglement, DetailAccordRemboursement, AccordRemboursement
 from eleves.models import Temoignage, Parent, Eleve
-from .models import Reclamation, ReclamationCategorie, PieceJointeReclamation, MessageReclamation
+from .models import Reclamation, ReclamationCategorie, MessageReclamation, FAQ, UserProfile
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth import authenticate, login, get_user_model
+from django.contrib.auth.tokens import default_token_generator, PasswordResetTokenGenerator
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from django.db.models import OuterRef, Subquery, DecimalField, Q, F, DurationField
-from django.core.validators import  EmailValidator
-from django.core.exceptions import  ValidationError, ObjectDoesNotExist
-from django.core.paginator import Paginator
-from django.core.mail import send_mail
 from django.http import JsonResponse
-from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from django.views.decorators.csrf import csrf_protect
+from django.core.paginator import Paginator
+from django.core.mail import send_mail, EmailMessage
+from django.template.loader import render_to_string
 from django.core.validators import validate_email, EmailValidator
+from django.core.exceptions import ValidationError
+from django.db.models import OuterRef, Subquery, DecimalField, Q, F, Min, Max
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Min, Max
-from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.utils.crypto import get_random_string
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from collections import defaultdict
-from .utils import decrypt_id, encrypt_id
+from .utils import decrypt_id, encrypt_id, handle_recaptcha_validation, get_client_ip
+from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
 import logging
-# Configuration du logger avec le nom du module actuel
+import jwt
+import random
+import string
+from django.conf import settings
+import requests  # à mettre tout en haut du fichier
+from urllib.parse import urlparse
+
 logger = logging.getLogger(__name__)
 
-# Enregistrement des logs
-    # logger.debug("Page visitée")
-    # logger.info("Action utilisateur")
-    # logger.warning("Attention à un truc")
-    # logger.error("Une erreur est survenue") 
-
-from .models import FAQ 
+###########
 
 
-# Create your views here.
-
-# créer une méthode utilitaire :
+# Méthode utilitaire permettant de récupérer un objet ou de retourner None s'il n'existe pas.
+# Elle prend en paramètre un modèle Django et des critères de filtrage (**kwargs).
+# Si un objet correspondant aux critères est trouvé, il est retourné.
+# Si aucun objet n'est trouvé (c'est-à-dire que le modèle lève une exception DoesNotExist),
+# la méthode retourne None au lieu de propager l'exception.
 def get_or_none(model, **kwargs):
     try:
         return model.objects.get(**kwargs)
@@ -2617,23 +2625,23 @@ def admin_payment_demande_paiement(request):
     """
     Vue d'administration permettant d'afficher les détails du paiement d'un élève,
     liés à une demande de paiement faite par un professeur.
-    Accessible uniquement aux administrateurs actifs.
     """
 
-    # Récupération sécurisée de l'accord de règlement ou renvoi d'une erreur 404
+    # dans le cas ou l'ID est payment_id non cripté
     payment_id = request.session.get('payment_id')
+
     
+
     # Condition nécessaire de l'activation du template
     if not payment_id:
         messages.info(request, "Il n'y a pas de paiement")
         return redirect('compte_administrateur')
-    
-    # Récupération du paiement lié à une demande de paiement
-    payment = get_object_or_404(Payment, id=payment_id, model="demande_paiement")
-    
-    # Récupération de la demande de paiement associée
-    demande_paiement = get_object_or_404(Demande_paiement, id=payment.model_id)
-    
+    elif payment_id:
+        # Récupération du paiement lié à une demande de paiement
+        payment = get_object_or_404(Payment, id=payment_id, model="demande_paiement")
+        # Récupération de la demande de paiement associée
+        demande_paiement = get_object_or_404(Demande_paiement, id=payment.model_id)
+
     # Récupération des détails de la demande de paiement avec les cours et horaires associés
     details_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(demande_paiement=demande_paiement)
     
@@ -3181,9 +3189,9 @@ def nouvelle_reclamation(request):
         return redirect('signin')
 
     user = request.user
-    titre = request.POST.get('titre', "").strip()
-    message = request.POST.get('message', "").strip()
-    categorie_nom = request.POST.get('categorie', "").strip()
+    titre = request.POST.get('titre', "").strip() # du template nouvelle_reclamation
+    message = request.POST.get('message', "").strip() # du template nouvelle_reclamation
+    categorie_nom = request.POST.get('categorie', "").strip() # du template nouvelle_reclamation
 
     if 'btn_enr' in request.POST:
         if titre and message and categorie_nom:
@@ -3226,6 +3234,7 @@ def nouvelle_reclamation(request):
             # réclamation à partir un paiement prés déterminé
             if  hasattr(user, 'eleve'):
                 payment_id = request.session.get('reclamation_payment_id')
+                demande_paiement_id = request.session.get('reclamation_demande_paiement_id')
                 if payment_id:
                     payment = Payment.objects.get(id=payment_id)
                     if not payment: messages.error(request, "Il n'y a pas de paiement lié à la reclamation")
@@ -3233,6 +3242,22 @@ def nouvelle_reclamation(request):
                         payment.reclamation=reclamation
                         payment.save()
                         messages.success(request, 'Le paiement est mis à jour.')
+                        demande_paiement = Demande_paiement.objects.get(id=payment.model_id)
+                        if demande_paiement:
+                            demande_paiement.reclamation=reclamation
+                            demande_paiement.statut_demande='Contester'
+                            demande_paiement.save()
+                            messages.success(request, 'La demande de  paiement est mise à jour.')
+                        else: messages.error(request, "Pas de demande de paiement trouvée")
+                elif demande_paiement_id:
+                    demande_paiement_id_decript = decrypt_id(demande_paiement_id)
+                    if demande_paiement_id_decript:
+                        demande_paiement = Demande_paiement.objects.get(id=demande_paiement_id_decript)
+                        demande_paiement.reclamation=reclamation
+                        demande_paiement.statut_demande='Contester'
+                        demande_paiement.save()
+                        messages.success(request, 'La demande de  paiement est mise à jour.')
+                    else: messages.error(request, "Pas de demande de paiement trouvée")
 
             messages.success(request, 'Réclamation enregistrée.')
             if  hasattr(user, 'eleve'): return redirect('compte_eleve')
@@ -3360,10 +3385,7 @@ def reclamations(request):
 
 
 
-from django.core.paginator import Paginator
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.db.models import Q
+
 
 def admin_faq(request):
     if hasattr(request.user, 'eleve'):
@@ -3594,7 +3616,7 @@ def admin_payment_eleve_remboursement(request):
     # Affichage de la page avec les paiements en attente de règlement
     return render(request, 'pages/admin_payment_eleve_remboursement.html', context)
 
-from django.contrib.admin.views.decorators import staff_member_required
+
 
 # J'ai remplacé LE décorateur lambda par @staff_member_required pour plus de clarté.
 @staff_member_required(login_url='/login/')
@@ -4891,3 +4913,689 @@ def admin_accord_remboursement_modifier(request):
 
     # Rendu de la page avec les données filtrées
     return render(request, 'pages/admin_accord_remboursement_modifier.html', context)
+
+
+
+
+# Protection CSRF : Empêche les attaques de type Cross-Site Request Forgery
+# en s'assurant que toute requête POST provient bien d'une page générée par le serveur lui-même.
+# Cela protège les utilisateurs connectés contre des soumissions de formulaires frauduleux 
+# déclenchés depuis un autre site.
+@csrf_protect
+def seconnecter(request):
+    """
+    Vue de connexion utilisateur.
+    
+    Comporte les fonctionnalités suivantes :
+    - Validation reCAPTCHA via `handle_recaptcha_validation` pour lutter contre les bots.
+    - Authentification par email ou nom d'utilisateur.
+    - Connexion persistante via cookie JWT si "se souvenir de moi" est coché.
+    - Vérification que l'utilisateur a confirmé son adresse e-mail.
+    - Gestion AJAX et affichage des messages d’erreur appropriés.
+    """
+
+    if request.method == 'POST':
+        # ------- Récupération des données envoyées depuis le formulaire -------
+        login_credential = request.POST.get('login')
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me') == 'on'
+        captcha_response = request.POST.get('g-recaptcha-response')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        user_ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', 'inconnu')
+
+        # ------- Vérification reCAPTCHA pour bloquer les bots -------
+        captcha_error = handle_recaptcha_validation(captcha_response, user_ip, user_agent)
+        if captcha_error:
+            if is_ajax:
+                return JsonResponse({'error': captcha_error}, status=400)
+            messages.error(request, captcha_error)
+            return render(request, 'pages/seconnecter.html', {
+                'form_login': login_credential,
+                'show_confirmation': False,
+                'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+            })
+
+        # ------- Authentification de l'utilisateur (email ou nom d'utilisateur) -------
+        User = get_user_model()
+        try:
+            user = None
+            # Recherche utilisateur par email si "@" détecté
+            if '@' in login_credential:
+                try:
+                    user = User.objects.get(email=login_credential)
+                except User.DoesNotExist:
+                    pass
+            else:
+                # Sinon, recherche par nom d'utilisateur
+                try:
+                    user = User.objects.get(username=login_credential)
+                except User.DoesNotExist:
+                    pass
+
+            # Si aucun utilisateur trouvé
+            if user is None:
+                error_msg = "Identifiant ou mot de passe incorrect."
+                if is_ajax:
+                    return JsonResponse({'error': error_msg, 'email': "Aucun compte trouvé avec cet identifiant."}, status=400)
+                messages.error(request, error_msg)
+                return render(request, 'pages/seconnecter.html', {
+                    'form_login': login_credential,
+                    'show_confirmation': False,
+                    'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+                })
+
+            # Tentative d'authentification avec le mot de passe
+            user_auth = authenticate(request, username=user.username, password=password)
+            if user_auth is None:
+                logger.warning(f"Connexion échouée - Mot de passe incorrect - Utilisateur: {user.username} - IP: {user_ip}")
+                error_msg = "Identifiant ou mot de passe incorrect."
+                if is_ajax:
+                    return JsonResponse({'error': error_msg, 'password': "Mot de passe incorrect."}, status=400)
+                messages.error(request, error_msg)
+                return render(request, 'pages/seconnecter.html', {
+                    'form_login': login_credential,
+                    'show_confirmation': False,
+                    'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+                })
+
+            # ------- Vérification si l'utilisateur a confirmé son adresse email -------
+            try:
+                user_profile = user.profile
+            except UserProfile.DoesNotExist:
+                user_profile = None
+
+            if not user_profile or not user_profile.email_confirmed:
+                # Génère un token et envoie un nouvel email de confirmation
+                confirmation_token = get_random_string(50)
+                user_profile, _ = UserProfile.objects.get_or_create(user=user)
+                user_profile.email_confirmed = False
+                user_profile.email_confirmation_token = confirmation_token
+                user_profile.save()
+                send_confirmation_email(user_profile, request)
+
+                msg = f"Votre compte n'a pas encore été confirmé. Un nouvel email a été envoyé à {user.email}."
+                if is_ajax:
+                    return JsonResponse({
+                        'requires_confirmation': True,
+                        'message': msg,
+                        'email': user.email
+                    }, status=200)
+
+                messages.info(request, msg)
+                return render(request, 'pages/seconnecter.html', {
+                    'form_login': login_credential,
+                    'show_confirmation': True,
+                    'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+                })
+
+            # ------- Connexion réussie -------
+            logger.info(f"Connexion réussie - Utilisateur: {user.username} - IP: {user_ip}")
+            login(request, user_auth)
+
+            # ------- Gestion du "se souvenir de moi" via cookie JWT -------
+            if remember_me:
+                payload = {
+                    'user_id': user.id,
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                    'iat': datetime.datetime.utcnow(),
+                    'ip': user_ip
+                }
+                token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+                # Réponse AJAX ou redirection normale
+                if is_ajax:
+                    response = JsonResponse({'redirect': get_user_redirect_url(user)}, status=200)
+                else:
+                    response = redirect(get_user_redirect_url(user))
+
+                # Enregistrement du cookie sécurisé
+                response.set_cookie(
+                    'remember_me', token,
+                    max_age=30*24*60*60,  # 30 jours
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite='Lax'
+                )
+                return response
+
+            # Redirection post-login
+            if is_ajax:
+                return JsonResponse({'redirect': get_user_redirect_url(user)}, status=200)
+            return redirect(get_user_redirect_url(user))
+
+        except Exception as e:
+            # ------- Gestion des erreurs inattendues -------
+            logger.error(f"Erreur lors de la connexion - Login: {login_credential} - IP: {user_ip} - Erreur: {str(e)}")
+            error_msg = "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+            if is_ajax:
+                return JsonResponse({'error': error_msg}, status=500)
+            messages.error(request, error_msg)
+            return render(request, 'pages/seconnecter.html', {
+                'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+                'show_confirmation': False,
+            })
+
+    # ------- Requête GET : afficher le formulaire de connexion vierge -------
+    return render(request, 'pages/seconnecter.html', {
+        'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+        'show_confirmation': False,
+    })
+
+
+
+def get_user_redirect_url(user):
+    """Détermine l'URL de redirection selon le type d'utilisateur"""
+    if user.is_superuser or user.is_staff:
+        return reverse('compte_administrateur')
+    elif hasattr(user, 'professeur'):
+        return reverse('compte_prof')
+    elif hasattr(user, 'eleve'):
+        return reverse('compte_eleve')
+    else: return reverse('index')
+
+
+
+
+
+def send_confirmation_email(user_profile, request):
+    """
+    Envoie un email de confirmation à l'utilisateur.
+
+    Cette fonction construit une URL de confirmation contenant un token unique,
+    puis envoie un email HTML à l'utilisateur pour valider son adresse email.
+    En cas d'erreur lors de l'envoi, l'erreur est enregistrée dans les logs.
+    """
+    try:
+        # Génération de l'URL de confirmation absolue à partir du token du profil utilisateur
+        confirmation_url = request.build_absolute_uri(
+            reverse('confirm_email', kwargs={'token': user_profile.email_confirmation_token})
+        )
+
+        # Sujet de l'email
+        subject = "Confirmation de votre adresse email"
+
+        # Contenu HTML de l'email, généré depuis un template
+        message = render_to_string('emails/confirmation_email.html', {
+            'user': user_profile.user,
+            'confirmation_url': confirmation_url,
+        })
+
+        # Envoi de l'email via la fonction utilitaire Django
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user_profile.user.email],
+            html_message=message,
+            fail_silently=False
+        )
+    except Exception as e:
+        # Journalisation de l'erreur avec trace complète pour faciliter le debug
+        logger.error(f"Erreur lors de l'envoi de l'email de confirmation à {user_profile.user.email} : {str(e)}", exc_info=True)
+
+
+
+
+
+def contact_admin(request):
+    """Gère le formulaire de contact avec l'administration via requête AJAX"""
+    
+    # Vérifie que la requête est de type POST et provient d'une requête AJAX (avec le bon en-tête)
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Récupère les données du formulaire : email et message, et supprime les espaces superflus
+        email = request.POST.get('email', '').strip()
+        message = request.POST.get('message', '').strip()
+
+        # Vérifie que les deux champs sont bien remplis
+        if not email or not message:
+            return JsonResponse({
+                'error': "Veuillez remplir tous les champs."
+            }, status=400)  # Code 400 = Bad Request
+
+        # Vérifie que l'adresse email est dans un format valide
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({
+                'error': "L'adresse e-mail saisie est invalide."
+            }, status=400)
+
+        # Crée le sujet de l'email envoyé à l'administration (incluant l'adresse de l'expéditeur pour identification)
+        subject = f"Demande de contact depuis le formulaire de connexion - {email}"
+        
+        # Récupère l'adresse email de l'administration depuis les paramètres Django.
+        # Si ADMIN_EMAIL n'existe pas, on utilise DEFAULT_FROM_EMAIL comme valeur de secours.
+        admin_email = getattr(settings, 'ADMIN_EMAIL', settings.DEFAULT_FROM_EMAIL)
+
+        # Prépare l'email à envoyer à l'administration
+        email_message = EmailMessage(
+            subject=subject,                   # Sujet de l'email
+            body=message,                     # Contenu du message
+            from_email=settings.DEFAULT_FROM_EMAIL,  # Expéditeur réel (adresse système définie dans settings)
+            to=[admin_email],                 # Destinataire : l'administration
+            reply_to=[email]                  # Permet à l'admin de répondre directement à l'utilisateur
+        )
+
+        # Envoie l'email (fail_silently=False lèvera une erreur si l'envoi échoue)
+        email_message.send(fail_silently=False)
+
+        # Retourne une réponse JSON indiquant le succès de l'opération
+        return JsonResponse({
+            'message': "Votre message a été envoyé à l'administration. Nous vous contacterons bientôt."
+        }, status=200)
+
+    # Si la requête n'est pas un POST AJAX, retourne une erreur 405 (Méthode non autorisée)
+    return JsonResponse({'error': 'Méthode non autorisée.'}, status=405)
+
+
+def confirm_email(request, token):
+    try:
+        profile = UserProfile.objects.get(email_confirmation_token=token)
+        profile.email_confirmed = True
+        profile.email_confirmation_token = ''
+        profile.save()
+        messages.success(request, "Votre adresse email a été confirmée avec succès.")
+        return redirect('seconnecter')  # ou la page de connexion que tu utilises
+    except UserProfile.DoesNotExist:
+        messages.error(request, "Lien de confirmation invalide ou expiré.")
+        return redirect('seconnecter')
+    
+"""
+Etapes pour réinitialiser le mot de passe
+"""
+
+
+def generate_random_password(length=8):
+    """Génère un mot de passe aléatoire"""
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
+
+def password_reset_confirm(request, uidb64, token):
+    """
+    Cette vue est appelée lorsque l'utilisateur clique sur le lien de réinitialisation de mot de passe
+    reçu par email. Elle vérifie la validité du lien (token + utilisateur),
+    génère un nouveau mot de passe si tout est valide, le sauvegarde et l’envoie par email.
+
+    """
+    # Récupère le modèle d'utilisateur actif (utile si vous utilisez un modèle personnalisé)
+    User = get_user_model()
+    
+    # Utilise le générateur de tokens de Django pour vérifier l’authenticité du lien
+    token_generator = PasswordResetTokenGenerator()
+
+    try:
+        # ✅ Décoder l'uid (ID de l'utilisateur) encodé en base64 dans le lien
+        uid = force_str(urlsafe_base64_decode(uidb64))
+
+        # ✅ Récupère l'utilisateur correspondant à cet ID
+        user = User.objects.get(pk=uid)
+
+    except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+        # ❌ En cas d'erreur (utilisateur introuvable, ID invalide, etc.), on considère que le lien est invalide
+        user = None
+
+    # ✅ Vérifie que l'utilisateur existe et que le token fourni dans l'URL est valide
+    if user is not None and token_generator.check_token(user, token):
+        
+        # ✅ Génère un nouveau mot de passe aléatoire
+        new_password = generate_random_password()  # Vous devez définir cette fonction ailleurs
+
+        # ✅ Met à jour le mot de passe de l'utilisateur dans la base de données (le mot de passe est hashé)
+        user.set_password(new_password)
+        user.save()
+
+        # ✅ Prépare le contenu de l'email avec le nouveau mot de passe
+        subject = "Nouveau mot de passe"
+        message = render_to_string('emails/new_password_email.html', {
+            'user': user,                   # Pour personnaliser l’email (ex : nom/prénom)
+            'new_password': new_password,   # Nouveau mot de passe à communiquer
+        })
+
+        # ✅ Envoie l'email contenant le nouveau mot de passe
+        send_mail(
+            subject=subject,
+            message=message,                       # Message en texte brut (obligatoire)
+            from_email=settings.DEFAULT_FROM_EMAIL, # L'adresse de l'expéditeur
+            recipient_list=[user.email],            # Adresse du destinataire
+            html_message=message,                   # Version HTML du message
+            fail_silently=False                     # Si True, ne lève pas d’erreur même si l’email échoue
+        )
+
+        # ✅ Affiche un message de succès à l’utilisateur sur le site
+        messages.success(request, "Un nouveau mot de passe a été envoyé à votre adresse email.")
+
+        # ✅ Redirige vers la page de connexion
+        return redirect('seconnecter')
+
+    else:
+        # ❌ Si le token ou l'utilisateur est invalide/expiré, afficher une erreur
+        messages.error(request, "Le lien de réinitialisation est invalide ou expiré.")
+
+        # Redirige vers la page de connexion
+        return redirect('seconnecter')
+
+
+
+
+
+
+
+
+def password_reset_request(request):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        email = request.POST.get('email')
+        captcha_response = request.POST.get('g-recaptcha-response')
+        user_ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        # ✅ Vérification reCAPTCHA
+        context = {'email': email}
+        captcha_result = handle_recaptcha_validation(
+            captcha_response=captcha_response,
+            user_ip=user_ip,
+            user_agent=user_agent,
+            request=request,
+            context_data=context,
+            is_ajax=True  # car cette vue est AJAX
+        )
+        if captcha_result:
+            return captcha_result  # retourne JsonResponse avec erreur
+
+        # ✅ Validation reCAPTCHA passée avec succès
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=email)
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = request.build_absolute_uri(
+                reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            )
+
+            # ✅ Envoi de l'email
+            send_mail(
+                subject='Réinitialisation de votre mot de passe',
+                message=f'Cliquez sur le lien suivant pour réinitialiser votre mot de passe : {reset_url}',
+                from_email=None,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+
+            return JsonResponse({'message': 'Un lien de réinitialisation a été envoyé à votre adresse email.'})
+
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Aucun utilisateur n’est associé à cette adresse email.'}, status=404)
+
+    return JsonResponse({'error': 'Requête invalide.'}, status=400)
+
+
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def demande_paiement_admin(request):
+    """
+    Vue permettant d'afficher les demandes de paiements.
+
+    Fonctionnalités :
+    - Filtrer les demandes de paiements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
+    - Affiche les détailles des demandes de paiements
+    - fait passer vers l'affectation de lien de paiement avec échéance pour chaque demande de paiement
+    """
+
+    # Format utilisé pour l'affichage et la conversion des dates
+    date_format = "%d/%m/%Y"
+    status_str=""
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = Demande_paiement.objects.filter(
+        statut_demande='En attente',
+        payment_id__isnull=True, # il n"'ya pas de paiement
+        accord_reglement_id__isnull=True # Il n'y a pas encore d'accord de règlement
+    ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    # Initialisation des variables date_debut et date_fin
+    date_debut, date_fin = None, None
+
+    try:
+        # Conversion des dates en objets de type date
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        # Vérification de la cohérence des dates
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+    
+    except ValueError as e:
+        # Gestion des erreurs en cas de format de date invalide
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'pages/demande_paiement_admin.html', {
+            'demande_paiements': [], 
+            'professeurs': [], 
+            'date_debut': date_debut, 
+            'date_fin': date_fin
+        })
+
+    # Définition des critères de filtrage des paiements
+    filters = {
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
+    }
+
+    # Correspondance des boutons de filtrage aux statuts de paiement
+    status_filter = {
+        'btn_en_ettente': 'En attente',   # Demande de paiements en attente
+        'btn_en_cours': 'En cours',   # Demande de paiements en cours
+        'btn_realiser': 'Réaliser',   # Demande de paiements en réaliser
+        'btn_contester': 'Contester',   # Demande de paiements contester
+        'btn_annuler': 'Annuler',      # Demande de paiements annuler
+    }
+
+    # Application du filtre de statut en fonction du bouton cliqué
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['statut_demande'] = status
+            status_str=status
+            break
+
+    # Récupération des paiements en fonction des filtres
+    demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
+
+    # Initialisation des listes pour stocker les résultats
+    demande_paiements, professeurs = [], set()
+
+    # Parcours des paiements récupérés pour associer les informations nécessaires
+    for demande_paiement in demande_paiements_data:
+        professeur = demande_paiement.user  # Récupération du professeur lié au paiement
+
+        # Ajout des informations collectées à la liste des paiements
+        id = encrypt_id(demande_paiement.id)
+        demande_paiements.append((demande_paiement, professeur, id))
+        professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
+
+    # Extraction de l'ID de la demande de paiement choisi dans le formulaire
+    demande_paiement_ids = [key.split('btn_demande_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_demande_paiement_id')]
+
+    # Vérification du nombre d'IDs extraits
+    if demande_paiement_ids:
+        if len(demande_paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['demande_paiement_id'] = demande_paiement_ids[0]
+            return redirect('admin_demande_paiement')
+        elif len(demande_paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+    # Préparation du contexte pour l'affichage dans le template
+    context = {
+        'today': timezone.now().date(),  # Date actuelle pour affichage
+        'demande_paiements': demande_paiements,
+        'professeurs': list(professeurs),
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+
+    # Affichage de la page avec les paiements en attente de règlement
+    return render(request, 'pages/demande_paiement_admin.html', context)
+
+
+# Décorateur pour restreindre l'accès à cette vue aux administrateurs actifs uniquement.
+# Si la vérification échoue, l'utilisateur est redirigé vers la page de login.
+@user_passes_test(is_admin_active, login_url='/login/')
+def admin_demande_paiement(request):
+    """
+    Vue d'administration permettant d'afficher les détails du paiement d'un élève,
+    liés à une demande de paiement faite par un professeur.
+    """
+    
+    # Format de date utilisé pour l'analyse des champs date (ex. "31/12/2025")
+    date_format = "%d/%m/%Y"
+    
+    # Récupération de l'identifiant chiffré de la demande de paiement depuis la session
+    demande_paiement_id = request.session.get('demande_paiement_id')
+    if not demande_paiement_id:
+        # Si aucun identifiant n'est présent en session, log l'information et redirige
+        logger.warning("Aucune demande de paiement trouvée en session pour l'utilisateur admin %s", request.user)
+        messages.info(request, "Il n'y a pas de paiement")
+        return redirect('compte_administrateur')
+
+    # Tentative de déchiffrement de l'identifiant
+    try:
+        demande_paiement_id_decript = decrypt_id(demande_paiement_id)
+        logger.info("Demande de paiement décryptée avec succès: %s", demande_paiement_id_decript)
+    except Exception as e:
+        # En cas d'erreur de déchiffrement, log l'erreur et redirige
+        logger.error("Erreur lors du déchiffrement de l'ID de demande de paiement : %s", str(e))
+        messages.error(request, "Erreur interne lors du traitement de la demande.")
+        return redirect('compte_administrateur')
+
+    # Récupère la demande de paiement associée ou retourne une 404 si elle n'existe pas
+    demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
+
+    # Récupère tous les détails liés à cette demande de paiement (cours et horaires inclus)
+    details_demande_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(
+        demande_paiement=demande_paiement
+    )
+    
+    # Prépare la liste des identifiants d'emails liés à la demande
+    email_ids = filter(None, [demande_paiement.email, demande_paiement.email_eleve])
+    
+    # Récupère tous les emails correspondants (s'ils existent) dans un dictionnaire pour un accès rapide
+    emails = {email.id: email for email in Email_telecharge.objects.filter(id__in=email_ids)}
+
+    # Fonction interne pour formater un email : affiche sujet et texte ou "Pas de message"
+    def format_email(email_id):
+        email = emails.get(email_id)
+        return f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
+    
+    # Formatage du texte des emails pour affichage
+    texte_email_prof = format_email(demande_paiement.email)
+    texte_email_eleve = format_email(demande_paiement.email_eleve)
+
+    # Préparation des paires (cours, horaire) à afficher
+    horaires = [(detail.cours, detail.horaire) for detail in details_demande_paiement]
+
+    # Ensemble unique de cours liés à la demande
+    cours_set = {detail.cours for detail in details_demande_paiement}
+
+    # Liste finale contenant chaque cours et son prix public (s'il existe)
+    cours_prix_publics = []
+    for cours in cours_set:
+        # Recherche des objets `Matiere` et `Niveau` correspondant au cours
+        matiere_obj = Matiere.objects.filter(matiere=cours.matiere).first()
+        niveau_obj = Niveau.objects.filter(niveau=cours.niveau).first()
+
+        # Recherche du lien entre le professeur, la matière et le niveau
+        prof_mat_niv = Prof_mat_niv.objects.filter(
+            user=demande_paiement.user, 
+            matiere=matiere_obj, 
+            niveau=niveau_obj
+        ).first()
+
+        # Récupère le prix public si une configuration existe pour ce triplet
+        prix_public = Prix_heure.objects.filter(
+            user=demande_paiement.user,
+            prof_mat_niv=prof_mat_niv
+        ).values_list('prix_heure', flat=True).first() if prof_mat_niv else None
+
+        # Ajoute la paire (cours, prix_public) à la liste
+        cours_prix_publics.append((cours, prix_public))
+
+    # Si le bouton "Voir la réclamation" a été soumis
+    if 'btn_reclamation' in request.POST:
+        if demande_paiement.reclamation and demande_paiement.reclamation.id:
+            # Enregistre l'identifiant de la réclamation en session pour consultation
+            logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
+            request.session['reclamation_id'] = demande_paiement.reclamation.id
+            return redirect('reclamation')
+        else:
+            # Aucun lien de réclamation trouvé
+            logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)
+            messages.error(request, "Il n'y a pas de réclamation liée à la demande de paiement")
+
+    # Si le bouton "Ajouter un lien de paiement" a été soumis
+    if 'btn_ajout_lien_paiement' in request.POST:
+        echeance = request.POST.get("echeance")
+        url_paiement = request.POST.get("url_paiement")
+
+        if url_paiement and echeance:
+            try:
+                # Vérifie que l’URL a un bon format
+                parsed_url = urlparse(url_paiement)
+                if parsed_url.scheme not in ['http', 'https'] or not parsed_url.netloc:
+                    messages.error(request, "Le lien de paiement est invalide. Il doit commencer par http:// ou https://")
+                    return redirect(request.path)
+
+                # Vérifie si l’URL est accessible
+                try:
+                    response = requests.head(url_paiement, timeout=5)
+                    if not response.ok:
+                        messages.error(request, f"Le lien n'est pas accessible (HTTP {response.status_code}).")
+                        return redirect(request.path)
+                except requests.RequestException as err:
+                    messages.error(request, "Impossible d'accéder au lien de paiement. Vérifiez le lien ou réessayez plus tard.")
+                    return redirect(request.path)
+
+                # Conversion de la date
+                echeance_date = datetime.strptime(echeance, date_format).date()
+                if echeance_date >= timezone.now().date():
+                    # envoyer et enregistrer un email d'information
+                    demande_paiement.date_expiration = echeance_date
+                    demande_paiement.url_paiement = url_paiement
+                    demande_paiement.save()
+                    logger.info("Lien de paiement ajouté pour la demande %s par l'admin %s", demande_paiement.id, request.user)
+                    messages.success(request, "Le lien de paiement a été enregistré avec succès.")
+                    return redirect('demande_paiement_admin')
+                else:
+                    messages.error(request, f"L’échéance doit être postérieure ou égale à aujourd’hui ({timezone.now().date()}).")
+                    return redirect(request.path)
+            except ValueError as e:
+                logger.error("Erreur de format de date pour l'échéance : %s", str(e))
+                messages.error(request, f"Erreur de date : {e}")
+                return redirect(request.path)
+        else:
+            logger.warning("Champs lien de paiement ou échéance manquants pour la demande %s", demande_paiement.id)
+            messages.error(request, "Veuillez remplir à la fois le lien de paiement et l’échéance.")
+            return redirect(request.path)
+
+    # Contexte à envoyer au template HTML
+    context = {
+        'today': timezone.now().date(),  # Date actuelle pour affichage
+        'date_expiration': demande_paiement.date_expiration.date() if demande_paiement.date_expiration else timezone.now().date(), # pour pouvoire la comparer avec today au même format dans le template
+        'demande_paiement': demande_paiement,  # Objet principal
+        'texte_email_prof': texte_email_prof,  # Email du professeur formaté
+        'texte_email_eleve': texte_email_eleve,  # Email de l'élève formaté
+        'horaires': horaires,  # Liste des cours avec horaires
+        'cours_prix_publics': cours_prix_publics,  # Liste des prix publics pour les cours
+    }
+
+    # Rendu de la page HTML avec le contexte préparé
+    return render(request, 'pages/admin_demande_paiement.html', context)

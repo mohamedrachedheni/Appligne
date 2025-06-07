@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404 #dans le cas ou l' id du user ne correspond pas à un user
 from django.contrib import messages, auth
+from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from .models import Eleve, Parent, Temoignage
-from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement, AccordRemboursement
+from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement, AccordRemboursement, Prof_mat_niv
 from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement, DetailAccordReglement, DetailAccordRemboursement
 from pages.models import ReclamationCategorie, PieceJointeReclamation, Reclamation, MessageReclamation
 import re
@@ -11,7 +14,6 @@ from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.db.models import OuterRef, Subquery, DecimalField, Sum, Q
 from django import forms
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils import timezone
@@ -22,17 +24,18 @@ from django.db.models import Min, Max
 import os
 from pages.forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
 from pages.utils import decrypt_id, encrypt_id
+from django.views.decorators.csrf import csrf_protect
+from django.conf import settings
+from pages.utils import verify_recaptcha
+import jwt
+import json
+import requests
+from pages.utils import get_client_ip
 import logging
+from django.views.decorators.clickjacking import xframe_options_exempt
+
 # Configuration du logger avec le nom du module actuel
 logger = logging.getLogger(__name__)
-
-# Enregistrement des logs
-    # logger.debug("Page visitée")
-    # logger.info("Action utilisateur")
-    # logger.warning("Attention à un truc")
-    # logger.error("Une erreur est survenue") 
-
-# Create your views here.
 
 def nouveau_compte_eleve(request):
     # Définir les variables
@@ -507,8 +510,8 @@ def email_detaille(request, email_id):
         return redirect('signin')   
     user = request.user
     # Vérifier si l'utilisateur a un profil de professeur associé
-    if not hasattr(user, 'eleve'):
-        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+    if not hasattr(user, 'eleve') and not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève, ni en tant que professeur")
         return redirect('signin')
 
     email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève
@@ -524,7 +527,11 @@ def email_detaille(request, email_id):
         email.date_suivi = date.today()
         email.save() 
         messages.success(request, "L'email est enregistré en tant qu'email ignoré.")
-        return redirect('email_recu')
+        if hasattr(user, 'eleve'): 
+            return redirect('email_recu')
+        elif hasattr(user, 'professeur'):
+            return redirect('email_recu_prof')
+        else: return redirect('index')
     if 'btn_confirmer' in request.POST:
         sujet = "Confirmation de réception"
         text_email =  f"""
@@ -566,8 +573,12 @@ Contenu de l'émail:
         email.date_suivi = date.today()
         email.reponse_email_id = email_reponse_id
         email.save() 
-        messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
-        return redirect('email_recu')
+        messages.success(request, "Le contenu de l'email est enregistré")
+        if hasattr(user, 'eleve'): 
+            return redirect('email_recu')
+        elif hasattr(user, 'professeur'):
+            return redirect('email_recu_prof')
+        else: return redirect('index')
     
     if 'btn_repondre' in request.POST:
         email_eleve = user.email
@@ -607,8 +618,8 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
         return redirect('signin')   
     user = request.user
     # Vérifier si l'utilisateur a un profil de professeur associé
-    if not hasattr(user, 'eleve'):
-        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+    if not hasattr(user, 'eleve') and not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève, en tant que professeur")
         return redirect('signin')
 
     text_email = request.session.get('text_email',None)
@@ -617,7 +628,12 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
     email_id = request.session.get('email_id',None)
     if not email_id: # donc la réponse est déjà effectuée puisque la session est vide
         messages.error(request, 'La réponse à cet email est déjà effectuée')
-        return redirect('email_recu')
+        if hasattr(user, 'eleve'): 
+            return redirect('email_recu')
+        elif hasattr(user, 'professeur'):
+            return redirect('email_recu_prof')
+        else: return redirect('index')
+        
     context={
             'text_email':text_email,
             'sujet':sujet, 
@@ -635,7 +651,7 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
         try:
             email_validator(email_eleve)
         except ValidationError:
-            messages.error(request, "L'adresse email de l'élève est invalide.")
+            messages.error(request, "L'adresse email de l'envoyeur est invalide.")
             return render(request, 'eleves/reponse_email_eleve.html')
 
         # si le sujet de l'email n'est pas défini dans le GET alors sujet='Sujet non défini'
@@ -678,7 +694,7 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
         email.date_suivi = date.today()
         email.reponse_email_id = email_reponse_id
         email.save() 
-        messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
+        messages.success(request, "Le contenu de l'email est enregistré")
 
         # vider les paramètres de la session email
         if 'text_email' in request.session:
@@ -689,7 +705,12 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
             del request.session['email_eleve']
         if 'email_id' in request.session:
             del request.session['email_id']
-        return redirect('compte_eleve')
+        if hasattr(user, 'eleve'):
+            return redirect('compte_eleve')
+        elif hasattr(user, 'professeur'):
+            return redirect('compte_prof')
+        else: return redirect('index')
+        
     
     return render(request, 'eleves/reponse_email_eleve.html', context)
 
@@ -775,7 +796,10 @@ def detaille_demande_paiement_recu(request, demande_paiement_id):
 
     if request.method == 'POST':
         if 'btn_contester' in request.POST:
-            return handle_contestation(request, context, user, prof, email, demande_paiement)
+
+            request.session['reclamation_demande_paiement_id'] = encrypt_id(demande_paiement.id)
+            # return handle_contestation(request, context, user, prof, email, demande_paiement)
+            return redirect('nouvelle_reclamation')
         elif 'btn_reglement' in request.POST:
             # Avant de passer à l'enregistrement il faut tester la conformité des enregistrements horaires
             # il faux que tous les enregistrement horaire liés à la demande de paiement sont non 'Annuler' non réglés
@@ -799,8 +823,8 @@ def detaille_demande_paiement_recu(request, demande_paiement_id):
 # Cela rend le code plus modulaire, facile à maintenir et améliore la lisibilité globale.
 
 def handle_contestation(request, context, user, prof, email, demande_paiement):
-    sujet_contestation = request.POST.get('sujet_contestation')
-    text_email_contestation = request.POST.get('text_email_contestation')
+    sujet_contestation = request.POST.get('sujet_contestation') # du template detaille_demande_paiement_recu
+    text_email_contestation = request.POST.get('text_email_contestation') # du template detaille_demande_paiement_recu
 
     if not sujet_contestation or not text_email_contestation:
         messages.error(request, "Il faut désigner l'objet de la contestation et son contenu.")
@@ -849,7 +873,7 @@ def handle_reglement(request, demande_paiement, prof, user):
 
     # création enregistrement payment (à réviser après l'intégration de la passerelle de paiement)
     payment = Payment.objects.create(
-        status='Approuvé',
+        status='En attente', # à changer par En attente
         model="demande_paiement",
         model_id=demande_paiement.id,
         slug=f"Dd{demande_paiement.id}Prof{prof.id}Elv{user.id}",
@@ -863,10 +887,10 @@ def handle_reglement(request, demande_paiement, prof, user):
 
     # mise à jour Demande_paiement
     demande_paiement.payment_id = payment.id # le paiement est réalisé
-    demande_paiement.statut_demande = "Réaliser"
+    demande_paiement.statut_demande = "En cours" # à changer En cours
     demande_paiement.save()
 
-    # Mise à jour Horaires
+    # Mise à jour Horaires, si le paiemnt est invalide horaire.payment_id = None
     horaires = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
     for horaire in horaires:
         horaire.payment_id = payment.id
@@ -875,7 +899,12 @@ def handle_reglement(request, demande_paiement, prof, user):
     # mise à jour de l'historique
     update_historique_prof(prof, demande_paiement, user)
 
-    messages.success(request, "La demande de paiement a été mise à jour avec le statut 'Réaliser'.")
+    # envoie d"email d'information à l'élève si le paiement est réalisé
+
+    # envoie d'émail d'information de l'état d'avansement du paiement
+    
+
+    messages.success(request, "Le paiement a été initié avec succès. <br>La demande de paiement a été mise à jour avec le statut « En attente ».")
     return redirect('compte_eleve')
 
 
@@ -1314,3 +1343,455 @@ def liste_remboursement(request):
 
     return render(request, 'eleves/liste_remboursement.html', context)
 
+
+
+"""
+Le décorateur @csrf_protect dans Django est utilisé pour activer 
+la protection contre les attaques CSRF (Cross-Site Request Forgery) sur une vue.
+Une attaque CSRF consiste à tromper un utilisateur authentifié pour qu’il soumette 
+une requête malveillante à un site web sur lequel il est connecté, à son insu. 
+Exemple : si un utilisateur est connecté à un site de banque et visite un site 
+piégé, une requête pourrait être envoyée à son insu pour transférer de l'argent.
+Vérifie que les requêtes POST (ou autres méthodes dangereuses comme PUT, DELETE) 
+contiennent un jeton CSRF valide (csrfmiddlewaretoken) dans le formulaire HTML.
+Empêche l'exécution de la vue si le jeton CSRF est manquant ou incorrect.
+"""
+@csrf_protect
+def register_eleve(request):
+    # Si la requête est une soumission de formulaire (méthode POST)
+    if request.method == 'POST':
+        # ===============================================
+        # Récupération des données du formulaire utilisateur
+        # ===============================================
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        remember_me = request.POST.get('remember_me')
+        captcha_response = request.POST.get('g-recaptcha-response')
+
+        # Dictionnaire pour stocker les messages d’erreur
+        errors = {}
+
+        # Récupération de l’adresse IP et du navigateur de l'utilisateur
+        user_ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', 'inconnu')
+
+        # ==========================================================================
+        # Vérification de la validité du CAPTCHA Google reCAPTCHA v3 (anti-robots)
+        # ==========================================================================
+        captcha_valid, captcha_score = verify_recaptcha(captcha_response, client_ip=user_ip)
+
+        if not captcha_valid:
+            errors['captcha'] = "Validation CAPTCHA échouée. Veuillez réessayer."
+            logger.warning(
+                f"CAPTCHA invalide - IP: {user_ip} - User-Agent: {user_agent} - Score: {captcha_score}"
+            )
+        elif captcha_score < getattr(settings, 'RECAPTCHA_MIN_SCORE', 0.5):
+            errors['captcha'] = "Activité suspecte détectée"
+            logger.warning(
+                f"Score CAPTCHA trop bas - IP: {user_ip} - Score: {captcha_score}"
+            )
+
+        # ==================================================
+        # Validation de l'email : format correct + unicité
+        # ==================================================
+        try:
+            validate_email(email)
+            if get_user_model().objects.filter(email=email).exists():
+                errors['email'] = "Cet email est déjà utilisé."
+                logger.warning(f"Email existant: {email} - IP: {user_ip}")
+        except ValidationError:
+            errors['email'] = "Veuillez entrer une adresse email valide."
+
+        # ===========================================
+        # Vérification que le nom d'utilisateur est libre
+        # ===========================================
+        if get_user_model().objects.filter(username=username).exists():
+            errors['username'] = "Ce nom d'utilisateur est déjà pris."
+            logger.warning(f"Username existant: {username} - IP: {user_ip}")
+
+        # ===========================================
+        # Vérification de la qualité du mot de passe
+        # ===========================================
+        if password != password_confirm:
+            errors['password'] = "Les mots de passe ne correspondent pas."
+        elif len(password) < 8:
+            errors['password'] = "Le mot de passe doit contenir au moins 8 caractères."
+
+        # ========================================================
+        # En cas d'erreurs, affichage des messages et retour page
+        # ========================================================
+        if errors:
+            for field, error in errors.items():
+                messages.error(request, error)
+            return render(request, 'eleves/register_eleve.html', {
+                'username': username,
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY,
+            })
+
+        # =====================================================================
+        # Si aucune erreur, création du compte utilisateur et du profil élève
+        # =====================================================================
+        try:
+            # Création de l'utilisateur Django avec mot de passe chiffré
+            user = get_user_model().objects.create(
+                username=username,
+                email=email,
+                password=make_password(password),  # Hachage sécurisé
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+
+            # Création du profil élève associé à cet utilisateur
+            Eleve.objects.create(user=user)
+
+            logger.info(
+                f"Nouvel élève inscrit: {user.username} ({user.email}) - IP: {user_ip} - Score CAPTCHA: {captcha_score}"
+            )
+
+            # ==================================================
+            # Connexion automatique de l’utilisateur après inscription
+            # ==================================================
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+
+                # Gestion de la persistance via "remember me" (JWT + cookie)
+                if remember_me:
+                    payload = {
+                        'user_id': user.id,
+                        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),  # Expiration
+                        'iat': datetime.datetime.utcnow(),  # Date de création
+                        'ip': user_ip
+                    }
+                    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+                    response = redirect('compte_eleve')
+                    response.set_cookie(
+                        'remember_me', token, max_age=30*24*60*60, httponly=True, secure=not settings.DEBUG
+                    )
+                    return response
+
+                # Redirection vers le tableau de bord élève
+                return redirect('compte_eleve')
+
+        # =========================================================
+        # Gestion des erreurs imprévues durant la création de compte
+        # =========================================================
+        except Exception as e:
+            logger.error(
+                f"Erreur création de compte - Username: {username} - IP: {user_ip} - Erreur: {str(e)}"
+            )
+            messages.error(request, "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.")
+            return render(request, 'eleves/register_eleve.html', {
+                'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY
+            })
+
+    # ===============================
+    # Affichage de la page d’inscription
+    # ===============================
+    return render(request, 'eleves/register_eleve.html', {
+        'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY
+    })
+
+
+@csrf_protect
+def demande_paiement_eleve(request):
+    """
+    Vue permettant d'afficher les demandes de paiements.
+
+    Fonctionnalités :
+    - Filtrer les demandes de paiements selon une période donnée (dates de début et de fin).
+    - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
+    - Affiche les détailles des demandes de paiements
+    - fait passer vers l'execution du paiement si un lien de paiement est fourni
+    """
+
+    # Format utilisé pour l'affichage et la conversion des dates
+    date_format = "%d/%m/%Y"
+    status_str=""
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+
+    # Vérifier si l'utilisateur a un profil de eleve associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+    
+    eleve = user.eleve
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = Demande_paiement.objects.filter(
+        eleve=eleve,
+        statut_demande__in = ('En attente', 'Contester'),
+        url_paiement__isnull = False,
+        date_expiration__isnull = False,
+        payment_id__isnull = True, # il n"'ya pas de paiement
+        accord_reglement_id__isnull = True, # Il n'y a pas encore d'accord de règlement
+    ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    # Initialisation des variables date_debut et date_fin
+    date_debut, date_fin = None, None
+
+    try:
+        # Conversion des dates en objets de type date
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+
+        # Vérification de la cohérence des dates
+        if date_debut > date_fin:
+            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
+    
+    except ValueError as e:
+        # Gestion des erreurs en cas de format de date invalide
+        messages.error(request, f"Erreur de date : {e}")
+        return render(request, 'eleves/demande_paiement_eleve.html', {
+            'demande_paiements': [], 
+            'professeurs': [], 
+            'date_debut': date_debut, 
+            'date_fin': date_fin
+        })
+
+    # Définition des critères de filtrage des paiements
+    filters = {
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1)), # Filtre sur la période sélectionnée
+        'eleve': eleve,
+        # 'payment_id': None,
+        'url_paiement__isnull': False,
+        'date_expiration__isnull': False,
+
+    }
+
+    # Correspondance des boutons de filtrage aux statuts de paiement
+    status_filter = {
+        'btn_en_ettente': 'En attente',   # Demande de paiements en attente
+        'btn_en_cours': 'En cours',   # Demande de paiements en cours
+        'btn_realiser': 'Réaliser',   # Demande de paiements en réaliser
+        'btn_contester': 'Contester',   # Demande de paiements contester
+        'btn_annuler': 'Annuler',      # Demande de paiements annuler
+    }
+
+    # Application du filtre de statut en fonction du bouton cliqué
+    for btn, status in status_filter.items():
+        if btn in request.POST:
+            filters['statut_demande'] = status
+            status_str=status
+            break
+
+    # Récupération des paiements en fonction des filtres
+    demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
+
+    # Initialisation des listes pour stocker les résultats
+    demande_paiements, professeurs = [], set()
+
+    # Parcours des paiements récupérés pour associer les informations nécessaires
+    for demande_paiement in demande_paiements_data:
+        professeur = demande_paiement.user  # Récupération du professeur lié au paiement
+
+        # Ajout des informations collectées à la liste des paiements
+        id = encrypt_id(demande_paiement.id)
+        demande_paiements.append((demande_paiement, professeur, id))
+        professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
+
+    # Extraction de l'ID de la demande de paiement choisi dans le formulaire
+    demande_paiement_ids = [key.split('btn_demande_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_demande_paiement_id')]
+
+    # Vérification du nombre d'IDs extraits
+    if demande_paiement_ids:
+        if len(demande_paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['demande_paiement_id'] = demande_paiement_ids[0]
+            return redirect('eleve_demande_paiement')
+        elif len(demande_paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+    # Préparation du contexte pour l'affichage dans le template
+    context = {
+        'today': timezone.now().date(),  # Date actuelle pour affichage
+        'date_expiration': demande_paiement.date_expiration.date(),  # pour pouvoire la comparer avec today au même format dans le template
+        'demande_paiements': demande_paiements,
+        'professeurs': list(professeurs),
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'status_str': status_str,
+    }
+
+    # Affichage de la page avec les paiements en attente de règlement
+    return render(request, 'eleves/demande_paiement_eleve.html', context)
+
+
+
+# @csrf_protect
+@xframe_options_exempt #Cela désactive la protection uniquement sur cette vue.
+def eleve_demande_paiement(request):
+    """
+    Vue permettant :
+        - d'afficher les détails d’un paiement élève associés à une demande émise par un professeur ;
+        - d'attribuer un lien de paiement direct, de vérifier sa validité et son format ;
+        - d'enregistrer ce lien ainsi que sa date d'échéance ;
+        - de journaliser les actions pertinentes dans un historique (log) pour assurer un suivi fiable.
+    """
+
+    # Récupérer le user
+    user = request.user
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin')   
+
+    # Vérifier si l'utilisateur a un profil de eleve associé
+    if not hasattr(user, 'eleve'):
+        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        return redirect('signin')
+    
+    # Récupération de l'identifiant chiffré de la demande de paiement depuis la session
+    demande_paiement_id = request.session.get('demande_paiement_id')
+    if not demande_paiement_id:
+        # Si aucun identifiant n'est présent en session, log l'information et redirige
+        logger.warning("Aucune demande de paiement trouvée en session pour l'utilisateur admin %s", request.user)
+        messages.info(request, "Il n'y a pas de paiement")
+        return redirect('compte_administrateur')
+
+    # Tentative de déchiffrement de l'identifiant
+    try:
+        demande_paiement_id_decript = decrypt_id(demande_paiement_id)
+        logger.info("Demande de paiement décryptée avec succès: %s", demande_paiement_id_decript)
+    except Exception as e:
+        # En cas d'erreur de déchiffrement, log l'erreur et redirige
+        logger.error("Erreur lors du déchiffrement de l'ID de demande de paiement : %s", str(e))
+        messages.error(request, "Erreur interne lors du traitement de la demande.")
+        return redirect('compte_administrateur')
+
+    # Récupère la demande de paiement associée ou retourne une 404 si elle n'existe pas
+    demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
+
+    prof = demande_paiement.user
+
+    if not demande_paiement.vue_le: # pour informer le prof que l'élève a vue la demande de paiement
+        demande_paiement.vue_le = timezone.now()
+        demande_paiement.save()
+
+    # Récupère tous les détails liés à cette demande de paiement (cours et horaires inclus)
+    details_demande_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(
+        demande_paiement=demande_paiement
+    )
+    
+    # Prépare la liste des identifiants d'emails liés à la demande
+    email_ids = filter(None, [demande_paiement.email, demande_paiement.email_eleve])
+    
+    # Récupère tous les emails correspondants (s'ils existent) dans un dictionnaire pour un accès rapide
+    emails = {email.id: email for email in Email_telecharge.objects.filter(id__in=email_ids)}
+
+    # Fonction interne pour formater un email : affiche sujet et texte ou "Pas de message"
+    def format_email(email_id):
+        email = emails.get(email_id)
+        return f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
+    
+    # Formatage du texte des emails pour affichage
+    texte_email_prof = format_email(demande_paiement.email)
+    texte_email_eleve = format_email(demande_paiement.email_eleve)
+
+    # Préparation des paires (cours, horaire) à afficher
+    horaires = [(detail.cours, detail.horaire) for detail in details_demande_paiement]
+
+    # Ensemble unique de cours liés à la demande
+    cours_set = {detail.cours for detail in details_demande_paiement}
+
+    # Liste finale contenant chaque cours et son prix public (s'il existe)
+    cours_prix_publics = []
+    for cours in cours_set:
+        # Recherche des objets `Matiere` et `Niveau` correspondant au cours
+        matiere_obj = Matiere.objects.filter(matiere=cours.matiere).first()
+        niveau_obj = Niveau.objects.filter(niveau=cours.niveau).first()
+
+        # Recherche du lien entre le professeur, la matière et le niveau pour afficher le prix publique
+        prof_mat_niv = Prof_mat_niv.objects.filter(
+            user=demande_paiement.user, # à controler 05/06/2025
+            matiere=matiere_obj, 
+            niveau=niveau_obj
+        ).first()
+
+        # Récupère le prix public si une configuration existe pour ce triplet
+        prix_public = Prix_heure.objects.filter(
+            user=demande_paiement.user,
+            prof_mat_niv=prof_mat_niv
+        ).values_list('prix_heure', flat=True).first() if prof_mat_niv else None
+
+        # Ajoute la paire (cours, prix_public) à la liste
+        cours_prix_publics.append((cours, prix_public))
+
+    # Si le bouton "Voir la réclamation" a été soumis
+    if 'btn_reclamation' in request.POST:
+        if demande_paiement.reclamation and demande_paiement.reclamation.id:
+            # Enregistre l'identifiant de la réclamation en session pour consultation
+            logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
+            request.session['reclamation_id'] = demande_paiement.reclamation.id
+            return redirect('reclamation')
+        else:
+            # Aucun lien de réclamation trouvé
+            logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)
+            messages.error(request, "Il n'y a pas de réclamation liée à la demande de paiement")
+
+    if request.method == 'POST':
+        # Partie du lien de paiement
+        reponse = request.POST.get("paiement_reponse")
+        if reponse == "True": # le bouton Terminer est soumis de la boite de dialogue du lien de paiement
+            """
+            reste à faire:
+            - envoie email de confirmation du paiement
+            - Ajout de l'email de confirmation du paiement
+            """
+            # Avant de passer à l'enregistrement il faut tester la conformité des enregistrements horaires
+            # il faux que tous les enregistrement horaire liés à la demande de paiement sont non 'Annuler' non réglés
+            horaires = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
+            i=0
+            for horaire in horaires:
+                if horaire.statut_cours == 'Annuler' or horaire.payment_id != None:
+                    messages.error(request, f" L'enregistrement horaire.payment_id = {horaire.payment_id}, horaire.statut_cours= {horaire.statut_cours} Dans la table Horaires <br> est déjà réglé, et / ou annulé <br> voire avec le programmeur.")
+                    i+=1
+            if i>0: return render(request, 'eleves/detaille_demande_paiement_recu.html', context) # si un enregistrement est non valide
+            # envoie d'email d'information
+
+            # Enregistrement du paiement entamé
+            return handle_reglement(request, demande_paiement, prof, user) # si non tous les condition de validation sont vraies
+
+        
+        else:
+            messages.warning(request, "Le paiement n'est pas effectué.")
+            # Redirection vers eleve_demande_paiement
+
+    # Contexte à envoyer au template HTML
+    context = {
+        'today': timezone.now().date(),  # Date actuelle pour affichage
+        'date_expiration': demande_paiement.date_expiration.date() if demande_paiement.date_expiration else timezone.now().date(), # pour pouvoire la comparer avec today au même format dans le template
+        'demande_paiement': demande_paiement,  # Objet principal
+        'texte_email_prof': texte_email_prof,  # Email du professeur formaté
+        'texte_email_eleve': texte_email_eleve,  # Email de l'élève formaté
+        'horaires': horaires,  # Liste des cours avec horaires
+        'cours_prix_publics': cours_prix_publics,  # Liste des prix publics pour les cours
+    }
+
+    # Rendu de la page HTML avec le contexte préparé
+    return render(request, 'eleves/eleve_demande_paiement.html', context)
+
+
+# Pour teste seulement
+def Stripe(request):
+    return render(request, 'eleves/Stripe.html')

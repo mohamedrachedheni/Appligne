@@ -4,6 +4,7 @@ from .models import Reclamation
 from .models import PieceJointeReclamation
 from .models import MessageReclamation
 from .models import FAQ
+from .models import UserProfile
 
 
 # Register your models here.
@@ -11,6 +12,8 @@ admin.site.register(ReclamationCategorie)
 admin.site.register(Reclamation)
 admin.site.register(PieceJointeReclamation)
 admin.site.register(MessageReclamation)
+admin.site.register(UserProfile)
+
 
 
 

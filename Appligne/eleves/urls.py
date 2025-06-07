@@ -15,5 +15,8 @@ urlpatterns = [
     path('temoignage_eleve', views.temoignage_eleve, name='temoignage_eleve'),
     path('liste_paiement_eleve', views.liste_paiement_eleve, name='liste_paiement_eleve'),
     path('liste_remboursement', views.liste_remboursement, name='liste_remboursement'),
-    
+    path('register_eleve', views.register_eleve, name='register_eleve'),
+    path('demande_paiement_eleve', views.demande_paiement_eleve, name='demande_paiement_eleve'),
+    path('eleve_demande_paiement', views.eleve_demande_paiement, name='eleve_demande_paiement'),
+    path('Stripe', views.Stripe, name='Stripe'),
 ]

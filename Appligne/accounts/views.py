@@ -25,7 +25,7 @@ from django.db.models import Func
 from django.db.models import Sum, F, ExpressionWrapper, DurationField, FloatField, fields, DecimalField
 from django.db.models.functions import Concat
 from django.contrib.auth.password_validation import validate_password
-
+from django.conf import settings
 import re
 import os
 import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe)
@@ -2827,12 +2827,12 @@ def declaration_cours(request, eleve_id):
                     messages.error(request, "Une erreur s'est produite lors de la récupération des enregistrements horaires. Veuillez contacter le programmeur.")
                     return render(request, 'accounts/declaration_cours.html', context)
             
-            # Envoi de l'email si nécessaire
+            # Envoi de l'email si nécessaire (il faut rediriger l'email à admin pour generer un lien de paiement avec une date d'échéance)
             sujet = request.POST.get('sujet', 'Demande de règlement de cours')
             text_email = request.POST.get('text_email', None)
             if sujet or text_email:
                 email_prof = professeur.user.email
-                destinations = ['prosib25@gmail.com', eleve.user.email]
+                destinations = [ settings.ADMIN_EMAIL]
                 if parent and parent.email_parent:
                     destinations.append(parent.email_parent)
 

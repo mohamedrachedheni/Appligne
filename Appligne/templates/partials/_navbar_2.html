@@ -27,9 +27,9 @@
                 <a href="{% url 'logout' %}" class="nav-item nav-link" >Se déconnecter</a>
                 <a href="{% url 'votre_compte' %}" class="nav-item nav-link" >Mon compte</a>
                 {% else %}
-                <a href="{% url 'signin' %}" class="nav-item nav-link "  >Se connecter</a>
+                <a href="{% url 'seconnecter' %}" class="nav-item nav-link "  >Se connecter</a>
                 <a href="{% url 'nouveau_compte_prof' %}" class="nav-item nav-link "  >Nouveau compte prof</a>
-                <a href="{% url 'nouveau_compte_eleve' %}" class="nav-item nav-link " >Nouveau compte élève</a>
+                <a href="{% url 'register_eleve' %}" class="nav-item nav-link " >Nouveau compte élève</a>
                 {% endif %}
             </div>
             {% if request.user.is_authenticated %}

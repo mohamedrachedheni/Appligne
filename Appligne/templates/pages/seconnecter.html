@@ -1,0 +1,536 @@
+<!-- templates/pages/seconnecter.html -->
+{% extends 'base_02.html' %}
+ 
+{% load static %}
+
+
+{% block title %}Se connecter{% endblock %}
+
+{% block content %}
+<!-- <div class="container bg-light p-5 wow fadeInUp"> -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0 text-center">Se connecter à son compte</h3>
+                </div>
+                <div class="card-body">
+                    <div id="messages-container">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post"  class="needs-validation" novalidate id="registerForm" action="{% url 'seconnecter' %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="login" class="form-label text-dark">Nom d'utilisateur ou Email *</label>
+                            <input type="text" class="form-control form-control-intitule" id="login" name="login" 
+                                   value="{% if form_login %}{{ form_login }}{% endif %}" required >
+                            <div class="invalid-feedback">Veuillez entrer votre identifiant.</div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="password" class="form-label text-dark">Mot de passe *</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-intitule" id="password" name="password" required >
+                                <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">Veuillez entrer votre mot de passe.</div>
+                        </div>
+                        
+                        <div class="form-group mb-3 form-check">
+                            <input type="checkbox" name="remember_me" id="remember_me" class="form-check-input">
+                            <label class="form-check-label text-dark" for="remember_me">Se souvenir de moi</label>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div id="captcha-error-container" class="mb-2"></div>
+                            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between align-items-center">
+                            <div></div>
+                            <div>
+                                <!-- <button type="reset" class="btn btn-warning me-md-2">Réinitialiser</button> -->
+                                <button type="submit" class="btn btn-primary" id="submit-btn"  name="se_connecter_btn">Se connecter</button>
+                            </div>
+                        </div>
+                    </form>
+                        
+                    
+                    <!-- Section cachée pour la récupération de mot de passe -->
+                    <div id="password-recovery-section" class="mt-4" style="display: none;">
+                        <div class="card border-primary">
+                            <div class="card-header bg-light text-primary">
+                                <h5 class="mb-0">Demande de réinitialisation du mot de passe</h5>
+                            </div>
+                            <div class="card-body">
+                                
+                                <form id="passwordRecoveryForm" action="{% url 'password_reset_request' %}" method="post" >
+                                    {% csrf_token %}
+                                    <div class="form-group mb-3">
+                                        <label for="recovery-email" class="form-label">Entrez votre email</label>
+                                        <input type="email" class="form-control" id="recovery-email" name="email" >
+                                        <div class="invalid-feedback" id="recovery-email-error"></div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div id="captcha-error-container" class="mb-2"></div>
+                                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <!-- <button type="button" id="cancel-recovery" class="btn btn-secondary">Annuler</button> -->
+                                        <button type="submit" class="btn btn-primary" id="recovery-submit-btn">
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            Envoyer le lien
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section cachée pour la confirmation d'email -->
+                    <div id="email-confirmation-section" class="mt-4" style="display: none;">
+                        <div class="card border-info">
+                            <div class="card-header bg-light text-info">
+                                <h5 class="mb-0">Confirmation d'email requise</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Un email de confirmation a été envoyé à <span id="confirmation-email"></span>. Veuillez cliquer sur le lien dans l'email pour activer votre compte.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button type="button" id="resend-confirmation" class="btn btn-info">
+                                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        Renvoyer l'email
+                                    </button>
+                                    <button type="button" id="change-email" class="btn btn-outline-secondary">Changer d'email</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section cachée pour contacter l'administration -->
+                    <div id="contact-admin-section" class="mt-4" style="display: none;">
+                        <div class="card border-warning">
+                            <div class="card-header bg-light text-warning">
+                                <h5 class="mb-0">Contacter l'administration</h5>
+                            </div>
+                            <div class="card-body">
+                                <!--  Pour que ton formulaire fonctionne correctement avec Django et effectue une requête AJAX vers la bonne URL -->
+                                <form id="contactAdminForm" action="{% url 'contact_admin' %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group mb-3">
+                                        <label for="contact-email" class="form-label">Votre email</label>
+                                        <input type="email" class="form-control is-invalid" id="contact-email" name="email" required  >
+                                        <div class="invalid-feedback" id="contact-email-error"></div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="contact-message" class="form-label">Message</label>
+                                        <textarea class="form-control" id="contact-message" rows="3" name="message" required ></textarea>
+                                        <div class="invalid-feedback" id="contact-message-error"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <!-- <button type="button" id="cancel-contact" class="btn btn-secondary">Annuler</button> -->
+                                        <button type="submit" class="btn btn-primary" id="contact-submit-btn" name="contact_admin_btn" >
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            Envoyer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between align-items-center">
+                            <div>
+                                <a href="#" id="forgot-password-link" class="text-primary">Mot de passe oublié ?</a>
+                                <span class="mx-2">|</span>
+                                <a href="#" id="contact-admin-link" class="text-primary">Contacter l'administration</a>
+                            </div>
+                            
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- </div> -->
+
+
+{% endblock %}
+
+{% block javascript %}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // ========================
+    // 1. Suppression des erreurs visuelles à la saisie
+    // ========================
+    $('input').on('input', function() {
+        // Lorsqu'un utilisateur commence à saisir dans un champ input,
+        // on retire la classe CSS `is-invalid` pour ne plus afficher le message d'erreur
+        $(this).removeClass('is-invalid');
+    });
+
+    // ========================
+    // 2. Fonction utilitaire pour afficher un message d'erreur lié au CAPTCHA
+    // ========================
+    function showCaptchaError(message) {
+        // Injecte un message d'erreur stylisé dans le conteneur prévu
+        $('#captcha-error-container').html(`
+            <div class="alert alert-danger alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
+
+        // Scroll automatique vers le conteneur d'erreur pour attirer l'attention de l'utilisateur
+        $('html, body').animate({
+            scrollTop: $('#captcha-error-container').offset().top - 100
+        }, 300);
+    }
+
+    // ========================
+    // 3. Gestion de la soumission du formulaire d'inscription
+    // ========================
+    $('#registerForm').submit(function(e) {
+        e.preventDefault();  // Empêche le comportement par défaut du formulaire
+
+        let isValid = true;  // Variable pour suivre la validité du formulaire
+        const password = $('#password').val();  // Récupère la valeur du champ mot de passe
+
+        // Réinitialise les conteneurs d'erreurs
+        $('#captcha-error-container').empty();
+        $('#form-error-container').empty();
+        $('.is-invalid').removeClass('is-invalid');
+
+        // Vérifie la longueur du mot de passe (doit être au moins de 8 caractères)
+        if (password.length < 8) {
+            $('#password').addClass('is-invalid');  // Ajoute un indicateur visuel d'erreur
+            isValid = false;  // Marque le formulaire comme invalide
+        }
+
+        // Si une erreur de validation est détectée, afficher un message d'erreur général
+        if (!isValid) {
+            showCaptchaError("Veuillez corriger les erreurs dans le formulaire.");
+            return;  // Empêche l'envoi du formulaire
+        }
+
+        // ========================
+        // 4. Exécution du reCAPTCHA v3
+        // ========================
+        grecaptcha.ready(function() {
+            grecaptcha.execute('{{ recaptcha_site_key }}', { action: 'register' })
+            .then(function(token) {
+                // Ajoute le token CAPTCHA dans le formulaire (champ caché)
+                $('#g-recaptcha-response').val(token);
+
+                // Sérialise tous les champs du formulaire sous forme de chaîne URL encodée
+                const formData = $('#registerForm').serialize();
+
+                // Envoie les données du formulaire via AJAX
+                $.ajax({
+                    url: $('#registerForm').attr('action'),  // URL du formulaire
+                    method: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'  // Indique qu'il s'agit d'une requête AJAX
+                    },
+                    success: function(response) {
+                        // Si le backend indique un redirection, rediriger l'utilisateur
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        }
+                        // Sinon, afficher un message de confirmation si nécessaire
+                        else if (response.requires_confirmation) {
+                            $('#captcha-error-container').html(`
+                                <div class="alert alert-info">${response.message}</div>
+                            `);
+                        }
+                        // Si tout s'est bien passé, informer l'utilisateur
+                        else {
+                            $('#captcha-error-container').html(`
+                                <div class="alert alert-success">Inscription réussie !</div>
+                            `);
+                        }
+                    },
+                    error: function(xhr) {
+                        // Gestion des erreurs retournées par le serveur
+                        let errMsg = "Une erreur est survenue.";
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errMsg = xhr.responseJSON.error;
+                        }
+                        showCaptchaError(errMsg);  // Affiche un message d'erreur
+                    }
+                });
+            }).catch(function(error) {
+                // En cas d'échec lors de l'exécution du reCAPTCHA
+                console.error("reCAPTCHA Error:", error);
+                showCaptchaError("Erreur lors de la validation CAPTCHA. Veuillez actualiser la page et réessayer.");
+            });
+        });
+    });
+
+    // ========================
+    // 5. Fonction pour afficher ou masquer le mot de passe
+    // ========================
+    window.togglePassword = function(fieldId) {
+        const field = document.getElementById(fieldId);  // Champ mot de passe
+        const icon = field.nextElementSibling.querySelector('i');  // Icône à côté du champ
+
+        if (field.type === "password") {
+            // Affiche le mot de passe
+            field.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            // Masque le mot de passe
+            field.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    };
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Récupération des éléments du DOM à manipuler
+    const contactLink = document.getElementById("contact-admin-link");               // Lien qui permet d'afficher/masquer la section de contact
+    const contactSection = document.getElementById("contact-admin-section");         // Section contenant le formulaire ou les infos de contact de l'admin
+    const passwordSection = document.getElementById("password-recovery-section");    // Section de récupération de mot de passe (si elle existe)
+    const registerForm = document.getElementById("registerForm");                    // Formulaire principal d'inscription
+
+    // Ajout d'un gestionnaire d'événement sur le clic du lien "Contacter l'admin"
+    contactLink.addEventListener("click", function (event) {
+        event.preventDefault(); // Empêche le comportement par défaut du lien (ne pas recharger la page)
+
+        // Vérifie si la section de contact est actuellement visible
+        const isContactVisible = contactSection.style.display === "block";
+
+        if (isContactVisible) {
+            // Si la section de contact est visible :
+            // - on la masque
+            // - on réaffiche le formulaire d'inscription
+            // - on masque la section de récupération du mot de passe
+            contactSection.style.display = "none";
+            registerForm.style.display = "block";
+            passwordSection.style.display = "none";
+        } else {
+            // Si la section de contact est masquée :
+            // - on l'affiche
+            // - on masque les autres sections (formulaire d'inscription et mot de passe)
+            contactSection.style.display = "block";
+            registerForm.style.display = "none";
+            passwordSection.style.display = "none";
+        }
+    });
+});
+</script>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Récupération du formulaire et des éléments d'interface
+    const form = document.getElementById("contactAdminForm");                     // Formulaire de contact de l'administrateur
+    const submitBtn = document.getElementById("contact-submit-btn");              // Bouton de soumission du formulaire
+    const spinner = submitBtn.querySelector(".spinner-border");                   // Élément spinner à afficher pendant l'envoi
+
+    // Champs d'entrée du formulaire
+    const emailInput = document.getElementById("contact-email");                  // Champ de saisie de l'email
+    const emailError  = document.getElementById("contact-email-error");           // Élément pour afficher l'erreur liée à l'email
+    const msgInput    = document.getElementById("contact-message");               // Champ de saisie du message
+    const msgError    = document.getElementById("contact-message-error");         // Élément pour afficher l'erreur liée au message
+
+    // Écoute de la soumission du formulaire
+    form.addEventListener("submit", function (e) {
+        e.preventDefault(); // Empêche la soumission classique (rechargement de page)
+
+        // Nettoyage des classes d'erreur et des messages d'erreur affichés
+        [emailInput, msgInput].forEach(input => input.classList.remove("is-invalid"));
+        emailError.textContent = "";
+        msgError.textContent = "";
+
+        // Récupération et nettoyage des valeurs entrées par l'utilisateur
+        const email   = emailInput.value.trim();
+        const message = msgInput.value.trim();
+
+        // Expression régulière de validation de l'email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // Vérifie que l'email est valide
+        if (!emailPattern.test(email)) {
+            emailInput.classList.add("is-invalid");
+            emailError.textContent = "L'adresse e-mail saisie est invalide.";
+            return; // On arrête l'exécution ici
+        }
+
+        // Vérifie que le message n'est pas vide
+        if (!message) {
+            msgInput.classList.add("is-invalid");
+            msgError.textContent = "Veuillez saisir un message.";
+            return; // On arrête l'exécution ici
+        }
+
+        // Affiche le spinner de chargement et désactive le bouton pour éviter le double envoi
+        spinner.classList.remove("d-none");
+        submitBtn.disabled = true;
+
+        // Envoie des données au serveur via `fetch` (AJAX)
+        fetch(form.action, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", // Indique une requête AJAX
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value, // Protection CSRF
+                "Content-Type": "application/x-www-form-urlencoded" // Type des données envoyées
+            },
+            body: new URLSearchParams({ email, message }) // Corps de la requête
+        })
+        .then(response => response.json()) // Transforme la réponse en JSON
+        .then(data => {
+            // Restaure l'état du bouton après réponse
+            spinner.classList.add("d-none");
+            submitBtn.disabled = false;
+
+            if (data.error) {
+                // Si une erreur est retournée par le serveur, l'affiche dans le bon champ
+                if (data.error.includes("email")) {
+                    emailInput.classList.add("is-invalid");
+                    emailError.textContent = data.error;
+                } else {
+                    msgInput.classList.add("is-invalid");
+                    msgError.textContent = data.error;
+                }
+            } else {
+                // Si tout s'est bien passé, affiche un message de succès et redirige
+                alert(data.message);
+                window.location.href = "/"; // Redirection vers la page d'accueil (peut être personnalisée)
+            }
+        })
+        .catch(err => {
+            // Gère les erreurs réseau ou inattendues
+            spinner.classList.add("d-none");
+            submitBtn.disabled = false;
+            alert("Une erreur est survenue. Veuillez réessayer plus tard.");
+            console.error("Erreur AJAX :", err); // Pour le débogage
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Récupération des éléments du DOM à manipuler
+    const forgotPasswordLink = document.getElementById("forgot-password-link");       // Lien "Mot de passe oublié"
+    const passwordSection = document.getElementById("password-recovery-section");     // Section de récupération du mot de passe
+    const contactSection = document.getElementById("contact-admin-section");          // Section de contact avec l'administrateur
+    const registerForm = document.getElementById("registerForm");                     // Formulaire d'inscription
+
+    // Événement au clic sur le lien "Mot de passe oublié"
+    forgotPasswordLink.addEventListener("click", function (event) {
+        event.preventDefault(); // Empêche le comportement par défaut du lien
+
+        // Vérifie si la section de récupération est déjà visible
+        const isPasswordVisible = passwordSection.style.display === "block";
+
+        if (isPasswordVisible) {
+            // Si visible : on la masque, et on réaffiche les autres sections
+            passwordSection.style.display = "none";
+            contactSection.style.display = "none";
+            registerForm.style.display = "block";
+        } else {
+            // Sinon : on l’affiche, et on masque les autres sections
+            passwordSection.style.display = "block";
+            contactSection.style.display = "none";
+            registerForm.style.display = "none";
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('passwordRecoveryForm');
+    const emailInput = document.getElementById('recovery-email');
+    const errorDiv = document.getElementById('recovery-email-error');
+    const submitBtn = document.getElementById('recovery-submit-btn');
+    const spinner = submitBtn.querySelector('.spinner-border');
+    const tokenField = document.getElementById('g-recaptcha-response'); // champ caché
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        errorDiv.textContent = '';
+        emailInput.classList.remove('is-invalid');
+
+        const email = emailInput.value.trim();
+        if (!email) {
+            emailInput.classList.add('is-invalid');
+            errorDiv.textContent = "Veuillez entrer une adresse email.";
+            return;
+        }
+
+        spinner.classList.remove('d-none');
+        submitBtn.disabled = true;
+
+        // Exécute reCAPTCHA d'abord
+        grecaptcha.ready(function () {
+            grecaptcha.execute('{{ recaptcha_site_key }}', { action: 'password_reset' }).then(function (token) {
+                tokenField.value = token;
+
+                // Ensuite, on envoie la requête AJAX
+                fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({
+                        email: email,
+                        'g-recaptcha-response': token
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    spinner.classList.add('d-none');
+                    submitBtn.disabled = false;
+
+                    if (data.error) {
+                        emailInput.classList.add('is-invalid');
+                        errorDiv.textContent = data.error;
+                    } else {
+                        alert(data.message);
+                        window.location.href = '/';
+                    }
+                })
+                .catch(error => {
+                    spinner.classList.add('d-none');
+                    submitBtn.disabled = false;
+                    alert("Une erreur est survenue. Veuillez réessayer.");
+                    console.error("Erreur :", error);
+                });
+            }).catch(function (error) {
+                spinner.classList.add('d-none');
+                submitBtn.disabled = false;
+                document.getElementById('captcha-error-container').innerHTML =
+                    '<div class="text-danger">Erreur CAPTCHA : ' + error + '</div>';
+            });
+        });
+    });
+});
+</script>
+
+
+
+
+{% endblock %}

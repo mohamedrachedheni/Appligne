@@ -463,7 +463,7 @@ class Payment(models.Model):
 
     model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement)
     model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
-    slug = models.CharField(max_length=255)  # Identifiant unique
+    slug = models.CharField(max_length=255)  # Identifiant unique (url du lien du paiement)
     reference = models.CharField(max_length=255)  # Référence interne du paiement
     payment_attempts = models.PositiveIntegerField(default=1)  # Nombre de tentatives
     expiration_date = models.DateTimeField()  # Date d'expiration du paiement
@@ -519,10 +519,13 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
     statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
     payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
+    reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement
     reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+    url_paiement = models.CharField(max_length=255, null=True, blank=True)  # lien fourni par la passerelle de paiement
+    date_expiration = models.DateTimeField(null=True)  # Date d'expiration du lien de paiement
 
 class Detail_demande_paiement(models.Model):  # Demande de paiement
     demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement

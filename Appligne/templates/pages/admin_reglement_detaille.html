@@ -87,7 +87,7 @@
                                 {% if  request.user.is_authenticated  and request.user.is_active and request.user.is_staff or request.user.eleve and request.user.is_active%}
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement" {% if accord_reglement.status == 'Réalisé' %} disabled {% endif %} >
                                             Passez à la modification de l'accord de règlement
                                         </button>
                                     </div>

@@ -14,7 +14,7 @@
                     {% include 'partials/_sidebar_eleve.html' %}
                 {% elif request.user.professeur %}
                     {% include 'partials/_sidebar.html' %}
-                {% else %}
+                {% elif request.user.is_staff and request.user.is_active %}
                     {% include 'partials/_sidebar_admin.html' %}
                 {% endif %}
             {% endif %}
