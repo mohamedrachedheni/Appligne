@@ -4916,6 +4916,7 @@ def admin_accord_remboursement_modifier(request):
 
 
 
+from datetime import datetime, timedelta, timezone
 
 # Protection CSRF : Empêche les attaques de type Cross-Site Request Forgery
 # en s'assurant que toute requête POST provient bien d'une page générée par le serveur lui-même.
@@ -4940,6 +4941,7 @@ def seconnecter(request):
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me') == 'on'
         captcha_response = request.POST.get('g-recaptcha-response')
+        logger.info(f"Token reCAPTCHA reçu : {captcha_response}")
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         user_ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', 'inconnu')
@@ -5037,8 +5039,8 @@ def seconnecter(request):
             if remember_me:
                 payload = {
                     'user_id': user.id,
-                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),
-                    'iat': datetime.datetime.utcnow(),
+                    'exp': datetime.now(timezone.utc) + timedelta(days=30),
+                    'iat': datetime.now(timezone.utc),
                     'ip': user_ip
                 }
                 token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
@@ -5287,6 +5289,7 @@ def password_reset_request(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         email = request.POST.get('email')
         captcha_response = request.POST.get('g-recaptcha-response')
+        logger.info(f"Token reCAPTCHA reçu : {captcha_response}")
         user_ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 

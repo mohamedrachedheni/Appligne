@@ -1371,6 +1371,7 @@ def register_eleve(request):
         email = request.POST.get('email')
         remember_me = request.POST.get('remember_me')
         captcha_response = request.POST.get('g-recaptcha-response')
+        logger.info(f"Token reCAPTCHA reçu : {captcha_response}")
 
         # Dictionnaire pour stocker les messages d’erreur
         errors = {}

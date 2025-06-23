@@ -212,12 +212,22 @@ DEFAULT_FROM_EMAIL = 'no-reply@monsite.com' # email par défaut si l'email de l'
 ADMIN_EMAIL = 'prosib25@gmail.com' # email de l'administrateur
 
 # Configurer les paramètres JWT
+"""
+Un JWT est un jeton d’authentification compact et encodé en base64, généralement utilisé pour prouver l’identité d’un utilisateur après qu’il se soit connecté.
+risque: Le contenu est lisible (base64 ≠ chiffrement), donc ne jamais y stocker de données sensibles.
+"""
 PASSWORD_JWT = config('PASSWORD_JWT') # Récupération du mot de passe PASSWORD_JWT depuis le fichier .env
 JWT_SECRET = PASSWORD_JWT # your_secret_key
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 3600  # Token expiration time (e.g., 1 hour)
 
-# Configurer les paramètres reCAPTCHA 
+# Configurer les paramètres reCAPTCHA (Vérifier qu’un utilisateur est humain et non un robot automatisé.)
+"""
+Protéger les formulaires de contact, commentaires, inscriptions ou connexions.
+Éviter les créations de comptes frauduleux.
+Empêcher les attaques par force brute (essais multiples de mots de passe).
+Réduire les spams automatiques.
+"""
 RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
 RECAPTCHA_MIN_SCORE = 0.5  # Seuil de sécurité (0.5-0.9 selon votre tolérance)
