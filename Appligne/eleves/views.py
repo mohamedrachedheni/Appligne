@@ -904,7 +904,7 @@ def handle_reglement(request, demande_paiement, prof, user):
     # envoie d'émail d'information de l'état d'avansement du paiement
     
 
-    messages.success(request, "Le paiement a été initié avec succès. <br>La demande de paiement a été mise à jour avec le statut « En attente ».")
+    messages.success(request, "Le paiement a été initié avec succès. <br>La demande de paiement a été mise à jour avec le statut « En cours ».")
     return redirect('compte_eleve')
 
 

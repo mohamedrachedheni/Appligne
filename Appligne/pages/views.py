@@ -4916,7 +4916,7 @@ def admin_accord_remboursement_modifier(request):
 
 
 
-from datetime import datetime, timedelta, timezone
+
 
 # Protection CSRF : Empêche les attaques de type Cross-Site Request Forgery
 # en s'assurant que toute requête POST provient bien d'une page générée par le serveur lui-même.
@@ -5037,6 +5037,7 @@ def seconnecter(request):
 
             # ------- Gestion du "se souvenir de moi" via cookie JWT -------
             if remember_me:
+                from datetime import datetime, timedelta, timezone # pour ne pas tomber dans le conflict avec: from django.utils import timezone
                 payload = {
                     'user_id': user.id,
                     'exp': datetime.now(timezone.utc) + timedelta(days=30),
