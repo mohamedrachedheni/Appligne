@@ -158,32 +158,28 @@
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 
-
 <form method="POST" id="paiement_form">
   {% csrf_token %}
   <input type="hidden" name="paiement_reponse" id="paiement_reponse_input">
 
-  <div class="modal fade" id="webModal" tabindex="-1" aria-labelledby="webModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 90%;">
+  <div class="modal fade" id="webModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Confirmer le paiement</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          <h5 class="modal-title">Confirmation</h5>
         </div>
         <div class="modal-body">
           <div id="paiement_loader" class="text-center my-3" style="display:none;">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p>Chargement de la page de paiement...</p>
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Vérification du lien de paiement...</p>
           </div>
-          <div id="paiement_error" class="alert alert-danger d-none" role="alert">
+          <div id="paiement_error" class="alert alert-danger d-none">
             La page de paiement est inaccessible. Veuillez réessayer plus tard.
           </div>
-          <iframe id="iframe_paiement" src="" width="100%" height="500px" style="border:none;"></iframe>
+          <p>Le paiement a été ouvert dans un nouvel onglet. Merci de confirmer une fois le paiement terminé.</p>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" id="btn_terminer" onclick="setPaiementResponse(true)">Terminer</button>
+          <button type="submit" class="btn btn-success" onclick="setPaiementResponse(true)">J'ai terminé le paiement</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setPaiementResponse(false)">Annuler</button>
         </div>
       </div>
@@ -219,68 +215,55 @@ for (let i = 0; i < textareas.length; i++) {
     window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
     document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
 </script>
-
 <script>
-// setPaiementResponse : enregistre si l'utilisateur a confirmé ou annulé.
-// fetch(..., {method: 'HEAD'}) : vérifie que l’URL est valide sans la charger.
-// iframe.src = url : charge la page de paiement dans une iframe seulement si tout va bien.
-// Gestion du spinner et des erreurs : l’utilisateur voit un chargement, ou un message d’erreur s’affiche.
-
-// Fonction appelée quand l’utilisateur clique sur "Terminer" ou "Annuler"
+    // Fonction pour gérer la réponse de confirmation
 function setPaiementResponse(val) {
-    // Met à jour un champ caché pour indiquer si le paiement est confirmé ("True") ou annulé ("False")
     document.getElementById("paiement_reponse_input").value = val ? "True" : "False";
 }
 
-// Ajoute un écouteur d’événement sur le bouton "Passer au paiement"
-document.getElementById("btn_passer_au_paiement").addEventListener("click", function () {
-    const url = this.dataset.url; // Récupère l’URL de paiement depuis l’attribut data-url du bouton
-    const iframe = document.getElementById("iframe_paiement"); // Iframe où sera chargée la page de paiement
-    const loader = document.getElementById("paiement_loader"); // Élément de chargement (spinner)
-    const errorMsg = document.getElementById("paiement_error"); // Zone de message d’erreur
-    const btnTerminer = document.getElementById("btn_terminer"); // Bouton "Terminer"
-
-    // ------------------- Réinitialisation ------------------- //
-    iframe.src = ""; // Vide l'iframe
-    loader.style.display = "block"; // Affiche le spinner de chargement
-    errorMsg.classList.add("d-none"); // Cache le message d’erreur
-    btnTerminer.disabled = true; // Désactive le bouton "Terminer" tant que l’URL n’est pas validée
-
-    // ------------------- Vérification de l'URL ------------------- //
-    // Envoie une requête HEAD (sans contenu) pour vérifier que l'URL existe et répond
+// Gestion du clic sur le bouton de paiement
+document.getElementById("btn_passer_au_paiement").addEventListener("click", function() {
+    const url = this.dataset.url;
+    const loader = document.getElementById("paiement_loader");
+    const errorMsg = document.getElementById("paiement_error");
+    
+    // Afficher le loader
+    loader.style.display = "block";
+    errorMsg.classList.add("d-none");
+    
+    // Vérification simplifiée de l'URL
     fetch(url, { method: 'HEAD' })
         .then(response => {
-            // Affiche le modal Bootstrap une fois la vérification terminée
-            const modal = new bootstrap.Modal(document.getElementById("webModal"));
-            modal.show();
-
+            loader.style.display = "none";
+            
             if (response.ok) {
-                // Si la réponse HTTP est correcte (status 200–299)
-                iframe.src = url; // Charge l'URL dans l’iframe
-                loader.style.display = "none"; // Cache le loader
-                errorMsg.classList.add("d-none"); // S’assure que le message d’erreur est caché
-                btnTerminer.disabled = false; // Active le bouton "Terminer"
+                // Ouvrir dans un nouvel onglet au lieu d'une iframe
+                window.open(url, '_blank');
+                
+                // Afficher la modal de confirmation seulement
+                const modal = new bootstrap.Modal(document.getElementById("webModal"));
+                modal.show();
             } else {
-                // Si la réponse HTTP est invalide (ex: 404, 500…)
-                loader.style.display = "none"; // Cache le loader
-                errorMsg.classList.remove("d-none"); // Affiche le message d’erreur
-                iframe.src = ""; // Vide l’iframe
-                btnTerminer.disabled = true; // Laisse "Terminer" désactivé
+                errorMsg.classList.remove("d-none");
             }
         })
         .catch(error => {
-            // Si l’URL est invalide ou inaccessible (erreur réseau)
-            const modal = new bootstrap.Modal(document.getElementById("webModal"));
-            modal.show();
-
-            loader.style.display = "none"; // Cache le loader
-            errorMsg.classList.remove("d-none"); // Affiche le message d’erreur
-            iframe.src = ""; // Vide l’iframe
-            btnTerminer.disabled = true; // Désactive le bouton "Terminer"
+            loader.style.display = "none";
+            errorMsg.classList.remove("d-none");
         });
 });
 </script>
-
+<!-- <script>
+    document.getElementById("btn_passer_au_paiement").addEventListener("click", function() {
+    const url = this.dataset.url;
+    
+    // Option 1: Ouvrir dans un nouvel onglet
+    window.open(url, '_blank');
+    
+    // Ou Option 2: Rediriger la page actuelle
+    // window.location.href = url;
+});
+</script> -->
 
 
 
