@@ -1,0 +1,179 @@
+/* Main container */
+.payment-success-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Card styling */
+.payment-success-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    text-align: center;
+}
+
+/* Header section */
+.payment-success-header {
+    margin-bottom: 30px;
+}
+
+.payment-success-header h1 {
+    color: #4CAF50;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 15px 0 5px;
+}
+
+.payment-success-header .subtitle {
+    color: #666;
+    font-size: 16px;
+    margin: 0;
+}
+
+.icon-success {
+    margin: 0 auto;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f9f0;
+    border-radius: 50%;
+}
+
+/* Details section */
+.payment-success-details {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: left;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.paid {
+    background-color: #e6f7e6;
+    color: #4CAF50;
+}
+
+/* Actions section */
+.payment-success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn {
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3d8b40;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+.btn-secondary:hover {
+    background-color: #f0f9f0;
+}
+
+.btn svg {
+    margin-right: 8px;
+}
+
+/* Footer section */
+.payment-success-footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.payment-success-footer a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.payment-success-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .payment-success-container {
+        padding: 15px;
+        margin: 20px auto;
+    }
+    
+    .payment-success-card {
+        padding: 20px;
+    }
+    
+    .payment-success-header h1 {
+        font-size: 24px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .detail-value {
+        margin-left: 0;
+    }
+}

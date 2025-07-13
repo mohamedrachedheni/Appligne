@@ -1,0 +1,185 @@
+{% load math_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture {{ invoice.invoice_number }} | École de Cours Particuliers</title>
+    <style>
+        /* Style optimisé pour l'impression */
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.5;
+            font-size: 12px;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .company-address {
+            line-height: 1.4;
+        }
+        
+        .invoice-details {
+            text-align: right;
+            line-height: 1.4;
+        }
+        
+        .invoice-title {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            text-align: left;
+            padding: 8px;
+            font-weight: normal;
+        }
+        
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+        
+        .payment-status {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #27ae60;
+            color: white;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+        }
+        
+        /* Améliorations pour l'impression */
+        @media print {
+            body {
+                font-size: 11px;
+            }
+            
+            .invoice-container {
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- En-tête -->
+        <div class="header">
+            <div class="company-address">
+                <strong>ÉCOLE DE COURS PARTICULIERS</strong><br>
+                123 Rue de l'Éducation<br>
+                75000 Paris, France<br>
+                Tél: 01 23 45 67 89<br>
+                Email: contact@ecole-cours.fr<br>
+                SIRET: 123 456 789 00000
+            </div>
+            
+            <div class="invoice-details">
+                <strong>FACTURE N°: {{ invoice.invoice_number }}</strong><br>
+                Date: {{ invoice.created_at|date:"d/m/Y" }}<br>
+                Client: 
+                {% if parent %}
+                    {{ parent.get_full_name }}
+                {% else %}
+                    {{ invoice.user.get_full_name }}
+                {% endif %}<br>
+                {% if invoice.paid_at %}
+                Statut: <span class="payment-status">PAYÉE</span><br>
+                Date de paiement: {{ invoice.paid_at|date:"d/m/Y" }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Titre principal -->
+        <div class="invoice-title">
+            Facture
+        </div>
+        
+        <!-- Détails des prestations -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Description</th>
+                    <th style="width: 15%;">Prix unitaire</th>
+                    <th style="width: 10%;">Quantité</th>
+                    <th style="width: 15%;" class="text-right">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.cart.items.all %}
+                <tr>
+                    <td>{{ item.cours }}</td>
+                    <td>{{ item.price|div:100|floatformat:2 }} €</td>
+                    <td>{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.subtotal|div:100|floatformat:2 }} €</td>
+                </tr>
+                {% endfor %}
+                
+                <!-- Total -->
+                <tr class="total-row">
+                    <td colspan="3" class="text-right">Total TTC</td>
+                    <td class="text-right">{{ invoice.total|div:100|floatformat:2 }} €</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Mentions légales -->
+        <div class="footer">
+            <p>TVA non applicable, art. 293 B du CGI - Paiement à réception de la facture</p>
+            <p>En cas de retard de paiement, seront exigibles, conformément à l'article L. 441-6 du code de commerce, une indemnité forfaitaire pour frais de recouvrement de 40€.</p>
+        </div>
+    </div>
+</body>
+</html>

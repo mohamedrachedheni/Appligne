@@ -47,7 +47,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mathfilters',
+    'cart',
+    'payment',
+    
 ]
+
+# Configurer Stripe dans settings.py
+STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -340,3 +348,4 @@ LOGGING = {
 
 # Générer une clé de chiffrement
 SECRET_ENCRYPTION_KEY = config('PASSWORD_CRYPTO')
+

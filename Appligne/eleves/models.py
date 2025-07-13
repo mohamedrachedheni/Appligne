@@ -29,6 +29,8 @@ class Eleve(models.Model):
     def set_date_naissance_from_str(self, date_naissance_str):
         if date_naissance_str:
             self.date_naissance = datetime.strptime(date_naissance_str, '%d/%m/%Y').date()
+    def get_parent(self):
+        return Parent.objects.filter(user=self.user).first()
 
 
 
@@ -57,6 +59,8 @@ class Parent(models.Model):
     def set_encrypted_code_carte(self, code_carte_plain):
         if code_carte_plain:
             self.code_carte = make_password(code_carte_plain)
+    def get_full_name(self):
+        return f"{self.prenom_parent} {self.nom_parent}"
             
 
 

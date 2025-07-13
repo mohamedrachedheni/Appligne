@@ -35,5 +35,7 @@ urlpatterns = [
     path('get_departments/', get_departments, name='get_departments'),
     path('get_regions/', get_regions, name='get_regions'),
     path('get_communes/', get_communes, name='get_communes'),
+    path('cart/', include('cart.urls')),
+    path('payment/', include('payment.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

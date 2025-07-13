@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Paiement interrompu{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Paiement interrompu
+                    </h2>
+                </div>
+                
+                <div class="card-body">
+                    {# Cas 1: Échec de paiement (carte refusée, etc.) #}
+                    {% if error_type == 'payment_failed' %}
+                        <div class="alert alert-danger">
+                            <h3 class="h5 alert-heading">Votre paiement n'a pas pu être traité</h3>
+                            <p>
+                                Le traitement de votre paiement (réf. {{ payment_reference }}) 
+                                d'un montant de {{ amount }} € a échoué.
+                            </p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Raison possible :</strong> Carte refusée, fonds insuffisants 
+                                ou problème technique avec votre banque.
+                            </p>
+                        </div>
+                    
+                    {# Cas 2: Session expirée #}
+                    {% elif error_type == 'session_expired' %}
+                        <div class="alert alert-warning">
+                            <h3 class="h5 alert-heading">Session de paiement expirée</h3>
+                            <p>
+                                Votre session de paiement pour la facture {{ invoice_number }} 
+                                a expiré le {{ expired_at|date:"d/m/Y à H:i" }}.
+                            </p>
+                            <p>
+                                Aucun prélèvement n'a été effectué sur votre compte.
+                            </p>
+                        </div>
+                    
+                    {# Cas 3: Annulation utilisateur #}
+                    {% elif error_type == 'user_cancelled' %}
+                        <div class="alert alert-info">
+                            <h3 class="h5 alert-heading">Paiement annulé</h3>
+                            <p>
+                                Vous avez choisi d'interrompre le paiement pour la facture {{ invoice_number }}.
+                            </p>
+                            <p>
+                                Aucun prélèvement n'a été effectué sur votre compte.
+                            </p>
+                        </div>
+                    
+                    {# Cas 4: Annulation précoce #}
+                    {% elif error_type == 'early_cancellation' %}
+                        <div class="alert alert-secondary">
+                            <h3 class="h5 alert-heading">Paiement non finalisé</h3>
+                            <p>
+                                Vous avez quitté le processus de paiement avant sa finalisation.
+                            </p>
+                            <p>
+                                Aucune tentative de paiement n'a été enregistrée.
+                            </p>
+                        </div>
+                    
+                    {# Cas 5: Erreur technique #}
+                    {% elif error_type == 'technical_error' %}
+                        <div class="alert alert-danger">
+                            <h3 class="h5 alert-heading">Problème technique</h3>
+                            <p>
+                                Une erreur technique a interrompu le processus de paiement.
+                            </p>
+                            <p class="mb-0">
+                                Notre équipe a été notifiée et résoudra le problème rapidement.
+                            </p>
+                        </div>
+                    
+                    {# Cas par défaut #}
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <h3 class="h5 alert-heading">Processus de paiement interrompu</h3>
+                            <p>
+                                Votre session de paiement semble avoir été interrompue.
+                            </p>
+                        </div>
+                    {% endif %}
+                    
+                    {# Actions possibles #}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'compte_eleve' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour à mon espace
+                        </a>
+                        
+                        {% if can_retry %}
+                            <a href="{% url 'eleve_demande_paiement' %}" class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>Réessayer le paiement
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    {# Informations supplémentaires #}
+                    <div class="mt-4 pt-3 border-top">
+                        {% if error_type %}
+                            <div class="alert alert-danger">
+                                {% if error_type == "technical_error" and error_message %}
+                                    {{ error_message }}
+                                {% elif error_type == "payment_failed" %}
+                                    Le paiement a échoué (référence : {{ payment_reference }}). Montant : {{ amount }} €
+                                {% elif error_type == "session_expired" %}
+                                    La session de paiement a expiré. Montant : {{ amount }} €
+                                {% elif error_type == "user_cancelled" %}
+                                    Vous avez annulé le paiement. Montant : {{ amount }} €
+                                {% elif error_type == "early_cancellation" %}
+                                    Le paiement a été annulé avant même d’être initié.
+                                {% elif error_type == "direct_access" %}
+                                    Vous avez accédé directement à cette page sans passer par une session de paiement.
+                                {% elif error_type == "unexpected_error" and error_message %}
+                                    {{ error_message }}
+                                {% else %}
+                                    Une erreur s'est produite. Veuillez réessayer plus tard.
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <h3 class="h6">Besoin d'aide ?</h3>
+                        <p>
+                            Si vous rencontrez des difficultés persistantes, contactez notre service client :
+                        </p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-envelope me-2"></i> support@example.com</li>
+                            <li><i class="fas fa-phone me-2"></i> +33 1 23 45 67 89</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

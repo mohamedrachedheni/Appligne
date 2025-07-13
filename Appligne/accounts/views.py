@@ -551,9 +551,9 @@ def signin(request):
                 # Si l'utilisateur est superuser et staff
                 elif  user.is_staff:  # à gérer le cas des administrateurs plus tard
                     return redirect('compte_administrateur')
-                else:
-                    # Message d'erreur si l'utilisateur n'est pas superuser ou staff
-                    messages.error(request, "Vous n'êtes pas autorisé à acceder au compte administrateur.")
+                # else:
+                #     # Message d'erreur si l'utilisateur n'est pas superuser ou staff
+                #     messages.error(request, "Vous n'êtes pas autorisé à acceder au compte administrateur.")
             else:
                 # Message d'erreur si l'utilisateur n'est pas actif
                 messages.error(request, "Votre compte est désactivé. Veuillez contacter l'administrateur.")

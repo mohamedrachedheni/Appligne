@@ -144,7 +144,7 @@
                                                         </div>
                                                         <div class="col-md-10 col-sm-12 d-flex justify-content-center mb-3">
                                                             <button type="submit" class="btn {% if not demande_paiement.statut_demande == 'Contester' %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_demande_paiement_id{{id}}" >
-                                                                {% if not demande_paiement.statut_demande == 'Contester' %}Détaille{% else %}Contesté{% endif %} -- {% if demande_paiement.payment_id %} Paiement entamé {% elif demande_paiement.date_expiration|date:'d/m/Y' < today|date:'d/m/Y' %}Date de paiement expirée {% else %}Date limite de paiement le {{demande_paiement.date_expiration|date:'d/m/Y'}} {% endif %}
+                                                                {% if not demande_paiement.statut_demande == 'Contester' %}Détaille{% else %}Contesté{% endif %} {% if demande_paiement.payment_id %} --  Paiement entamé  {% endif %}
                                                             </button>
                                                         </div>
                                                     </div>

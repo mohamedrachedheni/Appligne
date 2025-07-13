@@ -167,3 +167,5 @@ class UserProfile(models.Model):
     email_confirmed = models.BooleanField(default=False)
     email_confirmation_token = models.CharField(max_length=100, blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
+
+

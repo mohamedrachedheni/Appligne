@@ -27,25 +27,6 @@
                             <div class="container bg-light py-5 " >
                                 <div class="row  g-2 ">
                                     <div class="col-md-3 col-sm-12 position-relative">
-                                        <label for="eleve_id" class="form-label">Elève</label>
-                                        <input type="text" class="form-control form-control-intitule" id="eleve_id" value="{{demande_paiement.eleve.user.first_name}} {{demande_paiement.eleve.user.last_name}}" readonly >
-                                    </div>
-                                    <div class="col-md-3 col-sm-12 position-relative ">
-                                        <label for="date_paiement_id" class="form-label">Date limite de paiement</label>
-                                        <input type="text" class="form-control form-control-date "  name="echeance" placeholder="Sélectionnez une date" value="{{ date_expiration|default:today|date:'d/m/Y' }}" 
-                                        {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
-                                            disabled
-                                        {% elif demande_paiement.payment_id %}
-                                            disabled
-                                        {% elif date_expiration and  today  <=  date_expiration %}
-                                            disabled
-                                        {% endif %}
-                                         >
-                                    </div>
-                                    <div class="col-md-6 col-sm-12 position-relative">
-                                        <input  class="form-control" id="url_paiement_id" autocomplete="off" name="url_paiement" value="{{demande_paiement.url_paiement}}" type="hidden" >
-                                    </div>
-                                    <div class="col-md-3 col-sm-12 position-relative">
                                         <label for="prof_id" class="form-label">Professeur</label>
                                         <input type="text" class="form-control form-control-intitule" id="prof_id" value="{{demande_paiement.user.first_name}} {{demande_paiement.user.last_name}}" readonly >
                                     </div>
@@ -131,19 +112,17 @@
                                     </div>
                                 </div>
                                 <div class="row justify-content-between g-2 p-3">
-                                    <div class="col-lg-5 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >Voire réclamation</button>
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >{% if not  demande_paiement.reclamation %}Pas de réclamation {% else %} Voire réclamation {% endif %}</button>
                                     </div>
-                                    <div class="col-lg-5 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-primary w-100" id="btn_passer_au_paiement" data-url="{{ demande_paiement.url_paiement }}"
-                                            {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
+                                    
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_paiement_checkout"
+                                            {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'En cours'  %}
                                                 disabled
                                             {% elif demande_paiement.payment_id %}
                                                 disabled
-                                            {% elif not date_expiration or not demande_paiement.url_paiement or   date_expiration < today %}
-                                                disabled
-                                            {% endif %}
-                                            >Passer au paiement
+                                            {% endif %}>Passer au paiement
                                         </button>
                                     </div>
                                 </div>

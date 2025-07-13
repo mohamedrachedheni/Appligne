@@ -455,18 +455,18 @@ class Payment(models.Model):
     INVALID = 'invalid'
 
     STATUS_CHOICES = [
-        (PENDING, 'En attente'),
-        (APPROVED, 'Approuvé'),
-        (CANCELED, 'Annulé'),
-        (INVALID, 'Invalide'),
+        (PENDING, 'En attente'), # ('created', 'Créé'),
+        (APPROVED, 'Approuvé'), # ('succeeded', 'Réussi'),
+        (CANCELED, 'Annulé'), # ('canceled', 'Annulé'),
+        (INVALID, 'Invalide'), # ('failed', 'Échoué'),
     ]
 
     model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement)
     model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
-    slug = models.CharField(max_length=255)  # Identifiant unique (url du lien du paiement)
-    reference = models.CharField(max_length=255)  # Référence interne du paiement
-    payment_attempts = models.PositiveIntegerField(default=1)  # Nombre de tentatives
-    expiration_date = models.DateTimeField()  # Date d'expiration du paiement
+    slug = models.CharField(max_length=255)  # à enlever
+    reference = models.CharField(max_length=255)  
+    # payment_attempts = models.PositiveIntegerField(default=1)  # à enlever
+    # expiration_date = models.DateTimeField()  # à enlever
     amount = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
@@ -475,14 +475,15 @@ class Payment(models.Model):
         blank=True
     )  # Montant du paiement
     currency = models.CharField(max_length=10)  # Devise
-    source = models.CharField(max_length=255, default='desktop')  # Source (web/mobile)
+    # source = models.CharField(max_length=255, default='desktop')  # à enlever
     language = models.CharField(max_length=10)  # Langue utilisée
-    membership_number = models.CharField(max_length=255, null=True, blank=True)  # Numéro d'adhésion
-    payment_register_data = models.JSONField(null=True, blank=True)  # Données de la passerelle
-    order_id = models.CharField(max_length=255, null=True, blank=True)  # ID de commande
+    # membership_number = models.CharField(max_length=255, null=True, blank=True)  # à enlever
+    # payment_register_data = models.JSONField(null=True, blank=True)  # à enlever
+    # order_id = models.CharField(max_length=255, null=True, blank=True)  # à enlever
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
-    payment_body = models.JSONField(null=True, blank=True)  # Détails supplémentaires
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
+    payment_body = models.JSONField(null=True, blank=True)
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 

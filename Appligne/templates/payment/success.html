@@ -1,0 +1,72 @@
+{% extends 'base_02.html' %}
+{% load static %}
+
+{% block title %}Paiement Confirmé{% endblock %}
+
+{% block content %}
+<div class="payment-success-container">
+    <div class="payment-success-card">
+        <div class="payment-success-header">
+            <div class="icon-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h1>Paiement Réussi</h1>
+            <p class="subtitle">Merci pour votre confiance</p>
+        </div>
+
+        {% if invoice %}
+        <div class="payment-success-details">
+            <div class="detail-row">
+                <span class="detail-label">Référence :</span>
+                <span class="detail-value">{{ invoice.invoice_number }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date :</span>
+                <span class="detail-value">{{ invoice.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Montant :</span>
+                <span class="detail-value">{{ total_euro }} €</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Statut :</span>
+                <span class="detail-value status-badge paid">Payé</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="payment-success-actions">
+            <a href="{% url 'compte_eleve' %}" class="btn btn-primary">
+                Retour à l'accueil
+            </a>
+            {% if invoice %}
+            <a href="{% url 'payment:download_invoice' invoice.id %}" class="btn btn-success" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Télécharger la facture
+            </a>
+
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="payment-success-footer">
+        <p>Un email de confirmation vous a été envoyé.</p>
+        <p>Pour toute question, contactez notre <a href="{%  url 'nous_contacter' %}">service client</a>.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment/success.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+
+
+{% endblock %}
