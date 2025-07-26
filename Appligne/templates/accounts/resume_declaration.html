@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Déclaration cours{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <h4 class="text-center text-white">Gérer mon compte</h4>
+                        <h2 class="text-center text-white">Consulter mes élèves</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Main Content -->
+<div class="row justify-content-center g-4">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h2 class="section-title text-center text-primary mb-3">État des cours déclarés pour règlement</h2>
+                    {% include 'partials/_alerts.html' %}
+                </div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="bg-light rounded-3 shadow-sm p-4">
+                            <div class="row g-3">
+                                {% if request.user.is_authenticated %}
+                                <!-- Student Info -->
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text fw-semibold">Élève</span>
+                                        <input type="text" class="form-control bg-white" id="eleve_id" name="eleve" readonly
+                                            value="{{ eleve.user.last_name }} {{ eleve.user.first_name }} - Téléphone: {{ eleve.numero_telephone }} - Adresse: {{ eleve.adresse }} - Niveau: {{ niveau }}">
+                                    </div>
+                                </div>
+
+                                <!-- Parent Info -->
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text fw-semibold">Parent</span>
+                                        <input type="text" class="form-control bg-white" id="parent_id" name="parent" readonly
+                                            value="{{ parent.prenom_parent }} {{ parent.nom_parent }} - Téléphone: {{ parent.telephone_parent }} - Email: {{ parent.email_parent }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                </div>
+
+                                <!-- Course Details -->
+                                {% for horaire in horaires %}
+                                <div class="col-md-4">
+                                    <label for="matiere_id_{{ forloop.counter }}" class="form-label fw-semibold">Matière</label>
+                                    <input type="text" class="form-control bg-white" id="matiere_id_{{ forloop.counter }}"
+                                        name="matiere_{{ enr_horaire.id }}"
+                                        value="{{ matiere }} - Le: {{ horaire.date }} - Début: {{ horaire.debut }} - Fin: {{ horaire.fin }}"
+                                        readonly>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="duree_enr{{ forloop.counter }}_id" class="form-label fw-semibold">Durée/H</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-white text-end" id="duree_{{ forloop.counter }}_id"
+                                                    name="duree_{{ enr_horaire.id }}" value="{{ horaire.duree }}" readonly>
+                                                <span class="input-group-text">h</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <label for="prix_enr{{ forloop.counter }}_id" class="form-label fw-semibold">Prix par heure</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-white text-end" id="prix_{{ forloop.counter }}_id"
+                                                    name="prix_{{ enr_horaire.id }}" value="{{ prix_heure }}" readonly>
+                                                <span class="input-group-text">€/h</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="montant_{{ forloop.counter }}_id" class="form-label fw-semibold">Montant</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-white text-end" id="montant_{{ forloop.counter }}_id"
+                                                    name="montant_{{ enr_horaire.id }}" value="{{ horaire.montant|floatformat:2 }}" readonly>
+                                                <span class="input-group-text">€</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <label for="statut_enr{{ forloop.counter }}_id" class="form-label fw-semibold">Statut</label>
+                                    <input type="text" class="form-control bg-white" id="statut_enr{{ forloop.counter }}_id"
+                                        name="statut_{{ enr_horaire.id }}" value="{{ horaire.statut }}" readonly>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <label for="contenu_{{ forloop.counter }}_id" class="form-label fw-semibold">Contenu</label>
+                                    <input type="text" class="form-control bg-white" id="contenu_{{ forloop.counter }}_id"
+                                        name="contenu_{{ enr_horaire.id }}" value="{{ horaire.contenu }}" readonly>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr class="my-3">
+                                </div>
+                                {% endfor %}
+
+                                <!-- Email Subject -->
+                                <div class="col-12">
+                                    <label for="sujet_id" class="form-label fw-semibold">Objet du message</label>
+                                    <input type="text" class="form-control" id="sujet_id" name="sujet" required
+                                        value="Objet : Demande de règlement pour les cours de {{eleve.user.last_name }} {{ eleve.user.first_name }}">
+                                    <div class="invalid-feedback">
+                                        Veuillez saisir l'objet du message.
+                                    </div>
+                                </div>
+
+                                <!-- Email Content -->
+                                <div class="col-12">
+                                    <label for="text_email_id" class="form-label fw-semibold">Message joint à la demande de règlement</label>
+                                    <textarea class="form-control profil" id="text_email_id" name="text_email" required rows="5">
+    Bonjour {{ parent.prenom_parent }} {{ parent.nom_parent }},
+
+    Je me permets de vous contacter concernant le règlement des cours pour votre enfant, {{ eleve.user.last_name }} {{ eleve.user.first_name }}.
+
+    Voici les détails pour le paiement :
+
+    Nom et prénom du professeur : {{ user.last_name }} {{ user.first_name }}
+    Téléphone du professeur : {{ user.professeur.numero_telephone }}
+    Email du professeur : {{ user.email }}
+    Montant total à payer : {{ total_montant|floatformat:2 }} &euro;
+
+    Merci de bien vouloir effectuer le règlement dans les plus brefs délais.
+
+    Cordialement,
+
+    {{ professeur.user.last_name }} {{ professeur.user.first_name }}
+                                    </textarea>
+                                    <div class="invalid-feedback">
+                                        Veuillez saisir le contenu du message.
+                                    </div>
+                                </div>
+
+                                <!-- Total Amount -->
+                                <div class="col-md-8">
+                                    <label for="montant_total_id" class="form-label fw-semibold">Montant total</label>
+                                    <div class="row g-4">
+                                        <div class="col-md-2">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-white text-end fw-bold" id="montant_total_id" name="montant_total"
+                                                    value="{{ total_montant|floatformat:2 }}" readonly>
+                                                <span class="input-group-text">€</span>
+                                            </div>
+                                        </div>
+                                        <!-- Submit Button -->
+                                        <div class="col-md-10 ">
+                                            <button type="submit" class="btn btn-primary px-4" name="btn_enr_resumer">
+                                                <i class="bi bi-save me-2"></i>Envoi et enregistrement de la demande de règlement
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // Fonction pour redimensionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
+        const textareas = document.getElementsByClassName('form-control profil');
+        for (let i = 0; i < textareas.length; i++) {
+            const textarea = textareas[i];
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+        }
+    }
+
+    // Validation Bootstrap
+    (function () {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+
+    window.onload = function() {
+        adjustTextareaHeight();
+        document.addEventListener('input', adjustTextareaHeight);
+    }
+</script>
+{% endblock %}

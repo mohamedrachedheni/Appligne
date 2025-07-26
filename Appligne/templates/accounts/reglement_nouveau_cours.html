@@ -1,0 +1,741 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Demande paiement{% endblock %}
+
+{% block content %}
+
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 page-header">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="container">
+                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <h4 class="text-center text-white mb-3">Gérer mon compte</h4>
+                        <h1 class="text-center text-white mb-0">Consulter mes élèves</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Main Content -->
+<div class="row justify-content-center g-4">
+    <!-- Sidebar -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h2 class="section-title text-center text-primary mb-3">Demande règlement nouveau cours</h2>
+                    {% include 'partials/_alerts.html' %}
+                </div>
+
+                {% if request.user.is_authenticated %}
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div id="error-container" class="alert alert-danger mb-3" style="display: none;"></div>
+                    
+                    <!-- Students List -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Liste des élèves inscrits : (Sélectionner un élève)</label>
+                        <div class="scrollable-container border rounded p-3 bg-white" style="max-height: 200px; overflow-y: auto;">
+                            {% for eleve_id, eleve in mes_eleves %}
+                            <div class="row g-2 align-items-center mb-2">
+                                <div class="col-auto">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="chk_{{ eleve_id }}" name="chk_{{ eleve_id }}" onchange="chargerDernierCours('{{ eleve_id }}')">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control-plaintext ps-2 border-bottom" id="eleve_{{ eleve_id }}" name="eleve_{{ eleve_id }}" readonly value="{{ eleve }}">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Course Details -->
+                    <div class="row g-3 mb-4">
+                        <!-- Course Format -->
+                        <div class="col-md-3">
+                            <label for="format_id" class="form-label fw-semibold">Format cours</label>
+                            <div class="dropdown">
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="format_id" name="format" required value="{{ format }}" data-bs-toggle="dropdown">
+                                <ul class="dropdown-menu w-100" id="dropdownMenu_format_id">
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours à domicile">Cours à domicile</a></li>
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours en ligne">Cours en ligne</a></li>
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage pendant les vacances">Stage pendant les vacances</a></li>
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours en ligne en petit groupe">Cours en ligne en petit groupe</a></li>
+                                </ul>
+                                <div class="invalid-feedback">
+                                    Veuillez sélectionner un format.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subject -->
+                        <div class="col-md-4">
+                            <label for="matiere_id" class="form-label fw-semibold">Matière</label>
+                            <div class="dropdown">
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="matiere_id" name="matiere" required value="{{ matiere }}" data-bs-toggle="dropdown">
+                                <ul class="dropdown-menu w-100" id="dropdownMenu_matiere_id">
+                                    {% for une_matiere in matieres %}
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="invalid-feedback">
+                                    Veuillez sélectionner une matière.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Level -->
+                        <div class="col-md-3">
+                            <label for="niveau_id" class="form-label fw-semibold">Niveau</label>
+                            <div class="dropdown">
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="niveau_id" name="niveau" required value="{{ niveau }}" data-bs-toggle="dropdown">
+                                <ul class="dropdown-menu w-100" id="dropdownMenu_niveau_id">
+                                    {% for niveau in niveaux %}
+                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="invalid-feedback">
+                                    Veuillez sélectionner un niveau.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="col-md-2">
+                            <label for="prix_heure_id" class="form-label fw-semibold">Prix par heure</label>
+                            <div class="input-group has-validation">
+                                <input type="text" class="form-control text-center prix-heure " id="prix_heure_id" name="prix_heure" value="{{prix_heure}}" required>
+                                <span class="input-group-text">€/h</span>
+                                <div class="invalid-feedback">
+                                    Veuillez saisir un prix valide.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session Schedule -->
+                    <div class="row ajout-horaire g-3 mb-4 p-3 border rounded bg-light" id="supprimer_horaire_1">
+                        <!-- Date -->
+                        <div class="col-lg-2 col-md-4">
+                            <label for="date_id_1" class="form-label fw-semibold">Date</label>
+                            <input type="text" class="form-control form-control-date" id="date_id_1" name="date1" value="{{ horaire.date }}" required>
+                        </div>
+
+                        <!-- Start Time -->
+                        <div class="col-lg-2 col-md-4">
+                            <label for="debut1_id" class="form-label fw-semibold">Début</label>
+                            <input type="text" class="form-control form-control-heure" id="debut1_id" name="debut1" value="{{ horaire.debut }}" placeholder="00:00" required>
+                        </div>
+
+                        <!-- End Time -->
+                        <div class="col-lg-2 col-md-4">
+                            <label for="fin1_id" class="form-label fw-semibold">Fin</label>
+                            <input type="text" class="form-control form-control-heure" id="fin1_id" name="fin1" value="{{ horaire.fin }}" placeholder="00:00" required>
+                        </div>
+
+                        <!-- Session Content -->
+                        <div class="col-lg-6">
+                            <div class="row g-2">
+                                <div class="col-lg-7 col-md-6">
+                                    <label for="contenu1_id" class="form-label fw-semibold">Contenu de la séance</label>
+                                    <input type="text" class="form-control" id="contenu1_id" name="contenu1" value="{{ horaire.contenu }}" required>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <label for="statut1_id" class="form-label fw-semibold">Statut</label>
+                                    <select class="form-select" id="statut1_id" name="statut1" required>
+                                        <option value="Réaliser" >Réaliser</option>
+                                        <option value="En attente" >En attente</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-1 col-md-6 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger" onclick="supprimerDiv('supprimer_horaire_1')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-success px-4" onclick="ajouter_horaire()" id="bouton_ajout_div">
+                            <i class="bi bi-plus-circle me-2"></i>Ajouter
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4" name="btn_enr">
+                            <i class="bi bi-send-fill me-2"></i>Passer à l'enregistrement de la demande de réglement
+                        </button>
+                        <button type="submit" class="btn btn-secondary px-4" name="btn_cours_planifier">
+                            <i class="bi bi-send-fill me-2"></i>Statut des cours planifiés
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top position-fixed bottom-0 end-0 mb-4 me-4">
+        <i class="bi bi-arrow-up"></i>
+    </a>
+
+<!-- Modèle caché pour clonage (ne sera jamais affiché tel quel) -->
+<div id="horaire-template" class="row ajout-horaire g-3 mb-4 p-3 border rounded bg-light d-none">
+    <div class="col-lg-2 col-md-4">
+        <label class="form-label fw-semibold">Date</label>
+        <input type="text" class="form-control form-control-date" required>
+    </div>
+    <div class="col-lg-2 col-md-4">
+        <label class="form-label fw-semibold">Début</label>
+        <input type="text" class="form-control form-control-heure" placeholder="00:00" required>
+    </div>
+    <div class="col-lg-2 col-md-4">
+        <label class="form-label fw-semibold">Fin</label>
+        <input type="text" class="form-control form-control-heure" placeholder="00:00" required>
+    </div>
+    <div class="col-lg-6">
+        <div class="row g-2">
+            <div class="col-lg-7 col-md-6">
+                <label class="form-label fw-semibold">Contenu de la séance</label>
+                <input type="text" class="form-control" required>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Statut</label>
+                <select class="form-select" required>
+                    <option value="Réaliser">Réaliser</option>
+                    <option value="En attente">En attente</option>
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-6 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger btn-supprimer">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+    <!-- <script src="{% static 'js/Code_en_plus_reglement_nouveau_cours.js' %}"></script> -->
+    <script>
+    // Enhanced dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize dropdowns
+        const initDropdown = (inputId, menuId) => {
+            const input = document.getElementById(inputId);
+            const menu = document.getElementById(menuId);
+            
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.style.display = 'block';
+            });
+            
+            document.addEventListener('click', () => {
+                menu.style.display = 'none';
+            });
+            
+            const items = menu.querySelectorAll('.dropdown-item-demande');
+            items.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    input.value = item.getAttribute('data-value');
+                    menu.style.display = 'none';
+                });
+            });
+        };
+        
+        initDropdown('format_id', 'dropdownMenu_format_id');
+        initDropdown('matiere_id', 'dropdownMenu_matiere_id');
+        initDropdown('niveau_id', 'dropdownMenu_niveau_id');
+
+        // Single checkbox selection
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    if (cb !== checkbox) cb.checked = false;
+                });
+            });
+        });
+
+        // Date picker initialization
+        const initDatePickers = () => {
+            const dateInputs = document.querySelectorAll('.form-control-date');
+            
+            dateInputs.forEach((input) => {
+                let ignoreNextBlur = false;
+                
+                const picker = new Pikaday({
+                    field: input,
+                    format: 'DD/MM/YYYY',
+                    i18n: {
+                        previousMonth: 'Mois précédent',
+                        nextMonth: 'Mois suivant',
+                        months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+                        weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+                        weekdaysShort: ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+                    },
+                    onSelect: function(date) {
+                        // Formatage en jj/mm/aaaa
+                        const jour = String(date.getDate()).padStart(2, '0');
+                        const mois = String(date.getMonth() + 1).padStart(2, '0');
+                        input.value = `${jour}/${mois}/${date.getFullYear()}`;
+                        
+                        // Activer le flag pour ignorer le prochain blur
+                        ignoreNextBlur = true;
+                        
+                        // Remettre le focus après un léger délai
+                        setTimeout(() => {
+                            input.focus();
+                            input.select();
+                        }, 10);
+                    },
+                    onClose: function() {
+                        // Désactiver le flag après un court délai
+                        setTimeout(() => {
+                            ignoreNextBlur = false;
+                        }, 100);
+                    }
+                });
+
+                // Gestion du blur
+                input.addEventListener('blur', function(e) {
+                    if (ignoreNextBlur) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTimeout(() => {
+                            this.focus();
+                        }, 10);
+                    }
+                });
+            });
+        };
+
+    // Initialisation
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDatePickers);
+    } else {
+        initDatePickers();
+    }
+
+        // Time input validation
+        const timeInputs = document.querySelectorAll('.form-control-heure');
+        timeInputs.forEach(input => {
+            Inputmask("99:99", {
+                placeholder: "HH:MM",
+                insertMode: false,
+                showMaskOnHover: false
+            }).mask(input);
+
+            input.addEventListener('blur', function() {
+                const timeValue = this.value;
+                if (timeValue && !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeValue)) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+
+        // Price input formatting
+        $('.prix-heure').inputmask({
+            alias: 'decimal',
+            groupSeparator: '',
+            digits: 2,          // 2 chiffres après la virgule
+            digitsOptional: false,
+            integerDigits: 3,   // Maximum 3 chiffres avant la virgule
+            placeholder: '0',
+            autoUnmask: true,
+            allowMinus: false,
+            //suffix: ' €/h',
+            rightAlign: false,
+            max: 999.99         // Valeur maximale autorisée
+        });
+    });
+    </script>
+
+<script>
+/**
+ * Compteur global pour les horaires ajoutés dynamiquement
+ * Initialisé avec le nombre d'éléments .ajout-horaire existants
+ */
+let compteurHoraire = document.querySelectorAll('.ajout-horaire').length;
+console.debug(`Initialisation - compteurHoraire: ${compteurHoraire}`);
+
+/**
+ * Supprime un élément du DOM par son ID
+ * @param {string} id - L'ID de l'élément à supprimer
+ */
+function supprimerDiv(id) {
+    console.debug(`Tentative de suppression de l'élément #${id}`);
+    const div = document.getElementById(id);
+    if (div) {
+        div.remove();
+        console.info(`Élément #${id} supprimé avec succès`);
+    } else {
+        console.warn(`Élément #${id} non trouvé - suppression ignorée`);
+    }
+}
+
+/**
+ * Ajoute un nouveau bloc horaire dynamiquement en clonant le template
+ */
+function ajouter_horaire() {
+    console.groupCollapsed(`Ajout d'un nouvel horaire #${compteurHoraire + 1}`);
+    
+    try {
+        // Récupération du template et création du clone
+        const template = document.getElementById('horaire-template');
+        if (!template) {
+            throw new Error('Template horaire introuvable');
+        }
+        
+        const clone = template.cloneNode(true);
+        compteurHoraire += 1;
+        console.debug(`Nouvel index horaire: ${compteurHoraire}`);
+
+        // Configuration de l'ID et affichage du clone
+        const cloneId = `supprimer_horaire_${compteurHoraire}`;
+        clone.classList.remove('d-none');
+        clone.id = cloneId;
+        console.debug(`ID du nouvel élément: ${cloneId}`);
+
+        // Traitement de tous les éléments input, select et label
+        console.debug('Début de la configuration des champs...');
+        const inputs = clone.querySelectorAll('input, select, label');
+        inputs.forEach((el) => {
+            // Configuration des inputs
+            if (el.tagName === 'INPUT') {
+                el.value = ''; // Réinitialisation de la valeur
+                
+                // Gestion spécifique des champs date
+                if (el.classList.contains('form-control-date')) {
+                    el.name = `date${compteurHoraire}`;
+                    el.id = `date_id_${compteurHoraire}`;
+                    console.debug(`Champ date configuré: name=${el.name}, id=${el.id}`);
+                }
+                
+                // Gestion spécifique des champs heure
+                if (el.classList.contains('form-control-heure')) {
+                    const labelText = el.previousElementSibling?.innerText.trim().toLowerCase();
+
+                    let type = "heure"; // fallback
+                    if (labelText.includes("début") || labelText.includes("debut")) {
+                        type = "debut";
+                    } else if (labelText.includes("fin")) {
+                        type = "fin";
+                    }
+
+                    el.name = `${type}${compteurHoraire}`;
+                    el.id = `${type}${compteurHoraire}_id`;
+                    console.debug(`Champ heure (${type}) configuré: name=${el.name}, id=${el.id}`);
+                }
+            }
+
+            // Configuration des selects
+            if (el.tagName === 'SELECT') {
+                el.name = `statut${compteurHoraire}`;
+                el.id = `statut${compteurHoraire}_id`;
+                console.debug(`Select statut configuré: name=${el.name}, id=${el.id}`);
+            }
+
+            // Configuration des labels
+            if (el.tagName === 'LABEL') {
+                const text = el.innerText.toLowerCase();
+                const mappings = {
+                    'date': `date_id_${compteurHoraire}`,
+                    'debut': `debut${compteurHoraire}_id`,
+                    'fin': `fin${compteurHoraire}_id`,
+                    'contenu': `contenu${compteurHoraire}_id`,
+                    'statut': `statut${compteurHoraire}_id`
+                };
+                
+                for (const [key, value] of Object.entries(mappings)) {
+                    if (text.includes(key)) {
+                        el.setAttribute('for', value);
+                        console.debug(`Label "${key}" configuré: for=${value}`);
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Configuration spécifique du champ contenu
+        const contenu = clone.querySelector('input.form-control:not(.form-control-date):not(.form-control-heure)');
+        if (contenu) {
+            contenu.name = `contenu${compteurHoraire}`;
+            contenu.id = `contenu${compteurHoraire}_id`;
+            contenu.value = '';
+            console.debug(`Champ contenu configuré: name=${contenu.name}, id=${contenu.id}`);
+        }
+
+        // Configuration du bouton de suppression
+        const boutonSuppression = clone.querySelector('.btn-supprimer');
+        if (boutonSuppression) {
+            boutonSuppression.setAttribute('onclick', `supprimerDiv('${cloneId}')`);
+            console.debug(`Bouton suppression configuré pour l'élément #${cloneId}`);
+        }
+
+        // Insertion du nouvel élément dans le DOM
+        const boutonAjout = document.getElementById('bouton_ajout_div');
+        if (boutonAjout) {
+            const actions = boutonAjout.closest('.d-flex');
+            if (actions && actions.parentNode) {
+                actions.parentNode.insertBefore(clone, actions);
+                console.info(`Nouvel horaire #${compteurHoraire} ajouté avec succès`);
+            }
+        }
+
+        // Initialisation du date picker Pikaday
+        const dateInput = clone.querySelector('.form-control-date');
+        if (dateInput && typeof Pikaday !== 'undefined') {
+            console.debug('Initialisation du date picker...');
+            let ignoreNextBlur = false;
+
+            const picker = new Pikaday({
+                field: dateInput,
+                format: 'DD/MM/YYYY',
+                i18n: {
+                    previousMonth: 'Mois précédent',
+                    nextMonth: 'Mois suivant',
+                    months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+                    weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+                    weekdaysShort: ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+                },
+                onSelect: function (date) {
+                    const jour = String(date.getDate()).padStart(2, '0');
+                    const mois = String(date.getMonth() + 1).padStart(2, '0');
+                    dateInput.value = `${jour}/${mois}/${date.getFullYear()}`;
+                    ignoreNextBlur = true;
+                    setTimeout(() => {
+                        dateInput.focus();
+                        dateInput.select();
+                    }, 10);
+                    console.debug('Date sélectionnée:', dateInput.value);
+                },
+                onClose: function () {
+                    setTimeout(() => {
+                        ignoreNextBlur = false;
+                    }, 100);
+                }
+            });
+
+            dateInput.addEventListener('blur', function (e) {
+                if (ignoreNextBlur) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setTimeout(() => {
+                        this.focus();
+                    }, 10);
+                }
+            });
+        }
+
+        // Initialisation du masque de saisie pour les heures
+        console.debug('Initialisation des champs heure...');
+        clone.querySelectorAll('.form-control-heure').forEach(input => {
+            if (typeof Inputmask !== 'undefined') {
+                Inputmask("99:99", {
+                    placeholder: "HH:MM",
+                    insertMode: false,
+                    showMaskOnHover: false
+                }).mask(input);
+
+                input.addEventListener('blur', function () {
+                    const timeValue = this.value;
+                    const isValid = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeValue);
+                    
+                    if (timeValue && !isValid) {
+                        this.classList.add('is-invalid');
+                        console.warn(`Format heure invalide: ${timeValue}`);
+                    } else {
+                        this.classList.remove('is-invalid');
+                        console.debug(`Format heure valide: ${timeValue}`);
+                    }
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout d\'un horaire:', error);
+    } finally {
+        console.groupEnd();
+    }
+}
+
+// Note: La fonction supprimerDiv() est déjà documentée plus haut
+</script>
+
+
+<script>
+    /**
+ * Récupère la valeur d'un cookie par son nom
+ * @param {string} name - Nom du cookie à récupérer
+ * @returns {string|null} Valeur du cookie ou null si non trouvé
+ */
+function getCookie(name) {
+    try {
+        if (!document.cookie) {
+            console.debug('Aucun cookie disponible');
+            return null;
+        }
+
+        const cookies = document.cookie.split(';');
+        console.debug(`Recherche du cookie "${name}" parmi ${cookies.length} cookies`);
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(`${name}=`)) {
+                const value = decodeURIComponent(cookie.substring(name.length + 1));
+                console.debug(`Cookie "${name}" trouvé`, {value});
+                return value;
+            }
+        }
+
+        console.warn(`Cookie "${name}" non trouvé`);
+        return null;
+    } catch (error) {
+        console.error('Erreur lors de la récupération du cookie:', error);
+        return null;
+    }
+}
+
+/**
+ * Charge les derniers cours d'un élève et remplit le formulaire
+ * @param {number} eleve_id - ID de l'élève
+ */
+async function chargerDernierCours(eleve_id) {
+    console.log('Début de chargerDernierCours pour eleve_id:', eleve_id);
+    
+    try {
+        // Vérifier que l'ID est valide
+        if (!eleve_id || isNaN(eleve_id)) {
+            throw new Error('ID élève invalide');
+        }
+
+        const response = await fetch(`/accounts/get_last_cours_eleve/${eleve_id}/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+        });
+
+        console.log('Réponse reçue, status:', response.status);
+
+        const errorContainer = document.getElementById('error-container');
+        
+        // Gestion du conteneur d'erreur
+        if (!errorContainer) {
+            console.log('Création du conteneur d\'erreur');
+            const form = document.querySelector('form');
+            if (!form) {
+                throw new Error('Formulaire non trouvé');
+            }
+            const newErrorContainer = document.createElement('div');
+            newErrorContainer.id = 'error-container';
+            newErrorContainer.className = 'alert alert-danger mb-3';
+            form.prepend(newErrorContainer);
+        }
+
+        // Cacher l'erreur avant traitement
+        errorContainer.style.display = 'none';
+        errorContainer.textContent = '';
+
+        if (!response.ok) {
+            console.log('Erreur HTTP:', response.status);
+            try {
+                const data = await response.json();
+                console.log('Données d\'erreur:', data);
+                
+                errorContainer.textContent = data.error || `Erreur ${response.status} lors du chargement`;
+                errorContainer.style.display = 'block';
+                
+                // Réinitialiser les champs
+                ['format_id', 'matiere_id', 'niveau_id', 'prix_heure_id'].forEach(id => {
+                    const field = document.getElementById(id);
+                    console.log(`Réinitialisation du champ ${id}`, field);
+                    if (field) field.value = '';
+                });
+                
+                return;
+            } catch (parseError) {
+                console.error('Erreur lors du parsing de la réponse:', parseError);
+                errorContainer.textContent = 'Erreur lors de la lecture de la réponse';
+                errorContainer.style.display = 'block';
+                return;
+            }
+        }
+
+        const data = await response.json();
+        console.log('Données reçues:', data);
+        
+        // Mise à jour des champs
+        const fields = {
+            'format_id': 'format_cours',
+            'matiere_id': 'matiere',
+            'niveau_id': 'niveau',
+            'prix_heure_id': 'prix_heure'
+        };
+        
+        Object.entries(fields).forEach(([fieldId, dataKey]) => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = data[dataKey] || '';
+                console.log(`Champ ${fieldId} mis à jour avec:`, data[dataKey]);
+            } else {
+                console.warn(`Champ ${fieldId} non trouvé`);
+            }
+        });
+        
+        // Cacher le message d'erreur
+        errorContainer.style.display = 'none';
+        console.log('Chargement terminé avec succès');
+        
+    } catch (error) {
+        console.error('Erreur capturée:', error);
+        const errorContainer = document.getElementById('error-container') || 
+                              document.querySelector('#error-container');
+        if (errorContainer) {
+            errorContainer.textContent = error.message || 'Une erreur est survenue';
+            errorContainer.style.display = 'block';
+        } else {
+            console.error('Impossible d\'afficher l\'erreur: conteneur non trouvé');
+            alert(error.message || 'Une erreur est survenue');
+        }
+    }
+}
+
+// Fonction utilitaire pour afficher des notifications (optionnelle)
+function showToast({type, message, duration = 3000}) {
+    // Implémentation basique - à adapter selon votre UI
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), duration);
+}
+</script>
+
+
+
+{% endblock %}

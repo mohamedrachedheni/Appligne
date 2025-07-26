@@ -60,17 +60,17 @@
                                     </textarea>
                                 </div>
                                 <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-3 col-sm-12">
+                                    <div class="col-lg-2 col-sm-12">
                                         <button type="submit" class="btn btn-warning w-100" name="btn_ignorer">
                                             Ignorer
                                         </button>
                                     </div>
-                                    <div class="col-lg-3 col-sm-12">
-                                        <button type="submit" class="btn btn-success w-100" name="btn_confirmer">
+                                    <div class="col-lg-2 col-sm-12">
+                                        <button type="submit" class="btn btn-info w-100" name="btn_confirmer">
                                             Bien reçu
                                         </button>
                                     </div>
-                                    <div class="col-lg-3 col-sm-12">
+                                    <div class="col-lg-2 col-sm-12">
                                         <button type="submit" class="btn btn-primary w-100" name="btn_repondre">
                                             Répondre
                                         </button>
@@ -80,6 +80,13 @@
                                             Voire la réponse à cet émail
                                         </button>
                                     </div>
+                                    {% if est_prof and request.user.is_authenticated %}
+                                    <div class="col-lg-3 col-sm-12">
+                                        <button type="submit" class="btn btn-secondary w-100" name="btn_ajout_eleve">
+                                            Ajouter à mes élèves
+                                        </button>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -87,12 +94,6 @@
                 </div>
                 <!-- fichiers prof Fin -->
             </form>
-
-
-
-
-
-
             <!-- Fin Form -->
         </div>
     </div>

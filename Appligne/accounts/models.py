@@ -509,7 +509,7 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
         (EN_COURS, 'En cours'), # L'élève a confgirmé la demande par un paiement mais la passerelle de paiement est en cours de confirmation(c'est le temps nécessaire pour que la passerelle confirme le paiement)
         (REALISER, 'Réaliser'), # la passerelle a confirmé le paiement
         (CONTESTER, 'Contester'), # l'élève a contesté la demande de paiement avant même de passer au paiement
-        (ANNULER, 'Annuler'), # l'élève à commencé dans la procédure de paiement puis il a annulé
+        (ANNULER, 'Annuler'), # Le professeur a annulé la demande
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
     mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve

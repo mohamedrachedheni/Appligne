@@ -12,8 +12,4 @@ class PieceJointeReclamationForm(forms.ModelForm):
         # Vérifier si un fichier a été fourni
         if not fichier:
             raise forms.ValidationError("Aucun fichier sélectionné.")
-
-        # Lancer la validation du modèle (y compris FileSizeValidator)
-        # fichier.full_clean()
-
         return fichier

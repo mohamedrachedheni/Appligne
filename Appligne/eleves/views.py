@@ -493,18 +493,19 @@ def email_detaille(request, email_id):
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
-    user = request.user
+    user = request.user # c'est selui qui va répondre à l'email ( le nouveau expéditeur)
     # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'eleve') and not hasattr(user, 'professeur'):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève, ni en tant que professeur")
         return redirect('signin')
 
-    email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève
-    id_eleve = email.user_destinataire # ID de l'élève
-    id_prof = email.user.id
-    user = User.objects.filter(id=id_eleve).first() # User lié à l'élève
+    email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève si hasattr(user, 'professeur')
+    id_eleve = email.user_destinataire # ID estinataire de l'email
+    id_prof = email.user.id # ID expéditeur de l'email
+    user = User.objects.filter(id=id_eleve).first() # User qui va répondre à l'email ( c'est le même que user = request.user )
     context={
         'email':email,
+        'est_prof': True if hasattr(request.user, 'professeur') else False,
     }
     if 'btn_ignorer' in request.POST:
         # Mettre à jour les champs de l'email reçu
@@ -526,8 +527,8 @@ Sujet de l'émail: {email.sujet}
 Contenu de l'émail:
 {email.text_email}
 """
-        email_prof = email.user.email
-        email_eleve = user.email
+        email_prof = email.user.email # email se l'expéditeur de l'email reçu qu i est le nouveau destinateur de la réponse à envoyer
+        email_eleve = user.email # email du nouveau expediteur en réponse à l'email reçu
         eleve_id = user.id
         destinations = ['prosib25@gmail.com', email_prof]
         # Validation des emails dans destinations
@@ -557,7 +558,7 @@ Contenu de l'émail:
         email.suivi = 'Réception confirmée'
         email.date_suivi = date.today()
         email.reponse_email_id = email_reponse_id
-        email.save() 
+        email.save()
         messages.success(request, "Le contenu de l'email est enregistré")
         if hasattr(user, 'eleve'): 
             return redirect('email_recu')
@@ -594,6 +595,9 @@ Contenu de l'émail:
         email_id = email.reponse_email_id
         # il faut faire une page spéciale pour l'historique de l'émail (def email_detaille(request, email_id):)
         return redirect(reverse('email_detaille', args=[email_id])) # ça marche très bien
+    
+    if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
+        return redirect('ajouter_mes_eleve', eleve_id=email.user.id)
 
     return render(request, 'eleves/email_detaille.html', context)
 

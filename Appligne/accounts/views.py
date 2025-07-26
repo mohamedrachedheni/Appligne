@@ -32,6 +32,13 @@ import requests # pour utiliser des API (voire nouveau_compte_prof, mot de passe
 import hashlib # convertir le suffixe en une chaîne d'octets
 from django.core.paginator import Paginator
 from django.db.models import Min, Max
+import logging
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import PermissionDenied
+
+# Configuration du logger
+logger = logging.getLogger(__name__)
 
 
 def is_password_compromised(password):
@@ -3543,3 +3550,464 @@ def liste_reglement(request):
     }
 
     return render(request, 'accounts/liste_reglement.html', context)
+
+
+@login_required
+def reglement_nouveau_cours(request):
+    # Initialisation des champs de formulaire
+    format = matiere = niveau = prix_heure = ""
+    user = request.user
+
+    # Vérification de l'authentification
+    if not user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        logger.warning("Accès refusé : utilisateur non authentifié.")
+        return redirect('signin')
+
+    # Vérification que l'utilisateur est un professeur
+    if not hasattr(user, 'professeur'):
+        messages.error(request, "Vous n'êtes pas connecté en tant que professeur.")
+        logger.warning("Accès refusé : utilisateur %s n'est pas un professeur.", user)
+        return redirect('signin')
+
+    logger.debug("Utilisateur professeur connecté : %s", user)
+
+    # Chargement des données de base pour l'affichage du formulaire
+    matieres = Matiere.objects.all()
+    niveaux = Niveau.objects.all()
+    logger.debug("Matières disponibles : %s", list(matieres))
+    logger.debug("Niveaux disponibles : %s", list(niveaux))
+
+    # Récupération des élèves actifs du professeur
+    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=True).select_related('user', 'eleve').annotate(
+        eleve_nom=Concat(
+            F('eleve__user__last_name'), Value(' '),
+            F('eleve__user__first_name'),
+            Value(', Téléphone: '), F('eleve__numero_telephone'),
+            Value(', adresse: '), F('eleve__adresse'),
+            output_field=CharField(),
+        )
+    ).values_list('eleve__id', 'eleve_nom')
+
+    logger.debug("Liste des élèves actifs du professeur : %s", list(mes_eleves))
+
+    # Contexte pour le template HTML
+    context = {
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'mes_eleves': mes_eleves,
+        'format': format,
+        'matiere': matiere,
+        'niveau': niveau,
+        'prix_heure': prix_heure,
+    }
+
+    # --- Traitement du formulaire POST ---
+    if request.method == 'POST':
+        # Extraction de l'identifiant de l'élève sélectionné
+        eleve_ids = [int(key[4:]) for key in request.POST if key.startswith('chk_') and key[4:].isdigit()]
+        logger.debug("Élève(s) sélectionné(s) : %s", eleve_ids)
+
+        if not eleve_ids:
+            messages.error(request, "Veuillez sélectionner au moins un élève.")
+            logger.warning("Aucun élève sélectionné.")
+            return redirect('reglement_nouveau_cours')
+
+        try:
+            eleve = Eleve.objects.get(id=eleve_ids[0])
+            logger.debug("Élève récupéré : %s", eleve)
+        except Eleve.DoesNotExist:
+            messages.error(request, "Élève introuvable.")
+            logger.error("Élève introuvable avec l'ID : %s", eleve_ids[0])
+            return redirect('reglement_nouveau_cours')
+
+        # --- Redirection vers la planification des cours ---
+        if 'btn_cours_planifier' in request.POST:
+            try:
+                mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
+                logger.debug("Relation active trouvée avec l'élève : %s", mon_eleve)
+                return redirect(reverse('demande_reglement', args=[mon_eleve.id]))
+            except Mes_eleves.DoesNotExist:
+                messages.error(request, "Aucun lien actif trouvé avec cet élève.")
+                logger.warning("Relation Mes_eleves introuvable pour l'élève %s", eleve)
+                return redirect('reglement_nouveau_cours')
+
+        # --- Soumission pour résumé de la demande ---
+        if 'btn_enr' in request.POST:
+            logger.debug("Soumission du formulaire de déclaration de cours détectée (btn_enr).")
+
+            parent = getattr(eleve, 'parent', None)
+            logger.debug("Parent associé à l'élève : %s", parent)
+
+            # Récupération des champs du formulaire
+            format = request.POST.get('format', "").strip()
+            matiere = request.POST.get('matiere', "").strip()
+            niveau = request.POST.get('niveau', "").strip()
+            prix_heure = request.POST.get('prix_heure', "").strip()
+
+            logger.debug("Champs récupérés - Format: %s, Matière: %s, Niveau: %s, Prix/heure: %s",
+                         format, matiere, niveau, prix_heure)
+
+            # Vérification des champs obligatoires
+            if not all([format, matiere, niveau, prix_heure]):
+                messages.error(request, "Tous les champs sont obligatoires.")
+                logger.warning("Champs manquants dans le formulaire.")
+                return redirect('reglement_nouveau_cours')
+
+            try:
+                prix_heure_float = float(prix_heure)
+            except ValueError:
+                messages.error(request, "Le prix par heure doit être un nombre décimal.")
+                logger.warning("Prix par heure invalide : %s", prix_heure)
+                return redirect('reglement_nouveau_cours')
+
+            # Récupération des IDs d'horaires
+            ids = [int(key[4:]) for key in request.POST if key.startswith('date') and key[4:].isdigit()]
+            logger.debug("IDs des horaires saisis : %s", ids)
+
+            total_montant = 0
+            horaires_valides = []
+
+            # Traitement des horaires un par un
+            for id in ids:
+                date = request.POST.get(f'date{id}', "").strip()
+                debut = request.POST.get(f'debut{id}', "").strip()
+                fin = request.POST.get(f'fin{id}', "").strip()
+                contenu = request.POST.get(f'contenu{id}', "").strip()
+                statut = request.POST.get(f'statut{id}', "").strip()
+
+                try:
+                    date_obj = datetime.strptime(date, "%d/%m/%Y")
+                    debut_obj = datetime.strptime(debut, "%H:%M")
+                    fin_obj = datetime.strptime(fin, "%H:%M")
+                except ValueError:
+                    messages.error(request, f"Date ou heure invalide (ligne {id}).")
+                    logger.warning("Date/heure invalide - ID %s : %s - %s à %s", id, date, debut, fin)
+                    return redirect('reglement_nouveau_cours')
+
+                if debut_obj >= fin_obj:
+                    messages.error(request, f"L'heure de début doit être inférieure à l'heure de fin (ligne {id}).")
+                    logger.warning("Heure de début >= heure de fin - ID %s", id)
+                    return redirect('reglement_nouveau_cours')
+
+                # Calcul de la durée et du montant
+                duree = round((fin_obj - debut_obj).total_seconds() / 3600, 2)
+                montant = round(duree * prix_heure_float, 2)
+                total_montant += montant
+
+                horaires_valides.append({
+                    'date': date_obj.strftime('%d/%m/%Y'),
+                    'debut': debut_obj.strftime('%H:%M'),
+                    'fin': fin_obj.strftime('%H:%M'),
+                    'contenu': contenu,
+                    'statut': statut,
+                    'duree': duree,
+                    'montant': montant,
+                })
+
+            logger.debug("Total montant calculé : %.2f", total_montant)
+            logger.debug("Horaires valides à enregistrer : %s", horaires_valides)
+
+            # Enregistrement en session
+            request.session['detail_horaires'] = horaires_valides
+            request.session['detail_demande'] = {
+                'eleve_id': eleve.id,
+                'parent_id': parent.id if parent else None,
+                'format': format,
+                'matiere': matiere,
+                'niveau': niveau,
+                'prix_heure': prix_heure,
+                'total_montant': total_montant,
+            }
+
+            logger.debug("Session mise à jour avec detail_demande et detail_horaires.")
+            return redirect('resume_declaration')
+
+    # --- Affichage de la page (GET ou après erreur) ---
+    logger.debug("Affichage du template avec le contexte : %s", context)
+    return render(request, 'accounts/reglement_nouveau_cours.html', context)
+
+
+
+
+
+@login_required
+def resume_declaration(request):
+    user = request.user
+    logger.debug("Début de la vue resume_declaration pour l'utilisateur : %s", user)
+
+    # Affichage du contenu complet de la session pour diagnostic
+    logger.debug("Contenu de la session : %s", request.session.items())
+
+    # Récupération des données de session
+    detail_demande = request.session.get('detail_demande')
+    detail_horaires = request.session.get('detail_horaires')
+    logger.debug("Détails de la demande récupérés : %s", detail_demande)
+    logger.debug("Détails des horaires récupérés : %s", detail_horaires)
+
+    # Extraction des données de session
+    eleve_id = detail_demande['eleve_id']
+    eleve = Eleve.objects.get(id=eleve_id)
+    parent_id = detail_demande['parent_id']
+    parent = Parent.objects.filter(id=parent_id).first()
+    format = detail_demande['format']
+    matiere = detail_demande['matiere']
+    niveau = detail_demande['niveau']
+    total_montant = detail_demande['total_montant']
+    prix_heure = detail_demande['prix_heure']
+
+    # Transformation des horaires en objets datetime
+    horaires_valides = []
+    for horaire in detail_horaires:
+        horaires_valides.append({
+            'date': datetime.strptime(horaire['date'], "%d/%m/%Y"),
+            'debut': datetime.strptime(horaire['debut'], "%H:%M"),
+            'fin': datetime.strptime(horaire['fin'], "%H:%M"),
+            'contenu': horaire['contenu'],
+            'statut': horaire['statut'],
+            'duree': horaire['duree'],
+            'montant': horaire['montant'],
+        })
+
+    logger.debug("Horaires valides prêts à être affichés dans le résumé.")
+
+    context = {
+        'eleve': eleve,
+        'parent': parent,
+        'format': format,
+        'matiere': matiere,
+        'niveau': niveau,
+        'prix_heure': prix_heure,
+        'horaires': horaires_valides,
+        'total_montant': total_montant,
+    }
+
+    if 'btn_enr_resumer' in request.POST:
+        logger.debug("Soumission du formulaire de résumé détectée (btn_enr_resumer).")
+
+        if detail_horaires and detail_demande:
+            try:
+                # Récupération des objets nécessaires à l'enregistrement
+                eleve = Eleve.objects.get(id=detail_demande['eleve_id'])
+                parent = Parent.objects.filter(user=eleve.user).first()
+                mon_eleve = Mes_eleves.objects.get(eleve=eleve, user=user)
+                prix_heure_arrondi = round(float(detail_demande['prix_heure']), 2)
+
+                # Création du cours
+                cours = Cours.objects.create(
+                    user=user,
+                    mon_eleve=mon_eleve,
+                    format_cours=detail_demande['format'],
+                    matiere=detail_demande['matiere'],
+                    niveau=detail_demande['niveau'],
+                    prix_heure=prix_heure_arrondi,
+                    is_active=True
+                )
+                logger.info("Cours créé avec ID : %s", cours.id)
+
+                # Préparation email
+                sujet = request.POST.get('sujet', 'Demande de règlement de cours')
+                text_email = request.POST.get('text_email')
+                email_telecharge = None
+
+                if sujet or text_email:
+                    email_prof = user.email
+                    destinations = [settings.ADMIN_EMAIL, eleve.user.email]
+                    if parent and parent.email_parent:
+                        destinations.append(parent.email_parent)
+
+                    logger.debug("Destinataires de l'email : %s", destinations)
+
+                    # Validation des emails
+                    email_validator = EmailValidator()
+                    for destination in destinations:
+                        try:
+                            email_validator(destination)
+                        except ValidationError:
+                            messages.error(request, f"L'adresse email {destination} est invalide.")
+                            logger.error("Email invalide détecté : %s", destination)
+
+                    try:
+                        send_mail(
+                            sujet,
+                            text_email,
+                            email_prof,
+                            destinations,
+                            fail_silently=False,
+                        )
+                        logger.info("Email envoyé avec succès à : %s", destinations)
+                        messages.success(request, "L'email de la demande de règlement a été envoyé avec succès.")
+                    except Exception as e:
+                        logger.error("Erreur lors de l'envoi d'email : %s", str(e))
+                        messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
+
+                    email_telecharge = Email_telecharge.objects.create(
+                        user=user,
+                        email_telecharge=email_prof,
+                        text_email=text_email,
+                        user_destinataire=eleve.user.id,
+                        sujet=sujet
+                    )
+                    logger.debug("Email télécharge enregistré avec ID : %s", email_telecharge.id)
+
+                # Création de la demande de paiement
+                demande_paiement = Demande_paiement.objects.create(
+                    user=user,
+                    mon_eleve=mon_eleve,
+                    eleve=eleve,
+                    montant=round(float(detail_demande['total_montant']), 2),
+                    email=email_telecharge.id if email_telecharge else None,
+                    statut_demande='En attente'
+                )
+                logger.info("Demande de paiement créée avec ID : %s", demande_paiement.id)
+
+                # Création des horaires
+                horaires_to_create = []
+                for detail in detail_horaires:
+                    debut_obj = datetime.strptime(detail['debut'], "%H:%M")
+                    fin_obj = datetime.strptime(detail['fin'], "%H:%M")
+                    horaire = Horaire(
+                        cours=cours,
+                        date_cours=datetime.strptime(detail['date'], "%d/%m/%Y"),
+                        heure_debut=debut_obj,
+                        heure_fin=fin_obj,
+                        duree=round((fin_obj - debut_obj).total_seconds() / 3600, 2),
+                        contenu=detail['contenu'],
+                        statut_cours=detail['statut'],
+                        demande_paiement_id=demande_paiement.id
+                    )
+                    horaires_to_create.append(horaire)
+                Horaire.objects.bulk_create(horaires_to_create)
+                logger.debug("Création en masse des horaires terminée.")
+
+                # Création des détails de la demande de paiement
+                horaires = Horaire.objects.filter(cours=cours, demande_paiement_id=demande_paiement.id)
+                details_to_create = [
+                    Detail_demande_paiement(
+                        demande_paiement=demande_paiement,
+                        cours=cours,
+                        prix_heure=prix_heure_arrondi,
+                        horaire=h
+                    )
+                    for h in horaires
+                ]
+                Detail_demande_paiement.objects.bulk_create(details_to_create)
+                logger.debug("Création des détails de la demande de paiement terminée.")
+
+                messages.success(request, "Demande de paiement enregistrée et envoyée à l'élève.")
+                return redirect('compte_prof')
+
+            except Exception as e:
+                logger.exception("Exception lors de la confirmation de la demande de paiement : %s", str(e))
+                messages.error(request, f"Erreur inattendue : {str(e)}")
+                return redirect('compte_prof')
+
+        logger.warning("Données de session absentes ou incomplètes lors de la soumission.")
+        messages.error(request, "Une erreur est survenue. Veuillez refaire la demande de règlement.")
+        return redirect('compte_prof')
+
+    logger.debug("Fin de la vue resume_declaration. Affichage du résumé.")
+    return render(request, 'accounts/resume_declaration.html', context)
+
+
+# pour la foction ajax dans template reglement_nouveau_cours.html
+@login_required
+@require_http_methods(["GET"])  # Restriction aux requêtes GET uniquement
+def get_last_cours_eleve(request, eleve_id):
+    """
+    Vue pour récupérer les informations du dernier cours d'un élève
+    Sécurité:
+    - Nécessite une authentification
+    - Vérifie que l'utilisateur est bien le professeur de l'élève
+    - Limite aux requêtes GET
+    
+    Args:
+        request: HttpRequest - La requête HTTP
+        eleve_id: int - L'ID de l'élève
+    
+    Returns:
+        JsonResponse: Les données du cours ou un message d'erreur
+    """
+    try:
+        logger.info(
+            f"Début de get_last_cours_eleve - User: {request.user.id}, "
+            f"Eleve ID: {eleve_id}"
+        )
+
+        # Validation de l'ID élève
+        if not eleve_id or not str(eleve_id).isdigit():
+            logger.warning(f"ID élève invalide: {eleve_id}")
+            return JsonResponse(
+                {'error': 'ID élève invalide.'},
+                status=400
+            )
+
+        # Récupération et vérification du lien professeur-élève
+        logger.debug(f"Recherche du lien professeur-élève pour eleve_id: {eleve_id}")
+        mes_eleve = Mes_eleves.objects.filter(
+            user=request.user,
+            eleve_id=eleve_id
+        ).select_related('eleve').first()
+
+        if not mes_eleve:
+            logger.warning(
+                f"Aucun lien trouvé - User: {request.user.id}, "
+                f"Eleve ID: {eleve_id}"
+            )
+            return JsonResponse(
+                {'error': 'Aucun lien trouvé avec cet élève.'},
+                status=404
+            )
+
+        # Récupération du dernier cours
+        logger.debug(f"Recherche du dernier cours pour eleve_id: {eleve_id}")
+        cours = Cours.objects.filter(
+            mon_eleve=mes_eleve
+        ).order_by('-id').first()
+
+        if not cours:
+            logger.info(f"Aucun cours trouvé pour eleve_id: {eleve_id}")
+            return JsonResponse(
+                {'error': 'Aucun cours trouvé.'},
+                status=404
+            )
+
+        # Préparation des données de réponse
+        data = {
+            'format_cours': cours.format_cours,
+            'matiere': cours.matiere,
+            'niveau': cours.niveau,
+            'prix_heure': str(cours.prix_heure),  # Conversion en string pour éviter les problèmes de sérialisation
+        }
+
+        logger.info(
+            f"Succès - Cours ID: {cours.id}, "
+            f"Eleve ID: {eleve_id}, "
+            f"Format: {data['format_cours']}"
+        )
+        
+        return JsonResponse(data)
+
+    except PermissionDenied:
+        logger.error(
+            f"Tentative d'accès non autorisée - User: {request.user.id}, "
+            f"Eleve ID: {eleve_id}"
+        )
+        return JsonResponse(
+            {'error': 'Accès non autorisé.'},
+            status=403
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Erreur inattendue - User: {request.user.id}, "
+            f"Eleve ID: {eleve_id}, "
+            f"Erreur: {str(e)}",
+            exc_info=True
+        )
+        return JsonResponse(
+            {'error': 'Une erreur technique est survenue.'},
+            status=500
+        )
+    
+
