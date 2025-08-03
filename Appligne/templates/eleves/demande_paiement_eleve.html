@@ -143,8 +143,8 @@
                                                             <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{demande_paiement.montant|default:''|floatformat:2}} €" readonly>
                                                         </div>
                                                         <div class="col-md-10 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn {% if not demande_paiement.statut_demande == 'Contester' %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_demande_paiement_id{{id}}" >
-                                                                {% if not demande_paiement.statut_demande == 'Contester' %}Détaille{% else %}Contesté{% endif %} {% if demande_paiement.payment_id %} --  Paiement entamé  {% endif %}
+                                                            <button type="submit" class="btn {% if not demande_paiement.reclamation %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_demande_paiement_id{{id}}" >
+                                                                {% if not demande_paiement.reclamation  %}Détaille{% else %}Contesté{% endif %} {% if demande_paiement.payment_id %} --  Paiement entamé  {% endif %}
                                                             </button>
                                                         </div>
                                                     </div>

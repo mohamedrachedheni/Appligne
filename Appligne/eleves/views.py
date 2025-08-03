@@ -598,6 +598,14 @@ Contenu de l'émail:
     
     if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
         return redirect('ajouter_mes_eleve', eleve_id=email.user.id)
+    
+    if 'btn_ajout_cours' in request.POST: # passer à lenregistrement du cours est de l'eleve s'il n'est pas dans Mes_eleve(user=user)
+        request.session['email_id'] = email_id 
+        return redirect('ajout_cours_email')
+    
+
+    
+
 
     return render(request, 'eleves/email_detaille.html', context)
 
@@ -1513,6 +1521,7 @@ def eleve_demande_paiement(request):
 
         cours_prix_publics.append((cours, prix_public))
 
+    # messages.info(request, f"demande_paiement.reclamation = {demande_paiement.id};  demande_paiement.statut= {demande_paiement.statut_demande}")
     # Prépare le contexte pour le template
     context = {
         'today': timezone.now().date(),
@@ -1595,6 +1604,11 @@ def eleve_demande_paiement(request):
             request.session['demande_paiement_id_decript'] = demande_paiement_id_decript 
             return create_checkout_session(request)
         
+        # Passer à la création d'une nouvelle réclamation liée à la demande de paiement
+        if 'btn_nouvelle_reclamation' in request.POST:
+            request.session['reclamation_demande_paiement_id'] = demande_paiement.payment_id
+            return redirect('nouvelle_reclamation')
+
         else:
             messages.warning(request, "Le paiement n'est pas effectué.")
             logger.info("L'élève %s n'a pas validé le paiement pour la demande %s", user, demande_paiement.id)

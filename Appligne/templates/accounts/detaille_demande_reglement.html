@@ -109,15 +109,24 @@
                             </div>
 
                             <!-- Boutons d'action -->
-                            <div class="col-lg-4">
+                            {% if demande_paiement.statut_demande == 'En attente' %}
+                            <div class="col-lg-3">
                                 <button type="submit" class="btn btn-warning w-100" name="btn_rappelle">Envoyer un email de rappel</button>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <button type="submit" class="btn btn-warning w-100" name="btn_annuler">Annuler la déclaration</button>
                             </div>
-                            <div class="col-lg-4">
+                            {% endif %}
+                            {% if email_eleve.id %}
+                            <div class="col-lg-3">
                                 <button type="submit" class="btn btn-warning w-100" name="btn_repondre">Répondre à l'email de l'élève</button>
                             </div>
+                            {% endif %}
+                            {% if demande_paiement.reclamation.id  %}
+                            <div class="col-lg-3">
+                                <button type="submit" class="btn btn-warning w-100" name="btn_reclamation">Voire réclamation</button>
+                            </div>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>

@@ -115,6 +115,9 @@
                                     <div class="col-lg-4 col-md-4 col-sm-6">
                                         <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >{% if not  demande_paiement.reclamation %}Pas de réclamation {% else %} Voire réclamation {% endif %}</button>
                                     </div>
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-secondary w-100" name="btn_nouvelle_reclamation" {% if  demande_paiement.reclamation or not request.user.eleve %} disabled {% endif %} >Ajouter une réclamation liée au paiement</button>
+                                    </div>
                                     
                                     <div class="col-lg-4 col-md-4 col-sm-6">
                                         <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_paiement_checkout"

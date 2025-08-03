@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Demande paiement{% endblock %}
+{% block title %} | Ajout cours{% endblock %}
 
 {% block content %}
 
@@ -31,7 +31,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
-                    <h2 class="section-title text-center text-primary mb-3">{% if not enregistrement_direct %} Demande règlement nouveau cours {% else %} Enregistrement nouveau cours {% endif %} </h2>
+                    <h2 class="section-title text-center text-primary mb-3"> Demande règlement / Enregistrement: nouveau cours </h2>
                     {% include 'partials/_alerts.html' %}
                 </div>
 
@@ -43,20 +43,11 @@
                     
                     <!-- Students List -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Liste des élèves inscrits : (Sélectionner un élève)</label>
-                        <div class="scrollable-container border rounded p-3 bg-white" style="max-height: 200px; overflow-y: auto;">
-                            {% for eleve_id, eleve in mes_eleves %}
-                            <div class="row g-2 align-items-center mb-2">
-                                <div class="col-auto">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chk_{{ eleve_id }}" name="chk_{{ eleve_id }}" onchange="chargerDernierCours('{{ eleve_id }}')">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input type="text" class="form-control-plaintext ps-2 border-bottom" id="eleve_{{ eleve_id }}" name="eleve_{{ eleve_id }}" readonly value="{{ eleve }}">
-                                </div>
-                            </div>
-                            {% endfor %}
+                        <div class="col">
+                            <input type="text" class="form-control-plaintext ps-2 border-bottom" id="eleve" name="eleve" readonly value="Elève: {{ eleve.user.first_name }} {{ eleve.user.last_name }}, Email: {{ eleve.user.email }}, Téléphone: {{ eleve.numero_telephone }}, Adresse: {{ eleve.adresse }}">
+                        </div>
+                        <div class="col">
+                            <input type="text" class="form-control-plaintext ps-2 border-bottom" id="parent" name="parent" readonly value="Parent: {{ parent.nom_parent }} {{ parent.prenom_parent }}, Email: {{ parent.email_parent }}, Téléphone: {{ eleve.telephone_parent }}, Adresse: {{ parent.adresse }}">
                         </div>
                     </div>
 
@@ -66,7 +57,7 @@
                         <div class="col-md-3">
                             <label for="format_id" class="form-label fw-semibold">Format cours</label>
                             <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="format_id" name="format" required value="{{ format }}" data-bs-toggle="dropdown" readonly>
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="format_id" name="format" required value="{{ format_cours }}" data-bs-toggle="dropdown" readonly>
                                 <ul class="dropdown-menu w-100" id="dropdownMenu_format_id">
                                     {% if formats.a_domicile %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours à domicile">Cours à domicile</a></li>{% endif %}
                                     {% if formats.webcam %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours par webcam">Cours par webcam</a></li>{% endif %}
@@ -83,7 +74,7 @@
                         <div class="col-md-4">
                             <label for="matiere_id" class="form-label fw-semibold">Matière</label>
                             <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="matiere_id" name="matiere" required value="{{ matiere }}" data-bs-toggle="dropdown" readonly>
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="matiere_id" name="matiere" required value="{{ matiere_nom }}" data-bs-toggle="dropdown" readonly>
                                 <ul class="dropdown-menu w-100" id="dropdownMenu_matiere_id">
                                     {% for une_matiere in matieres %}
                                     <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
@@ -99,7 +90,7 @@
                         <div class="col-md-3">
                             <label for="niveau_id" class="form-label fw-semibold">Niveau</label>
                             <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="niveau_id" name="niveau" required value="{{ niveau }}" data-bs-toggle="dropdown" readonly>
+                                <input type="text" class="form-control dropdown-toggle border border-gray" id="niveau_id" name="niveau" required value="{{ niveau_nom }}" data-bs-toggle="dropdown" readonly>
                                 <ul class="dropdown-menu w-100" id="dropdownMenu_niveau_id">
                                     {% for niveau in niveaux %}
                                     <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
@@ -117,9 +108,6 @@
                             <div class="input-group has-validation">
                                 <input type="text" class="form-control text-center prix-heure " id="prix_heure_id" name="prix_heure" value="{{prix_heure}}" required readonly>
                                 <span class="input-group-text">€/h</span>
-                                <div class="invalid-feedback">
-                                    Veuillez saisir un prix valide.
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -172,12 +160,12 @@
                         <button type="button" class="btn btn-success px-4" onclick="ajouter_horaire()" id="bouton_ajout_div">
                             <i class="bi bi-plus-circle me-2"></i>Ajouter
                         </button>
-                        {% if not enregistrement_direct %}<button type="submit" class="btn btn-primary px-4" name="btn_enr">
+                        <button type="submit" class="btn btn-primary px-4" name="btn_enr">
                             <i class="bi bi-send-fill me-2"></i>Passer à l'enregistrement de la demande de réglement
-                        </button>{% endif %}
-                        {% if enregistrement_direct %}<button type="submit" class="btn btn-info px-4" name="btn_horaires">
+                        </button>
+                        <button type="submit" class="btn btn-info px-4" name="btn_horaires">
                             <i class="bi bi-send-fill me-2"></i>Planifier des horaires de cours
-                        </button>{% endif %}
+                        </button>
                         <button type="submit" class="btn btn-secondary px-4" name="btn_cours_planifier">
                             <i class="bi bi-send-fill me-2"></i>Statut des cours planifiés
                         </button>
@@ -381,96 +369,171 @@
         });
     });
 
-    /**
-     * Met à jour le prix en fonction des sélections actuelles
-     */
-    async function updatePrixFromSelections() {
-        const format = document.getElementById('format_id').value;
-        const matiere = document.getElementById('matiere_id').value;
-        const niveau = document.getElementById('niveau_id').value;
+
+    
+
+
+
+
+
+    
+</script>
+<script>
+    // Fonction utilitaire pour afficher des notifications (optionnelle)
+    function showToast({type, message, duration = 3000}) {
+        // Implémentation basique - à adapter selon votre UI
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
         
-        // Vérifier que tous les champs sont remplis
-        if (!format || !matiere || !niveau) {
-            return;
-        }
+        setTimeout(() => toast.remove(), duration);
+    }
+</script>
+<!-- <script>
+    
+    /**
+     * Charge les derniers cours d'un élève et remplit le formulaire
+     * @param {number} eleve_id - ID de l'élève
+     */
+    async function chargerDernierCours(eleve_id) {
+        console.log('Début de chargerDernierCours pour eleve_id:', eleve_id);
         
         try {
-            const response = await fetch('/accounts/get_prix_cours/', {
-                method: 'POST',
+            // Vérifier que l'ID est valide
+            if (!eleve_id || isNaN(eleve_id)) {
+                throw new Error('ID élève invalide');
+            }
+
+            const response = await fetch(`/accounts/get_last_cours_eleve/${eleve_id}/`, {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRFToken': getCookie('csrftoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    format: format,
-                    matiere: matiere,
-                    niveau: niveau
-                })
             });
 
+            console.log('Réponse reçue, status:', response.status);
+
+            const errorContainer = document.getElementById('error-container');
+            
+            // Gestion du conteneur d'erreur
+            if (!errorContainer) {
+                console.log('Création du conteneur d\'erreur');
+                const form = document.querySelector('form');
+                if (!form) {
+                    throw new Error('Formulaire non trouvé');
+                }
+                const newErrorContainer = document.createElement('div');
+                newErrorContainer.id = 'error-container';
+                newErrorContainer.className = 'alert alert-danger mb-3';
+                form.prepend(newErrorContainer);
+            }
+
+            // Cacher l'erreur avant traitement
+            errorContainer.style.display = 'none';
+            errorContainer.textContent = '';
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erreur lors de la récupération du prix');
+                console.log('Erreur HTTP:', response.status);
+                try {
+                    const data = await response.json();
+                    console.log('Données d\'erreur:', data);
+                    
+                    errorContainer.textContent = data.error || `Erreur ${response.status} lors du chargement`;
+                    errorContainer.style.display = 'block';
+                    
+                    // Réinitialiser les champs
+                    ['format_id', 'matiere_id', 'niveau_id', 'prix_heure_id'].forEach(id => {
+                        const field = document.getElementById(id);
+                        console.log(`Réinitialisation du champ ${id}`, field);
+                        if (field) field.value = '';
+                    });
+                    
+                    return;
+                } catch (parseError) {
+                    console.error('Erreur lors du parsing de la réponse:', parseError);
+                    errorContainer.textContent = 'Erreur lors de la lecture de la réponse';
+                    errorContainer.style.display = 'block';
+                    return;
+                }
             }
 
             const data = await response.json();
+            console.log('Données reçues:', data);
             
-            if (data.prix_heure) {
-                document.getElementById('prix_heure_id').value = data.prix_heure;
-                hideError();
-            } else {
-                throw new Error('Prix non configuré pour cette combinaison');
-            }
+            // Mise à jour des champs
+            const fields = {
+                'format_id': 'format_cours',
+                'matiere_id': 'matiere',
+                'niveau_id': 'niveau',
+                'prix_heure_id': 'prix_heure'
+            };
+            
+            Object.entries(fields).forEach(([fieldId, dataKey]) => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = data[dataKey] || '';
+                    console.log(`Champ ${fieldId} mis à jour avec:`, data[dataKey]);
+                } else {
+                    console.warn(`Champ ${fieldId} non trouvé`);
+                }
+            });
+            
+            // Cacher le message d'erreur
+            errorContainer.style.display = 'none';
+            console.log('Chargement terminé avec succès');
             
         } catch (error) {
-            showError(error.message);
-            document.getElementById('prix_heure_id').value = '';
+            console.error('Erreur capturée:', error);
+            const errorContainer = document.getElementById('error-container') || 
+                                document.querySelector('#error-container');
+            if (errorContainer) {
+                errorContainer.textContent = error.message || 'Une erreur est survenue';
+                errorContainer.style.display = 'block';
+            } else {
+                console.error('Impossible d\'afficher l\'erreur: conteneur non trouvé');
+                alert(error.message || 'Une erreur est survenue');
+            }
         }
     }
-
-    function hideError() {
-        const errorContainer = document.getElementById('error-container');
-        if (errorContainer) {
-            errorContainer.style.display = 'none';
-        }
-    }
-
-    function showError(message) {
-        let errorContainer = document.getElementById('error-container');
-        if (!errorContainer) {
-            errorContainer = document.createElement('div');
-            errorContainer.id = 'error-container';
-            errorContainer.className = 'alert alert-danger mb-3';
-            document.querySelector('form').prepend(errorContainer);
-        }
-        
-        errorContainer.textContent = message;
-        errorContainer.style.display = 'block';
-    }
-
+</script> -->
+<script>
+    
     /**
-     * Compteur global pour les horaires ajoutés dynamiquement
-     * Initialisé avec le nombre d'éléments .ajout-horaire existants
+     * Récupère la valeur d'un cookie par son nom
+     * @param {string} name - Nom du cookie à récupérer
+     * @returns {string|null} Valeur du cookie ou null si non trouvé
      */
-    let compteurHoraire = document.querySelectorAll('.ajout-horaire').length;
-    console.debug(`Initialisation - compteurHoraire: ${compteurHoraire}`);
+    function getCookie(name) {
+        try {
+            if (!document.cookie) {
+                console.debug('Aucun cookie disponible');
+                return null;
+            }
 
-    /**
-     * Supprime un élément du DOM par son ID
-     * @param {string} id - L'ID de l'élément à supprimer
-     */
-    function supprimerDiv(id) {
-        console.debug(`Tentative de suppression de l'élément #${id}`);
-        const div = document.getElementById(id);
-        if (div) {
-            div.remove();
-            console.info(`Élément #${id} supprimé avec succès`);
-        } else {
-            console.warn(`Élément #${id} non trouvé - suppression ignorée`);
+            const cookies = document.cookie.split(';');
+            console.debug(`Recherche du cookie "${name}" parmi ${cookies.length} cookies`);
+
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(`${name}=`)) {
+                    const value = decodeURIComponent(cookie.substring(name.length + 1));
+                    console.debug(`Cookie "${name}" trouvé`, {value});
+                    return value;
+                }
+            }
+
+            console.warn(`Cookie "${name}" non trouvé`);
+            return null;
+        } catch (error) {
+            console.error('Erreur lors de la récupération du cookie:', error);
+            return null;
         }
     }
-
+</script>
+<script>
+    
     /**
      * Ajoute un nouveau bloc horaire dynamiquement en clonant le template
      */
@@ -656,155 +719,111 @@
             console.groupEnd();
         }
     }
-
+</script>
+<script>
+    
     /**
-     * Récupère la valeur d'un cookie par son nom
-     * @param {string} name - Nom du cookie à récupérer
-     * @returns {string|null} Valeur du cookie ou null si non trouvé
+     * Supprime un élément du DOM par son ID
+     * @param {string} id - L'ID de l'élément à supprimer
      */
-    function getCookie(name) {
-        try {
-            if (!document.cookie) {
-                console.debug('Aucun cookie disponible');
-                return null;
-            }
+    function supprimerDiv(id) {
+        console.debug(`Tentative de suppression de l'élément #${id}`);
+        const div = document.getElementById(id);
+        if (div) {
+            div.remove();
+            console.info(`Élément #${id} supprimé avec succès`);
+        } else {
+            console.warn(`Élément #${id} non trouvé - suppression ignorée`);
+        }
+    }
+</script>
+<script>
+    /**
+     * Compteur global pour les horaires ajoutés dynamiquement
+     * Initialisé avec le nombre d'éléments .ajout-horaire existants
+     */
+    let compteurHoraire = document.querySelectorAll('.ajout-horaire').length;
+    console.debug(`Initialisation - compteurHoraire: ${compteurHoraire}`);
+</script>
+<script>
+    
 
-            const cookies = document.cookie.split(';');
-            console.debug(`Recherche du cookie "${name}" parmi ${cookies.length} cookies`);
-
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.startsWith(`${name}=`)) {
-                    const value = decodeURIComponent(cookie.substring(name.length + 1));
-                    console.debug(`Cookie "${name}" trouvé`, {value});
-                    return value;
-                }
-            }
-
-            console.warn(`Cookie "${name}" non trouvé`);
-            return null;
-        } catch (error) {
-            console.error('Erreur lors de la récupération du cookie:', error);
-            return null;
+    function hideError() {
+        const errorContainer = document.getElementById('error-container');
+        if (errorContainer) {
+            errorContainer.style.display = 'none';
         }
     }
 
+    function showError(message) {
+        let errorContainer = document.getElementById('error-container');
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.id = 'error-container';
+            errorContainer.className = 'alert alert-danger mb-3';
+            document.querySelector('form').prepend(errorContainer);
+        }
+        
+        errorContainer.textContent = message;
+        errorContainer.style.display = 'block';
+    }
+</script>
+<script>
+    
     /**
-     * Charge les derniers cours d'un élève et remplit le formulaire
-     * @param {number} eleve_id - ID de l'élève
+     * Met à jour le prix en fonction des sélections actuelles
      */
-    async function chargerDernierCours(eleve_id) {
-        console.log('Début de chargerDernierCours pour eleve_id:', eleve_id);
+    async function updatePrixFromSelections() {
+        const format = document.getElementById('format_id').value;
+        const matiere = document.getElementById('matiere_id').value;
+        const niveau = document.getElementById('niveau_id').value;
+        
+        // Vérifier que tous les champs sont remplis
+        if (!format || !matiere || !niveau) {
+            return;
+        }
         
         try {
-            // Vérifier que l'ID est valide
-            if (!eleve_id || isNaN(eleve_id)) {
-                throw new Error('ID élève invalide');
-            }
-
-            const response = await fetch(`/accounts/get_last_cours_eleve/${eleve_id}/`, {
-                method: 'GET',
+            const response = await fetch('/accounts/get_prix_cours_email/', {
+                method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                body: JSON.stringify({
+                    format: format,
+                    matiere: matiere,
+                    niveau: niveau
+                })
             });
 
-            console.log('Réponse reçue, status:', response.status);
-
-            const errorContainer = document.getElementById('error-container');
-            
-            // Gestion du conteneur d'erreur
-            if (!errorContainer) {
-                console.log('Création du conteneur d\'erreur');
-                const form = document.querySelector('form');
-                if (!form) {
-                    throw new Error('Formulaire non trouvé');
-                }
-                const newErrorContainer = document.createElement('div');
-                newErrorContainer.id = 'error-container';
-                newErrorContainer.className = 'alert alert-danger mb-3';
-                form.prepend(newErrorContainer);
-            }
-
-            // Cacher l'erreur avant traitement
-            errorContainer.style.display = 'none';
-            errorContainer.textContent = '';
-
             if (!response.ok) {
-                console.log('Erreur HTTP:', response.status);
-                try {
-                    const data = await response.json();
-                    console.log('Données d\'erreur:', data);
-                    
-                    errorContainer.textContent = data.error || `Erreur ${response.status} lors du chargement`;
-                    errorContainer.style.display = 'block';
-                    
-                    // Réinitialiser les champs
-                    ['format_id', 'matiere_id', 'niveau_id', 'prix_heure_id'].forEach(id => {
-                        const field = document.getElementById(id);
-                        console.log(`Réinitialisation du champ ${id}`, field);
-                        if (field) field.value = '';
-                    });
-                    
-                    return;
-                } catch (parseError) {
-                    console.error('Erreur lors du parsing de la réponse:', parseError);
-                    errorContainer.textContent = 'Erreur lors de la lecture de la réponse';
-                    errorContainer.style.display = 'block';
-                    return;
-                }
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erreur lors de la récupération du prix');
             }
 
             const data = await response.json();
-            console.log('Données reçues:', data);
             
-            // Mise à jour des champs
-            const fields = {
-                'format_id': 'format_cours',
-                'matiere_id': 'matiere',
-                'niveau_id': 'niveau',
-                'prix_heure_id': 'prix_heure'
-            };
-            
-            Object.entries(fields).forEach(([fieldId, dataKey]) => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.value = data[dataKey] || '';
-                    console.log(`Champ ${fieldId} mis à jour avec:`, data[dataKey]);
-                } else {
-                    console.warn(`Champ ${fieldId} non trouvé`);
-                }
-            });
-            
-            // Cacher le message d'erreur
-            errorContainer.style.display = 'none';
-            console.log('Chargement terminé avec succès');
+            if (data.prix_heure) {
+                document.getElementById('prix_heure_id').value = data.prix_heure;
+                hideError();
+            } else {
+                throw new Error('Prix non configuré pour cette combinaison');
+            }
             
         } catch (error) {
-            console.error('Erreur capturée:', error);
-            const errorContainer = document.getElementById('error-container') || 
-                                document.querySelector('#error-container');
-            if (errorContainer) {
-                errorContainer.textContent = error.message || 'Une erreur est survenue';
-                errorContainer.style.display = 'block';
-            } else {
-                console.error('Impossible d\'afficher l\'erreur: conteneur non trouvé');
-                alert(error.message || 'Une erreur est survenue');
-            }
+            showError(error.message);
+            document.getElementById('prix_heure_id').value = '';
         }
     }
-
-    // Fonction utilitaire pour afficher des notifications (optionnelle)
-    function showToast({type, message, duration = 3000}) {
-        // Implémentation basique - à adapter selon votre UI
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => toast.remove(), duration);
-    }
+</script>
+<script>
+// très important pour activer les fonctionnalités des paramètre du cours
+// ce code doit être mis à la fin du JS
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePrixFromSelections();
+    });
 </script>
 
 

@@ -67,7 +67,7 @@
                                 <!-- Boucle sur chaque élève associé au professeur -->
                                 {% for eleve in mes_eleves %}
                                     <p><strong>{{ eleve.eleve.user.last_name }}</strong> <strong>{{ eleve.eleve.user.first_name }}</strong></p>
-                                    <div class="col-lg-9">
+                                    <div class="col-lg-10">
                                         <!-- Informations sur l'élève -->
                                         <input type="text" class="form-control" id="eleve_id_{{ forloop.counter }}" 
                                             name="eleve_{{ forloop.counter }}" readonly
@@ -79,7 +79,7 @@
                                             <div class="col-lg-1 col-sm-12">
                                                 <a class="btn btn-warning w-100 " href="{% url 'modifier_mes_eleve' mon_eleve_id=eleve.id%}">Elève</a>
                                             </div>
-                                            <div class="col-lg-1 col-sm-12">
+                                            <div class="col-lg-1 col-sm-12 d-none ">
                                                 <button type="submit" class="btn btn-warning w-100 " name="btn_cours_{{eleve.id}}" {% if not is_active %} disabled  {% endif %} >
                                                     Cours
                                                 </button>

@@ -50,8 +50,10 @@ urlpatterns = [
     path('temoignages_partial/<int:id_user>/', views.temoignages_partial, name='temoignages_partial'),
     path('liste_payment', views.liste_payment, name='liste_payment'),
     path('liste_reglement', views.liste_reglement, name='liste_reglement'),
-    path('reglement_nouveau_cours', views.reglement_nouveau_cours, name='reglement_nouveau_cours'),
+    path('reglement_nouveau_cours/<str:enregistrement_direct>/', views.reglement_nouveau_cours, name='reglement_nouveau_cours'),
     path('get_last_cours_eleve/<int:eleve_id>/', views.get_last_cours_eleve, name='get_last_cours_eleve'),
     path('resume_declaration', views.resume_declaration, name='resume_declaration'),
+    path('get_prix_cours/', views.get_prix_cours, name='get_prix_cours'),
+    path('ajout_cours_email', views.ajout_cours_email, name='ajout_cours_email'),
+    path('get_prix_cours_email/', views.get_prix_cours_email, name='get_prix_cours_email'),
 ]
-

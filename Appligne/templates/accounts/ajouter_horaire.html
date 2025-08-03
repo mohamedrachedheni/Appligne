@@ -94,7 +94,7 @@
                                     name="statut{{ forloop.counter }}">
                                     <option value="En attente" {% if horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
                                     <option value="Réaliser" {% if horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
-                                    <option value="Annuler" {% if horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
+                                    <!-- <option value="Annuler"  if horaire.statut == 'Annuler' selected endif >Annuler</option> -->
                                 </select>
                             </div>
                             <hr>
@@ -144,7 +144,7 @@
                                                 name="statut_enr{{ forloop.counter }}" disabled>
                                                 <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
                                                 <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
-                                                <option value="Annuler" {% if enr_horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
+                                                <!-- <option value="Annuler"  if enr_horaire.statut == 'Annuler' selected endif >Annuler</option> -->
                                                 </select>
                                             </div>
                                             <div class="col-md-5 position-relative mb-2 ">

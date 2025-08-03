@@ -289,7 +289,7 @@ class Pro_fichier(models.Model):
 
 
 class Email_telecharge(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # ID de l'expéditeur 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # ID de l'expéditeur (eleve, professeur, admin, [visiteur si null ou blank])
     date_telechargement = models.DateTimeField(default=date.today)
     email_telecharge = models.CharField(max_length=255, null=True, blank=True)  # l'adresse email de l'expéditeur
     sujet = models.CharField(max_length=255, null=True, blank=True)
@@ -348,6 +348,13 @@ class Prix_heure(models.Model):
         null=True, 
         blank=True
     )
+    prix_heure_prof = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.01'))], 
+        null=True, 
+        blank=True
+    )
     class Meta:
         ordering = ['user', 'prof_mat_niv']
         constraints = [
@@ -390,13 +397,11 @@ class Horaire(models.Model):  # Les horaires des séances du cours planifié par
     # Définition des différents statuts de la séance du cours
     EN_ATTENTE = 'en_attente'
     REALISER = 'realiser'
-    ANNULER = 'annuler'
 
     # Choix de statuts de la séance
     STATUS_CHOICES = [
         (EN_ATTENTE, 'En attente'),
         (REALISER, 'Réaliser'),
-        (ANNULER, 'Annuler'),
     ]
     cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
     date_cours = models.DateField(null=True)  # Date du cours
@@ -500,7 +505,6 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     EN_ATTENTE = 'En attente'
     EN_COURS = 'En cours'
     REALISER = 'Réaliser'
-    CONTESTER = 'Contester'
     ANNULER = 'Annuler'
 
     # Choix de statuts de la demande de paiement
@@ -508,7 +512,6 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
         (EN_ATTENTE, 'En attente'), # Enregistré par le prof et en attente de la confirmation de l'élève
         (EN_COURS, 'En cours'), # L'élève a confgirmé la demande par un paiement mais la passerelle de paiement est en cours de confirmation(c'est le temps nécessaire pour que la passerelle confirme le paiement)
         (REALISER, 'Réaliser'), # la passerelle a confirmé le paiement
-        (CONTESTER, 'Contester'), # l'élève a contesté la demande de paiement avant même de passer au paiement
         (ANNULER, 'Annuler'), # Le professeur a annulé la demande
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
@@ -531,7 +534,7 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
 class Detail_demande_paiement(models.Model):  # Demande de paiement
     demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
     cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
-    prix_heure = models.FloatField()  # Prix par heure du cours défini à la date de création de la demende de règlement qui peut etre différent du prix_heure du cours actuel
+    prix_heure = models.FloatField()  # Prix par heure du cours pour le prof
     horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
 
 class AccordReglement(models.Model):

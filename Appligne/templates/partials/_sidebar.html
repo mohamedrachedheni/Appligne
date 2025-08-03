@@ -83,8 +83,11 @@
                     <li>
                         <a href="{% url 'liste_mes_eleve' %}" class="dropdown-item"  >Élèves/ Cours/ Règlements</a>
                     </li>
+                    <!-- <li>
+                        <a href=" 'ajouter_cours' " class="dropdown-item"  >Ajouter un cours</a>
+                    </li> -->
                     <li>
-                        <a href="{% url 'ajouter_cours' %}" class="dropdown-item"  >Ajouter un cours</a>
+                        <a href="{% url 'reglement_nouveau_cours' 'true' %}" class="dropdown-item"  >Ajouter un cours</a>
                     </li>
                     <li>
                         <a href="{% url 'temoignage_mes_eleves' %}" class="dropdown-item"  >Liste des témoignages</a>
@@ -95,13 +98,13 @@
                 <a href="#pageSubmenu_payment" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Suivi de  mes règlements</strong></a>
                 <ul class="collapse list-unstyled" id="pageSubmenu_payment">
                     <li>
-                        <a href="{% url 'reglement_nouveau_cours' %}" class="dropdown-item"  >Nouvelle demande de règlement</a>
+                        <a href="{% url 'reglement_nouveau_cours' 'false' %}" class="dropdown-item"  >Nouvelle demande de règlement</a>
                     </li>
                     <li>
                         <a href="{% url 'liste_declaration_cours' %}" class="dropdown-item"  >Statut demandes de règlement</a>
                     </li>
                     <li>
-                        <a href="{% url 'liste_payment' %}" class="dropdown-item"  >Liste de mes paiements</a>
+                        <a href="{% url 'liste_payment' %}" class="dropdown-item"  >Liste des paiements de mes élèves</a>
                     </li>
                     <li>
                         <a href="{% url 'liste_reglement' %}" class="dropdown-item"  >Liste de mes règlements</a>

@@ -81,15 +81,15 @@
                                                     <label for="matiere_id_{{ id }}" class="form-label">Matière</label>
                                                     <input type="text" class="form-control form-control-intitule" id="matiere_id_{{ id }}"  value="{{cours.matiere}}" readonly >
                                                 </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="niveau_id_{{ id }}" class="form-label">Niveau</label>
                                                     <input type="text" class="form-control form-control-intitule" id="niveau_id_{{ id }}"  value="{{cours.niveau}}" readonly >
                                                 </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                <div class="col-md-2 col-sm-12 position-relative d-none ">
                                                     <label for="prix_heure_id" class="form-label">Prix/h accordé</label>
                                                     <input type="text" class="form-control form-control-intitule" id="prix_heure_id" value="{{cours.prix_heure|default:'0.00'|floatformat:2}} €" readonly >
                                                 </div>
-                                                    <div class="col-md-2 col-sm-12 position-relative">
+                                                    <div class="col-md-3 col-sm-12 position-relative">
                                                         <label for="prix_heure_publie_id" class="form-label">Prix/h publié</label>
                                                         <input type="text" class="form-control form-control-intitule" id="prix_heure_publie_id" value="{{prix_public|default:'0.00'|floatformat:2}} €" readonly >
                                                     </div>

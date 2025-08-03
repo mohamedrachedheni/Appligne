@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="col-lg-2 position-relative">
                                     <label for="prix_heure_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="form-label">Prix par heure:   &euro;/h</label>
-                                    <input type="text" class="form-control  prix-heure text-center " id="prix_heure_id" name="prix_heure" value="{{ prix_heure}}" >
+                                    <input type="text" class="form-control  prix-heure text-center " id="prix_heure_id" name="prix_heure" value="{{ prix_heure}}" readonly >
                                 </div>
                                 <div class="form-check col-lg-2 position-relative ">
                                     <input class="form-check-input" type="checkbox" id="is_active_id" name="is_active" {% if mon_cours.is_active %} checked {% endif %} >

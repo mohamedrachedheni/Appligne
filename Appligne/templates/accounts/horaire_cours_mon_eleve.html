@@ -61,24 +61,24 @@
                             </div>
 
                             <!-- Course Information -->
-                            <div class="col-md-8 position-relative">
+                            <div class="col-md-12 position-relative">
                                 <input type="text" class="form-control" id="mon_cours_id" name="mon_cours" readonly
                                     value="{{ mon_cours.format_cours }} -- {{ mon_cours.matiere }} -- Niveau: {{ mon_cours.niveau }}  -- Prix de l'heure: {{ mon_cours.prix_heure }} € -- Activé: {% if mon_cours.is_active %} Oui {% else %} Non {%  endif%} ">
                             </div>
 
-                            <div class="col-lg-1 position-relative">
+                            <div class="col-lg-1 position-relative  d-none">
                                 <button type="submit" class="btn btn-warning" name="btn_activer">
                                     {% if not mon_cours.is_active %} Activer {% else %} Désactiver {%  endif%}
                                 </button>
                             </div>
-                            <div class="col-lg-3 position-relative">
+                            <div class="col-lg-3 position-relative  d-none">
                                 <div class="row  ">
                                     <div class="col-8 position-relative">
                                         <button type="submit" class="btn btn-warning" name="btn_prix" {% if not mon_cours.is_active %} disabled {%  endif%}  >
                                             Nouveau prix =>
                                         </button>
                                     </div>
-                                    <div class="col-4 position-relative">
+                                    <div class="col-4 position-relative d-none">
                                         <input type="text" class="form-control prix-heure" id="prix_heure_id" name="prix_heure"
                                             value="" {% if not mon_cours.is_active %} disabled {%  endif%}  >
                                     </div>

@@ -25,7 +25,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.utils.crypto import get_random_string
 from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from collections import defaultdict
 from .utils import decrypt_id, encrypt_id, handle_recaptcha_validation, get_client_ip
 from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
@@ -1017,7 +1017,13 @@ def admin_compte_prof(request, user_id=0):
                 # Remplace les anciens prix horaires par les nouveaux
                 Prix_heure.objects.filter(user=user_prof_select).delete()
                 Prix_heure.objects.bulk_create([
-                    Prix_heure(user=user_prof_select, prof_mat_niv_id=mat_niv_id, format=format_label, prix_heure=prix_dec)
+                    Prix_heure(
+                        user=user_prof_select,
+                        prof_mat_niv_id=mat_niv_id,
+                        format=format_label,
+                        prix_heure_prof=prix_dec,
+                        prix_heure=(prix_dec / Decimal('2') * Decimal('3')).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+                    )
                     for mat_niv_id, format_label, prix_dec in liste_prix_mat_niv_for
                 ])
 
@@ -1234,7 +1240,7 @@ def admin_compte_prof(request, user_id=0):
             for prof_mat_niveau in prof_mat_niv:
                 prix_heure = prix_heure_qs.filter(
                     prof_mat_niv=prof_mat_niveau.id, format=format_label).first()
-                prix_heure_value = str(prix_heure.prix_heure) if prix_heure else ""
+                prix_heure_value = str(prix_heure.prix_heure_prof) if prix_heure else ""
                 liste_enregistrements.append(
                     (prof_mat_niveau.id, prof_mat_niveau.matiere, prof_mat_niveau.niveau, prix_heure_value, format_key)
                 )
@@ -2679,7 +2685,7 @@ def admin_payment_demande_paiement(request):
         
         cours_prix_publics.append((cours, prix_public))
     
-    # Passer à la création d'une nouvelle réclamation
+    # Passer à la création d'une nouvelle réclamation liée au paiement
     if 'btn_nouvelle_reclamation' in request.POST:
         request.session['reclamation_payment_id'] = payment_id
         return redirect('nouvelle_reclamation')
@@ -3094,6 +3100,12 @@ def reclamation(request):
     ou de modifier le statut, la priorité et la 
     cathégorie de la réclamation selon le type d'utilisateur
     """
+
+    # Obtenir l'utilisateur actuel
+    if not request.user.is_authenticated:
+        messages.error(request, "Pas d'utilisateur connecté.")
+        return redirect('signin') 
+    
     user = request.user
 
     reclamation_id = request.session.get('reclamation_id')
@@ -3245,19 +3257,16 @@ def nouvelle_reclamation(request):
                         demande_paiement = Demande_paiement.objects.get(id=payment.model_id)
                         if demande_paiement:
                             demande_paiement.reclamation=reclamation
-                            demande_paiement.statut_demande='Contester'
+                            # demande_paiement.statut_demande='Contester' # il vaut mieux l'enlever pour garder le statut lié seulement au paiement, demande_paiement.reclamation est suffisant
                             demande_paiement.save()
                             messages.success(request, 'La demande de  paiement est mise à jour.')
                         else: messages.error(request, "Pas de demande de paiement trouvée")
                 elif demande_paiement_id:
-                    demande_paiement_id_decript = decrypt_id(demande_paiement_id)
-                    if demande_paiement_id_decript:
-                        demande_paiement = Demande_paiement.objects.get(id=demande_paiement_id_decript)
-                        demande_paiement.reclamation=reclamation
-                        demande_paiement.statut_demande='Contester'
-                        demande_paiement.save()
-                        messages.success(request, 'La demande de  paiement est mise à jour.')
-                    else: messages.error(request, "Pas de demande de paiement trouvée")
+                    demande_paiement = Demande_paiement.objects.get(id=demande_paiement_id)
+                    demande_paiement.reclamation=reclamation
+                    # demande_paiement.statut_demande='Contester'
+                    demande_paiement.save()
+                    messages.success(request, 'La demande de  paiement est mise à jour.')
 
             messages.success(request, 'Réclamation enregistrée.')
             if  hasattr(user, 'eleve'): return redirect('compte_eleve')
@@ -3289,7 +3298,7 @@ def reclamations(request):
     user = request.user
     if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
+        return redirect('signin')
     
     
     date_format = "%d/%m/%Y"
@@ -3360,18 +3369,19 @@ def reclamations(request):
     if request.POST:
         # Extraction de l'ID de la réclamation choisi dans le formulaire
         reclamation_keys = [key for key in request.POST.keys() if key.startswith('btn_reclamation_id')]
-        reclamation_key = [key.split('btn_reclamation_id')[1] for key in reclamation_keys][0]
-        
+        if reclamation_keys: 
+            reclamation_key = [key.split('btn_reclamation_id')[1] for key in reclamation_keys][0]
+            
 
-        # Vérification du nombre d'IDs extraits
-        if reclamation_key:
-                request.session['reclamation_id'] = decrypt_id(reclamation_key) # décripter ID de la réclamation
-                return redirect('reclamation')
-        else:  # Plusieurs IDs trouvés, erreur système
-            messages.error(request, "Erreur système, veuillez contacter le support technique.")
-            if  hasattr(user, 'eleve'):return redirect('compte_eleve')
-            elif  hasattr(user, 'professeur'):return redirect('compte_prof')
-            else: return redirect('compte_administrateur')
+            # Vérification du nombre d'IDs extraits
+            if reclamation_key:
+                    request.session['reclamation_id'] = decrypt_id(reclamation_key) # décripter ID de la réclamation
+                    return redirect('reclamation')
+            else:  # Plusieurs IDs trouvés, erreur système
+                messages.error(request, "Erreur système, veuillez contacter le support technique.")
+                if  hasattr(user, 'eleve'):return redirect('compte_eleve')
+                elif  hasattr(user, 'professeur'):return redirect('compte_prof')
+                else: return redirect('compte_administrateur')
 
     # Rendu de la page avec le contexte
     context = {

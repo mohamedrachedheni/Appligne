@@ -75,15 +75,20 @@
                                             Répondre
                                         </button>
                                     </div>
-                                    <div class="col-lg-3 col-sm-12">
+                                    <div class="col-lg-2 col-sm-12">
                                         <button type="submit" class="btn btn-success w-100" name="btn_historique">
-                                            Voire la réponse à cet émail
+                                            Voire réponse 
                                         </button>
                                     </div>
                                     {% if est_prof and request.user.is_authenticated %}
-                                    <div class="col-lg-3 col-sm-12">
+                                    <div class="col-lg-2 col-sm-12">
                                         <button type="submit" class="btn btn-secondary w-100" name="btn_ajout_eleve">
                                             Ajouter à mes élèves
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-2 col-sm-12 ">
+                                        <button type="submit" class="btn btn-success w-100" name="btn_ajout_cours" >
+                                            Ajout cours
                                         </button>
                                     </div>
                                     {% endif %}

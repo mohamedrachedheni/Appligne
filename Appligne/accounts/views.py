@@ -36,6 +36,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseBadRequest
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -1540,6 +1541,10 @@ def demande_cours_recu_eleve(request, email_id):
     
     if 'btn_voire_eleve' in request.POST: # bouton ajout élève activé
         return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id) # Rediriger vers autre page
+    
+    if 'btn_ajout_cours' in request.POST: # bouton ajout cours et eleve si eleve non inscrit
+        request.session['email_id'] = email_id
+        return redirect('ajout_cours_email') 
 
     return render(request, 'accounts/demande_cours_recu_eleve.html', context) # Revenir à la même page, le context est nécessaire pout le template
 
@@ -1803,7 +1808,7 @@ def nouveau_prix_heure(request):
         for prof_mat_niveau in prof_mat_niv:
             prix_heure = prix_heure_qs.filter(
                 prof_mat_niv=prof_mat_niveau.id, format=format_label).first()
-            prix_heure_value = str(prix_heure.prix_heure) if prix_heure else ""
+            prix_heure_value = str(prix_heure.prix_heure_prof) if prix_heure else ""
             liste_enregistrements.append(
                 (prof_mat_niveau.id, prof_mat_niveau.matiere, prof_mat_niveau.niveau, prix_heure_value, format_key)
             )
@@ -1818,25 +1823,29 @@ def nouveau_prix_heure(request):
         liste_prix_mat_niv_for = []
 
         for prix_key, prix in request.POST.items():
-            if prix_key.startswith('prix_heure-') and prix: # Si le prix est défini
-                try:
-                    prix_dec = Decimal(prix[:-4]).quantize(Decimal('0.00'))
-                except (InvalidOperation, ValueError):
-                    messages.error(request, f"Erreur lors de la conversion du prix '{prix[:-4]}' en décimal.")
+            if prix_key.startswith('prix_heure-'): 
+                if prix: # Si le prix est défini
+                    try:
+                        prix_dec = Decimal(prix[:-4]).quantize(Decimal('0.00'))
+                    except (InvalidOperation, ValueError):
+                        messages.error(request, f"Erreur lors de la conversion du prix '{prix[:-4]}' en décimal.")
+                        return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+                    if prix_dec < 10:
+                        messages.info(request, "Les prix inférieurs à 10 Euro doivent être chagés.")
+                        return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+                    mat_niv_id_str, format_key = prix_key.split('-')[1].split('__')
+                    try:
+                        mat_niv_id = int(mat_niv_id_str)
+                    except ValueError:
+                        messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier.")
+                        return render(request, 'accounts/nouveau_prix_heure.html', context)
+
+                    liste_prix_mat_niv_for.append((mat_niv_id, selected_formats[format_key], prix_dec))
+                else:
+                    messages.error(request, "Tous les tarifs horaires doivent être définis, sinon les cours sans tarif seront ignorés.")
                     return render(request, 'accounts/nouveau_prix_heure.html', context)
-
-                if prix_dec < 10:
-                    messages.info(request, "Les prix inférieurs à 10 Euro sont ignorés.")
-                    continue
-
-                mat_niv_id_str, format_key = prix_key.split('-')[1].split('__')
-                try:
-                    mat_niv_id = int(mat_niv_id_str)
-                except ValueError:
-                    messages.error(request, f"Erreur lors de la conversion de l'ID '{mat_niv_id_str}' en entier.")
-                    return render(request, 'accounts/nouveau_prix_heure.html', context)
-
-                liste_prix_mat_niv_for.append((mat_niv_id, selected_formats[format_key], prix_dec))
 
         if not liste_prix_mat_niv_for:
             messages.error(request, "Vous devez fixer au moins un prix supérieur ou égal à 10 Euro.") # à réviser avec Hichem
@@ -1845,7 +1854,13 @@ def nouveau_prix_heure(request):
         # Remplace les anciens prix horaires par les nouveaux
         Prix_heure.objects.filter(user=user).delete()
         Prix_heure.objects.bulk_create([
-            Prix_heure(user=user, prof_mat_niv_id=mat_niv_id, format=format_label, prix_heure=prix_dec)
+            Prix_heure(
+                user=user,
+                prof_mat_niv_id=mat_niv_id,
+                format=format_label,
+                prix_heure_prof=prix_dec,
+                prix_heure=(prix_dec / Decimal('2') * Decimal('3')).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+            )
             for mat_niv_id, format_label, prix_dec in liste_prix_mat_niv_for
         ])
 
@@ -1887,9 +1902,7 @@ def ajouter_mes_eleve(request, eleve_id):
         remarque = request.POST.get('remarque', None)
         Mes_eleves.objects.create(user=request.user, eleve=eleve, is_active=True, remarque=remarque)
         messages.success(request, "L'élève est ajouté à la liste des élèves inscrits")
-        
-        # Rediriger vers la vue `ajouter_cours` avec l'ID de l'élève
-        return redirect('ajouter_cours')
+        return redirect('compte_prof')
 
     # Rendre le template pour ajouter un élève
     return render(request, 'accounts/ajouter_mes_eleve.html', context)
@@ -2037,7 +2050,7 @@ def obtenir_parametres_cours(request): # Json / AJAX
 
 
 
-
+# à supprimer
 def ajouter_cours(request):
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
@@ -2929,13 +2942,14 @@ def liste_declaration_cours(request):
     statut_demande = 'En cours'
     if 'btn_en_cours' in request.POST: statut_demande = 'En cours'
     if 'btn_attente' in request.POST: statut_demande = 'En attente'
-    if 'btn_contester' in request.POST: statut_demande = 'Contester'
+    
     if 'btn_annuler' in request.POST: statut_demande = 'Annuler'
     if 'btn_regler' in request.POST: statut_demande = 'Réaliser'
     # Filtrer les demandes de paiement associées à l'utilisateur, en excluant celles qui sont annulées
     demande_paiements = Demande_paiement.objects.filter(user=user, statut_demande=statut_demande)
 
     if 'btn_tous' in request.POST: demande_paiements = Demande_paiement.objects.filter(user=user)
+    if 'btn_contester' in request.POST: demande_paiements = Demande_paiement.objects.filter(user=user, reclamation__isnull=False)
     
     # Construire la liste des cours déclarés avec les détails nécessaires
     cours_declares = [
@@ -2947,6 +2961,7 @@ def liste_declaration_cours(request):
             'statut_demande': enr.statut_demande,
             'vue_le': enr.vue_le,
             'email_eleve': enr.email_eleve,
+            'reclamation': bool(enr.reclamation),
         }
         for enr in demande_paiements
     ]
@@ -3041,6 +3056,15 @@ def detaille_demande_reglement(request, demande_paiement_id):
             messages.error(request, "La demande de paiement est déjà réglée ou ne peut être annulée.")
 
         return render(request, 'accounts/detaille_demande_reglement.html', context)
+    # Gère le bouton "Réclamation"
+    if 'btn_reclamation' in request.POST:
+        if demande_paiement.reclamation and demande_paiement.reclamation.id:
+            logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
+            request.session['reclamation_id'] = demande_paiement.reclamation.id
+            return redirect('reclamation')
+        else:
+            logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)
+            messages.error(request, "Il n'y a pas de réclamation liée à la demande de paiement")
 
     # Affichage du template
     return render(request, 'accounts/detaille_demande_reglement.html', context)
@@ -3553,7 +3577,10 @@ def liste_reglement(request):
 
 
 @login_required
-def reglement_nouveau_cours(request):
+def reglement_nouveau_cours(request, enregistrement_direct='true'):
+    if enregistrement_direct not in ['true', 'false']:
+        return HttpResponseBadRequest("Paramètre invalide")
+    enregistrement_direct = enregistrement_direct == 'true'
     # Initialisation des champs de formulaire
     format = matiere = niveau = prix_heure = ""
     user = request.user
@@ -3573,8 +3600,14 @@ def reglement_nouveau_cours(request):
     logger.debug("Utilisateur professeur connecté : %s", user)
 
     # Chargement des données de base pour l'affichage du formulaire
-    matieres = Matiere.objects.all()
-    niveaux = Niveau.objects.all()
+    formats = Format_cour.objects.filter(user=user).first()
+    matieres = Matiere.objects.filter(
+        prof_mat_niv__user=user
+    ).distinct()
+
+    niveaux = Niveau.objects.filter(
+        prof_mat_niv__user=user
+    ).distinct()
     logger.debug("Matières disponibles : %s", list(matieres))
     logger.debug("Niveaux disponibles : %s", list(niveaux))
 
@@ -3593,6 +3626,7 @@ def reglement_nouveau_cours(request):
 
     # Contexte pour le template HTML
     context = {
+        'formats': formats,
         'matieres': matieres,
         'niveaux': niveaux,
         'mes_eleves': mes_eleves,
@@ -3600,6 +3634,8 @@ def reglement_nouveau_cours(request):
         'matiere': matiere,
         'niveau': niveau,
         'prix_heure': prix_heure,
+        'enregistrement_direct':enregistrement_direct,
+
     }
 
     # --- Traitement du formulaire POST ---
@@ -3611,7 +3647,7 @@ def reglement_nouveau_cours(request):
         if not eleve_ids:
             messages.error(request, "Veuillez sélectionner au moins un élève.")
             logger.warning("Aucun élève sélectionné.")
-            return redirect('reglement_nouveau_cours')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
 
         try:
             eleve = Eleve.objects.get(id=eleve_ids[0])
@@ -3619,7 +3655,7 @@ def reglement_nouveau_cours(request):
         except Eleve.DoesNotExist:
             messages.error(request, "Élève introuvable.")
             logger.error("Élève introuvable avec l'ID : %s", eleve_ids[0])
-            return redirect('reglement_nouveau_cours')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
 
         # --- Redirection vers la planification des cours ---
         if 'btn_cours_planifier' in request.POST:
@@ -3630,10 +3666,11 @@ def reglement_nouveau_cours(request):
             except Mes_eleves.DoesNotExist:
                 messages.error(request, "Aucun lien actif trouvé avec cet élève.")
                 logger.warning("Relation Mes_eleves introuvable pour l'élève %s", eleve)
-                return redirect('reglement_nouveau_cours')
+                return redirect(request.META.get('HTTP_REFERER', '/'))
 
-        # --- Soumission pour résumé de la demande ---
-        if 'btn_enr' in request.POST:
+
+        # --- Soumission pour résumé de la demande de règlement ou l'enregistrement directe des horaires---
+        if 'btn_enr' in request.POST or 'btn_horaires' in request.POST:
             logger.debug("Soumission du formulaire de déclaration de cours détectée (btn_enr).")
 
             parent = getattr(eleve, 'parent', None)
@@ -3652,14 +3689,14 @@ def reglement_nouveau_cours(request):
             if not all([format, matiere, niveau, prix_heure]):
                 messages.error(request, "Tous les champs sont obligatoires.")
                 logger.warning("Champs manquants dans le formulaire.")
-                return redirect('reglement_nouveau_cours')
+                return redirect(request.META.get('HTTP_REFERER', '/'))
 
             try:
                 prix_heure_float = float(prix_heure)
             except ValueError:
                 messages.error(request, "Le prix par heure doit être un nombre décimal.")
                 logger.warning("Prix par heure invalide : %s", prix_heure)
-                return redirect('reglement_nouveau_cours')
+                return redirect(request.META.get('HTTP_REFERER', '/'))
 
             # Récupération des IDs d'horaires
             ids = [int(key[4:]) for key in request.POST if key.startswith('date') and key[4:].isdigit()]
@@ -3667,6 +3704,7 @@ def reglement_nouveau_cours(request):
 
             total_montant = 0
             horaires_valides = []
+            horaires_to_create = []
 
             # Traitement des horaires un par un
             for id in ids:
@@ -3683,12 +3721,12 @@ def reglement_nouveau_cours(request):
                 except ValueError:
                     messages.error(request, f"Date ou heure invalide (ligne {id}).")
                     logger.warning("Date/heure invalide - ID %s : %s - %s à %s", id, date, debut, fin)
-                    return redirect('reglement_nouveau_cours')
+                    return redirect(request.META.get('HTTP_REFERER', '/'))
 
                 if debut_obj >= fin_obj:
                     messages.error(request, f"L'heure de début doit être inférieure à l'heure de fin (ligne {id}).")
                     logger.warning("Heure de début >= heure de fin - ID %s", id)
-                    return redirect('reglement_nouveau_cours')
+                    return redirect(request.META.get('HTTP_REFERER', '/'))
 
                 # Calcul de la durée et du montant
                 duree = round((fin_obj - debut_obj).total_seconds() / 3600, 2)
@@ -3704,24 +3742,58 @@ def reglement_nouveau_cours(request):
                     'duree': duree,
                     'montant': montant,
                 })
+                
 
             logger.debug("Total montant calculé : %.2f", total_montant)
             logger.debug("Horaires valides à enregistrer : %s", horaires_valides)
 
-            # Enregistrement en session
-            request.session['detail_horaires'] = horaires_valides
-            request.session['detail_demande'] = {
-                'eleve_id': eleve.id,
-                'parent_id': parent.id if parent else None,
-                'format': format,
-                'matiere': matiere,
-                'niveau': niveau,
-                'prix_heure': prix_heure,
-                'total_montant': total_montant,
-            }
+            # Enregistrement en session pour résumer la demande de règlement
+            if 'btn_enr' in request.POST:
+                request.session['detail_horaires'] = horaires_valides
+                request.session['detail_demande'] = {
+                    'eleve_id': eleve.id,
+                    'parent_id': parent.id if parent else None,
+                    'format': format,
+                    'matiere': matiere,
+                    'niveau': niveau,
+                    'prix_heure': prix_heure,
+                    'total_montant': total_montant,
+                }
 
-            logger.debug("Session mise à jour avec detail_demande et detail_horaires.")
-            return redirect('resume_declaration')
+                logger.debug("Session mise à jour avec detail_demande et detail_horaires.")
+                return redirect('resume_declaration')
+            # passer directement à l'enregistrement des horaires
+            else:
+                # Création ou récupération du cours existant
+                mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
+                cours = Cours.objects.create(
+                    user=user,
+                    mon_eleve=mon_eleve,
+                    format_cours=format,
+                    matiere=matiere,
+                    niveau=niveau,
+                    prix_heure=prix_heure_float,
+                    is_active=True
+                )
+
+                # Création des horaires
+                horaires_to_create = []
+                for horaire in horaires_valides:
+                    horaires_to_create.append(Horaire(
+                        cours=cours,
+                        date_cours=datetime.strptime(horaire['date'], '%d/%m/%Y').date(),  # ✅ conversion en date
+                        heure_debut=datetime.strptime(horaire['debut'], '%H:%M').time(),    # ✅ conversion en time
+                        heure_fin=datetime.strptime(horaire['fin'], '%H:%M').time(),        # ✅ conversion en time
+                        duree=horaire['duree'],
+                        contenu=horaire['contenu'],
+                        statut_cours=horaire['statut']
+                    ))
+
+
+                Horaire.objects.bulk_create(horaires_to_create)
+                logger.debug("Création en masse des horaires terminée.")
+                messages.success(request, 'Le cours a été créé avec succès.')
+                return redirect('compte_prof')
 
     # --- Affichage de la page (GET ou après erreur) ---
     logger.debug("Affichage du template avec le contexte : %s", context)
@@ -3793,7 +3865,7 @@ def resume_declaration(request):
                 mon_eleve = Mes_eleves.objects.get(eleve=eleve, user=user)
                 prix_heure_arrondi = round(float(detail_demande['prix_heure']), 2)
 
-                # Création du cours
+                # Création ou récupération du cours existant
                 cours = Cours.objects.create(
                     user=user,
                     mon_eleve=mon_eleve,
@@ -3803,7 +3875,7 @@ def resume_declaration(request):
                     prix_heure=prix_heure_arrondi,
                     is_active=True
                 )
-                logger.info("Cours créé avec ID : %s", cours.id)
+                logger.info("Cours get_or_create avec ID : %s", cours.id)
 
                 # Préparation email
                 sujet = request.POST.get('sujet', 'Demande de règlement de cours')
@@ -3912,22 +3984,8 @@ def resume_declaration(request):
 
 # pour la foction ajax dans template reglement_nouveau_cours.html
 @login_required
-@require_http_methods(["GET"])  # Restriction aux requêtes GET uniquement
+@require_http_methods(["GET"])
 def get_last_cours_eleve(request, eleve_id):
-    """
-    Vue pour récupérer les informations du dernier cours d'un élève
-    Sécurité:
-    - Nécessite une authentification
-    - Vérifie que l'utilisateur est bien le professeur de l'élève
-    - Limite aux requêtes GET
-    
-    Args:
-        request: HttpRequest - La requête HTTP
-        eleve_id: int - L'ID de l'élève
-    
-    Returns:
-        JsonResponse: Les données du cours ou un message d'erreur
-    """
     try:
         logger.info(
             f"Début de get_last_cours_eleve - User: {request.user.id}, "
@@ -3972,18 +4030,76 @@ def get_last_cours_eleve(request, eleve_id):
                 status=404
             )
 
+        # Récupération de l'objet Matière correspondant au nom dans le cours
+        try:
+            matiere_obj = Matiere.objects.get(matiere=cours.matiere)
+        except Matiere.DoesNotExist:
+            logger.warning(
+                f"Matière introuvable - Matière: {cours.matiere}"
+            )
+            return JsonResponse(
+                {'error': 'Matière non trouvée dans le catalogue.'},
+                status=404
+            )
+
+        # Récupération de l'objet Niveau correspondant au nom dans le cours
+        try:
+            niveau_obj = Niveau.objects.get(niveau=cours.niveau)
+        except Niveau.DoesNotExist:
+            logger.warning(
+                f"Niveau introuvable - Niveau: {cours.niveau}"
+            )
+            return JsonResponse(
+                {'error': 'Niveau non trouvé dans le catalogue.'},
+                status=404
+            )
+
+        # Récupération du prix_heure depuis la table Prix_heure
+        prof_mat_niv = Prof_mat_niv.objects.filter(
+            user=request.user,
+            matiere=matiere_obj,
+            niveau=niveau_obj
+        ).first()
+
+        if not prof_mat_niv:
+            logger.warning(
+                f"Configuration Prof_mat_niv introuvable - User: {request.user.id}, "
+                f"Matière: {matiere_obj.matiere}, Niveau: {niveau_obj.niveau}"
+            )
+            return JsonResponse(
+                {'error': 'Configuration de prix introuvable pour cette matière/niveau.'},
+                status=404
+            )
+
+        prix_heure = Prix_heure.objects.filter(
+            user=request.user,
+            prof_mat_niv=prof_mat_niv,
+            format=cours.format_cours
+        ).first()
+
+        if not prix_heure or not prix_heure.prix_heure:
+            logger.warning(
+                f"Prix introuvable pour ce format - User: {request.user.id}, "
+                f"Format: {cours.format_cours}"
+            )
+            return JsonResponse(
+                {'error': 'Prix non configuré pour ce format de cours.'},
+                status=404
+            )
+
         # Préparation des données de réponse
         data = {
             'format_cours': cours.format_cours,
-            'matiere': cours.matiere,
-            'niveau': cours.niveau,
-            'prix_heure': str(cours.prix_heure),  # Conversion en string pour éviter les problèmes de sérialisation
+            'matiere': cours.matiere,  # Nom de la matière
+            'niveau': cours.niveau,     # Nom du niveau
+            'prix_heure': str(prix_heure.prix_heure),
         }
 
         logger.info(
             f"Succès - Cours ID: {cours.id}, "
             f"Eleve ID: {eleve_id}, "
-            f"Format: {data['format_cours']}"
+            f"Format: {data['format_cours']}, "
+            f"Prix: {data['prix_heure']}"
         )
         
         return JsonResponse(data)
@@ -4010,4 +4126,359 @@ def get_last_cours_eleve(request, eleve_id):
             status=500
         )
     
+@require_http_methods(["POST"])
+def get_prix_cours(request):
+    try:
+        data = json.loads(request.body)
+        format_cours = data.get('format')
+        matiere_nom = data.get('matiere')
+        niveau_nom = data.get('niveau')
+
+        # Validation des données
+        if not all([format_cours, matiere_nom, niveau_nom]):
+            return JsonResponse({'error': 'Tous les champs sont requis'}, status=400)
+
+        # Récupération des objets
+        matiere = Matiere.objects.get(matiere=matiere_nom)
+        niveau = Niveau.objects.get(niveau=niveau_nom)
+        
+        # Vérification de la configuration Prof_mat_niv
+        prof_mat_niv = Prof_mat_niv.objects.filter(
+            user=request.user,
+            matiere=matiere,
+            niveau=niveau
+        ).first()
+
+        if not prof_mat_niv:
+            return JsonResponse(
+                {'error': 'Configuration non trouvée pour cette matière/niveau'}, 
+                status=404
+            )
+
+        # Récupération du prix
+        prix_heure = Prix_heure.objects.filter(
+            user=request.user,
+            prof_mat_niv=prof_mat_niv,
+            format=format_cours
+        ).first()
+
+        if not prix_heure or not prix_heure.prix_heure:
+            return JsonResponse(
+                {'error': 'Prix non configuré pour ce format'}, 
+                status=404
+            )
+
+        return JsonResponse({
+            'prix_heure': str(prix_heure.prix_heure)
+        })
+
+    except Matiere.DoesNotExist:
+        return JsonResponse({'error': 'Matière non trouvée'}, status=404)
+    except Niveau.DoesNotExist:
+        return JsonResponse({'error': 'Niveau non trouvé'}, status=404)
+    except Exception as e:
+        logger.error(f"Erreur get_prix_cours: {str(e)}")
+        return JsonResponse({'error': 'Erreur technique'}, status=500)
+
+
+@login_required    
+def ajout_cours_email(request):
+    user= request.user
+    # Chargement des données de base pour l'affichage du formulaire
+    formats = Format_cour.objects.filter(user=user).first()
+    matieres = Matiere.objects.filter(
+        prof_mat_niv__user=user
+    ).distinct()
+
+    niveaux = Niveau.objects.filter(
+        prof_mat_niv__user=user
+    ).distinct()
+
+    email_id = request.session.get('email_id')
+    if email_id is None:
+        messages.error(request, "Une erreur s’est produite. Merci de retourner à la page des e-mails.")
+        return redirect('compte_prof')
+    email_telecharge = Email_telecharge.objects.filter(id=email_id).first()
+    if not email_telecharge:
+        messages.error(request, "Pas d'email trouvé")
+        return redirect('compte_prof')
+    email_detaille = Email_detaille.objects.filter(email=email_telecharge).first()
+    if not email_detaille:
+        messages.error(request, "L'email n'est pas une demande de cours")
+        return redirect('compte_prof')
+    user_eleve = email_telecharge.user
+    eleve = Eleve.objects.filter(user=user_eleve).first()
+    mon_eleve = Mes_eleves.objects.filter(user=user, eleve=eleve).first()
+    parent = Parent.objects.filter(user=user_eleve).first()
+    
+    format_cours = email_detaille.format_cours
+    matiere_nom = email_detaille.matiere
+    niveau_nom = email_detaille.niveau
+
+    # Validation des données
+    if not all([format_cours, matiere_nom, niveau_nom]):
+        messages.error(request, "Une erreur s’est produite : les données nécessaires pour ce cours sont absentes ou incomplètes.")
+        return redirect('compte_prof')
+
+    # Récupération des objets
+    matiere = Matiere.objects.get(matiere=matiere_nom)
+    niveau = Niveau.objects.get(niveau=niveau_nom)
+    
+    # Vérification de la configuration Prof_mat_niv
+    prof_mat_niv = Prof_mat_niv.objects.filter(
+        user=request.user,
+        matiere=matiere,
+        niveau=niveau
+    ).first()
+
+    if not prof_mat_niv:
+        messages.error(request, "Le cours demandé ne correspond à aucun des cours actuellement proposés par ce professeur.")
+    
+    # Détermination du libellé du format du cours
+    format_cours_map = {
+        'a_domicile': 'Cours à domicile',
+        'webcam': 'Cours par webcam',
+        'stage': 'Stage pendant les vacances',
+        'stage_webcam': 'Stage par webcam',
+    }
+    format_cours_label = format_cours_map.get(format_cours, 'Format inconnu')
+
+    # Récupération du prix
+    prix_heure_obj = Prix_heure.objects.filter(
+        user=request.user,
+        prof_mat_niv=prof_mat_niv,
+        format=format_cours_label
+    ).first()
+
+    if not prix_heure_obj or not prix_heure_obj.prix_heure:
+        messages.error(request, "Le professeur n’a pas encore défini son tarif horaire.")
+        prix_heure_valeur = None
+    else:
+        prix_heure_valeur = prix_heure_obj.prix_heure
+        # messages.info(request, f"prix_heure = {prix_heure_valeur:.2f}")
+
+    # --- Redirection vers la planification des cours ---
+    if 'btn_cours_planifier' in request.POST:
+        try:
+            mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
+            logger.debug("Relation active trouvée avec l'élève : %s", mon_eleve)
+            return redirect(reverse('demande_reglement', args=[mon_eleve.id]))
+        except Mes_eleves.DoesNotExist:
+            messages.error(request, "Aucun lien actif trouvé avec cet élève.")
+            logger.warning("Relation Mes_eleves introuvable pour l'élève %s", eleve)
+            request.META['HTTP_REFERER']
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    if 'btn_enr' in request.POST or 'btn_horaires' in request.POST:
+        logger.debug("Soumission du formulaire de déclaration de cours détectée (btn_enr).")
+
+        parent = getattr(eleve, 'parent', None)
+        logger.debug("Parent associé à l'élève : %s", parent)
+
+        # Récupération des champs du formulaire
+        format = request.POST.get('format', "").strip()
+        matiere = request.POST.get('matiere', "").strip()
+        niveau = request.POST.get('niveau', "").strip()
+        prix_heure = request.POST.get('prix_heure', "").strip()
+
+        logger.debug("Champs récupérés - Format: %s, Matière: %s, Niveau: %s, Prix/heure: %s",
+                        format, matiere, niveau, prix_heure)
+
+        # Vérification des champs obligatoires
+        if not all([format, matiere, niveau, prix_heure]):
+            messages.error(request, "Tous les champs sont obligatoires.")
+            logger.warning("Champs manquants dans le formulaire.")
+            request.META['HTTP_REFERER']
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+        try:
+            prix_heure_float = float(prix_heure)
+        except ValueError:
+            messages.error(request, "Le prix par heure doit être un nombre décimal.")
+            logger.warning("Prix par heure invalide : %s", prix_heure)
+            request.META['HTTP_REFERER']
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+        # Récupération des IDs d'horaires
+        ids = [int(key[4:]) for key in request.POST if key.startswith('date') and key[4:].isdigit()]
+        logger.debug("IDs des horaires saisis : %s", ids)
+
+        total_montant = 0
+        horaires_valides = []
+        horaires_to_create = []
+
+        # Traitement des horaires un par un
+        for id in ids:
+            date = request.POST.get(f'date{id}', "").strip()
+            debut = request.POST.get(f'debut{id}', "").strip()
+            fin = request.POST.get(f'fin{id}', "").strip()
+            contenu = request.POST.get(f'contenu{id}', "").strip()
+            statut = request.POST.get(f'statut{id}', "").strip()
+
+            try:
+                date_obj = datetime.strptime(date, "%d/%m/%Y")
+                debut_obj = datetime.strptime(debut, "%H:%M")
+                fin_obj = datetime.strptime(fin, "%H:%M")
+            except ValueError:
+                messages.error(request, f"Date ou heure invalide (ligne {id}).")
+                logger.warning("Date/heure invalide - ID %s : %s - %s à %s", id, date, debut, fin)
+                request.META['HTTP_REFERER']
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+            if debut_obj >= fin_obj:
+                messages.error(request, f"L'heure de début doit être inférieure à l'heure de fin (ligne {id}).")
+                logger.warning("Heure de début >= heure de fin - ID %s", id)
+                request.META['HTTP_REFERER']
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+            # Calcul de la durée et du montant
+            duree = round((fin_obj - debut_obj).total_seconds() / 3600, 2)
+            montant = round(duree * prix_heure_float, 2)
+            total_montant += montant
+
+            horaires_valides.append({
+                'date': date_obj.strftime('%d/%m/%Y'),
+                'debut': debut_obj.strftime('%H:%M'),
+                'fin': fin_obj.strftime('%H:%M'),
+                'contenu': contenu,
+                'statut': statut,
+                'duree': duree,
+                'montant': montant,
+            })
+            
+
+        logger.debug("Total montant calculé : %.2f", total_montant)
+        logger.debug("Horaires valides à enregistrer : %s", horaires_valides)
+        if 'btn_enr' in request.POST:
+            request.session['detail_horaires'] = horaires_valides
+            request.session['detail_demande'] = {
+                'eleve_id': eleve.id,
+                'parent_id': parent.id if parent else None,
+                'format': format,
+                'matiere': matiere,
+                'niveau': niveau,
+                'prix_heure': prix_heure,
+                'total_montant': total_montant,
+            }
+
+            logger.debug("Session mise à jour avec detail_demande et detail_horaires.")
+            return redirect('resume_declaration')
+        # passer directement à l'enregistrement des horaires
+        else:
+            # Création ou récupération de l'élève
+            mon_eleve, created = Mes_eleves.objects.get_or_create(user=user, eleve=eleve)
+            mon_eleve.is_active = True
+            mon_eleve.save()
+
+            # Création ou récupération du cours existant
+            cours = Cours.objects.create(
+                user=user,
+                mon_eleve=mon_eleve,
+                format_cours=format,
+                matiere=matiere,
+                niveau=niveau,
+                prix_heure=prix_heure_float,
+                is_active=True
+            )
+
+            # Création des horaires
+            horaires_to_create = []
+            for horaire in horaires_valides:
+                horaires_to_create.append(Horaire(
+                    cours=cours,
+                    date_cours=datetime.strptime(horaire['date'], '%d/%m/%Y').date(),  # ✅ conversion en date
+                    heure_debut=datetime.strptime(horaire['debut'], '%H:%M').time(),    # ✅ conversion en time
+                    heure_fin=datetime.strptime(horaire['fin'], '%H:%M').time(),        # ✅ conversion en time
+                    duree=horaire['duree'],
+                    contenu=horaire['contenu'],
+                    statut_cours=horaire['statut']
+                ))
+
+
+            Horaire.objects.bulk_create(horaires_to_create)
+            logger.debug("Création en masse des horaires terminée.")
+            messages.success(request, 'Le cours a été créé avec succès.')
+            return redirect('compte_prof')
+
+    context = {
+        'formats': formats,
+        'matieres': matieres,
+        'niveaux': niveaux,
+        'eleve': eleve,
+        'parent': parent,
+        'prix_heure': prix_heure_valeur,
+        'format_cours': format_cours_label,
+        'matiere_nom': matiere_nom,
+        'niveau_nom': niveau_nom,
+    }
+
+    return render(request, 'accounts/ajout_cours_email.html', context)
+
+# from django.views.decorators.http import require_http_methods
+# from django.http import JsonResponse
+# import json
+# import logging
+
+# logger = logging.getLogger(__name__)
+# from django.views.decorators.http import require_http_methods
+# from django.http import JsonResponse
+# import json
+# import logging
+
+logger = logging.getLogger(__name__)
+
+# exacterment le même code que require_http mais onles a séparere pour une éventuelle modification !!
+@require_http_methods(["POST"])
+def get_prix_cours_email(request):
+    try:
+        data = json.loads(request.body)
+        format_label = data.get('format')
+        matiere_nom = data.get('matiere')
+        niveau_nom = data.get('niveau')
+
+        if not all([format_label, matiere_nom, niveau_nom]):
+            return JsonResponse({'error': 'Tous les champs sont requis'}, status=400)
+
+        # Récupération des objets
+        try:
+            matiere = Matiere.objects.get(matiere=matiere_nom)
+        except Matiere.DoesNotExist:
+            return JsonResponse({'error': 'Matière non trouvée'}, status=404)
+
+        try:
+            niveau = Niveau.objects.get(niveau=niveau_nom)
+        except Niveau.DoesNotExist:
+            return JsonResponse({'error': 'Niveau non trouvé'}, status=404)
+
+        prof_mat_niv = Prof_mat_niv.objects.filter(
+            user=request.user,
+            matiere=matiere,
+            niveau=niveau
+        ).first()
+
+        if not prof_mat_niv:
+            return JsonResponse(
+                {'error': 'Configuration non trouvée pour cette matière/niveau'},
+                status=404
+            )
+
+        prix_heure_obj = Prix_heure.objects.filter(
+            user=request.user,
+            prof_mat_niv=prof_mat_niv,
+            format=format_label
+        ).first()
+
+        if not prix_heure_obj or prix_heure_obj.prix_heure is None:
+            return JsonResponse(
+                {'error': 'Prix non configuré pour ce format'},
+                status=404
+            )
+
+        return JsonResponse({
+            'prix_heure': f"{prix_heure_obj.prix_heure:.2f}"
+        })
+
+    except Exception as e:
+        logger.error(f"[get_prix_cours_email] Erreur : {str(e)}", exc_info=True)
+        return JsonResponse({'error': 'Erreur technique'}, status=500)
 
