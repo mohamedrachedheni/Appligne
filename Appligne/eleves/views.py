@@ -1383,7 +1383,6 @@ def demande_paiement_eleve(request):
         'btn_en_ettente': 'En attente',   # Demande de paiements en attente
         'btn_en_cours': 'En cours',   # Demande de paiements en cours
         'btn_realiser': 'Réaliser',   # Demande de paiements en réaliser
-        'btn_contester': 'Contester',   # Demande de paiements contester
         'btn_annuler': 'Annuler',      # Demande de paiements annuler
     }
 
@@ -1396,7 +1395,8 @@ def demande_paiement_eleve(request):
 
     # Récupération des paiements en fonction des filtres
     demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
-
+    if 'btn_contester' in request.POST:
+        demande_paiements_data = Demande_paiement.objects.filter(**filters, reclamation__isnull = False).order_by('-date_creation')
     # tester demande_paiements_data si elle est null
 
     # Initialisation des listes pour stocker les résultats
@@ -1606,7 +1606,7 @@ def eleve_demande_paiement(request):
         
         # Passer à la création d'une nouvelle réclamation liée à la demande de paiement
         if 'btn_nouvelle_reclamation' in request.POST:
-            request.session['reclamation_demande_paiement_id'] = demande_paiement.payment_id
+            request.session['reclamation_demande_paiement_id'] = demande_paiement.id
             return redirect('nouvelle_reclamation')
 
         else:

@@ -123,7 +123,6 @@
                                                 {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %} disabled {%  endif%}  >
                                                 <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
                                                 <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réaliser</option>
-                                                <option value="Annuler" {% if enr_horaire.statut == 'Annuler' %}selected{% endif %}>Annuler</option>
                                             </select>
                                         </div>
                                         <div class="col-lg-4 position-relative mb-2 ">
