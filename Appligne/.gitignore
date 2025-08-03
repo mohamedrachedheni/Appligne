@@ -1,17 +1,24 @@
-.env
+# Environnement virtuel
 venv/
+
+# Fichiers sensibles
+.env
+
+# Dossiers de médias
 media/
+
+# Migrations Django
 */migrations/
+__pycache__/
 
 # Fichiers Python compilés
 *.pyc
+**/*.pyc
 *.pyo
 *.pyd
 
-# Dossiers de cache Python
-__pycache__/
-
 # Logs
-Appligne/logs/
 *.log
+logs/
 **/log/
+Appligne/logs/

@@ -164,8 +164,20 @@ def payment_success(request):
         """
         try: # Tentative de récupération de la session et de la facture
             session = stripe.checkout.Session.retrieve(session_id) # On récupère les détails de la session Stripe via l’API. Cela contient des informations comme payment_status, metadata, etc.
-            invoice = Invoice.objects.get(id=session.metadata.invoice_id, user=request.user) # À partir de metadata (défini lors de la création de la session Stripe), on récupère l’id de la facture. On filtre aussi par user=request.user pour sécurité (un utilisateur ne peut pas accéder à la facture d’un autre).
+            # invoice = Invoice.objects.get(id=session.metadata.invoice_id, user=request.user) # À partir de metadata (défini lors de la création de la session Stripe), on récupère l’id de la facture. On filtre aussi par user=request.user pour sécurité (un utilisateur ne peut pas accéder à la facture d’un autre).
+            # Vérifier que metadata et invoice_id existent
+            invoice_id = session.metadata.get('invoice_id') if session.metadata else None
+
+            if not invoice_id:
+                logger.warning("❌ invoice_id absent dans les metadata Stripe")
+                messages.error(request, "Identifiant de facture introuvable.")
+                return render(request, 'payment/success.html')
+
+            # Récupérer la facture
+            logger.info(f"Traitement du paiement pour la facture {invoice_id}, utilisateur {request.user.id}")
+            invoice = Invoice.objects.get(id=invoice_id, user=request.user)
             
+
             """
             Stripe peut retourner différents statuts de paiement : 'paid', 'unpaid', 'no_payment_required', etc.
             On s'assure ici que le paiement est bien effectué.
@@ -175,6 +187,7 @@ def payment_success(request):
                 amount_stripe = session.amount_total /100
                 # payment_id = request.session['payment_id'] # le paiement est déjà créé en statut En attente dans la view: eleve_demande_paiement qui envoie payment_id
                 amout_payment = invoice.payment.amount
+                logger.info(f"Montant Stripe: {amount_stripe}, Montant Facture: {amout_payment}")
                 # amout_payment = int(round(payment.amount*100 ,1))/100
                 if not math.isclose(amount_stripe, amout_payment, abs_tol=0.05):
                     messages.error(request, f"Le montant payé avec la passerelle de paiement: {amount_stripe} € est différent du montant déclaré par le professeur {amout_payment} €")
@@ -201,6 +214,10 @@ def payment_success(request):
                 # màj table payment, màj table demande_paiement, màj table Horaire
                 # Historique prof nb d'élèves, nb d'heure payées, 
                 prof_id = request.session.get('prof_id')
+                if not prof_id:
+                    logger.error("prof_id introuvable dans la session")
+                    messages.error(request, "Informations de session manquantes")
+                    return render(request, 'payment/success.html')
                 prof = get_object_or_404(User, id=prof_id)
                 demande_paiement_id = request.session.get('demande_paiement_id_decript')
                 demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
@@ -300,9 +317,17 @@ def payment_success(request):
                 # visualiser le contenu de la session Stripe
                 print("\n=== Contenu de la session Stripe ===")
                 pp.pprint(session)
+                logger.info(f"Affichage de la page de succès avec la facture: {invoice}")
                 return render(request, 'payment/success.html', {'invoice': invoice, 'total_euro': "{:.2f}".format(invoice.total / 100)})
             
+            if session.payment_status != 'paid':
+                logger.warning(f"Statut du paiement: {session.payment_status}, attendu 'paid'")
+                messages.warning(request, "Paiement non encore confirmé")
+                return render(request, 'payment/success.html')
         except (Invoice.DoesNotExist, stripe.error.StripeError) as e:
+            logger.exception("Erreur lors du traitement du paiement Stripe")
+            messages.error(request, "Une erreur est survenue lors du traitement du paiement. Contactez l’administrateur.")
+
             """
             Si une erreur survient :
                 Invoice.DoesNotExist : la facture n’a pas été trouvée en base
@@ -310,7 +335,8 @@ def payment_success(request):
                 On ignore l’erreur, et passe à l’affichage simple.
             """
             pass
-    
+
+    logger.info("✅ Redirection vers la page de succès sans facture")
     return render(request, 'payment/success.html')
 
 
@@ -505,6 +531,7 @@ def download_invoice(request, invoice_id):
         Si rien n’est trouvé, cela renvoie une erreur 404 automatiquement.
     """
     invoice = get_object_or_404(Invoice, id=invoice_id, user=request.user)
+    
     """
     invoice.pdf.name donne le chemin relatif du fichier stocké (ex : "invoices/invoice_INV-20250701-ABC123.pdf").
     settings.MEDIA_ROOT est la racine absolue des fichiers médias (souvent media/).
