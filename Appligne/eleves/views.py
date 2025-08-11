@@ -439,6 +439,7 @@ Cordialement,
     return render(request, 'eleves/demande_cours_envoie.html', context)
 
 
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 def email_recu(request):
     if not request.user.is_authenticated:
@@ -479,17 +480,54 @@ def email_recu(request):
             # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
             emails = get_emails({'suivi': 'Mis à côté'})
 
+    # Pagination - 10 emails par page
+    paginator = Paginator(emails, 10)
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        # Si le paramètre page n'est pas un entier, afficher la première page
+        page_obj = paginator.get_page(1)
+    except EmptyPage:
+        # Si la page est hors limite (ex: 9999), afficher la dernière page
+        page_obj = paginator.get_page(paginator.num_pages)
+    
+    # Création d'une liste (obj, id_chiffré) via compréhension de liste
+    emails_list = [(obj, encrypt_id(obj.id)) for obj in page_obj]
+
+    # Gestion des soumissions POST pour le bouton "détail"
+    # Trouver la clé du bouton cliqué commençant par "btn_email_"
+    email_enr_key = next((key for key in request.POST if key.startswith('btn_email_')), None)
+    if request.method == 'POST' and email_enr_key:
+        
+
+        if email_enr_key:
+            try:
+                # Déchiffrement de l'ID
+                email_id = decrypt_id(email_enr_key.removeprefix('btn_email_'))
+                request.session['email_id'] = email_id
+                return redirect('email_detaille')
+
+            except (ValueError, TypeError):
+                messages.error(request, "L'ID fourni est invalide.")
+            except Demande_paiement.DoesNotExist:
+                messages.error(request, f"L'email avec l'ID {email_id} n'a pas été trouvée.")
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+
     # Contexte à passer au template
     context = {
-        'emails': emails
+        'emails': emails_list,  # La liste des tuples (email, id_chiffré)
+        'page_obj': page_obj    # L'objet paginé pour la pagination
     }
-    
-    # Rendu de la page avec les emails filtrés
+
+    # Rendu de la page avec les emails filtrés et paginés
     return render(request, 'eleves/email_recu.html', context)
 
 
 
-def email_detaille(request, email_id):
+
+def email_detaille(request):
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -499,6 +537,7 @@ def email_detaille(request, email_id):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève, ni en tant que professeur")
         return redirect('signin')
 
+    email_id = request.session.get('email_id',None)
     email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève si hasattr(user, 'professeur')
     id_eleve = email.user_destinataire # ID estinataire de l'email
     id_prof = email.user.id # ID expéditeur de l'email
@@ -566,7 +605,7 @@ Contenu de l'émail:
             return redirect('email_recu_prof')
         else: return redirect('index')
     
-    if 'btn_repondre' in request.POST:
+    if 'btn_repondre' in request.POST and not email.reponse_email_id:
         email_eleve = user.email
         sujet = "Suite à votre email"
         text_email =  f"""
@@ -586,15 +625,15 @@ Contenu de l'émail:
         request.session['sujet'] = sujet
         request.session['email_eleve'] = email_eleve
         request.session['email_id'] = email_id
-        return redirect('reponse_email_eleve', email_id=email_id )  # C'est bien fait
-    if 'btn_historique' in request.POST:
+        return redirect('reponse_email_eleve' )  # C'est bien fait
+    if 'btn_historique' in request.POST :
         if not email.reponse_email_id:
             messages.info(request, "Il n'y a pas de réponse à cet email")
             return render(request, 'eleves/email_detaille.html', context)
         
-        email_id = email.reponse_email_id
+        request.session['email_id']  = email.reponse_email_id
         # il faut faire une page spéciale pour l'historique de l'émail (def email_detaille(request, email_id):)
-        return redirect(reverse('email_detaille', args=[email_id])) # ça marche très bien
+        return redirect('email_detaille') # ça marche très bien
     
     if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
         return redirect('ajouter_mes_eleve', eleve_id=email.user.id)
@@ -603,13 +642,9 @@ Contenu de l'émail:
         request.session['email_id'] = email_id 
         return redirect('ajout_cours_email')
     
-
-    
-
-
     return render(request, 'eleves/email_detaille.html', context)
 
-def reponse_email_eleve(request, email_id): # email_id est envoyé par le template demande_cours_recu_eleve.html
+def reponse_email_eleve(request): # email_id est envoyé par le template demande_cours_recu_eleve.html
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -618,12 +653,12 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
     if not hasattr(user, 'eleve') and not hasattr(user, 'professeur'):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève, en tant que professeur")
         return redirect('signin')
-
+    
     text_email = request.session.get('text_email',None)
     sujet = request.session.get('sujet',None)
     email_eleve = request.session.get('email_eleve',None)
     email_id = request.session.get('email_id',None)
-    if not email_id: # donc la réponse est déjà effectuée puisque la session est vide
+    if not email_id: # 
         messages.error(request, 'La réponse à cet email est déjà effectuée')
         if hasattr(user, 'eleve'): 
             return redirect('email_recu')
@@ -639,7 +674,6 @@ def reponse_email_eleve(request, email_id): # email_id est envoyé par le templa
     if request.method == 'POST' and 'btn_enr' in request.POST:
         user = request.user
         email = Email_telecharge.objects.filter(id=email_id).first()
-        # messages.success(request, "Teste 03.")
         
         email_eleve = request.POST.get('email_adresse', '').strip()
         if not email_eleve: email_eleve = user.email
@@ -850,31 +884,24 @@ def temoignage_eleve(request):
     return render(request, 'eleves/temoignage_eleve.html', {'list_prof': list_prof})
 
 
-
 def liste_paiement_eleve(request):
     """
-        Vue permettant d'afficher les paiements de l'élève.
-
-    Fonctionnalités :
-    - Filtrer les paiements selon une période donnée (dates de début et de fin).
-    - Appliquer des filtres selon le statut du paiement (en attente, approuvé, annulé, etc.).
-    - Associer chaque paiement à sa demande de paiement et à une éventuellle date d'accord de règlement.
+    Vue permettant d'afficher les paiements de l'élève.
     """
-    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
+    date_format = "%d/%m/%Y"
 
     # Récupérer le user
     user = request.user
     if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
-    user = request.user
+    
     # Vérifier si l'utilisateur a un profil d'élève associé
     if not hasattr(user, 'eleve'):
-        messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
+        messages.error(request, "Vous n'êtes pas connecté en tant qu'élève")
         return redirect('signin')
 
-
-    # Récupérer les demandes de paiement du professeur et les paiements associés
+    # Récupérer les demandes de paiement de l'élève
     demande_paiement = Demande_paiement.objects.filter(eleve=user.eleve)
     if not demande_paiement:
         messages.error(request, "Vous n'avez pas encore reçu de demande de paiement.")
@@ -886,7 +913,7 @@ def liste_paiement_eleve(request):
         model_id__in=demande_paiement.values_list('id', flat=True)
     )
 
-    # Récupération des dates minimales et maximales depuis les paiements associés aux demandes du professeur
+    # Récupération des dates minimales et maximales
     dates = paiement.aggregate(
         min_date=Min('date_creation'), 
         max_date=Max('date_creation')
@@ -896,36 +923,32 @@ def liste_paiement_eleve(request):
     date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
     date_max = dates['max_date'] or timezone.now().date()
 
-    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
-    
+    # Récupération des dates du formulaire
     date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
     date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
 
     try:
-        # Conversion des dates en objets de type date
         date_debut = datetime.strptime(date_debut_str, date_format).date()
         date_fin = datetime.strptime(date_fin_str, date_format).date()
 
-        # Vérification de la cohérence des dates
         if date_debut > date_fin:
             raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
 
     except ValueError as e:
-        # Gestion des erreurs en cas de format de date invalide
         messages.error(request, f"Erreur de date : {e}")
         return render(request, 'accounts/compte_prof.html', {
             'paiements': [], 
             'professeurs': [], 
-            'date_debut': date_debut_str,  # Renvoi des valeurs sous forme de chaîne en cas d'erreur
+            'date_debut': date_debut_str,
             'date_fin': date_fin_str
         })
 
-    # Définition des critères de filtrage des paiements
+    # Filtres de base
     filters = {
-        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1))
     }
 
-    # Correspondance des boutons de filtrage aux statuts de paiement
+    # Filtres de statut
     status_filter = {
         'btn_en_ettente': 'En attente',
         'btn_approuve': 'Approuvé',
@@ -933,7 +956,6 @@ def liste_paiement_eleve(request):
         'btn_annule': 'Annulé',
     }
 
-    # Application du filtre de statut en fonction du bouton cliqué
     status_str = None
     for btn, status in status_filter.items():
         if btn in request.POST:
@@ -941,64 +963,63 @@ def liste_paiement_eleve(request):
             status_str = status
             break
 
-    # Filtrage des paiements contestés (réclamation)
     if 'btn_reclame' in request.POST:
-        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
+        filters['reclamation__isnull'] = False
         status_str = "Réclamé"
 
-    # Filtrage des paiements sans accord de règlement
     if 'btn_sans_accord' in request.POST:
-        filters['accord_reglement_id'] = None  # Paiements contestés par l'élève
+        filters['accord_reglement_id'] = None
         status_str = "Sans accord"
 
-    # Récupération des paiements en fonction des filtres
+    # Application des filtres
     payments = paiement.filter(**filters).order_by('-date_creation')
 
-    # Initialisation des listes pour stocker les résultats
+    # Pagination
+    paginator = Paginator(payments, 10)  # 10 éléments par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Préparation des données pour le template
     paiements = []
+    for payment in page_obj:  # Utilisation de page_obj ici
+        demande = Demande_paiement.objects.filter(id=payment.model_id).first()
+        if not demande:
+            continue
 
-    # Parcours des paiements récupérés pour associer les informations nécessaires
-    for payment in payments:
-        # Récupération de la demande de paiement associée
-        demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
-        if not demande_paiement: continue  # Ignorer les paiements sans demande associée
-
-        # Récupérer le professeur
-        professeur = demande_paiement.user
-        
+        professeur = demande.user
         accord_reglement = None
 
-        # Vérification et récupération de l'accord de règlement associé
         if payment.accord_reglement_id:
             accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
 
-        # Ajout des informations collectées à la liste des paiements
-        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
         paiements.append((professeur, payment, accord_reglement))
 
-    # Extraction de l'ID du paiement choisi dans le formulaire
+    # Gestion du bouton de paiement sélectionné
     paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
-    # Vérification du nombre d'IDs extraits
     if paiement_ids:
-        if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
-            eleve = Eleve.objects.filter(user=request.user).first() # Si le user est un professeur
+        if len(paiement_ids) == 1:
+            eleve = Eleve.objects.filter(user=request.user).first()
             if eleve:
-                paiement = Payment.objects.filter(id=paiement_ids[0]).first() # il faut que le paiement est de l'éléve
-                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, eleve=eleve).exists(): # Si non il y a eu une manipulation des données du template
-                    messages.error(request, f"le paiement sélectionné n'est pas de l'élève, paiement_id= {paiement_ids[0]}")
+                paiement = Payment.objects.filter(id=paiement_ids[0]).first()
+                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, eleve=eleve).exists():
+                    messages.error(request, f"Le paiement sélectionné n'est pas associé à cet élève, paiement_id= {paiement_ids[0]}")
                     return redirect('compte_eleve')
-            request.session['payment_id'] = paiement_ids[0] # passer le paramètre au formulaire
-            return redirect('admin_payment_demande_paiement')
-        elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+            request.session['payment_id'] = paiement_ids[0]
+            payment_selct = Payment.objects.filter(id=paiement_ids[0], model="demande_paiement").first()
+            demande_paiement_id = encrypt_id(payment_selct.model_id)
+            request.session['demande_paiement_id'] = demande_paiement_id
+            # messages.info(request, f"demande_paiement_id = {demande_paiement_id}-- paiement_ids[0] = {paiement_ids[0]}")
+            return redirect('eleve_demande_paiement') # passer au paiement au besoin
+        else:
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_eleve')
 
-    # Préparation du contexte pour l'affichage dans le template
     context = {
         'paiements': paiements,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'status_str': status_str,
+        'page_obj': page_obj,  # Important pour la pagination
     }
     
     return render(request, 'eleves/liste_payment_eleve.html', context)
@@ -1304,6 +1325,8 @@ def register_eleve(request):
         'recaptcha_site_key': settings.RECAPTCHA_PUBLIC_KEY
     })
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.decorators.csrf import csrf_protect
 
 @csrf_protect
 def demande_paiement_eleve(request):
@@ -1315,11 +1338,13 @@ def demande_paiement_eleve(request):
     - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
     - Affiche les détailles des demandes de paiements
     - fait passer vers l'execution du paiement
+    - Pagination des résultats
     """
 
     # Format utilisé pour l'affichage et la conversion des dates
     date_format = "%d/%m/%Y"
-    status_str=""
+    status_str = ""
+    ITEMS_PER_PAGE = 10  # Nombre d'éléments par page
 
     # Récupérer le user
     user = request.user
@@ -1337,9 +1362,9 @@ def demande_paiement_eleve(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = Demande_paiement.objects.filter(
         eleve=eleve,
-        statut_demande__in = ('En attente', 'Contester'),
-        payment_id__isnull = True, # il n'y a pas de paiement
-        accord_reglement_id__isnull = True, # Il n'y a pas encore d'accord de règlement (en plus, pas nécessaire vue la condition précédente)
+        statut_demande__in=('En attente', 'Contester'),
+        payment_id__isnull=True,  # il n'y a pas de paiement
+        accord_reglement_id__isnull=True,  # Il n'y a pas encore d'accord de règlement
     ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
 
     # Définition des valeurs par défaut
@@ -1374,36 +1399,49 @@ def demande_paiement_eleve(request):
 
     # Définition des critères de filtrage des paiements
     filters = {
-        'date_creation__range': (date_debut, date_fin + timedelta(days=1)), # Filtre sur la période sélectionnée
+        'date_creation__range': (date_debut, date_fin + timedelta(days=1)),  # Filtre sur la période sélectionnée
         'eleve': eleve,
     }
 
     # Correspondance des boutons de filtrage aux statuts de paiement
     status_filter = {
         'btn_en_ettente': 'En attente',   # Demande de paiements en attente
-        'btn_en_cours': 'En cours',   # Demande de paiements en cours
-        'btn_realiser': 'Réaliser',   # Demande de paiements en réaliser
-        'btn_annuler': 'Annuler',      # Demande de paiements annuler
+        'btn_en_cours': 'En cours',       # Demande de paiements en cours
+        'btn_realiser': 'Réaliser',       # Demande de paiements réalisés
+        'btn_annuler': 'Annuler',         # Demande de paiements annulés
     }
 
     # Application du filtre de statut en fonction du bouton cliqué
     for btn, status in status_filter.items():
         if btn in request.POST:
             filters['statut_demande'] = status
-            status_str=status
+            status_str = status
             break
 
     # Récupération des paiements en fonction des filtres
     demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
+    
     if 'btn_contester' in request.POST:
-        demande_paiements_data = Demande_paiement.objects.filter(**filters, reclamation__isnull = False).order_by('-date_creation')
-    # tester demande_paiements_data si elle est null
+        demande_paiements_data = Demande_paiement.objects.filter(**filters, reclamation__isnull=False).order_by('-date_creation')
+    
+    # Pagination
+    paginator = Paginator(demande_paiements_data, ITEMS_PER_PAGE)
+    page = request.GET.get('page')
+    
+    try:
+        demande_paiements_paginated = paginator.page(page)
+    except PageNotAnInteger:
+        # Si page n'est pas un entier, afficher la première page
+        demande_paiements_paginated = paginator.page(1)
+    except EmptyPage:
+        # Si page est hors limite, afficher la dernière page
+        demande_paiements_paginated = paginator.page(paginator.num_pages)
 
     # Initialisation des listes pour stocker les résultats
     demande_paiements, professeurs = [], set()
 
     # Parcours des paiements récupérés pour associer les informations nécessaires
-    for demande_paiement in demande_paiements_data:
+    for demande_paiement in demande_paiements_paginated:
         professeur = demande_paiement.user  # Récupération du professeur lié au paiement
 
         # Ajout des informations collectées à la liste des paiements
@@ -1419,7 +1457,7 @@ def demande_paiement_eleve(request):
         if len(demande_paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
             request.session['demande_paiement_id'] = demande_paiement_ids[0]
             return redirect('eleve_demande_paiement')
-        elif len(demande_paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
+        elif len(demande_paiement_ids) != 1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             # return redirect('compte_administrateur')
 
@@ -1427,10 +1465,12 @@ def demande_paiement_eleve(request):
     context = {
         'today': timezone.now().date(),  # Date actuelle pour affichage
         'demande_paiements': demande_paiements,
-        'professeurs': list(professeurs),
+        'professeurs': sorted(list(professeurs), key=lambda x: x.last_name),  # Tri par nom de famille
         'date_debut': date_debut,
         'date_fin': date_fin,
         'status_str': status_str,
+        'paginator': paginator,
+        'page_obj': demande_paiements_paginated,
     }
 
     # Affichage de la page avec les paiements en attente de règlement

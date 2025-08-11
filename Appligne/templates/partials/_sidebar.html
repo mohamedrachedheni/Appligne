@@ -1,129 +1,265 @@
 {% load static %}
-<!-- début sidebar -->
-<nav id="sidebar">
+<!-- Sidebar Professionnelle pour Professeurs -->
+<nav id="sidebar" class="bg-secondary text-white">
     <div class="p-4 pt-5">
-        <ul class="list-unstyled components mb-5">
-            <li >
-                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Ajouter à mon profil </strong></a>
-                <ul class="collapse list-unstyled" id="homeSubmenu">
-                    <li>
-                        <a class="nav-link" href="{% url 'profil_prof' id_user=user.id %}"><strong>Voire mon profil</strong></a>
+        <div class="sidebar-header mb-4">
+            <h4 class="text-center">Menu Professeur</h4>
+            <hr class="bg-light">
+        </div>
+        
+        <ul class="list-unstyled components">
+            <!-- Section Profil -->
+            <li class="mb-2">
+                <a href="#profileMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-user-tie mr-2"></i><strong>Mon Profil</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="profileMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'profil_prof' id_user=user.id %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-eye mr-2"></i>Voir mon profil
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'nouveau_diplome' %}" class="dropdown-item"  >Diplome</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_experience' %}" class="dropdown-item"  >Expérience</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Format cours</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_matiere' %}" class="dropdown-item"  >Matière</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_zone' %}" class="dropdown-item"  >Zone d'activité</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_description' %}" class="dropdown-item"  >Description détaillée</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_fichier' %}" class="dropdown-item"  >Envoyer des fichiers</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouveau_prix_heure' %}" class="dropdown-item"  >Prix par heure</a>
-                    </li>
-                    
-                </ul>
-            </li>
-            <li>
-                <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Modifier mon profil</strong></a>
-                <ul class="collapse list-unstyled" id="pageSubmenu">
-                    <li>
-                        <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre identification</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_compte_prof' %}" class="dropdown-item"  >Modifier vos coordonnées</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_diplome' %}" class="dropdown-item"  >Modifier vos diplomes</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_experience' %}" class="dropdown-item"  >Modifier vos expériences</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_format_cours' %}" class="dropdown-item"  >Modifier formats cours</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_description' %}" class="dropdown-item"  >Modifier vos descriptions</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_matiere' %}" class="dropdown-item"  >Modifier des matières</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'modifier_zone' %}" class="dropdown-item"  >Supprimer des zones</a>
+                    <li class="mb-1">
+                        <a href="{% url 'compte_prof' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-user-cog mr-2"></i>Mon compte
+                        </a>
                     </li>
                 </ul>
             </li>
-            <li>
-                <a href="#pageSubmenu_eleve" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Gérer mes élèves</strong></a>
-                <ul class="collapse list-unstyled" id="pageSubmenu_eleve">
-                    <li>
-                        <a href="{% url 'liste_seance_cours' %}" class="dropdown-item"  >Liste de mes cours en attentes</a>
+            
+            <!-- Section Compléter Profil -->
+            <li class="mb-2">
+                <a href="#completeProfileMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-plus-circle mr-2"></i><strong>Compléter mon Profil</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="completeProfileMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_diplome' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-graduation-cap mr-2"></i>Ajouter un diplôme
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'demande_cours_recu' %}" class="dropdown-item"  >Nouvelles demandes de cours</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_experience' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-briefcase mr-2"></i>Ajouter une expérience
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'email_recu_prof' %}" class="dropdown-item"  >Nouveaux émails reçus</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_matiere' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-book mr-2"></i>Ajouter une matière
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'liste_declaration_cours' %}" class="dropdown-item"  >Liste de mes cours déclarés</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_zone' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Ajouter une zone
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'liste_mes_eleve' %}" class="dropdown-item"  >Élèves/ Cours/ Règlements</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_description' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-file-alt mr-2"></i>Ajouter une description
+                        </a>
                     </li>
-                    <!-- <li>
-                        <a href=" 'ajouter_cours' " class="dropdown-item"  >Ajouter un cours</a>
-                    </li> -->
-                    <li>
-                        <a href="{% url 'reglement_nouveau_cours' 'true' %}" class="dropdown-item"  >Ajouter un cours</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_fichier' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-file-upload mr-2"></i>Envoyer des fichiers
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'temoignage_mes_eleves' %}" class="dropdown-item"  >Liste des témoignages</a>
+                    <li class="mb-1">
+                        <a href="{% url 'nouveau_prix_heure' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-euro-sign mr-2"></i>Définir tarif horaire
+                        </a>
                     </li>
-                </ul>
-            </li>
-            <li>
-                <a href="#pageSubmenu_payment" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Suivi de  mes règlements</strong></a>
-                <ul class="collapse list-unstyled" id="pageSubmenu_payment">
-                    <li>
-                        <a href="{% url 'reglement_nouveau_cours' 'false' %}" class="dropdown-item"  >Nouvelle demande de règlement</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'liste_declaration_cours' %}" class="dropdown-item"  >Statut demandes de règlement</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'liste_payment' %}" class="dropdown-item"  >Liste des paiements de mes élèves</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'liste_reglement' %}" class="dropdown-item"  >Liste de mes règlements</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'nouvelle_reclamation' %}" class="dropdown-item"  >Créer une réclamation</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'reclamations' %}" class="dropdown-item"  >Liste des réclamations</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'admin_faq' %}" class="dropdown-item"  >FAQs GPT</a>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_format_cours' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>Formats de cours
+                        </a>
                     </li>
                 </ul>
             </li>
-            <li>
-                <a class="nav-link" href="{% url 'compte_prof' %}"><strong>Voire mon compte</strong></a>
+            
+            <!-- Section Modifier Profil -->
+            <li class="mb-2">
+                <a href="#editProfileMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-edit mr-2"></i><strong>Modifier mon Profil</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="editProfileMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_mot_pass' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-key mr-2"></i>Identifiants de connexion
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_compte_prof' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-address-card mr-2"></i>Coordonnées
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_diplome' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-graduation-cap mr-2"></i>Diplômes
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_experience' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-briefcase mr-2"></i>Expériences
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_matiere' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-book mr-2"></i>Matières enseignées
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_zone' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Zones d'activité
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_description' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-file-alt mr-2"></i>Descriptions
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Section Gestion Élèves -->
+            <li class="mb-2">
+                <a href="#studentsMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-users mr-2"></i><strong>Gestion des Élèves</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="studentsMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'demande_cours_recu' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-bell mr-2"></i>Nouvelles demandes
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_seance_cours' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-clock mr-2"></i>Cours en attente
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_mes_eleve' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-list mr-2"></i>Mes élèves
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'reglement_nouveau_cours' 'true' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-plus mr-2"></i>Ajouter un cours
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_declaration_cours' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-check-circle mr-2"></i>Cours déclarés
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'email_recu_prof' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-envelope mr-2"></i>Messages reçus
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'temoignage_mes_eleves' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-comment mr-2"></i>Témoignages
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Section Paiements -->
+            <li class="mb-2">
+                <a href="#paymentsMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-euro-sign mr-2"></i><strong>Gestion Financière</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="paymentsMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'reglement_nouveau_cours' 'false' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-file-invoice mr-2"></i>Demander un règlement
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_declaration_cours' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-search-dollar mr-2"></i>Statut des demandes
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_reglement' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-money-check-alt mr-2"></i>Mes règlements
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_payment' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-list-alt mr-2"></i>Paiements élèves
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Section Support -->
+            <li class="mb-2">
+                <a href="#supportMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-question-circle mr-2"></i><strong>Support</strong></span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled pl-3 mt-2" id="supportMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'nouvelle_reclamation' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-plus mr-2"></i>Nouvelle réclamation
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'reclamations' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-list mr-2"></i>Mes réclamations
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'admin_faq' %}" class="d-block py-2 text-white-50 hover-white">
+                            <i class="fas fa-info-circle mr-2"></i>FAQ & Assistance
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>
 </nav>
-<!-- fin sidebar -->
+
+<style>
+    #sidebar {
+        min-width: 280px;
+        max-width: 280px;
+        transition: all 0.3s;
+        
+    }
+    
+    #sidebar .hover-white:hover {
+        color: white !important;
+        text-decoration: none;
+        padding-left: 5px;
+    }
+    
+    #sidebar .dropdown-toggle::after {
+        display: none;
+    }
+    
+    #sidebar a {
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    #sidebar .active {
+        background-color: rgba(255,255,255,0.1);
+        border-left: 3px solid #fff;
+    }
+    
+    #sidebar .sidebar-header h4 {
+        color: #fff;
+        font-weight: 600;
+    }
+    
+    #sidebar hr {
+        margin: 0.5rem 0;
+    }
+</style>

@@ -1,3 +1,5 @@
+# Appligne/settings.py
+
 """
 Django settings for Appligne project.
 

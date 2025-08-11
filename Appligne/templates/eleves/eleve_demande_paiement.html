@@ -12,7 +12,7 @@
                 <div class="container  ">
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Détails demande de paiement émise par le professeur</h6>
+                        <h3 class="section-title bg-white text-center text-primary px-3">Détails demande de paiement émise par le professeur</h3>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
@@ -59,18 +59,18 @@
                                                     <label for="matiere_id_{{ id }}" class="form-label">Matière</label>
                                                     <input type="text" class="form-control form-control-intitule" id="matiere_id_{{ id }}"  value="{{cours.matiere}}" readonly >
                                                 </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="niveau_id_{{ id }}" class="form-label">Niveau</label>
                                                     <input type="text" class="form-control form-control-intitule" id="niveau_id_{{ id }}"  value="{{cours.niveau}}" readonly >
                                                 </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
+                                                <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="prix_heure_id" class="form-label">Prix/h accordé</label>
                                                     <input type="text" class="form-control form-control-intitule" id="prix_heure_id" value="{{cours.prix_heure|default:'0.00'|floatformat:2}} €" readonly >
                                                 </div>
-                                                    <div class="col-md-2 col-sm-12 position-relative">
-                                                        <label for="prix_heure_publie_id" class="form-label">Prix/h publié</label>
-                                                        <input type="text" class="form-control form-control-intitule" id="prix_heure_publie_id" value="{{prix_public|default:'0.00'|floatformat:2}} €" readonly >
-                                                    </div>
+                                                <div class="col-md-2 col-sm-12 position-relative d-none">
+                                                    <label for="prix_heure_publie_id" class="form-label">Prix/h publié</label>
+                                                    <input type="text" class="form-control form-control-intitule" id="prix_heure_publie_id" value="{{prix_public|default:'0.00'|floatformat:2}} €" readonly >
+                                                </div>
                                                 <hr>
                                                 {% for cours_paiement, horaire in horaires %}
                                                     {% if cours == cours_paiement %}
@@ -235,18 +235,5 @@ document.getElementById("btn_passer_au_paiement").addEventListener("click", func
         });
 });
 </script>
-<!-- <script>
-    document.getElementById("btn_passer_au_paiement").addEventListener("click", function() {
-    const url = this.dataset.url;
-    
-    // Option 1: Ouvrir dans un nouvel onglet
-    window.open(url, '_blank');
-    
-    // Ou Option 2: Rediriger la page actuelle
-    // window.location.href = url;
-});
-</script> -->
-
-
 
 {% endblock %}

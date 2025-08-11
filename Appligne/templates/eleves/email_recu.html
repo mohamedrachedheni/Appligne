@@ -1,125 +1,246 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Compte professeur{% endblock %}
+{% block title %} | Messagerie Élève{% endblock %}
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
+<div class="container-fluid">
+    <div class="row g-0">
+        <!-- Sidebar Column -->
+        <div class="col-lg-2 d-none d-lg-block p-0">
+            {% include 'partials/_sidebar_eleve.html' %}
+        </div>
+
+        <!-- Main Content Column -->
+        <div class="col-lg-10 col-md-12 ms-auto px-0">  <!-- ms-auto pour pousser le contenu à droite -->
+            <div class="container-fluid py-4 px-3">  <!-- Ajout de px-3 pour le padding horizontal -->
+                <!-- Alerts Section -->
+                <div class="row">
+                    <div class="col-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                </div>
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu' %}">
+                            {% csrf_token %}
+                <!-- Email Filter Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Boîte de réception</h5>
+                    </div>
+                    <div class="card-body">
+                        
+                            <div class="row g-3">
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" name="btn_nouveau">
+                                        <i class="fas fa-bell me-2"></i>Nouveaux
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" name="btn_attente">
+                                        <i class="fas fa-clock me-2"></i>En attente
+                                    </button>
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" name="btn_ignore">
+                                        <i class="fas fa-times-circle me-2"></i>Ignorés
+                                    </button>
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" name="btn_repondu">
+                                        <i class="fas fa-check-circle me-2"></i>Répondus
+                                    </button>
+                                </div>
+                                <div class="col-md-2 col-12">
+                                    <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" name="btn_tous">
+                                        <i class="fas fa-inbox me-2"></i>Tous
+                                    </button>
+                                </div>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Email List Section -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="15%">Date</th>
+                                        <th width="50%">Sujet</th>
+                                        <th width="10%">Statut</th>
+                                        <th width="15%">Professeur</th>
+                                        <th width="10%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for email, email_id in emails %}
+                                    <tr class="{% if email.suivi == 'Nouveau' %}table-info{% elif email.suivi == 'Ignoré' %}table-secondary{% endif %}">
+                                        <td>{{ email.date_telechargement|date:"d/m/Y" }}</td>
+                                        <td>{{ email.sujet|truncatechars:100 }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if email.suivi == 'Nouveau' %}bg-info
+                                                {% elif email.suivi == 'Réception confirmée' %}bg-warning text-dark
+                                                {% elif email.suivi == 'Mis à côté' %}bg-secondary
+                                                {% elif email.suivi == 'Répondu' %}bg-primary
+                                                {% else %}bg-success{% endif %}">
+                                                {% if not email.suivi %}Nouveau {% else %} {{ email.suivi }} {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>{{ email.user.first_name }} {{ email.user.last_name }}</td>
+                                        <td>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" name="btn_email_{{email_id}}">
+                                                <i class="fas fa-eye me-1"></i> Détails
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                            <p class="text-muted">Aucun email trouvé</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <!-- header end -->
                 </div>
+                </form>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                        {% endif %}
+
+                        {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-5 ">
-                <div class="container ">
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                    <!-- <div class="container bg-light  "> -->
-                        <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu' %}">
-                            {% csrf_token %}
-                            <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
-                                style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                                <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
-                            </div>
-                            <div class="container-xxl " >
-                                <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-3 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
-                                            Nouveaux
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-3 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_attente">
-                                            En attente
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
-                                            Ignorés
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
-                                            Répondus
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_tous">
-                                            Tous
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="container-xxl py-5 bg-light " >
-                                <!-- <div class="container"> -->
-                                    <!-- <div class="container bg-light "> -->
-                                        <!-- <div class="container bg-light "> -->
-                                        {% for email in emails %}
-                                            <div class="row  ajout-dipl "  >
-                                                <div class="col-md-2 col-sm-12 position-relative ">
-                                                    <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" readonly>
-                                                </div>
-                                                <div class="col-md-4 col-sm-12 position-relative">
-                                                    <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" readonly>
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
-                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Réponse</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi}}" readonly>
-                                                </div>
-                                                <div class="col-md-4 col-sm-12 position-relative">
-                                                    <div class="row  ajout-dipl ">
-                                                        <label for="first_name_id_{{ forloop.counter }}" class="form-label">Professeur</label>
-                                                        <div class="col-md-8 col-sm-12 position-relative mb-2">
-                                                
-                                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
-                                                                value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
-                                                        </div>
-                                                        <div class="col-md-4 col-sm-12 position-relative mb-2">
-                                                            <a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}"
-                                                                href="{% url 'email_detaille' email_id=email.id %}"><span
-                                                                    style="color: white;">Détaille <!--{{email.id }}--></span></a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                            </div>
-                                        {% endfor %}
-                                    <!-- </div> -->
-                                <!-- </div> -->
-                            </div>                        
-                        </form>
-                    <!-- </div> -->
-                </div>
-            </div> 
-        </div>
-    </div>
 </div>
-    <!-- mon compte fin -->
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-lg-square back-to-top position-fixed">
+    <i class="fas fa-arrow-up"></i>
+</a>
+
+<style>
+    /* Styles globaux */
+    .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99;
+        opacity: 0.7;
+        transition: all 0.3s;
+    }
+    
+    .back-to-top:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    
+
+    /* Ajustement du contenu principal */
+    @media (min-width: 992px) {
+        .col-lg-10 {
+            margin-left: 280px; /* Correspond à la largeur de la sidebar */
+            width: calc(100% - 280px);
+        }
+    }
+</style>
+
+<style>
+    .email-filter-btn.active {
+        background-color: #0db9fdfc !important;
+        color: white !important;
+        border-color: #0db9fdfc !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.email-filter-btn');
+        
+        // Récupérer le dernier bouton cliqué depuis le sessionStorage
+        const lastClicked = sessionStorage.getItem('lastClickedEmailFilter');
+        if (lastClicked) {
+            document.querySelector(`button[name="${lastClicked}"]`).classList.add('active');
+        }
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Retirer la classe active de tous les boutons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.classList.add('btn-outline-primary');
+                    btn.classList.remove('btn-primary');
+                });
+                
+                // Ajouter la classe active au bouton cliqué
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-primary');
+                
+                // Stocker le dernier bouton cliqué
+                sessionStorage.setItem('lastClickedEmailFilter', this.name);
+            });
+        });
+    });
+</script>
 
 {% endblock %}

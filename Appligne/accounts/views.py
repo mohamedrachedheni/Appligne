@@ -37,6 +37,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
+from pages.utils import decrypt_id, encrypt_id
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -1688,9 +1689,32 @@ def email_recu_prof(request):
             # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
             emails = get_emails({'suivi': 'Mis à côté'})
 
+    # Création d'une liste (obj, id_chiffré) via compréhension de liste
+    emails_list = [(obj, encrypt_id(obj.id)) for obj in emails]
+    
+    # Gestion des soumissions POST pour le bouton "détail"
+    # Trouver la clé du bouton cliqué commençant par "btn_email_"
+    email_enr_key = next((key for key in request.POST if key.startswith('btn_email_')), None)
+    if request.method == 'POST' and email_enr_key:
+        
+
+        if email_enr_key:
+            try:
+                # Déchiffrement de l'ID
+                email_id = decrypt_id(email_enr_key.removeprefix('btn_email_'))
+                request.session['email_id'] = email_id
+                return redirect('email_detaille')
+
+            except (ValueError, TypeError):
+                messages.error(request, "L'ID fourni est invalide.")
+            except Demande_paiement.DoesNotExist:
+                messages.error(request, f"L'email avec l'ID {email_id} n'a pas été trouvée.")
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+
     # Contexte à passer au template
     context = {
-        'emails': emails
+        'emails': emails_list
     }
     
     # Rendu de la page avec les emails filtrés

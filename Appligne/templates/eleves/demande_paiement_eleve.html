@@ -1,166 +1,238 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Demande Paiement Elève{% endblock %}
+{% block title %} | Demande Paiement Élève{% endblock %}
 
 {% block content %}
-
-
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">État des demandes de paiements</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Sidebar -->
+        {% include 'partials/_sidebar_eleve.html' %}
+    </div>
+    
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Alert Messages -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
-                {% csrf_token %}
+        </div>
+        
+        <!-- Main Form -->
+        <form method="POST" enctype="multipart/form-data" id="professeurForm">
+            {% csrf_token %}
+            
+            <!-- Section Title -->
+            <div class="text-center wow fadeInUp py-5" data-wow-delay="0.1s">
+                <h3 class="section-title bg-white text-center text-primary px-3">État des demandes de paiements</h3>
+            </div>
 
-                <!-- boutons début -->
-                <div class="container-xxl bg-light" >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_1" class="form-label">Début période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
-                        </div>
-                        <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h3>Demandes de paiements émises par les professeurs</h3>
-                        </div>
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_2" class="form-label">Fin période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
-                        </div>                           
+            <!-- Date Filters -->
+            <div class="container-xxl">
+                <div class="row justify-content-between g-2 p-3">
+                    <div class="col-md-3 col-sm-12">
+                        <label for="date_id_1" class="form-label">Début période</label>
+                        <input type="text" class="form-control form-control-date" required 
+                               name="date_debut" placeholder="Sélectionnez une date" 
+                               value="{{ date_debut|date:'d/m/Y' }}">
                     </div>
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
-                                En attente
-                            </button>
+                    <div class="col-md-6 col-sm-12 text-center">
+                        <h5 class="mb-0">Demandes de paiements émises par les professeurs</h5>
+                    </div>
+                    <div class="col-md-3 col-sm-12">
+                        <label for="date_id_2" class="form-label">Fin période</label>
+                        <input type="text" class="form-control form-control-date" required 
+                               name="date_fin" placeholder="Sélectionnez une date" 
+                               value="{{ date_fin|date:'d/m/Y' }}">
+                    </div>                           
+                </div>
+                
+                <!-- Status Filter Buttons -->
+                <div class="row justify-content-between g-2 p-3">
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_en_ettente">
+                            <i class="fas fa-clock me-1"></i> En attente
+                        </button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_en_cours">
+                            <i class="fas fa-spinner me-1"></i> En cours
+                        </button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_realiser">
+                            <i class="fas fa-check-circle me-1"></i> Réalisé
+                        </button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_contester">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Contesté
+                        </button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_annuler">
+                            <i class="fas fa-times-circle me-1"></i> Annulé
+                        </button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 mb-2">
+                        <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn" 
+                                name="btn_tous">
+                            <i class="fas fa-list me-1"></i> Tous
+                        </button>
+                    </div>
+                    
+                    <!-- Status Description -->
+                    {% if status_str %}
+                    <div class="col-12">
+                        <div class="alert alert-info mt-3">
+                            {% if status_str == 'En attente' %}
+                                <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Les demandes de paiement en attente désignent celles émises par les professeurs, en attente d'une réponse de leurs élèves.</p>
+                            {% elif status_str == 'En cours' %}
+                                <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Les demandes de paiement en cours désignent celles émises par les professeurs pour lesquelles les élèves concernés ont initié une transaction de paiement encore inachevée.</p>
+                            {% elif status_str == 'Réaliser' %}
+                                <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Les demandes de paiement réalisées désignent celles émises par les professeurs pour lesquelles les élèves concernés ont finalisé le paiement.</p>
+                            {% elif status_str == 'Contester' %}
+                                <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Les demandes de paiement contestées sont celles envoyées par les professeurs, mais qui ont fait l'objet d'une réclamation de la part des élèves concernés.</p>
+                            {% elif status_str == 'Annuler' %}
+                                <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Les demandes de paiement annulées sont celles envoyées par les professeurs, puis annulées par ces derniers par la suite.</p>
+                            {% endif %}
                         </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
-                                En cours
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_realiser">
-                                Réalisé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_contester">
-                                Contesté
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_annuler">
-                                Annulé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_tous">
-                                Tous
-                            </button>
-                        </div>
-                        {% if status_str == 'En attente' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les demandes de paiement en attente désignent celles émises par les professeurs, en attente d'une réponse de leurs élèves.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'En cours' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les demandes de paiement en cours désignent celles émises par les professeurs pour lesquelles les élèves concernés ont initié une transaction de paiement encore inachevée.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Réaliser' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les demandes de paiement réalisées désignent celles émises par les professeurs pour lesquelles les élèves concernés ont finalisé le paiement.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Contester' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les demandes de paiement contestées sont celles envoyées par les professeurs, mais qui ont fait l’objet d’une réclamation de la part des élèves concernés.              </h6>
-                        </div>
-                        {% elif status_str == 'Annuler' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les demandes de paiement annulées sont celles envoyées par les professeurs, puis annulées par ces derniers par la suite.
-                            </h6>
-                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Requests List -->
+            {% if request.user.is_authenticated and request.user.is_active %}
+                <div class="container-xxl py-3">
+                    <div class="container">
+                        {% if not page_obj %}
+                            <div class="col-md-12 text-center py-5">
+                                <div class="alert alert-warning">
+                                    <h4><i class="far fa-folder-open me-2"></i>Aucune demande de paiement trouvée pour cette période</h4>
+                                </div>
+                            </div>
+                        {% else %}
+                            {% for prof in professeurs %}
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+                                            Professeur: {{ prof.first_name }} {{ prof.last_name }}
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Statut</th>
+                                                        <th>Date création</th>
+                                                        <th>Montant</th>
+                                                        <th class="text-center">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for demande_paiement, professeur, id in demande_paiements %}
+                                                        {% if professeur == prof %}
+                                                        <tr>
+                                                            <td >
+                                                                <span class="badge 
+                                                                    {% if demande_paiement.statut_demande == 'En attente' %}bg-warning
+                                                                    {% elif demande_paiement.statut_demande == 'En cours' %}bg-info
+                                                                    {% elif demande_paiement.statut_demande == 'Réaliser' %}bg-success
+                                                                    {% elif demande_paiement.statut_demande == 'Contester' %}bg-danger
+                                                                    {% elif demande_paiement.statut_demande == 'Annuler' %}bg-secondary
+                                                                    {% endif %} 
+                                                                    py-2 px-3 d-inline-block w-100"
+                                                                    style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                                    {{ demande_paiement.statut_demande }}
+                                                                </span>
+                                                            </td>
+                                                            <td>{{ demande_paiement.date_creation|date:'d/m/Y' }}</td>
+                                                            <td>{{ demande_paiement.montant|default:0|floatformat:2 }} €</td>
+                                                            <td class="text-end">
+                                                                <button type="submit" 
+                                                                        class="btn {% if not demande_paiement.reclamation %}btn-primary btn-sm{% else %}btn-danger btn-sm{% endif %} w-100" 
+                                                                        name="btn_demande_paiement_id{{id}}">
+                                                                    {% if not demande_paiement.reclamation %}
+                                                                        <i class="fas fa-eye me-1"></i>Détails
+                                                                    {% else %}
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i>Contesté
+                                                                    {% endif %}
+                                                                    {% if demande_paiement.payment_id %}
+                                                                        <span class="badge bg-success ms-1">
+                                                                            <i class="fas fa-credit-card"></i>
+                                                                        </span>
+                                                                    {% endif %}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            <!-- Pagination -->
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                                
+                                <div class="text-center text-muted mt-2">
+                                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} • 
+                                    {{ page_obj.paginator.count }} demandes au total
+                                </div>
+                            </nav>
                         {% endif %}
                     </div>
                 </div>
-                <!-- boutons fin -->
-
-                {% if  request.user.is_authenticated  and request.user.is_active %}
-                    <!-- Liste élèves début -->
-                    <div class="container-xxl py-5">
-                        <div class="container">
-                            {% for prof in professeurs %}
-                                <div class="container bg-light mb-3">
-                                    {% if not demande_paiements %}
-                                        <div class="col-md-12 text-center">
-                                            <h4>Il n'y a pas de paiement pour cette période</h4>
-                                        </div>
-                                    {% endif %}
-                                    <div class="row  py-3" style="margin-bottom: 30px;">
-                                        <div class="col-12  position-relative">
-                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
-                                        </div>
-                                    </div>
-                                    {% for demande_paiement, professeur, id in demande_paiements %}
-                                        {% if professeur == prof %}
-                                            <div class="row  " style="margin-bottom: 10px;">
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut demande paiement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{demande_paiement.statut_demande}} " readonly >
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 position-relative ">
-                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date création</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{demande_paiement.date_creation|date:'d/m/Y'}}" readonly>
-                                                </div>
-                                                <div class="col-md-7 col-sm-12 position-relative">
-                                                    <div class="row  ">
-                                                        <label for="reponse_id_{{ forloop.counter }}" class="form-label">Montant</label>
-                                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                                            
-                                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{demande_paiement.montant|default:''|floatformat:2}} €" readonly>
-                                                        </div>
-                                                        <div class="col-md-10 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn {% if not demande_paiement.reclamation %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_demande_paiement_id{{id}}" >
-                                                                {% if not demande_paiement.reclamation  %}Détaille{% else %}Contesté{% endif %} {% if demande_paiement.payment_id %} --  Paiement entamé  {% endif %}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <!-- Liste élève fin -->
-                {% endif %}
-            </form>
-        </div>
+            {% endif %}
+        </form>
     </div>
+</div>
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
@@ -170,11 +242,60 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
 <script>
-    
+    $(document).ready(function() {
+        // Initialize datepickers
+        $(".form-control-date").datepicker({
+            dateFormat: 'dd/mm/yy',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-5:+5"
+        });
+        
+        // Highlight active filter button
+        $('button[name^="btn_"]').click(function() {
+            $('button[name^="btn_"]').removeClass('active');
+            $(this).addClass('active');
+        });
+    });
 </script>
-    
-    
-    
+<style>
+    .email-filter-btn.active {
+        background-color: #0db9fdfc !important;
+        color: white !important;
+        border-color: #0db9fdfc !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.email-filter-btn');
+        
+        // Récupérer le dernier bouton cliqué depuis le sessionStorage
+        const lastClicked = sessionStorage.getItem('lastClickedEmailFilter');
+        if (lastClicked) {
+            document.querySelector(`button[name="${lastClicked}"]`).classList.add('active');
+        }
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Retirer la classe active de tous les boutons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.classList.add('btn-outline-primary');
+                    btn.classList.remove('btn-primary');
+                });
+                
+                // Ajouter la classe active au bouton cliqué
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-primary');
+                
+                // Stocker le dernier bouton cliqué
+                sessionStorage.setItem('lastClickedEmailFilter', this.name);
+            });
+        });
+    });
+</script>
 {% endblock %}

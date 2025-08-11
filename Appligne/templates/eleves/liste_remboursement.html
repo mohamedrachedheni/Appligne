@@ -1,156 +1,268 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Liste remboursements Elève{% endblock %}
+{% block title %} | Suivi des Remboursements Élève{% endblock %}
+
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/remboursements.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        .status-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        .status-pending {
+            border-left-color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.05);
+        }
+        .status-in-progress {
+            border-left-color: #17a2b8;
+            background-color: rgba(23, 162, 184, 0.05);
+        }
+        .status-completed {
+            border-left-color: #28a745;
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        .status-invalid {
+            border-left-color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        .status-cancelled {
+            border-left-color: #6c757d;
+            background-color: rgba(108, 117, 125, 0.05);
+        }
+        .btn-filter {
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .date-picker-container {
+            position: relative;
+        }
+        .date-picker-container i {
+            position: absolute;
+            right: 10px;
+            top: 38px;
+            color: #6c757d;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Suivi des remboursements de l'élève par période et échéance</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                </div>
-            </div>
-            <form method="POST" enctype="multipart/form-data" >
+<div class="row justify-content-center">
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Sidebar -->
+        {% include 'partials/_sidebar_eleve.html' %}
+    </div>
+        
+    <!-- Main Content -->
+    <div class="col-lg-10 col-md-9 main-content-column py-4">
+        <div class="container-fluid">
+            <!-- Header -->
+            <header class="text-center mb-5 animate__animated animate__fadeIn">
+                <h2 class="text-primary fw-bold">Suivi des remboursements</h2>
+                <p class="lead text-muted">Consultez l'état de vos remboursements par date d'échéance</p>
+                {% include 'partials/_alerts.html' %}
+            </header>
+
+            <!-- Filter Form -->
+            <form method="POST" enctype="multipart/form-data" class="mb-5">
                 {% csrf_token %}
-                <!-- boutons début -->
-                <div class="container-xxl bg-light" >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_1" class="form-label">Début période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
-                        </div>
-                        <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h1>Remboursements Elève</h1>
-                        </div>
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_2" class="form-label">Fin période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
-                        </div>                           
-                    </div>
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
-                                En attente
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
-                                En cours
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_realiser">
-                                Réalisé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
-                                Annulé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
-                                Invalide
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12  justify-content-center">
-                            <div class="col-md-10 col-sm-12 position-relative ">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_tous">Tous</button>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <!-- Date Filters -->
+                            <div class="col-md-3 date-picker-container">
+                                <label for="date_debut" class="form-label fw-semibold">Début période</label>
+                                <input type="text" class="form-control datepicker" id="date_debut" 
+                                        name="date_debut" value="{{ date_debut|date:'d/m/Y' }}" required>
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            
+                            <div class="col-md-6 text-center">
+                                <h4 class="text-primary mb-0">Historique des Remboursements</h4>
+                            </div>
+                            
+                            <div class="col-md-3 date-picker-container">
+                                <label for="date_fin" class="form-label fw-semibold">Fin période</label>
+                                <input type="text" class="form-control datepicker" id="date_fin" 
+                                        name="date_fin" value="{{ date_fin|date:'d/m/Y' }}" required>
+                                <i class="fas fa-calendar-alt"></i>
                             </div>
                         </div>
-                        {% if statut == 'En attente' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de remboursement en attente correspondent à des paiements confirmés, pour lesquels le transfert du remboursement vers l’élève n’a pas encore été initié par l’administrateur.
-                            </h6>
+                    </div>
+                </div>
+
+                <!-- Status Filters -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-warning w-100 py-2" name="btn_en_ettente">
+                                    <i class="fas fa-clock me-2"></i>En attente
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-info w-100 py-2" name="btn_en_cours">
+                                    <i class="fas fa-spinner me-2"></i>En cours
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-success w-100 py-2" name="btn_realiser">
+                                    <i class="fas fa-check-circle me-2"></i>Réalisé
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-secondary w-100 py-2" name="btn_annule">
+                                    <i class="fas fa-times-circle me-2"></i>Annulé
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-danger w-100 py-2" name="btn_invalide">
+                                    <i class="fas fa-exclamation-circle me-2"></i>Invalide
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-filter btn-primary w-100 py-2" name="btn_tous">
+                                    <i class="fas fa-list-ul me-2"></i>Tous
+                                </button>
+                            </div>
                         </div>
-                        {% elif statut == 'En cours' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de remboursement en cours concernent des paiements confirmés, dont le transfert vers l’élève a été initié par l’administrateur et est en attente de validation par la banque.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Réalisé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de remboursement réalisés correspondent à des paiements confirmés, pour lesquels le virement a été validé et approuvé par la banque, attestant que le remboursement a bien été effectué auprès de l’élève.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Invalide' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de remboursement invalides concernent des paiements d’élèves validés, dont le virement du remboursement a été refusé par la banque en raison d’un problème technique ou d’une erreur de transfert. Une explication est alors transmise à l’élève.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Annulé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de remboursement annulés concernent des paiements d’élèves initialement validés et enregistrés par l’administrateur. Par la suite, l’administrateur décide d’annuler l’accord de remboursement sans procéder au virement bancaire. Une explication est alors transmise à l’élève.
-                            </h6>
+                        
+                        <!-- Status Explanation -->
+                        {% if statut %}
+                        <div class="alert alert-{% if statut == 'En attente' %}warning{% elif statut == 'En cours' %}info{% elif statut == 'Réalisé' %}success{% elif statut == 'Invalide' %}danger{% else %}secondary{% endif %} mt-3">
+                            <h5 class="alert-heading">{{ statut }}</h5>
+                            <p class="mb-0">
+                                {% if statut == 'En attente' %}
+                                Les accords de remboursement en attente correspondent à des paiements confirmés, pour lesquels le transfert du remboursement vers l'élève n'a pas encore été initié par l'administrateur.
+                                {% elif statut == 'En cours' %}
+                                Les accords de remboursement en cours concernent des paiements confirmés, dont le transfert vers l'élève a été initié par l'administrateur et est en attente de validation par la banque.
+                                {% elif statut == 'Réalisé' %}
+                                Les accords de remboursement réalisés correspondent à des paiements confirmés, pour lesquels le virement a été validé et approuvé par la banque, attestant que le remboursement a bien été effectué auprès de l'élève.
+                                {% elif statut == 'Invalide' %}
+                                Les accords de remboursement invalides concernent des paiements d'élèves validés, dont le virement du remboursement a été refusé par la banque en raison d'un problème technique ou d'une erreur de transfert. Une explication est alors transmise à l'élève.
+                                {% elif statut == 'Annulé' %}
+                                Les accords de remboursement annulés concernent des paiements d'élèves initialement validés et enregistrés par l'administrateur. Par la suite, l'administrateur décide d'annuler l'accord de remboursement sans procéder au virement bancaire. Une explication est alors transmise à l'élève.
+                                {% endif %}
+                            </p>
                         </div>
                         {% endif %}
                     </div>
                 </div>
-                <!-- boutons fin -->
-                {% if  request.user.is_authenticated  and request.user.is_active %}
-                    <div class="container-xxl py-3">
-                        <div class="container">
-                            <div class="container bg-light">
-                                {% if not accord_remboursement_approveds %}
-                                    <div class="col-md-12 text-center">
-                                        <h4>Il n'y a pas de règlements pour cette période</h4>
-                                    </div>
-                                {% endif %}
-                                {% for accord_remboursement , approved in accord_remboursement_approveds %}
-                                    <div class="row ">
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{accord_remboursement.status}}" readonly name="status_accord_id{{accord_remboursement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative ">
-                                                    <label for="due_date_id_{{ forloop.counter }}" class="form-label">Echéance</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_remboursement.due_date|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_remboursement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Règlement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_remboursement.total_amount|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_remboursement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative p-4 g-2 ">
-                                                    <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100 " name="btn_detaille_remboursement_id{{ accord_remboursement.id }}" >
-                                                        {% if approved %}Détaille{% else %}Contesté{% endif %}
-                                                    </button>
-                                                </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
+
+                <!-- Results Section -->
+                {% if request.user.is_authenticated and request.user.is_active %}
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        {% if not accord_remboursement_approveds %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Aucun remboursement trouvé pour cette période</h4>
+                            <p class="text-muted">Veuillez sélectionner une autre période ou un autre statut</p>
                         </div>
+                        {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Statut</th>
+                                        <th>Échéance</th>
+                                        <th>Montant</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for accord_remboursement, approved in accord_remboursement_approveds %}
+                                    <tr class="status-card 
+                                        {% if accord_remboursement.status == 'pending' %}status-pending
+                                        {% elif accord_remboursement.status == 'in_progress' %}status-in-progress
+                                        {% elif accord_remboursement.status == 'completed' %}status-completed
+                                        {% elif accord_remboursement.status == 'invalid' %}status-invalid
+                                        {% else %}status-cancelled
+                                        {% endif %} ">
+                                        <td>
+                                            <span class="badge 
+                                                {% if accord_remboursement.status == 'pending' %}bg-warning
+                                                {% elif accord_remboursement.status == 'in_progress' %}bg-info
+                                                {% elif accord_remboursement.status == 'completed' %}bg-success
+                                                {% elif accord_remboursement.status == 'invalid' %}bg-danger
+                                                {% else %}bg-secondary
+                                                {% endif %}
+                                                py-2 px-3 d-inline-block w-100"
+                                                style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                {% if accord_remboursement.status == 'pending' %}En attente
+                                                {% elif accord_remboursement.status == 'in_progress' %}En cours
+                                                {% elif accord_remboursement.status == 'completed' %}Réalisé
+                                                {% elif accord_remboursement.status == 'invalid' %}Invalide
+                                                {% else %}Annulé
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>{{ accord_remboursement.due_date|date:"d/m/Y" }}</td>
+                                        <td class="fw-bold">{{ accord_remboursement.total_amount|default:"0.00"|floatformat:2 }} €</td>
+                                        <td>
+                                            <button type="submit" class="btn btn-sm {% if approved %}btn-outline-primary{% else %}btn-outline-danger{% endif %}  w-100" 
+                                                name="btn_detaille_remboursement_id{{ accord_remboursement.id }}">
+                                                {% if approved %}
+                                                <i class="fas fa-eye me-1"></i> Détails
+                                                {% else %}
+                                                <i class="fas fa-exclamation-triangle me-1"></i> Contesté
+                                                {% endif %}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
                     </div>
+                </div>
                 {% endif %}
             </form>
         </div>
     </div>
+</div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-floating btn-lg back-to-top animate__animated animate__fadeIn">
+    <i class="fas fa-arrow-up"></i>
+</a>
 {% endblock %}
 
 {% block javascript %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
-<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
 <script>
-    
+    $(function() {
+        // Initialize datepicker
+        $(".datepicker").datepicker({
+            dateFormat: 'dd/mm/yy',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-2:+2"
+        });
+
+        // Back to top button
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 300) {
+                $('.back-to-top').fadeIn('slow');
+            } else {
+                $('.back-to-top').fadeOut('slow');
+            }
+        });
+        
+        $('.back-to-top').click(function(e) {
+            e.preventDefault();
+            $('html, body').animate({scrollTop: 0}, 'slow');
+            return false;
+        });
+    });
 </script>
 {% endblock %}

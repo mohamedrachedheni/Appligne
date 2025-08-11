@@ -1,202 +1,322 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Liste des paiements de l'élève {% endblock %}
+{% block title %} | Historique des paiements {% endblock %}
 
 {% block content %}
 
-
     <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- Sidebar -->
             {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements de l'élève</h6>
-                    </div>
+        
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <!-- Alert Messages -->
+            <div class="container-xxl py-1">
+                <div class="container">
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+
+            <!-- Payment Filter Form -->
+            <form method="POST" enctype="multipart/form-data" id="paymentFilterForm">
                 {% csrf_token %}
 
-                <!-- boutons début -->
-                <div class="container-xxl bg-light" >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_1" class="form-label">Début période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
+                <div class="text-center wow fadeInUp py-5" data-wow-delay="0.1s">
+                    <h3 class="section-title bg-white text-center text-primary px-3">Historique des paiements</h3>
+                    <h1 class="mb-4">Suivi de vos transactions</h1>
+                </div>
+                <!-- Date Range Filter -->
+                
+                    <div class="container-xxl py-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <label for="date_debut" class="form-label fw-bold">Date de début</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control datepicker" required 
+                                           name="date_debut" placeholder="jj/mm/aaaa" 
+                                           value="{{ date_debut|date:'d/m/Y' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 text-center d-none d-md-block">
+                                <h3 class="mb-0">Pour la période</h3>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="date_fin" class="form-label fw-bold">Date de fin</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control datepicker" required 
+                                           name="date_fin" placeholder="jj/mm/aaaa" 
+                                           value="{{ date_fin|date:'d/m/Y' }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h1>Paiements Elève</h1>
-                        </div>
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_2" class="form-label">Fin période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
-                        </div>                           
                     </div>
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
-                                En attente
-                            </button>
+                
+                
+                <!-- Status Filter Buttons -->
+                
+                    <div class="container-xxl py-4">
+                        <div class="row g-2">
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-primary w-100" name="btn_en_ettente">
+                                    <i class="fas fa-clock me-2"></i>En attente
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-success w-100" name="btn_approuve">
+                                    <i class="fas fa-check-circle me-2"></i>Validés
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-danger w-100" name="btn_invalide">
+                                    <i class="fas fa-times-circle me-2"></i>Invalides
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-secondary w-100" name="btn_annule">
+                                    <i class="fas fa-ban me-2"></i>Annulés
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-warning w-100" name="btn_reclame">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Réclamés
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-info w-100" name="btn_sans_accord">
+                                    <i class="fas fa-hourglass-half me-2"></i>En traitement
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_approuve">
-                                Approuvé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
-                                Invalide
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
-                                Annulé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_reclame">
-                                Réclamé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_sans_accord">
-                                Sans accord
-                            </button>
-                        </div>
-                        {% if status_str == 'En attente' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements en attente correspondent aux transactions effectuées par les élèves qui n'ont pas encore été confirmées par la passerelle de paiement.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Approuvé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements approuvés correspondent aux transactions effectuées par les élèves qui ont été confirmées par la passerelle de paiement.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Réclamé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements réclamés sont des transactions confirmées par la passerelle de paiement, mais ultérieurement contestées par l'élève.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Invalide' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiement invalides sont les transfères non validés par la passerelle de paiement.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Annulé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements annulés correspondent aux transactions interrompues par l'élève avant leur finalisation.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Réclamé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements réclamés sont ceux approuvés par la passerelle de paiement, mais pour lesquels l'élève a ensuite déposé une réclamation.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'Sans accord' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les paiements sans accord n'ont pas encore reçu d'accord de règlement de l'administration.
-                            </h6>
+                        
+                        <!-- Status Description -->
+                        {% if status_str %}
+                        <div class="alert alert-info mt-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3 fs-4"></i>
+                                <div>
+                                    {% if status_str == 'En attente' %}
+                                    <p class="mb-0">Les paiements en attente ont été initiés mais ne sont pas finalisés. L’élève doit compléter la procédure pour valider son règlement.</p>
+                                    {% elif status_str == 'Approuvé' %}
+                                    <p class="mb-0">Ces paiements ont été confirmés par notre service financier. Les cours associés peuvent maintenant être planifiés.</p>
+                                    {% elif status_str == 'Réclamé' %}
+                                    <p class="mb-0">Vous avez contesté ces transactions. Notre service client traitera votre demande dans les meilleurs délais.</p>
+                                    {% elif status_str == 'Invalide' %}
+                                    <p class="mb-0">Ces transactions n'ont pas pu être validées. Veuillez vérifier les informations ou contacter le support.</p>
+                                    {% elif status_str == 'Annulé' %}
+                                    <p class="mb-0">Ces paiements ont été annulés avant leur finalisation. Aucun prélèvement n'a été effectué.</p>
+                                    {% elif status_str == 'Sans accord' %}
+                                    <p class="mb-0">Ces paiements sont en cours de traitement par notre administration. Merci pour votre patience.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
-                </div>
-                <!-- boutons fin -->
-
+                
+                
+                <!-- Payments List -->
                 {% if request.user.is_authenticated and request.user.is_active and request.user.eleve %}
-                    <!-- Liste élèves début -->
-                    <div class="container-xxl py-5">
-                        <div class="container">
-                                <div class="container bg-light mb-3">
-                                    {% if not paiements %}
-                                        <div class="col-md-12 text-center">
-                                            <h4>Il n'y a pas de paiement pour cette période</h4>
-                                        </div>
-                                    {% endif %}
-                                    {% for professeur, payment,  accordReglement in paiements %}
-                                            <div class="row  " style="margin-bottom: 10px;">
-                                                <div class="col-md-2 col-sm-12 position-relative">
-                                                    <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{professeur.first_name}} {{professeur.last_name}} " readonly >
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
-                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut du paiement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="Bnq: {{payment.status}} {% if  payment.reclamation %} - Elv: Contesté {% endif %} " readonly >
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 position-relative ">
-                                                    <label for="date_payment_id_{{ forloop.counter }}" class="form-label">Date paiement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="date_payment_id_{{ forloop.counter }}"  value="{{payment.date_creation|date:'d/m/Y'}}" readonly>
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <div class="row  ">
-                                                        <label for="reponse_id_{{ forloop.counter }}" class="form-label">Paiement</label>
-                                                        <div class="col-md-6 col-sm-12 position-relative ">
-                                                            
-                                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{payment.amount|default:''|floatformat:2}} €" readonly>
-                                                        </div>
-                                                        <div class="col-md-6 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn {% if not payment.reclamation %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{payment.id}}" >
-                                                                {% if not payment.reclamation %}Détaille{% else %}Contesté{% endif %}
-                                                            </button>
-                                                        </div>
+                <div class="container-xxl">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            {% if not paiements %}
+                            <div class="text-center py-5">
+                                <img src="{% static 'img/empty-state.svg' %}" alt="Aucun paiement" class="img-fluid mb-4" style="max-height: 200px;">
+                                <h4 class="text-muted">Aucun paiement trouvé pour cette période</h4>
+                                <p class="text-muted">Essayez d'ajuster vos critères de recherche ou contactez-nous pour toute question.</p>
+                            </div>
+                            {% else %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Professeur</th>
+                                            <th>Statut</th>
+                                            <th>Date</th>
+                                            <th>Montant</th>
+                                            <th>Actions</th>
+                                            <th>Règlement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for professeur, payment, accordReglement in paiements %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar me-3">
+                                                        <span class="avatar-initial bg-primary text-white rounded-circle">
+                                                            {{ professeur.first_name|first }}{{ professeur.last_name|first }}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ professeur.first_name }} {{ professeur.last_name }}</h6>
+                                                        <small class="text-muted">{{ professeur.matiere_enseignee|default:"-" }}</small>
                                                     </div>
                                                 </div>
-                                                {% if accordReglement %} 
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <div class="row p-4 ">
-                                                        <h6>Règlement le: {{accordReglement.due_date|date:'d/m/Y'}} / {{accordReglement.status}} </h6>
-                                                    </div>
-                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if payment.status == 'Approuvé' %}bg-success
+                                                    {% elif payment.status == 'En attente' %}bg-warning text-dark
+                                                    {% elif payment.status == 'Invalide' or payment.status == 'Annulé' %}bg-danger
+                                                    {% else %}bg-secondary
+                                                    {% endif %} 
+                                                    py-2 px-3 d-inline-block w-100 "
+                                                    style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                    {{ payment.status }}
+                                                    {% if payment.reclamation %}
+                                                    <span class="badge bg-danger ms-1">Contesté</span>
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td>{{ payment.date_creation|date:"d/m/Y" }}</td>
+                                            <td class="fw-bold">{{ payment.amount|default:0|floatformat:2 }} €</td>
+                                            <td>
+                                                <button type="submit" name="btn_paiement_id{{payment.id}}" 
+                                                        class="btn btn-sm {% if not payment.reclamation %}btn-outline-primary{% else %}btn-outline-danger{% endif %}">
+                                                    <i class="fas {% if not payment.reclamation %}fa-eye{% else %}fa-exclamation-circle{% endif %} me-1"></i>
+                                                    {% if not payment.reclamation %}Détails{% else %}Contesté{% endif %}
+                                                </button>
+                                            </td>
+                                            <td>
+                                                {% if accordReglement %}
+                                                <span class="badge bg-info py-2 px-3 d-inline-block w-100" 
+                                                style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                    <i class="fas fa-file-contract me-1"></i>
+                                                    {{ accordReglement.due_date|date:"d/m/Y" }} ({{ accordReglement.status }})
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">Pas encore de règlement</span>
                                                 {% endif %}
-                                                {% if not accordReglement %} 
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <div class="row  p-4">
-                                                        <h6>Pas encore d'accord de règlement </h6>
-                                                    </div>
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                    {% endfor %}
-                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% if page_obj.paginator.num_pages > 1 %}
+                                <nav aria-label="Pagination">
+                                    <ul class="pagination justify-content-center mt-4">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1" aria-label="First">
+                                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&laquo;&laquo;</span>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&laquo;</span>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&raquo;</span>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&raquo;&raquo;</span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                            </div>
+                            
+                            {% endif %}
                         </div>
                     </div>
-                    <!-- Liste élève fin -->
+                </div>
                 {% endif %}
             </form>
         </div>
     </div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 {% endblock %}
 
 {% block javascript %}
+<!-- Datepicker Configuration -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
-<script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-i18n/1.12.1/jquery-ui-i18n.min.js"></script>
+
 <script>
+$(document).ready(function() {
+    // Initialize datepicker with French localization
+    $.datepicker.setDefaults($.datepicker.regional['fr']);
     
+    $(".datepicker").datepicker({
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        changeYear: true,
+        yearRange: "-2:+1"
+    });
+    
+    // Add animation to status filter buttons
+    $("button[name^='btn_']").hover(
+        function() {
+            $(this).addClass('shadow');
+        },
+        function() {
+            $(this).removeClass('shadow');
+        }
+    );
+    
+    // Back to top button
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 300) {
+            $('.back-to-top').fadeIn('slow');
+        } else {
+            $('.back-to-top').fadeOut('slow');
+        }
+    });
+    
+    $('.back-to-top').click(function(e) {
+        e.preventDefault();
+        $('html, body').animate({scrollTop: 0}, 500);
+        return false;
+    });
+});
 </script>
-    
-    
-    
 {% endblock %}

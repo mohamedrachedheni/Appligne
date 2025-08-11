@@ -2,142 +2,261 @@
 {% load static %}
 {% block title %} | Témoignage{% endblock %}
 
-
 {% block head %}
-    {{ block.super }}  <!-- Conserve les styles existants dans 'base.html' -->
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'css/styleplus_temoignage.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        .sidebar-column {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+        .main-content-column {
+            overflow-x: hidden;
+            padding: 2rem;
+        }
+        .rating-star {
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+        .rating-star:hover {
+            transform: scale(1.1);
+        }
+        @media (max-width: 767.98px) {
+            .sidebar-column {
+                height: auto;
+                position: relative;
+            }
+            .main-content-column {
+                padding: 1rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <!-- Titre de la page -->
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                        <h4 class="text-center text-white">Gérer mon compte élève</h4>
+    <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-4 col-lg-2  ">
+                {% include 'partials/_sidebar_eleve.html' %}
+            </div>
+            
+            <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp py-5  " data-wow-delay="0.1s">
+                <div class="container-xxl py-1" >
+                    <div class="container  ">
+                        <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
+                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                            <h3 class="section-title bg-white text-center text-primary px-3 mb-4">Témoignage et évaluation</h3>
+                        </div>
+                        <div class="col-md-12">
+                            {% include 'partials/_alerts.html' %}
+                        </div>
                     </div>
                 </div>
+
+                <!-- Testimonial Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="container-xxl py-5">
+                        <div class="container">
+                            <div class="container bg-light py-5 " >
+                                <div class="row justify-content-center mx-0  "  >  <!-- mx-0 pour supprimer les marges horizontales -->
+                                    <div class="col-12 col-xl-10 col-lg-11 px-2 px-md-3">  <!-- Padding réduit et responsive -->
+                                        <div class="card border-0 shadow-sm rounded-3">
+                                            <div class="card-body p-3 p-md-4">  <!-- Padding réduit sur mobile -->
+                                                <!-- Professor Selection -->
+                                                <div class="mb-4">
+                                                    <label for="prof_id" class="form-label fw-semibold">Sélectionnez un professeur :</label>
+                                                    <select class="form-select shadow-none" id="prof_id" name="prof" required>
+                                                        <option value="" disabled selected>Choisir un professeur...</option>
+                                                        {% for prof in list_prof %}
+                                                        <option value="{{ prof.id }}" {% if selected_prof == prof.id|stringformat:"s" %}selected{% endif %}>
+                                                            {{ prof.last_name|upper }} {{ prof.first_name }} • Tél: {{ prof.professeur.numero_telephone }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <div class="invalid-feedback">
+                                                        Veuillez sélectionner un professeur.
+                                                    </div>
+                                                </div>
+
+                                                <!-- Star Rating -->
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold d-block">Évaluation :</label>
+                                                    <div class="star-rating mb-2">
+                                                        {% for i in "12345" %}
+                                                            <i class="fas fa-star rating-star text-muted" id="star{{i}}" data-rating="{{i}}"></i>
+                                                        {% endfor %}
+                                                        <span class="rating-text ms-2 fw-medium" id="rating-text">Sélectionnez une note</span>
+                                                    </div>
+                                                    <input type="hidden" name="temoignage" id="temoignage-value" value="{{selected_temoignage}}" required>
+                                                </div>
+
+                                                <!-- Testimonial Content -->
+                                                <div class="mb-4">
+                                                    <label for="text_email_id" class="form-label fw-semibold">Votre témoignage :</label>
+                                                    <textarea class="form-control shadow-none auto-resize" id="text_email_id" rows="5" name="text" maxlength="300" 
+                                                            placeholder="Décrivez votre expérience avec ce professeur (300 caractères max)..." 
+                                                            required>{{ selected_text|default_if_none:'' }}</textarea>
+                                                    <div class="d-flex justify-content-between mt-1">
+                                                        <div class="invalid-feedback">
+                                                            Veuillez rédiger votre témoignage.
+                                                        </div>
+                                                        <div class="form-text">
+                                                            <span id="char-count">0</span>/300 caractères
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Form Buttons -->
+                                                <div class="d-flex justify-content-between mt-4">
+                                                    <a href="{% url 'compte_eleve' %}" class="btn btn-outline-primary px-3 px-md-4">  <!-- Padding réduit sur mobile -->
+                                                        <i class="fas fa-arrow-left me-2"></i>Retour au compte
+                                                    </a>
+                                                    <button type="submit" class="btn btn-primary px-3 px-md-4" name="btn_enr">  <!-- Padding réduit sur mobile -->
+                                                        <i class="fas fa-save me-2"></i>Enregistrer
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
-<!-- Header End -->
 
-<!-- Début de la section principale du compte élève -->
-<div class="row justify-content-center">
-    <div class="col-sm-12 col-md-4 col-lg-2">
-        <!-- Inclusion de la sidebar du compte élève -->
-        {% include 'partials/_sidebar_eleve.html' %}
-    </div>
-    
-    <!-- Contenu principal de la page -->
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container-xxl py-1">
-            <div class="container">
-                <!-- Titre secondaire de la section témoignage et évaluation -->
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Témoignage et évaluation</h6>
-                </div>
-                <!-- Affichage des alertes (succès, erreurs, etc.) -->
-                <div class="col-md-12">
-                    {% include 'partials/_alerts.html' %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Début du formulaire pour soumettre un témoignage -->
-        <form method="POST" enctype="multipart/form-data" autocomplete="off">
-            {% csrf_token %} <!-- Token de sécurité CSRF -->
-
-            <!-- Section de sélection du professeur et soumission du témoignage -->
-            <div class="container-xxl py-5" id="identite">
-                <div class="container bg-light ">
-                    <div class="row g-4">
-                        <!-- Sélection du professeur à évaluer -->
-                        <div class="col-12">
-                            <label for="prof_id" class="form-label">Sélectionnez un professeur :</label>
-                            <select class="form-control" id="prof_id" name="prof" style="background-color: #fff; color: #000; border: 1px solid #ced4da;">
-                                <option value="0">Sélectionner</option>
-                                <!-- Boucle pour afficher les options des professeurs disponibles -->
-                                {% for prof in list_prof %}
-                                <option value="{{ prof.id }}" {% if selected_prof == prof.id|stringformat:"s" %}selected{% endif %}>
-                                    Prof: {{ prof.last_name }} {{ prof.first_name }} -- Téléphone: {{ prof.professeur.numero_telephone }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        
-<!-- Évaluation en étoiles -->
-                        <div class="col-sm-12">
-                            <div class="mb-2">
-                                <!-- Boucle pour afficher les 5 étoiles cliquables -->
-                                <small class="fa fa-star spaced"   id="t1" onclick="rate(1)"></small>
-                                <small class="fa fa-star spaced"   id="t2" onclick="rate(2)"></small>
-                                <small class="fa fa-star spaced"   id="t3" onclick="rate(3)"></small>
-                                <small class="fa fa-star spaced"   id="t4" onclick="rate(4)"></small>
-                                <small class="fa fa-star spaced"   id="t5" onclick="rate(5)"></small>
-                                
-                                <!-- Label pour afficher la note sélectionnée -->
-                                <small>
-                                    <label class="form-label spaced" id="t6" style="font-size: large;">Témoignage</label>
-                                </small>
-                            </div>
-                            <!-- Champ caché pour stocker la note sélectionnée -->
-                            <input type="hidden" name="temoignage" id="temoignage-value" value="{{selected_temoignage}}">
-                        </div>
-                        <!-- Zone de texte pour le contenu du témoignage -->
-                        <div class="col-12 position-relative">
-                            <label for="text_email_id" class="form-label">Contenu de votre témoignage :</label>
-                            <textarea class="form-control profil" id="text_email_id" rows="4" name="text"  maxlength="300">{{ selected_text|default_if_none:'' }}</textarea>
-                        </div>
-
-                        <!-- Boutons pour retourner au compte ou soumettre le témoignage -->
-                        <div class="row justify-content-between g-2 p-3">
-                            <div class="col-lg-2 col-md-4 col-sm-6 ">
-                                <a class="btn btn-primary w-100" href="{% url 'compte_eleve' %}"><span style="color: white;">Votre compte</span></a>
-                            </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_enr">Enregistrer</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-        <!-- Fin du formulaire -->
-    </div>
-</div>
-<!-- Fin de la section principale du compte élève -->
-
-<!-- Bouton pour retourner en haut de la page -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<button class="btn btn-primary btn-floating btn-lg back-to-top animate__animated animate__fadeIn">
+    <i class="fas fa-arrow-up"></i>
+</button>
 
 {% endblock %}
 
 {% block javascript %}
 <script>
-    // http://localhost:8000/profil_prof/2/
-    // fonction pour redimentionner les Textarea selon leur contenu
+    // Textarea Auto-Resize Function
     function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
-
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+        document.querySelectorAll('.auto-resize').forEach(textarea => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        });
     }
-    }
-</script>
-<script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
-</script>
 
-<!-- Chargement du fichier JavaScript pour gérer l'interaction des étoiles -->
-<script src="{% static 'js/Code_en_plus_temoignage.js' %}"></script>
+    // Character Counter
+    function updateCharCount() {
+        const textarea = document.getElementById('text_email_id');
+        const counter = document.getElementById('char-count');
+        counter.textContent = textarea.value.length;
+    }
+
+    // Star Rating System
+    function setupStarRating() {
+        const stars = document.querySelectorAll('.rating-star');
+        const ratingInput = document.getElementById('temoignage-value');
+        const ratingText = document.getElementById('rating-text');
+        
+        const ratingTexts = [
+            "Très déçu",
+            "Déçu",
+            "Satisfait",
+            "Très satisfait",
+            "Excellent"
+        ];
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+                
+                // Update stars display
+                stars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.add('text-warning');
+                        s.classList.remove('text-muted');
+                    } else {
+                        s.classList.add('text-muted');
+                        s.classList.remove('text-warning');
+                    }
+                });
+                
+                // Update rating text
+                ratingText.textContent = ratingTexts[rating-1];
+            });
+
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const hoverRating = this.getAttribute('data-rating');
+                stars.forEach((s, index) => {
+                    if (index < hoverRating) {
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.remove('text-warning');
+                    }
+                });
+            });
+
+            star.addEventListener('mouseleave', function() {
+                const currentRating = ratingInput.value || 0;
+                stars.forEach((s, index) => {
+                    if (index < currentRating) {
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.add('text-muted');
+                        s.classList.remove('text-warning');
+                    }
+                });
+            });
+        });
+
+        // Initialize stars if value exists
+        if (ratingInput.value) {
+            stars[ratingInput.value-1].click();
+        }
+    }
+
+    // Form Validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Initialize components
+            adjustTextareaHeight();
+            updateCharCount();
+            setupStarRating();
+
+            // Form validation
+            const forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // Event Listeners
+    document.getElementById('text_email_id').addEventListener('input', function() {
+        adjustTextareaHeight();
+        updateCharCount();
+    });
+
+    // Back to top button
+    document.querySelector('.back-to-top').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+</script>
 {% endblock %}

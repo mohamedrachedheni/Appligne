@@ -4468,16 +4468,16 @@ def admin_remboursement_email(request):
 
             # 10. Si accord réalisé, ajouter les transferts et mettre à jour les paiements liés
             if new_status == 'completed':
-                messages.info(request, f"new_status = {new_status}")
+                # messages.info(request, f"new_status = {new_status}")
                 date_str = request.POST.get(f'date_operation_{enc_id}', '')
-                messages.info(request, f"date_str = {date_str} ")
+                # messages.info(request, f"date_str = {date_str} ")
                 try:
                     accord.date_trensfere = datetime.strptime(date_str, '%d/%m/%Y').date()
-                    messages.info(request, f"accord.date_transfere = {datetime.strptime(date_str, '%d/%m/%Y').date()} ")
+                    # messages.info(request, f"accord.date_transfere = {datetime.strptime(date_str, '%d/%m/%Y').date()} ")
                 except ValueError:
                     logger.warning(f"accord.date_transfere: datetime.strptime(date_str, '%d/%m/%Y').date() = {datetime.strptime(date_str, '%d/%m/%Y').date()}")
                     accord.date_trensfere = date.today()  # Date actuelle si la date saisie est invalide
-                    messages.info(request, f"date_str = {date.today()} ")
+                    # messages.info(request, f"date_str = {date.today()} ")
 
                 accord.transfere_id = request.POST.get(f'operation_{enc_id}', '')
 

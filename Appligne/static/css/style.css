@@ -437,7 +437,8 @@
     border-right: none;
 }
 .container-fluid {
-    margin-bottom: 3rem; 
+    /* background-color: #181d38; */ /* modifier le 09/08/2025 */
+    margin-bottom: 0rem; 
 }
 
 .container-fluid {

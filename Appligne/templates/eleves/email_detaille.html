@@ -1,128 +1,171 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Compte éléve{% endblock %}
+{% block title %} | Détails Email Élève{% endblock %}
 
 {% block content %}
-
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte élève</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+<div class="container-fluid">
+    <div class="row g-0">
+        <!-- Sidebar Column -->
+        <div class="col-lg-2 d-none d-lg-block">
             {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Envoyez une demande de cours</h6>
-                    </div>
-                    <div class="col-md-12">
+
+        <!-- Main Content Column -->
+        <div class="col-lg-10 col-md-12">
+            <div class="container-fluid py-4 px-4">
+                <!-- Header Section -->
+                
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h3 class="section-title bg-white text-center text-primary px-3"><i class="fas fa-envelope-open-text me-2"></i>Détails de l'email</h3>
+                </div>
+                    
+                
+
+                <!-- Alerts Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
-            <!-- Début Form-->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_detaille' email_id=email.id %}" >
-                {% csrf_token %}
-            
-                <!-- fichiers prof debut -->
-                <div class="container-xxl py-5 " id="identite">
-                    <div class="container ">
-                        <div class="container bg-light  ">
-                            <div class="row g-4">
-                                <div class="col-12 position-relative">
-                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                    <input type="text" class="form-control" id="sujet_id"
-                                         name="sujet" value="{{email.sujet}}" readonly >
+
+                <!-- Email Detail Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_detaille' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Email Content Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Sujet -->
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Sujet</label>
+                                    <input type="text" class="form-control bg-light" value="{{email.sujet}}" readonly>
                                 </div>
-                                <div class="col-12 position-relative">
-                                    <label for="text_email_id" class="form-label">Contenu de votre email reçu :</label>
-                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" placeholder="Au besoin, posez vos questions"  readonly>
-                                            {{email.text_email}}
-                                    </textarea>
-                                </div>
-                                <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_ignorer">
-                                            Ignorer
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-info w-100" name="btn_confirmer">
-                                            Bien reçu
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_repondre">
-                                            Répondre
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-success w-100" name="btn_historique">
-                                            Voire réponse 
-                                        </button>
-                                    </div>
-                                    {% if est_prof and request.user.is_authenticated %}
-                                    <div class="col-lg-2 col-sm-12">
-                                        <button type="submit" class="btn btn-secondary w-100" name="btn_ajout_eleve">
-                                            Ajouter à mes élèves
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12 ">
-                                        <button type="submit" class="btn btn-success w-100" name="btn_ajout_cours" >
-                                            Ajout cours
-                                        </button>
-                                    </div>
-                                    {% endif %}
+                                
+                                <!-- Contenu -->
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Contenu</label>
+                                    <textarea class="form-control auto-resize bg-light" rows="6" readonly>{{email.text_email}}</textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- fichiers prof Fin -->
-            </form>
-            <!-- Fin Form -->
+
+                    <!-- Action Buttons -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row g-3 justify-content-center">
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <button type="submit" class="btn btn-warning w-100" name="btn_ignorer">
+                                        <i class="fas fa-times-circle me-2"></i>Ignorer
+                                    </button>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <button type="submit" class="btn btn-info w-100" name="btn_confirmer">
+                                        <i class="fas fa-check-circle me-2"></i>Bien reçu
+                                    </button>
+                                </div>
+                                
+                                {% if not email.reponse_email_id %}
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <button type="submit" class="btn btn-primary w-100" name="btn_repondre">
+                                        <i class="fas fa-reply me-2"></i>Répondre
+                                    </button>
+                                </div>
+                                {% endif %}
+                                
+                                {% if email.reponse_email_id %}
+                                <div class="col-lg-2 col-md-4 col-6 d-none">
+                                    <button type="submit" class="btn btn-success w-100" name="btn_historique">
+                                        <i class="fas fa-history me-2"></i>Voir réponse
+                                    </button>
+                                </div>
+                                {% endif %}
+                                
+                                {% if est_prof and request.user.is_authenticated %}
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <button type="submit" class="btn btn-secondary w-100" name="btn_ajout_eleve">
+                                        <i class="fas fa-user-plus me-2"></i>Ajouter élève
+                                    </button>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <button type="submit" class="btn btn-success w-100" name="btn_ajout_cours">
+                                        <i class="fas fa-plus-circle me-2"></i>Ajouter cours
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <!-- mon compte fin -->
+</div>
 
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-lg-square back-to-top position-fixed">
+    <i class="fas fa-arrow-up"></i>
+</a>
+
+<style>
+    .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99;
+        opacity: 0.7;
+        transition: all 0.3s;
+    }
+    
+    .back-to-top:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .auto-resize {
+        min-height: 150px;
+        resize: none;
+        overflow-y: hidden;
+    }
+    
+    
+</style>
 {% endblock %}
+
 {% block javascript %}
 <script>
-    // http://localhost:8000/profil_prof/2/
-    // fonction pour redimentionner les Textarea selon leur contenu
-    function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
-
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
-    }
-    }
-</script>
-<script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    // Auto-resize textareas
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('.auto-resize');
+        
+        textareas.forEach(textarea => {
+            // Initial adjustment
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+            
+            // Adjust on input
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+    });
 </script>
 {% endblock %}

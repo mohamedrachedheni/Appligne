@@ -1,62 +1,195 @@
 {% load static %}
-<!-- début sidebar -->
-<nav id="sidebar">
+<!-- Sidebar Professionnelle -->
+<nav id="sidebar" style="background-color: #e3f2fd;">
     <div class="p-4 pt-5">
-        <ul class="list-unstyled components mb-5">
-            <li >
-                <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Mes coordonnées</strong></a>
-                <ul class="collapse list-unstyled" id="homeSubmenu">
-                <li>
-                    <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Ajouter coordonnées du parent</a>
-                </li>
-                <li>
-                    <a href="{% url 'modifier_mot_pass' %}" class="dropdown-item"  >Modifier votre mot de passe</a>
-                </li>
-                <li>
-                    <a href="{% url 'modifier_coordonnee_eleve' %}" class="dropdown-item"  >Modifier coordonnées de l' élève</a>
-                </li>
-                <li>
-                    <a href="{% url 'modifier_coordonnee_parent' %}" class="dropdown-item"  >Modier coordonnées du parent</a>
-                </li>
-                </ul>
-            </li>
-            <li>
-                <a href="#coursSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><strong>Mes Cours</strong></a>
-                <ul class="collapse list-unstyled" id="coursSubmenu">
-                    <li>
-                        <a href="{% url 'liste_prof' %}" class="dropdown-item"  >Ajouter une demande de cours</a>
+        <div class="sidebar-header mb-4 text-center">
+            <h4 class="fw-bold">Menu Élève</h4>
+            <hr class="border-2 border-top border-dark opacity-75">
+        </div>
+        
+        <ul class="list-unstyled components">
+            <!-- Section Profil -->
+            <li class="mb-2">
+                <a href="#profileMenu" data-toggle="collapse" aria-expanded="false" 
+                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
+                    <span><i class="fas fa-user-circle me-2"></i>Mon Profil</span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled ps-3 mt-2" id="profileMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'compte_eleve' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-eye me-2"></i>Voir mon compte
+                        </a>
                     </li>
-                    <li>
-                        <a href="{% url 'email_recu' %}" class="dropdown-item"  >Nouveaux émails reçus</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'demande_paiement_eleve' %}" class="dropdown-item"  >Liste demandes de paiement directe</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'temoignage_eleve' %}" class="dropdown-item"  >Témoignage</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'liste_paiement_eleve' %}" class="dropdown-item"  >Liste des paiements</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'liste_remboursement' %}" class="dropdown-item"  >Liste des remboursements</a>
-                    </li>
-                    
-                    <li>
-                        <a href="{% url 'nouvelle_reclamation' %}" class="dropdown-item"  >Créer une réclamation</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'reclamations' %}" class="dropdown-item"  >Liste des réclamations</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'admin_faq' %}" class="dropdown-item"  >FAQs GPT</a>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_mot_pass' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-key me-2"></i>Modifier mot de passe
+                        </a>
                     </li>
                 </ul>
             </li>
-            <li>
-                <a class="nav-link" href="{% url 'compte_eleve' %}"><strong>Voire mon compte</strong></a>
+            
+            <!-- Section Coordonnées -->
+            <li class="mb-2">
+                <a href="#coordonneesMenu" data-toggle="collapse" aria-expanded="false" 
+                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
+                    <span><i class="fas fa-address-book me-2"></i>Mes Coordonnées</span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled ps-3 mt-2" id="coordonneesMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_coordonnee_eleve' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-user-edit me-2"></i>Coordonnées élève
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'modifier_coordonnee_parent' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-user-friends me-2"></i>Coordonnées parent
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Section Cours -->
+            <li class="mb-2">
+                <a href="#coursMenu" data-toggle="collapse" aria-expanded="false" 
+                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
+                    <span><i class="fas fa-book-open me-2"></i>Mes Cours</span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled ps-3 mt-2" id="coursMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'liste_prof' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-plus-circle me-2"></i>Demander un cours
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'email_recu' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-envelope me-2"></i>Emails reçus
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_paiement_eleve' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-receipt me-2"></i>Historique paiements
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'demande_paiement_eleve' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Demandes de paiement
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'liste_remboursement' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-money-bill-wave me-2"></i>Remboursements
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Section Support -->
+            <li class="mb-2">
+                <a href="#supportMenu" data-toggle="collapse" aria-expanded="false" 
+                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
+                    <span><i class="fas fa-headset me-2"></i>Support</span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <ul class="collapse list-unstyled ps-3 mt-2" id="supportMenu">
+                    <li class="mb-1">
+                        <a href="{% url 'nouvelle_reclamation' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-plus me-2"></i>Nouvelle réclamation
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'reclamations' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-list me-2"></i>Mes réclamations
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'temoignage_eleve' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-comment-alt me-2"></i>Laisser un témoignage
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'admin_faq' %}" 
+                           class="d-block py-2 text-dark hover-blue">
+                            <i class="fas fa-question-circle me-2"></i>FAQ / Assistance
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>
 </nav>
-<!-- fin sidebar -->
+
+<style>
+    #sidebar {
+        min-width: 280px;
+        max-width: 280px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        background-color: #e3f2fd !important; /* Force le bleu clair */
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    #sidebar .sidebar-header h4 {
+        color: #0d6efd; /* Bleu primaire */
+        font-weight: 700;
+    }
+    
+    #sidebar .hover-blue:hover {
+        color: #0d6efd !important; /* Bleu primaire au survol */
+        text-decoration: none;
+        padding-left: 5px;
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    #sidebar .dropdown-toggle {
+        color: #212529 !important; /* Noir pour meilleure lisibilité */
+        transition: all 0.2s;
+    }
+    
+    #sidebar .dropdown-toggle:hover {
+        color: #0d6efd !important;
+    }
+    
+    #sidebar .active {
+        background-color: rgba(13, 110, 253, 0.15);
+        border-left: 3px solid #0d6efd;
+    }
+    
+    #sidebar a {
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    #sidebar i {
+        color: #0d6efd; /* Icônes en bleu */
+        width: 20px;
+        text-align: center;
+    }
+    
+    @media (max-width: 991.98px) {
+        #sidebar {
+            position: fixed;
+            z-index: 1000;
+            margin-left: -280px;
+        }
+        #sidebar.active {
+            margin-left: 0;
+        }
+    }
+</style>

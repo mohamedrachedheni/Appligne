@@ -1,3 +1,4 @@
+# Appligne/wsgi.py
 """
 WSGI config for Appligne project.
 

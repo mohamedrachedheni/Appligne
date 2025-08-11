@@ -1,119 +1,183 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Compte éléve{% endblock %}
+{% block title %} | Demande de Cours{% endblock %}
 
 {% block content %}
-
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte élève</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+<div class="container-fluid">
+    <div class="row g-0">
+        <!-- Sidebar Column -->
+        <div class="col-lg-2 d-none d-lg-block">
             {% include 'partials/_sidebar_eleve.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Envoyez une demande de cours</h6>
-                    </div>
-                    <div class="col-md-12">
+
+        <!-- Main Content Column -->
+        <div class="col-lg-10 col-md-12">
+            <div class="container-fluid py-4 px-4">
+                <!-- Header Section -->
+                <!-- <div class="text-center mb-5">
+                    <h3 class="section-title text-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Envoyer une demande de cours
+                    </h3>
+                    <hr class="w-25 mx-auto bg-primary opacity-75" style="height: 2px;">
+                </div> -->
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h3 class="section-title bg-white text-center text-primary px-3"><i class="fas fa-paper-plane me-2"></i>Envoyer l'email</h3>
+                </div>
+
+                <!-- Alerts Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
-            <!-- Début Form-->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'reponse_email_eleve' email_id  %}"  >
-                {% csrf_token %}
-            
-                <!-- fichiers eleve debut -->
-                <div class="container-xxl py-5 " id="identite">
-                    <div class="container ">
-                        <div class="container bg-light  p-5">
+
+                <!-- Email Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'reponse_email_eleve' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Email Content Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
                             <div class="row g-4">
-                                <div class="col-12 position-relative">
-                                    <label for="email_adresse_id" class="form-label">Votre adresse email</label>
-                                    <input type="text" class="form-control" id="email_adresse_id"
-                                         name="email_adresse" value="{{email_eleve}}" >
+                                <!-- Email Address -->
+                                <div class="col-md-6">
+                                    <label for="email_adresse_id" class="form-label fw-bold">
+                                        <i class="fas fa-envelope me-2 text-primary"></i>Votre adresse email
+                                    </label>
+                                    <input type="email" class="form-control" id="email_adresse_id" 
+                                           name="email_adresse" value="{{email_eleve}}" required>
                                 </div>
-                                <div class="col-12 position-relative">
-                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                    <input type="text" class="form-control" id="sujet_id"
-                                         name="sujet" value="{{sujet}}" >
+                                
+                                <!-- Subject -->
+                                <div class="col-md-6">
+                                    <label for="sujet_id" class="form-label fw-bold">
+                                        <i class="fas fa-tag me-2 text-primary"></i>Sujet de l'email
+                                    </label>
+                                    <input type="text" class="form-control" id="sujet_id" 
+                                           name="sujet" value="{{sujet}}" required>
                                 </div>
-                                <div class="col-12 position-relative">
-                                    <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
-                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email"  >
-                                            {{text_email}}
+                                
+                                <!-- Message Content -->
+                                <div class="col-12 mt-3">
+                                    <label for="text_email_id" class="form-label fw-bold">
+                                        <i class="fas fa-comment-alt me-2 text-primary"></i>Contenu de votre message
+                                    </label>
+                                    <textarea class="form-control auto-resize" id="text_email_id" rows="8" 
+                                              name="text_email" required>{{text_email}}
 ---------------------------
-En réponse à votre email, je vous adresse ce qui suit.
-                                        </textarea>
-                                        
-                                        
-                                </div>
-                                <div class="row justify-content-between g-2 p-3 ">
-                                    <!-- <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <a class="btn btn-primary " {% if request.user.eleve %} href="{% url 'compte_eleve' %}" {% else %} href="{% url 'compte_prof' %}" {% endif %} ><span style="color: white;">Votre compte</span></a>
-                                    </div> -->
-                                    <div class="col-lg-1 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-warning" name="btn_enr">
-                                            Envoyez
-                                        </button>
+En réponse à votre email, je vous adresse ce qui suit.</textarea>
+                                    <div class="form-text mt-2">
+                                        Soyez aussi précis que possible dans votre demande pour une réponse optimale.
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- fichiers eleve Fin -->
-            </form>
 
-
-
-
-
-
-            <!-- Fin Form -->
+                    <!-- Action Buttons -->
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5" name="btn_enr">
+                                <i class="fas fa-paper-plane me-2"></i>Envoyer l'email
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <!-- mon compte fin -->
+</div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-lg-square back-to-top position-fixed">
+    <i class="fas fa-arrow-up"></i>
+</a>
+
+<style>
+    .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99;
+        opacity: 0.7;
+        transition: all 0.3s;
+    }
+    
+    .back-to-top:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    
+    
+    .auto-resize {
+        min-height: 200px;
+        resize: none;
+        overflow-y: hidden;
+        line-height: 1.6;
+    }
+    
+    .form-control {
+        padding: 12px;
+        border-radius: 8px;
+    }
+    
+    textarea.form-control {
+        background-color: #f8f9fa;
+    }
+</style>
 {% endblock %}
+
 {% block javascript %}
 <script>
-    // http://localhost:8000/profil_prof/2/
-    // fonction pour redimentionner les Textarea selon leur contenu
-    function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
+    // Auto-resize textareas
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('.auto-resize');
+        
+        textareas.forEach(textarea => {
+            // Initial adjustment
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+            
+            // Adjust on input
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
 
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
-    }
-    }
-</script>
-<script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+        // Add basic form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs obligatoires.');
+            }
+        });
+    });
 </script>
 {% endblock %}
