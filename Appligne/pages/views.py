@@ -13,7 +13,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail, EmailMessage
 from django.template.loader import render_to_string
 from django.core.validators import validate_email, EmailValidator
@@ -3284,117 +3284,144 @@ def nouvelle_reclamation(request):
     }
     return render(request, 'pages/nouvelle_reclamation.html', context)
 
+from urllib.parse import urlencode
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Min, Max
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.contrib import messages
+from django.shortcuts import redirect, render
 
 def reclamations(request):
     """
-    Afficher toutes les réclamations de la période 
-    liées à l'élève (et / ou) au professeur selon 
-    le user (élève, professeur, admin)
+    Afficher toutes les réclamations de la période avec pagination
+    et conservation des paramètres de recherche
     """
-    
-    
-    # messages.info(request, f'key = {Fernet.generate_key()}')
-    # Récupérer le user
+    # Vérification de l'authentification
     user = request.user
     if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')
-    
-    
+
     date_format = "%d/%m/%Y"
     status_str = ""
 
-    # Récupération des dates minimales et maximales depuis la base de données
+    # Récupération des dates min/max depuis la base
     dates = Reclamation.objects.exclude(statut__in=['resolue', 'fermee']).aggregate(
         min_date=Min('date_creation'), 
         max_date=Max('date_creation')
     )
-
-    # Valeurs par défaut si aucune réclamation n'existe
     date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
     date_max = dates['max_date'] or timezone.now().date()
 
-    # Récupération des dates depuis le formulaire ou valeurs par défaut
-    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
-    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+    # Gestion des paramètres de recherche (POST ou GET)
+    if request.method == 'POST':
+        # Récupération depuis le formulaire POST
+        date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+        date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+        
+        # Stockage en session pour la pagination
+        request.session['reclamation_filters'] = {
+            'date_debut': date_debut_str,
+            'date_fin': date_fin_str,
+            'statut': request.POST.get('statut_filter', '')
+        }
+    else:
+        # Récupération depuis la session ou valeurs par défaut
+        filters = request.session.get('reclamation_filters', {})
+        date_debut_str = filters.get('date_debut', date_min.strftime(date_format))
+        date_fin_str = filters.get('date_fin', date_max.strftime(date_format))
+        status_str = filters.get('statut', '')
 
+    # Traitement des dates
     try:
         date_debut = datetime.strptime(date_debut_str, date_format).date()
         date_fin = datetime.strptime(date_fin_str, date_format).date()
 
         if date_debut > date_fin:
             raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
-    
     except ValueError as e:
         messages.error(request, f"Erreur de date : {e}")
         return render(request, 'pages/reclamations.html', {
             'reclamations': [],  
-            'date_debut': date_debut, 
-            'date_fin': date_fin
+            'date_debut': date_min, 
+            'date_fin': date_max
         })
 
-    # Définition des filtres
-    filters = { 
+    # Construction des filtres de base
+    filters = {
         'date_creation__range': (date_debut, date_fin + timedelta(days=1))
     }
 
-    # Correspondance des boutons de filtrage aux statuts des réclamations
-    status_filter = {
+    # Gestion des statuts
+    status_mapping = {
         'btn_en_attente': 'en_attente',
         'btn_en_cours': 'en_cours',
         'btn_resolue': 'resolue',
         'btn_fermee': 'fermee',
     }
 
-    # Application du filtre en fonction du bouton cliqué
-    for btn, status in status_filter.items():
-        if btn in request.POST:
-            filters['statut'] = status
-            status_str = status
-            break
+    if request.method == 'POST':
+        for btn, status in status_mapping.items():
+            if btn in request.POST:
+                filters['statut'] = status
+                status_str = status
+                break
 
-    # Filtrer les réclamations ayant le prmier message non lu
-    # le tri des non lues est fait dans le template
-    if 'btn_non_lu' in request.POST:
-        status_str = "non_lu"
+        if 'btn_non_lu' in request.POST:
+            status_str = "non_lu"
 
-    if  hasattr(user, 'eleve') or hasattr(user, 'professeur'):filters['user'] = user  # Ajout du filtre utilisateur pour élève ou professeur
+    elif status_str:  # Pour la pagination GET
+        if status_str in status_mapping.values():
+            filters['statut'] = status_str
 
-    # Récupération des réclamations (le tri ne distingue pas les messages lu et non lu c'est dans le template que la séparation est faite)
-    reclamations = Reclamation.objects.filter(**filters).order_by('-priorite','-date_creation')
-    reclamation_list = []
-    for reclamation in reclamations:
-        reclamation_list.append((reclamation, encrypt_id(reclamation.id))) # cripter ID de la réclamation
-        
-    if request.POST:
-        # Extraction de l'ID de la réclamation choisi dans le formulaire
+    # Filtre utilisateur si élève/professeur
+    if hasattr(user, 'eleve') or hasattr(user, 'professeur'):
+        filters['user'] = user
+
+    # Récupération et pagination des réclamations
+    reclamations = Reclamation.objects.filter(**filters).order_by('-priorite', '-date_creation')
+    
+    paginator = Paginator(reclamations, 10)  # 10 éléments par page
+    page = request.GET.get('page', 1)
+
+    try:
+        reclamations_paginated = paginator.page(page)
+    except PageNotAnInteger:
+        reclamations_paginated = paginator.page(1)
+    except EmptyPage:
+        reclamations_paginated = paginator.page(paginator.num_pages)
+
+    # Préparation des données pour le template
+    reclamation_list = [
+        (reclamation, encrypt_id(reclamation.id)) 
+        for reclamation in reclamations_paginated
+    ]
+
+    # Gestion de la sélection d'une réclamation
+    if request.method == 'POST':
         reclamation_keys = [key for key in request.POST.keys() if key.startswith('btn_reclamation_id')]
         if reclamation_keys: 
-            reclamation_key = [key.split('btn_reclamation_id')[1] for key in reclamation_keys][0]
-            
-
-            # Vérification du nombre d'IDs extraits
+            reclamation_key = reclamation_keys[0].split('btn_reclamation_id')[1]
             if reclamation_key:
-                    request.session['reclamation_id'] = decrypt_id(reclamation_key) # décripter ID de la réclamation
-                    return redirect('reclamation')
-            else:  # Plusieurs IDs trouvés, erreur système
-                messages.error(request, "Erreur système, veuillez contacter le support technique.")
-                if  hasattr(user, 'eleve'):return redirect('compte_eleve')
-                elif  hasattr(user, 'professeur'):return redirect('compte_prof')
-                else: return redirect('compte_administrateur')
+                request.session['reclamation_id'] = decrypt_id(reclamation_key)
+                return redirect('reclamation')
 
-    # Rendu de la page avec le contexte
+    # Préparation du contexte
     context = {
         'reclamation_list': reclamation_list,
+        'reclamations_paginated': reclamations_paginated,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'status_str': status_str,
+        'filter_params': request.session.get('reclamation_filters', {}),
     }
+
     return render(request, 'pages/reclamations.html', context)
-
-
-
-
 
 
 def admin_faq(request):

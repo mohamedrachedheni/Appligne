@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Réclamations{% endblock %}
+{% block title %} | Gestion des Réclamations{% endblock %}
 
 {% block content %}
+
     <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
+        <!-- Sidebar -->
             {% if request.user.is_authenticated %}
                 {% if request.user.eleve %}
                     {% include 'partials/_sidebar_eleve.html' %}
@@ -15,215 +16,337 @@
                     {% include 'partials/_sidebar_admin.html' %}
                 {% endif %}
             {% endif %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">État des réclamations par période</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
+        
+        <!-- Main Content -->
+        <div class="col-sm-12 col-md-8 col-lg-10 " >
+            <div class="container">
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+
+            <!-- Filter Form -->
+            <form method="POST" enctype="multipart/form-data" id="reclamationForm">
                 {% csrf_token %}
 
-                <!-- boutons début -->
-                <div class="container-xxl bg-light" >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_1" class="form-label">Début période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
+                <div class="text-center  py-5" >
+                    <h3 class="section-title bg-white text-center text-primary px-3">Gestion des Réclamations</h3>
+                    <h1 class="mb-4">Suivi des réclamations par période</h1>
+                </div>
+                
+                <!-- Date Range Filter -->
+                
+                    <div class="container-xxl">
+                        <div class="row justify-content-between g-2 p-3">
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <label for="date_debut" class="form-label fw-bold">Date de début</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control datepicker" required 
+                                           name="date_debut" placeholder="jj/mm/aaaa" 
+                                           value="{{ date_debut|date:'d/m/Y' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 text-center">
+                                <h3 class="mb-0">Filtres des réclamations</h3>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="date_fin" class="form-label fw-bold">Date de fin</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control datepicker" required 
+                                           name="date_fin" placeholder="jj/mm/aaaa" 
+                                           value="{{ date_fin|date:'d/m/Y' }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h1>Réclamations</h1>
-                        </div>
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_2" class="form-label">Fin période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
-                        </div>                           
                     </div>
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_attente">
-                                En attente
-                            </button>
+                
+                
+                <!-- Status Filter Buttons -->
+                
+                    <div class="container-xxl">
+                        <div class="row justify-content-between g-2 p-3">
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn " name="btn_en_attente email-filter-btn ">
+                                    <i class="fas fa-clock me-2"></i>En attente
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-info w-100 email-filter-btn " name="btn_en_cours">
+                                    <i class="fas fa-spinner me-2"></i>En cours
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-success w-100 email-filter-btn " name="btn_resolue">
+                                    <i class="fas fa-check-circle me-2"></i>Résolue
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-secondary w-100 email-filter-btn " name="btn_fermee">
+                                    <i class="fas fa-lock me-2"></i>Fermée
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-warning w-100 email-filter-btn " name="btn_non_lu">
+                                    <i class="fas fa-envelope me-2"></i>Non lue
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <button type="submit" class="btn btn-outline-primary w-100 email-filter-btn " name="btn_tous">
+                                    <i class="fas fa-list me-2"></i>Toutes
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
-                                En cours
-                            </button>
+                        
+                        <!-- Status Description -->
+                        {% if status_str %}
+                        <div class="alert alert-info mt-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3 fs-4"></i>
+                                <div>
+                                    {% if status_str == 'en_attente' %}
+                                    <p class="mb-0">Les réclamations en attente n'ont pas encore été traitées par l'administration.</p>
+                                    {% elif status_str == 'en_cours' %}
+                                    <p class="mb-0">Les réclamations en cours sont actuellement traitées par l'administration, mais n'ont pas encore été finalisées.</p>
+                                    {% elif status_str == 'resolue' %}
+                                    <p class="mb-0">Les réclamations résolues ont été traitées avec succès par l'administration et leur traitement est désormais achevé.</p>
+                                    {% elif status_str == 'fermee' %}
+                                    <p class="mb-0">Les réclamations fermées sont clôturées, bien qu'elles ne soient pas nécessairement résolues.</p>
+                                    {% elif status_str == 'non_lu' %}
+                                    <p class="mb-0">Les réclamations non vues n'ont pas encore été consultées par l'administration.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_resolue">
-                                Résolue
-                            </button>
+                        {% endif %}
+                    </div>
+                
+                
+                <!-- Reclamations List -->
+                {% if request.user.is_authenticated and request.user.is_active %}
+                <div class="container-xxl py-3">
+                    <div class="container">
+                        {% if not reclamation_list %}
+                        <div class="text-center py-5">
+                            <img src="{% static 'img/empty-state.svg' %}" alt="Aucune réclamation" class="img-fluid mb-4" style="max-height: 200px;">
+                            <h4 class="text-muted">Aucune réclamation trouvée pour cette période</h4>
+                            <p class="text-muted">Essayez d'ajuster vos critères de recherche.</p>
                         </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_fermee">
-                                Fermée
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_non_lu">
-                                Non lue
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_tous">
-                                Tous
-                            </button>
-                        </div>
-                        {% if status_str == 'en_attente' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les réclamations en attente n'ont pas encore été traitées par l'administration.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'en_cours' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les réclamations en cours sont actuellement traitées par l'administration, mais n'ont pas encore été finalisées.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'resolue' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les réclamations résolues ont été traitées avec succès par l'administration et leur traitement est désormais achevé.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'fermee' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les réclamations fermées sont clôturées, bien qu'elles ne soient pas nécessairement résolues.
-                            </h6>
-                        </div>
-                        {% elif status_str == 'non_lu' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les réclamations non vues n'ont pas encore été consultées par l'administration.
-                            </h6>
+                        {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Priorité</th>
+                                        <th>Utilisateur</th>
+                                        <th>Date</th>
+                                        <th>Statut</th>
+                                        <th>Catégorie</th>
+                                        <th>Titre</th>
+                                        <th>Consultée</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reclamation, reclamation_id in reclamation_list %}
+                                    {% if not status_str == 'non_lu' or not reclamation.messages.last.lu %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge 
+                                                {% if reclamation.priorite == 'H' %}bg-danger
+                                                {% elif reclamation.priorite == 'M' %}bg-warning text-dark
+                                                {% else %}bg-secondary
+                                                {% endif %}  
+                                                py-2 px-3 d-inline-block w-100" 
+                                                style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                {{ reclamation.get_priorite_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ reclamation.user }}</td>
+                                        <td>{{ reclamation.date_creation|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if reclamation.statut == 'resolue' %}bg-success
+                                                {% elif reclamation.statut == 'en_cours' %}bg-info
+                                                {% elif reclamation.statut == 'en_attente' %}bg-warning text-dark
+                                                {% else %}bg-secondary
+                                                {% endif %} py-2 px-3 d-inline-block w-100" 
+                                                style="min-width: 90px; font-size: 0.9rem; line-height: 1.2;">
+                                                {{ reclamation.get_statut_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ reclamation.categorie }}</td>
+                                        <td>{{ reclamation.messages.first.titre|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if reclamation.messages.last.lu %}
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            {% else %}
+                                            <i class="fas fa-exclamation-circle text-warning"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="submit" name="btn_reclamation_id{{reclamation_id}}" 
+                                                    class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>Détails
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Pagination -->
+                            <!-- Dans votre template, modifiez la pagination comme ceci -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            {% if reclamations_paginated.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" 
+                                                    href="?page=1{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+                                                    aria-label="First">
+                                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" 
+                                                    href="?page={{ reclamations_paginated.previous_page_number }}{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+                                                    aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+
+                                            {% for num in reclamations_paginated.paginator.page_range %}
+                                                {% if reclamations_paginated.number == num %}
+                                                    <li class="page-item active">
+                                                        <a class="page-link" 
+                                                        href="?page={{ num }}{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                                        {{ num }}
+                                                        </a>
+                                                    </li>
+                                                {% elif num > reclamations_paginated.number|add:'-3' and num < reclamations_paginated.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" 
+                                                        href="?page={{ num }}{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                                        {{ num }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if reclamations_paginated.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" 
+                                                    href="?page={{ reclamations_paginated.next_page_number }}{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+                                                    aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" 
+                                                    href="?page={{ reclamations_paginated.paginator.num_pages }}{% for key, value in filter_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+                                                    aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            <!-- Fin Pagination -->
                         </div>
                         {% endif %}
                     </div>
                 </div>
-                <!-- boutons fin -->
-
-                {% if  request.user.is_authenticated  and request.user.is_active %}
-                    <div class="container-xxl py-5">
-                        <div class="container">
-                            <div class="container bg-light  p-3 ">
-                                {% if not reclamation_list %}
-                                    <div class="col-md-12 text-center">
-                                        <h4>Il n'y a pas de réclamations pour cette période</h4>
-                                    </div>
-                                {% endif %}
-                                {% for reclamation , reclamation_id in reclamation_list %}
-                                <!-- le tri du view ne tient pas compte des réclamatioms lues ou non lues -->
-                                {% if not status_str == 'non_lu' %}
-                                    <div class="row g-2 " style="margin-bottom: 10px;">
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="priorit_id{{ forloop.counter }}" class="form-label">Priorité / User</label>
-                                            <input type="text" class="form-control form-control-intitule" id="priorit_id{{ forloop.counter }}"  value="{{reclamation.get_priorite_display}} / {{reclamation.user}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="date_reclamation_id_{{ forloop.counter }}" class="form-label">Date réclamation</label>
-                                            <input type="text" class="form-control form-control-intitule" id="date_reclamation_id_{{ forloop.counter }}"  value="{{reclamation.date_creation|date:'d/m/Y'}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative">
-                                            <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
-                                            <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{ reclamation.get_statut_display }}" readonly >
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="categorie_id_{{ forloop.counter }}" class="form-label">Cathégorie</label>
-                                            <input type="text" class="form-control form-control-intitule" id="categorie_id_{{ forloop.counter }}"  value="{{reclamation.categorie}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="titre_id_{{ forloop.counter }}" class="form-label">Titre</label>
-                                            <input type="text" class="form-control form-control-intitule" id="titre_id_{{ forloop.counter }}"  value="{{reclamation.messages.first.titre}}" readonly>
-                                        </div>
-                                        
-                                        <div class="col-md-2 col-sm-12 position-relative mb-0 py-0">
-                                            <label for="vue_id{{ reclamation.id }}" class="form-label">Vue</label>
-                                            <div class="row g-2 ">
-                                                <div class="col-md-5 col-sm-12 position-relative ">
-                                                    <input type="text" class="form-control form-control-intitule" id="vue_id{{ reclamation.id }}"  value="{% if reclamation.messages.last.lu %} Oui {% else %} Non {% endif %}" readonly>
-                                                </div>
-                                                <div class="col-md-7 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation_id}}" >
-                                                        Détaille
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {%  endif %}
-                                {% endfor %}
-                                {% for reclamation , reclamation_id in reclamation_list %}
-                                <!-- dans ce cas seul les réclamations non lues sont affichées grasse à la commande last qui ne tient compte que du dernier message lié à la  réclamation -->
-                                {% if status_str == 'non_lu' and not reclamation.messages.last.lu  %}
-                                    <div class="row g-2 " style="margin-bottom: 10px;">
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="priorit_id{{ forloop.counter }}" class="form-label">Priorité / User</label>
-                                            <input type="text" class="form-control form-control-intitule" id="priorit_id{{ forloop.counter }}"  value="{{reclamation.get_priorite_display}} / {{reclamation.user}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="date_reclamation_id_{{ forloop.counter }}" class="form-label">Date réclamation</label>
-                                            <input type="text" class="form-control form-control-intitule" id="date_reclamation_id_{{ forloop.counter }}"  value="{{reclamation.date_creation|date:'d/m/Y'}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative">
-                                            <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
-                                            <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{ reclamation.get_statut_display }}" readonly >
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="categorie_id_{{ forloop.counter }}" class="form-label">Cathégorie</label>
-                                            <input type="text" class="form-control form-control-intitule" id="categorie_id_{{ forloop.counter }}"  value="{{reclamation.categorie}}" readonly>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="titre_id_{{ forloop.counter }}" class="form-label">Titre</label>
-                                            <input type="text" class="form-control form-control-intitule" id="titre_id_{{ forloop.counter }}"  value="{{reclamation.messages.first.titre}}" readonly>
-                                        </div>
-                                        
-                                        <div class="col-md-2 col-sm-12 position-relative mb-0 py-0">
-                                            <label for="vue_id{{ reclamation.id }}" class="form-label">Vue</label>
-                                            <div class="row g-2 ">
-                                                <div class="col-md-5 col-sm-12 position-relative ">
-                                                    <input type="text" class="form-control form-control-intitule" id="vue_id{{ reclamation.id }}"  value="{% if reclamation.messages.last.lu %} Oui {% else %} Non {% endif %}" readonly>
-                                                </div>
-                                                <div class="col-md-7 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <button type="submit" class="btn btn-primary  w-100" name="btn_reclamation_id{{reclamation_id}}" >
-                                                        Détaille
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {%  endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Liste élève fin -->
                 {% endif %}
             </form>
         </div>
     </div>
 
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 {% endblock %}
 
 {% block javascript %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
-    <script src="{% static 'js/Code_en_plus_admin_payment_en_attente_reglement.js' %}"></script>
-    <script>
+<!-- Datepicker Configuration -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-i18n/1.12.1/jquery-ui-i18n.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize datepicker with French localization
+    $.datepicker.setDefaults($.datepicker.regional['fr']);
+    
+    $(".datepicker").datepicker({
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        changeYear: true,
+        yearRange: "-2:+1"
+    });
+    
+    // Back to top button
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 300) {
+            $('.back-to-top').fadeIn('slow');
+        } else {
+            $('.back-to-top').fadeOut('slow');
+        }
+    });
+    
+    $('.back-to-top').click(function(e) {
+        e.preventDefault();
+        $('html, body').animate({scrollTop: 0}, 500);
+        return false;
+    });
+});
+</script>
+<style>
+    .email-filter-btn.active {
+        background-color: #0db9fdfc !important;
+        color: white !important;
+        border-color: #0db9fdfc !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.email-filter-btn');
         
-    </script>
+        // Récupérer le dernier bouton cliqué depuis le sessionStorage
+        const lastClicked = sessionStorage.getItem('lastClickedEmailFilter');
+        if (lastClicked) {
+            document.querySelector(`button[name="${lastClicked}"]`).classList.add('active');
+        }
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Retirer la classe active de tous les boutons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.classList.add('btn-outline-primary');
+                    btn.classList.remove('btn-primary');
+                });
+                
+                // Ajouter la classe active au bouton cliqué
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-primary');
+                
+                // Stocker le dernier bouton cliqué
+                sessionStorage.setItem('lastClickedEmailFilter', this.name);
+            });
+        });
+    });
+</script>
 {% endblock %}
