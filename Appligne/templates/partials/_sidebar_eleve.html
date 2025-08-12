@@ -1,3 +1,4 @@
+<!-- Sidebar Elève -->
 {% load static %}
 <!-- Sidebar Professionnelle -->
 <nav id="sidebar" style="background-color: #e3f2fd;">
@@ -125,6 +126,18 @@
                         <a href="{% url 'admin_faq' %}" 
                            class="d-block py-2 text-dark hover-blue">
                             <i class="fas fa-question-circle me-2"></i>FAQ / Assistance
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'index' %}" 
+                           class="d-block py-2 text-primary hover-blue">
+                            <img src="{% static 'img/logo.png' %}" alt="Appligne" height="30" class="me-2">Page principale
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{% url 'logout' %}" 
+                           class="d-block py-2 text-danger hover-blue">
+                            <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
                         </a>
                     </li>
                 </ul>

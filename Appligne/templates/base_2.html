@@ -66,12 +66,18 @@
             margin-bottom: 0rem;
         }
     </style>
+    <style>
+        /* Cache sidebar par défaut  */
+        #sidebarCollapse {
+            display: none;
+        }
+    </style>
 
 
 </head>
 
 <body>
-    {% include 'partials/_navbar_2.html' %}
+    {% include 'partials/_navbar.html' %}
 
     {% block content %}
 

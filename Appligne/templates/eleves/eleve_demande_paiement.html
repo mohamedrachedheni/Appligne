@@ -112,20 +112,27 @@
                                     </div>
                                 </div>
                                 <div class="row justify-content-between g-2 p-3">
-                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
                                         <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >{% if not  demande_paiement.reclamation %}Pas de réclamation {% else %} Voire réclamation {% endif %}</button>
                                     </div>
-                                    <div class="col-lg-4 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-secondary w-100" name="btn_nouvelle_reclamation" {% if  demande_paiement.reclamation or not request.user.eleve %} disabled {% endif %} >Ajouter une réclamation liée au paiement</button>
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-secondary w-100" name="btn_nouvelle_reclamation" {% if  demande_paiement.reclamation or not request.user.eleve %} disabled {% endif %} >Ajouter une réclamation</button>
                                     </div>
                                     
-                                    <div class="col-lg-4 col-md-4 col-sm-6">
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
                                         <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_paiement_checkout"
                                             {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'En cours'  %}
                                                 disabled
                                             {% elif demande_paiement.payment_id %}
                                                 disabled
                                             {% endif %}>Passer au paiement
+                                        </button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_facture"
+                                            {% if not demande_paiement.payment_id %}
+                                                disabled
+                                            {% endif %}>Télécharger facture
                                         </button>
                                     </div>
                                 </div>
