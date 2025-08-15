@@ -18,7 +18,7 @@
                 <div class="container  ">
                     <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves</h6>
+                        <h3 class="section-title bg-white text-center text-primary px-3">État des paiements des élèves</h3>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
@@ -132,11 +132,6 @@
                                             <h4>Il n'y a pas de paiement pour cette période</h4>
                                         </div>
                                     {% endif %}
-                                    <!-- <div class="row  py-3" style="margin-bottom: 30px;">
-                                        <div class="col-12  position-relative">
-                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="Professeur: {{prof.first_name}} {{prof.last_name}}" readonly >
-                                        </div>
-                                    </div> -->
                                     {% for eleve, payment,  accordReglement in paiements %}
                                         <!--  if professeur == prof  -->
                                             <div class="row  " style="margin-bottom: 10px;">

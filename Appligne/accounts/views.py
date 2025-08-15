@@ -2532,7 +2532,8 @@ def cours_mon_eleve(request, eleve_id):
                 mon_cours = Cours.objects.get(id=cours_id, is_active=request.session.get('is_active', True))
                 
                 # Redirige vers la vue 'horaire_cours_mon_eleve' en passant l'ID du cours
-                return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
+                request.session['cours_id'] = cours_id
+                return redirect('horaire_cours_mon_eleve')
             
             except Cours.DoesNotExist:
                 # Si le cours n'existe pas, affiche un message d'erreur et redirige vers la page 'compte_prof'
@@ -2548,8 +2549,21 @@ def cours_mon_eleve(request, eleve_id):
     # Rend le template 'cours_mon_eleve' avec le contexte préparé
     return render(request, 'accounts/cours_mon_eleve.html', context)
 
-def horaire_cours_mon_eleve(request, cours_id):
-    mon_cours = Cours.objects.get(id=cours_id)
+from django.core.paginator import Paginator
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Horaire, Cours, Mes_eleves, Detail_demande_paiement
+from decimal import Decimal
+from datetime import datetime
+
+def horaire_cours_mon_eleve(request):
+    """
+    Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique
+    avec pagination des horaires.
+    """
+    cours_id = request.session.get('cours_id', None)
+    mon_cours = get_object_or_404(Cours, id=cours_id)
+    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
     
     # Gestion des requêtes POST
     if request.method == 'POST':
@@ -2568,40 +2582,34 @@ def horaire_cours_mon_eleve(request, cours_id):
             mon_cours.prix_heure = prix_heure_dec
             mon_cours.save()
             messages.success(request, "Le prix de l'heure est modifié avec succès.")
-            return redirect('horaire_cours_mon_eleve', cours_id=cours_id )
 
-        # Gestion de la modification du prix de l'heure
+            return redirect('horaire_cours_mon_eleve')
+
+        # Gestion de l'activation/désactivation du cours
         if 'btn_activer' in request.POST:
-            
             if mon_cours.is_active:  
-                
-                # if is_activ_first and not is_activ_last:
-                # Récupérer tous les statuts des demandes de paiement liés au cours
                 details_demande_paiement = Detail_demande_paiement.objects.filter(cours=mon_cours)
                 Statut_demandes = [
                     detail.demande_paiement.statut_demande 
                     for detail in details_demande_paiement
                 ]
                 teste = True
-                # Vérification des statuts
                 for statut in Statut_demandes:
                     if statut not in ['Annuler', 'Réaliser']:
                         messages.error(request, "Au moins une demande de paiement liée à ce cours est en attente ou en cours, ce qui empêche sa désactivation.")
                         teste = False
                         break
 
-                # Si tous les statuts sont valides, désactiver le cours
                 if teste:
                     mon_cours.is_active = False
                     mon_cours.save()
-                    
+            else: 
+                mon_cours.is_active = True
+                mon_cours.save()
+            
+            messages.info(request, f"Le cours est {'désactivé' if not mon_cours.is_active else 'activé'}.")
+            return redirect('horaire_cours_mon_eleve')
         
-            else: mon_cours.is_active = True
-            mon_cours.save()
-            if not  mon_cours.is_active: messages.info(request, "Le cours est désactivé.")
-            else: messages.info(request, "Le cours est activé.")
-           
-
         # Gestion de la suppression d'un horaire
         sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
         if sup_enr_keys:
@@ -2610,9 +2618,10 @@ def horaire_cours_mon_eleve(request, cours_id):
             try:
                 horaire_to_delete = Horaire.objects.get(id=horaire_id)
                 horaire_to_delete.delete()
-                messages.success(request, f"Horaire  supprimé avec succès.")
+                messages.success(request, "Horaire supprimé avec succès.")
             except Horaire.DoesNotExist:
-                messages.error(request, f"Horaire  non trouvé.")
+                messages.error(request, "Horaire non trouvé.")
+            return redirect('horaire_cours_mon_eleve')
         
         # Gestion de la modification d'un horaire
         modif_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_modif_')]
@@ -2633,108 +2642,143 @@ def horaire_cours_mon_eleve(request, cours_id):
                     heure_fin_conv = datetime.strptime(heure_fin, '%H:%M')
                     if heure_debut_conv >= heure_fin_conv:
                         messages.error(request, f"Début de la séance {heure_debut} doit être inférieur à fin de la séance {heure_fin}.")
-                        return render(request, 'accounts/horaire_cours_mon_eleve.html', {
-                            'mon_cours': mon_cours,
-                            'mon_eleve': mon_eleve,
-                            'enr_horaires': enr_horaires,
-                        })
-                
-                # Mise à jour de l'horaire
-                horaire_enr.set_date_obtenu_from_str(date_cours)
-                horaire_enr.set_heure_debut_from_str(heure_debut)
-                horaire_enr.set_heure_fin_from_str(heure_fin)
-                horaire_enr.contenu = contenu
-                horaire_enr.statut_cours = statut_cours
-                horaire_enr.calculer_duree()
-                horaire_enr.save()
-                messages.success(request, f"Horaire  modifié avec succès.")
+                    else:
+                        # Mise à jour de l'horaire
+                        horaire_enr.set_date_obtenu_from_str(date_cours)
+                        horaire_enr.set_heure_debut_from_str(heure_debut)
+                        horaire_enr.set_heure_fin_from_str(heure_fin)
+                        horaire_enr.contenu = contenu
+                        horaire_enr.statut_cours = statut_cours
+                        horaire_enr.calculer_duree()
+                        horaire_enr.save()
+                        messages.success(request, "Horaire modifié avec succès.")
                 
             except Horaire.DoesNotExist:
-                messages.error(request, f"Horaire  non trouvé.")
-    """
-    Gère les opérations de suppression, modification, et ajout des horaires pour un cours spécifique.
-    """
+                messages.error(request, "Horaire non trouvé.")
+            return redirect('horaire_cours_mon_eleve')
 
-    # Initialiser les variables nécessaires
-    mon_cours = get_object_or_404(Cours, id=cours_id)
-    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
-    
-    # Récupère tous les horaires associés au cours
+    # Récupération des horaires avec pagination
+    horaires_query = Horaire.objects.filter(cours=mon_cours).order_by('date_cours', 'heure_debut')
+    paginator = Paginator(horaires_query, 10)  # 10 horaires par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Préparation des données pour le template
     enr_horaires = []
-    enrs = Horaire.objects.filter(cours=mon_cours)
-    for enr in enrs:
-        # Déterminer le statut du règlement
-        if enr.payment_id:
-            statut_reglement = 'Réglé'
-        elif enr.demande_paiement_id:
-            statut_reglement = 'Règlement en cours'
-        else:
-            statut_reglement = 'Non réglé'
-        
-        # Ajouter l'horaire à la liste avec les informations et le statut de règlement
+    for enr in page_obj:
+        statut_reglement = 'Réglé' if enr.payment_id else 'Règlement en cours' if enr.demande_paiement_id else 'Non réglé'
         enr_horaires.append({
-            'date': enr.date_cours.strftime('%d/%m/%Y'),  # Formatage de la date
-            'debut': enr.heure_debut,                      # Heure de début
-            'fin': enr.heure_fin,                          # Heure de fin
-            'contenu': enr.contenu,                        # Contenu du cours
-            'statut': enr.statut_cours,                    # Statut du cours
-            'id': enr.id,                                  # ID de l'horaire
-            'statut_reglement': statut_reglement,          # Statut du règlement
+            'date': enr.date_cours.strftime('%d/%m/%Y'),
+            'debut': enr.heure_debut,
+            'fin': enr.heure_fin,
+            'contenu': enr.contenu,
+            'statut': enr.statut_cours,
+            'id': enr.id,
+            'statut_reglement': statut_reglement,
         })
-    # Prépare le contexte pour le rendu de la vue
+
     context = {
         'mon_cours': mon_cours,
         'mon_eleve': mon_eleve,
         'enr_horaires': enr_horaires,
+        'page_obj': page_obj,  # Objet de pagination
     }
     
-    # Renvoie le template avec le contexte préparé
     return render(request, 'accounts/horaire_cours_mon_eleve.html', context)
 
+# from django.core.paginator import Paginator
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from .models import Horaire
 
 def liste_seance_cours(request):
     """
     Affiche la liste des séances de cours en attente pour l'utilisateur actuel
-    et gère la redirection vers la page de détail d'une séance spécifique si demandé.
+    avec pagination et gestion des filtres actif/non-actif.
     """
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
+        return redirect('signin')
+    
     user = request.user
-    # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant que prof")
-        return redirect('signin')   # Récupère l'utilisateur actuel
-    is_active = True # par défaut
-    if 'btn_active' in request.POST: is_active = True
-    if 'btn_non_active' in request.POST: is_active = False
+        messages.error(request, "Vous n'êtes pas connecté en tant que prof")
+        return redirect('signin')
 
-    # Filtre les horaires en attente associés aux cours actifs pour l'utilisateur actuel
-    liste_horaires = Horaire.objects.filter(
+    # Gestion des filtres
+    is_active = True  # Valeur par défaut
+    if request.method == 'POST':
+        if 'btn_active' in request.POST:
+            is_active = True
+        elif 'btn_non_active' in request.POST:
+            is_active = False
+
+    # Filtrage des horaires
+    horaires_query = Horaire.objects.filter(
         statut_cours="En attente",
         cours__is_active=is_active,
         cours__mon_eleve__is_active=True,
-        cours__user=user  # Assure que les cours appartiennent à l'utilisateur (professeur) actuel
+        cours__user=user
     ).order_by('date_cours', 'heure_debut')
 
-    # Vérifie si un bouton de détail a été activé
-    detaille_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_detaille_')]
-    if detaille_enr_keys:
-        btn_key = detaille_enr_keys[0]  # Récupère la clé du bouton activé
-        horaire_id = int(btn_key.split('btn_detaille_')[1])  # Extrait l'ID de l'horaire de la clé
-        try:
-            # Récupère l'horaire correspondant à l'ID
-            horaire_enr = Horaire.objects.get(id=horaire_id)
-            cours_id = horaire_enr.cours_id  # Récupère l'ID du cours associé à l'horaire
-            # Redirige vers la page de détail de l'horaire
-            return redirect('horaire_cours_mon_eleve', cours_id=cours_id)
-        except Horaire.DoesNotExist:
-            # Affiche un message d'erreur si l'horaire n'existe pas
-            messages.error(request, f"Horaire  non trouvé.")
+    # Pagination - 10 éléments par page
+    paginator = Paginator(horaires_query, 10)
+    page_number = request.GET.get('page')
+    liste_horaires = paginator.get_page(page_number)
+    liste_cours = []
+    for enr in liste_horaires:
+        cours_id = encrypt_id(enr.id)
+        liste_cours.append((enr, cours_id))
 
-    # Rende la vue avec la liste des horaires en attente
-    return render(request, 'accounts/liste_seance_cours.html', {'liste_horaires': liste_horaires, 'is_active': is_active})
 
+
+    # Gestion des boutons de détail
+    if request.method == 'POST':
+        # On récupère uniquement les clés qui correspondent au format attendu
+        detaille_enr_keys = [
+            key for key in request.POST.keys()
+            if key.startswith('btn_detaille_')
+        ]
+
+        if detaille_enr_keys:
+            btn_key = detaille_enr_keys[0]  # Premier bouton trouvé
+
+            # On isole la partie chiffrée
+            encrypted_part = btn_key.removeprefix('btn_detaille_').strip()
+
+            try:
+                # Déchiffrement de l'ID de l'horaire
+                horaire_id = decrypt_id(encrypted_part)
+
+                # Vérifie que l'ID est bien un entier positif
+                if not isinstance(horaire_id, int) or horaire_id <= 0:
+                    raise ValueError("ID horaire déchiffré invalide")
+
+                # Récupère l'horaire en base
+                horaire = Horaire.objects.select_related('cours').get(id=horaire_id)
+
+                # Stocke l'ID du cours dans la session
+                request.session['cours_id'] = horaire.cours_id
+
+                return redirect('horaire_cours_mon_eleve')
+
+            except Horaire.DoesNotExist:
+                messages.error(request, "Horaire introuvable.")
+
+            except ValueError as e:
+                messages.error(request, str(e))
+
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+
+
+
+
+    return render(request, 'accounts/liste_seance_cours.html', {
+        'liste_horaires': liste_horaires,
+        'liste_cours': liste_cours,
+        'is_active': is_active
+    })
 
 
 def demande_reglement(request, eleve_id):

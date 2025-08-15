@@ -3,53 +3,47 @@
 document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>');
 
 
-// Fonction pour configurer Pikaday pour un élément spécifique selon son ID
 function configurerPikaday(indice) {
-    // Date par défaut
     var defaultDate = new Date();
 
-    // Utilisation de la bibliothèque Pikaday pour faciliter la sélection de la date
+    var field = document.getElementById('date_id_' + indice);
+
     var picker = new Pikaday({
-        field: document.getElementById('date_id_' + indice),
-        format: 'DD/MM/YYYY', // Format de la date en français
+        field: field,
+        format: 'DD/MM/YYYY',
         i18n: {
             previousMonth: 'Mois précédent',
             nextMonth: 'Mois suivant',
             months: [
-                'Janvier',
-                'Février',
-                'Mars',
-                'Avril',
-                'Mai',
-                'Juin',
-                'Juillet',
-                'Août',
-                'Septembre',
-                'Octobre',
-                'Novembre',
-                'Décembre'
+                'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
             ],
             weekdays: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
             weekdaysShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
         },
-        defaultDate: defaultDate, // Définir la date par défaut
+        defaultDate: defaultDate,
         onSelect: function (date) {
-            var formattedDate = ("0" + date.getDate()).slice(-2) + "/" + ("0" + (date.getMonth() + 1)).slice(-2) + "/" + date.getFullYear();
-            var field = document.getElementById('date_id_' + indice);
+            var formattedDate =
+                ("0" + date.getDate()).slice(-2) + "/" +
+                ("0" + (date.getMonth() + 1)).slice(-2) + "/" +
+                date.getFullYear();
+
             field.value = formattedDate;
 
-            // Trouver le prochain champ de date et lui donner le focus
-            var nextField = document.querySelector(`#date_id_${indice + 1}`);
-            if (nextField) {
-                nextField.focus();
-            } else {
-                // Si aucun champ suivant n'est trouvé, vous pouvez également le déplacer ailleurs
-                // Par exemple, vous pouvez déplacer le focus au premier champ d'heure ou autre champ
-                var firstTimeField = document.querySelector('.form-control-heure');
-                if (firstTimeField) {
-                    firstTimeField.focus();
-                }
-            }
+            // Redonner le focus après la fermeture du calendrier
+            requestAnimationFrame(function () {
+                field.focus();
+            });
+        }
+    });
+
+    // Éviter que Pikaday perde le focus après clic
+    field.addEventListener('blur', function (e) {
+        if (picker.isVisible()) {
+            e.preventDefault();
+            requestAnimationFrame(function () {
+                field.focus();
+            });
         }
     });
 }
