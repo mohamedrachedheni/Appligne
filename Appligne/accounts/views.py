@@ -435,7 +435,7 @@ def nouveau_zone(request):
         return redirect('signin') 
 
 
-    btn_text = "Enregistrez les zones"  # Texte par défaut du bouton
+    btn_text = "Enregistrer zones"  # Texte par défaut du bouton
     if 'btn_enr' in request.POST:
         # Récupérer les listes des communes du GET sélectionnées dans le deuxième select name="communes_chx"
         liste_communes = request.POST.getlist('communes_chx')
@@ -459,7 +459,7 @@ def nouveau_zone(request):
                 prof_zone.save()
                 
                 # Modifier le texte du bouton après l'enregistrement réussi
-                btn_text = "Ajoutez d'autres zones"
+                btn_text = "Ajouter zones"
             else:
                 # messages.info(request, f"Enregistrement de la Commune  = '{commune_text}' éxiste déjà.")
                 continue # passer à la suivante commune si l'enregistrement existe déjà   
@@ -1412,6 +1412,7 @@ def modifier_zone(request):
     messages.error(request, "Les données des zones d'activités n'existent pas pour cet utilisateur. Vous devez ajouter vos zones avant.")
     return redirect('nouveau_zone')
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 def demande_cours_recu(request):
     # Vérification si l'utilisateur est connecté
@@ -1419,21 +1420,92 @@ def demande_cours_recu(request):
         messages.error(request, "Vous devez être connecté pour accéder à cette page.")
         return redirect('signin')
     
-    user_id = request.user.id # ID prof
+    user_id = request.user.id  # ID prof
     
-    emails = Email_telecharge.objects.filter(user_destinataire=user_id, suivi__isnull = True) # email destinés aux prof sans réponse
+    # Récupération des emails destinés au prof sans réponse
+    emails = Email_telecharge.objects.filter(
+        user_destinataire=user_id, 
+        suivi__isnull=True
+    ).order_by('-date_telechargement')  # Tri par date décroissante
     
-    if emails.count() == 0:
-        messages.info(request, "Il n'y a pas d'Email nouvellement envoyé.")
+    if not emails.exists():
+        messages.info(request, "Il n'y a pas de nouvelles demandes de cours.")
         return redirect('compte_prof')
-    # tri enregistrements par ordre décroissant des date_telechargement
-    email_detailles = Email_detaille.objects.filter(email__in=emails).order_by('-email__date_telechargement')
-    context = {'email_detailles': email_detailles}
+    
+    # Récupération des détails des emails avec pagination
+    email_detailles = Email_detaille.objects.filter(email__in=emails)
+
+    email_detailles_liste = []
+    for enr in email_detailles:
+        email_detailles_liste.append((enr, encrypt_id(enr.email.id)))
+    
+    # Configuration de la pagination
+    paginator = Paginator(email_detailles, 10)  # 10 éléments par page
+    page_number = request.GET.get('page')  # Récupération du numéro de page depuis l'URL
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        # Si le paramètre page n'est pas un entier, on retourne la première page
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        # Si la page est hors limite (trop grande), on retourne la dernière page
+        page_obj = paginator.page(paginator.num_pages)
+    
+    # Gestion des boutons de détail de redirection dans le formulaire
+    if request.method == 'POST':
+        # On récupère uniquement les clés qui correspondent au format attendu
+        detaille_enr_keys = [
+            key for key in request.POST.keys()
+            if key.startswith('btn_email_recu_')
+        ]
+
+        if detaille_enr_keys:
+            btn_key = detaille_enr_keys[0]  # Premier bouton trouvé
+
+            # On isole la partie chiffrée
+            encrypted_part = btn_key.removeprefix('btn_email_recu_').strip()
+
+            try:
+                # Déchiffrement de l'ID 
+                enr_id = decrypt_id(encrypted_part)
+
+                # Vérifie que l'ID est bien un entier positif
+                if not isinstance(enr_id, int) or enr_id <= 0:
+                    raise ValueError("ID déchiffré invalide") 
+
+                # Récupère l'enregistrement en base (Modifier la table appropriée)
+                email_telecharge = Email_telecharge.objects.get(id=enr_id)
+
+                # Stocke l'ID de l'enregistrement dans la session (donner un nom approprié à l'ID)
+                request.session['email_telecharge_id'] = email_telecharge.id
+
+                return redirect('demande_cours_recu_eleve') # rediriger vers la vue appropriée
+
+            except Email_detaille.DoesNotExist: # (spécifier la table appropriée)
+                messages.error(request, "Email introuvable.") # (spécifier la table appropriée)
+
+            except ValueError as e:
+                messages.error(request, str(e))
+
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+
+    context = {
+        'email_detailles': page_obj,
+        'email_detailles_liste': email_detailles_liste,
+        'page_obj': page_obj,  # Pour l'affichage des contrôles de pagination
+    }
     
     return render(request, 'accounts/demande_cours_recu.html', context)
     
 
-def demande_cours_recu_eleve(request, email_id):
+def demande_cours_recu_eleve(request):
+    email_id = request.session.get('email_telecharge_id', None)
+    if not email_id:
+        messages.error(request, "L'ID de l'email n'est pas dans la session")
+        return redirect('compte_prof')
+
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -1523,7 +1595,8 @@ def demande_cours_recu_eleve(request, email_id):
         return redirect('compte_prof')
 
     if 'btn_repondre' in request.POST:
-        return redirect('reponse_email', email_id=email_id) # Redirigze ver page  email_id est transmis à reponse_email
+        request.session['email_telecharge_id'] = email_id
+        return redirect('reponse_email') # Redirigze ver page  email_id est transmis à reponse_email
     
     if 'btn_historique' in request.POST: # bouton historique activé
         if email.reponse_email_id==None:
@@ -1535,13 +1608,15 @@ def demande_cours_recu_eleve(request, email_id):
             return redirect('compte_prof')
         # rediriger vers la même page mais en changeant l'argument
         # il faut élaborer une page spéciale pour afficher l'historique des emails
-        return redirect(reverse('demande_cours_recu_eleve', args=[email.reponse_email_id])) # -	ça marche très bien
+        return redirect('demande_cours_recu_eleve') # -	ça marche très bien
     
     if 'btn_ajout_eleve' in request.POST: # bouton ajout élève activé
         return redirect('ajouter_mes_eleve', eleve_id=email.user.id) # Rediriger vers autre page
     
     if 'btn_voire_eleve' in request.POST: # bouton ajout élève activé
-        return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id) # Rediriger vers autre page
+        request.session['mon_eleve_id'] = mon_eleve_id
+        return redirect('modifier_mes_eleve') # Rediriger vers autre page
+    
     
     if 'btn_ajout_cours' in request.POST: # bouton ajout cours et eleve si eleve non inscrit
         request.session['email_id'] = email_id
@@ -1550,8 +1625,12 @@ def demande_cours_recu_eleve(request, email_id):
     return render(request, 'accounts/demande_cours_recu_eleve.html', context) # Revenir à la même page, le context est nécessaire pout le template
 
 
-
-def reponse_email(request, email_id): 
+def reponse_email(request): 
+    email_id = request.session.get('email_telecharge_id', None)
+    if not email_id:
+        messages.error(request, "L'ID de l'email n'est pas dans la session")
+        return redirect('compte_prof')
+    
     email = Email_telecharge.objects.filter(id=email_id).first() # envoyé par l'élève
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
@@ -1652,6 +1731,7 @@ def reponse_email(request, email_id):
     
     return render(request, 'accounts/reponse_email.html', context) # revenir sur la même page
 
+# from django.core.paginator import Paginator
 
 def email_recu_prof(request):
     # Vérification si l'utilisateur est connecté
@@ -1664,8 +1744,6 @@ def email_recu_prof(request):
     # Fonction interne pour récupérer les emails en fonction des critères de filtrage
     def get_emails(filter_criteria):
         emails = Email_telecharge.objects.filter(user_destinataire=user_id, **filter_criteria).order_by('-date_telechargement')
-        # if not emails:
-        #     messages.info(request, "Il n'y a pas d'Email correspondant à votre filtre.")
         return emails
 
     # Filtrage par défaut pour les nouveaux emails (emails avec suivi = null)
@@ -1674,50 +1752,43 @@ def email_recu_prof(request):
     # Vérification du type de requête et application des filtres en fonction du bouton cliqué
     if request.method == 'POST':
         if 'btn_tous' in request.POST:
-            # Filtrer pour tous les emails
             emails = get_emails({})
         elif 'btn_nouveau' in request.POST:
-            # Filtrer pour les nouveaux emails (suivi = null)
             emails = get_emails({'suivi__isnull': True})
         elif 'btn_attente' in request.POST:
-            # Filtrer pour les emails en attente (suivi = 'Réception confirmée')
             emails = get_emails({'suivi': 'Réception confirmée'})
         elif 'btn_repondu' in request.POST:
-            # Filtrer pour les emails répondus (suivi = 'Répondu')
             emails = get_emails({'suivi': 'Répondu'})
         elif 'btn_ignore' in request.POST:
-            # Filtrer pour les emails ignorés (suivi = 'Mis à côté')
             emails = get_emails({'suivi': 'Mis à côté'})
 
+    # Pagination - 10 éléments par page
+    paginator = Paginator(emails, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Création d'une liste (obj, id_chiffré) via compréhension de liste
-    emails_list = [(obj, encrypt_id(obj.id)) for obj in emails]
+    emails_list = [(obj, encrypt_id(obj.id)) for obj in page_obj]
     
     # Gestion des soumissions POST pour le bouton "détail"
-    # Trouver la clé du bouton cliqué commençant par "btn_email_"
     email_enr_key = next((key for key in request.POST if key.startswith('btn_email_')), None)
     if request.method == 'POST' and email_enr_key:
-        
+        try:
+            email_id = decrypt_id(email_enr_key.removeprefix('btn_email_'))
+            request.session['email_id'] = email_id
+            return redirect('email_detaille')
+        except (ValueError, TypeError):
+            messages.error(request, "L'ID fourni est invalide.")
+        except Demande_paiement.DoesNotExist:
+            messages.error(request, f"L'email avec l'ID {email_id} n'a pas été trouvée.")
+        except Exception as e:
+            messages.error(request, f"Une erreur est survenue : {e}")
 
-        if email_enr_key:
-            try:
-                # Déchiffrement de l'ID
-                email_id = decrypt_id(email_enr_key.removeprefix('btn_email_'))
-                request.session['email_id'] = email_id
-                return redirect('email_detaille')
-
-            except (ValueError, TypeError):
-                messages.error(request, "L'ID fourni est invalide.")
-            except Demande_paiement.DoesNotExist:
-                messages.error(request, f"L'email avec l'ID {email_id} n'a pas été trouvée.")
-            except Exception as e:
-                messages.error(request, f"Une erreur est survenue : {e}")
-
-    # Contexte à passer au template
     context = {
-        'emails': emails_list
+        'emails': emails_list,
+        'page_obj': page_obj  # Ajout de l'objet pagination au contexte
     }
     
-    # Rendu de la page avec les emails filtrés
     return render(request, 'accounts/email_recu_prof.html', context)
 
 def modifier_mot_pass(request):
@@ -1931,7 +2002,11 @@ def ajouter_mes_eleve(request, eleve_id):
     # Rendre le template pour ajouter un élève
     return render(request, 'accounts/ajouter_mes_eleve.html', context)
 
-def modifier_mes_eleve(request, mon_eleve_id):
+def modifier_mes_eleve(request):
+    mon_eleve_id = request.session.get('mon_eleve_id', None)
+    if not mon_eleve_id:
+        messages.error(request, "L'ID de l'élève n'est pas dans la session")
+        return redirect('compte_prof')
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -1979,14 +2054,14 @@ def modifier_mes_eleve(request, mon_eleve_id):
                 cours_mon_eleve.is_active = False
                 cours_mon_eleve.save()
             messages.success(request, "L'enregistrement de mon élève est mis à jour avec désactivation de tous les cours liés")
-            return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id )
+            return redirect('modifier_mes_eleve' )
                 
         else:  # sauvegarder l'enregistrement mon_eleve sans exception
             mon_eleve.is_active = 'is_active' in request.POST
             mon_eleve.remarque = remarque = request.POST.get('remarque', None)
             mon_eleve.save()
             messages.success(request, "L'enregistrement de mon élève est mis à jour.")
-            return redirect('modifier_mes_eleve', mon_eleve_id=mon_eleve_id )
+            return redirect('modifier_mes_eleve')
         
     return render(request, 'accounts/modifier_mes_eleve.html', context)
 
@@ -2411,78 +2486,93 @@ def modifier_cours(request, cours_id):
 def liste_mes_eleve(request):
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
+        return redirect('signin')
+
     user = request.user
-    # Vérifier si l'utilisateur a un profil de professeur associé
+    # Vérifier si l'utilisateur est un professeur
     if not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant que prof")
-        return redirect('signin') 
-    is_active = True # par défaut
-    if 'btn_active' in request.POST: is_active = True
-    if 'btn_non_active' in request.POST: is_active = False
-    # Récupérer les informations des élèves actifs associés à l'utilisateur connecté
-    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=is_active)
-    
+        messages.error(request, "Vous n'êtes pas connecté en tant que professeur.")
+        return redirect('signin')
 
-    # Si aucun élève n'est trouvé, renvoyer un message d'erreur
+    # Récupérer les élèves actifs
+    mes_eleves = Mes_eleves.objects.filter(user=user, is_active=True)
+
     if not mes_eleves.exists():
-        messages.error(request, "Aucun élève trouvé pour ce cours.")
-        return redirect('compte_prof')  # Redirection vers la vue de compte du professeur
+        messages.error(request, "Aucun élève trouvé.")
+        return redirect('compte_prof')
 
-    # Si la requête est de type POST, traiter les actions des boutons
+    # Liste avec IDs chiffrés
+    mes_eleves_liste = [(enr, encrypt_id(enr.id)) for enr in mes_eleves]
+
+    # Fonction utilitaire pour traiter les boutons POST
+    def handle_post_button(prefix, redirect_url):
+        """
+        Traite le bouton dont le nom commence par `prefix` et redirige vers `redirect_url`.
+        """
+        for key in request.POST.keys():
+            if key.startswith(prefix):
+                encrypted_part = key.removeprefix(prefix).strip()
+                try:
+                    enr_id = decrypt_id(encrypted_part)
+                    if not isinstance(enr_id, int) or enr_id <= 0:
+                        raise ValueError("ID déchiffré invalide")
+                    mon_eleve = Mes_eleves.objects.get(id=enr_id)
+                    request.session['mon_eleve_id'] = mon_eleve.id
+                    return redirect(redirect_url)
+                except Mes_eleves.DoesNotExist:
+                    messages.error(request, "Élève introuvable.")
+                except ValueError as e:
+                    messages.error(request, str(e))
+                except Exception as e:
+                    messages.error(request, f"Une erreur est survenue : {e}")
+                break
+        return None
+
+    # Traitement des actions POST
     if request.method == 'POST':
-        # Recherche des clés commençant par 'btn_cours_' dans les données POST
-        cours_keys = [key for key in request.POST.keys() if key.startswith('btn_cours_')]
-        if cours_keys:
-            # Prendre le premier bouton cliqué correspondant à un cours
-            btn_key = cours_keys[0]
-            # Extraire l'ID de l'élève à partir de la clé du bouton
-            mon_eleve_id = int(btn_key.split('btn_cours_')[1])
-
-            try:
-                # Récupérer l'élève en utilisant l'ID extrait
-                mon_eleve = Mes_eleves.objects.get(id=mon_eleve_id)
-                
-                # Filtrer les cours associés à cet élève
-                cours = Cours.objects.filter(mon_eleve=mon_eleve)
-                
-                if not cours.exists():
-                    messages.error(request, f"Il n'y a pas de cours pour l'élève {mon_eleve.eleve.user.last_name}.")
-                    return redirect('compte_prof')  # Redirection si aucun cours n'est trouvé
-
-                # Redirection vers la vue 'cours_mon_eleve' avec l'ID de l'élève
-                return redirect('cours_mon_eleve', eleve_id=mon_eleve_id)
-
-            except Mes_eleves.DoesNotExist:
-                # Message d'erreur si l'élève n'est pas trouvé
-                messages.error(request, "Élève non trouvé.")
-                return redirect('compte_prof')
-
+        response = handle_post_button('btn_eleve_', 'modifier_mes_eleve')
+        if response:
+            return response
+        
         # Recherche des clés commençant par 'btn_plus_' pour gérer une autre action
         reglement_keys = [key for key in request.POST.keys() if key.startswith('btn_reglement_')]
         if reglement_keys:
-            # Prendre le premier bouton cliqué correspondant à une demande de règlement
-            btn_key = reglement_keys[0]
-            # Extraire l'ID de l'élève
-            mon_eleve_id = int(btn_key.split('btn_reglement_')[1])
-            # Redirection vers la vue 'demande_reglement' avec l'ID de l'élève
-            return redirect('demande_reglement', eleve_id=mon_eleve_id)
-        # Recherche des clés commençant par 'btn_eleve_' pour gérer une autre action
-        mon_eleve_keys = [key for key in request.POST.keys() if key.startswith('btn_eleve_')]
-        if mon_eleve_keys:
-            # Prendre le premier bouton cliqué correspondant à une demande de règlement
-            btn_key = mon_eleve_keys[0]
-            # Extraire l'ID de l'élève
-            mon_eleve_id = int(btn_key.split('btn_eleve_')[1])
-            # Redirection vers la vue 'demande_reglement' avec l'ID de l'élève
-            return redirect('modifier_mes_eleve', eleve_id=mon_eleve_id)
+            btn_key = reglement_keys[0]  # Premier bouton trouvé
 
-    # Passer les informations des élèves au contexte du template
-    context = {
+            # On isole la partie chiffrée
+            encrypted_part = btn_key.removeprefix('btn_reglement_').strip()
+
+            try:
+                # Déchiffrement de l'ID 
+                enr_id = decrypt_id(encrypted_part)
+
+                # Vérifie que l'ID est bien un entier positif
+                if not isinstance(enr_id, int) or enr_id <= 0:
+                    raise ValueError("ID déchiffré invalide") 
+
+                # Récupère l'enregistrement en base (Modifier la table appropriée)
+                mon_eleve = get_object_or_404(Mes_eleves, id=enr_id, user=user, is_active=True)
+                mon_eleve_id = mon_eleve.id
+
+                # Stocke l'ID de l'enregistrement dans la session (donner un nom approprié à l'ID)
+                request.session['mon_eleve_id'] = mon_eleve_id
+                return redirect('demande_reglement')
+
+            except Email_detaille.DoesNotExist: # (spécifier la table appropriée)
+                messages.error(request, "Elève introuvable.") # (spécifier la table appropriée)
+
+            except ValueError as e:
+                messages.error(request, str(e))
+
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+        
+
+    return render(request, 'accounts/liste_mes_eleve.html', {
         'mes_eleves': mes_eleves,
-        'is_active': is_active,
-    }
-    return render(request, 'accounts/liste_mes_eleve.html', context)
+        'mes_eleves_liste': mes_eleves_liste,
+    })
+
 
 
 def cours_mon_eleve(request, eleve_id):
@@ -2781,7 +2871,15 @@ def liste_seance_cours(request):
     })
 
 
-def demande_reglement(request, eleve_id):
+def demande_reglement(request):
+    eleve_id = request.session.get('mon_eleve_id', None)
+    if not eleve_id:
+        messages.error(request, "Pas d'ID élève dans la session")
+        return redirect('compte_prof')
+    if not eleve_id:
+        messages.error(request, "L'ID de l'élève n'est pas dans la session")
+        return redirect('compte_prof')
+    
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -2814,34 +2912,63 @@ def demande_reglement(request, eleve_id):
         for enr in Horaire.objects.filter(cours=mon_cours)
     ]
 
+    enr_horaires_liste = []
+    for enr in enr_horaires:
+        enr_horaires_liste.append((enr, encrypt_id(enr['id']))) # enr est un dictionnaire
+
     # Contexte pour le rendu du template
     context = {
         'mon_eleve': mon_eleve,
         'mes_cours': mes_cours,
-        'enr_horaires': enr_horaires,
+        'enr_horaires': enr_horaires_liste,
     }
 
     # Gestion du formulaire de demande de règlement
     if request.method == 'POST' and 'btn_reglement' in request.POST:
         # Récupérer les horaires sélectionnés à partir des cases cochées
         chk_keys = [key for key in request.POST.keys() if key.startswith('chk_')]
+        # On récupère uniquement les clés qui correspondent au format attendu
+        chk_keys = [
+            key for key in request.POST.keys()
+            if key.startswith('chk_')
+        ]
+
         if chk_keys:
-            # Extraire les IDs des horaires sélectionnés
-            selected_horaires = [int(chk_key.split('chk_')[1]) for chk_key in chk_keys]
-            request.session['selected_horaires'] = selected_horaires
-            # for id in selected_horaires:
-            #     messages.info(request, f"id= {id} ")
-            return redirect('declaration_cours', eleve_id=eleve_id)
-        else:
-            messages.error(request, "Pour déclarer un cours et demander le paiement, vous devez cocher au moins une case active")
+            btn_key = chk_keys[0]  # Premier bouton trouvé
+
+            # On isole la partie chiffrée
+            encrypted_part = btn_key.removeprefix('chk_').strip()
+
+            try:
+                # Déchiffrement de l'ID 
+                enr_id = decrypt_id(encrypted_part)
+
+                # Vérifie que l'ID est bien un entier positif
+                if not isinstance(enr_id, int) or enr_id <= 0:
+                    raise ValueError("ID déchiffré invalide") 
+
+                request.session['selected_horaires'] = enr_id
+                request.session['eleve_id'] = eleve_id
+                return redirect('declaration_cours') # rediriger vers la vue appropriée
+
+            except ValueError as e:
+                messages.error(request, str(e))
+
+            except Exception as e:
+                messages.error(request, f"Une erreur est survenue : {e}")
+        else: messages.error(request, "Pour déclarer un cours et demander le paiement, vous devez cocher au moins une case active")
 
     # Rendre le template avec le contexte
     return render(request, 'accounts/demande_reglement.html', context)
 
 
+def declaration_cours(request):
 
-
-def declaration_cours(request, eleve_id):
+    eleve_id = request.session.get('eleve_id', None)
+    selected_horaires = request.session.get('selected_horaires', [])
+    if not eleve_id or not selected_horaires:
+        messages.error(request, "L'ID de l'élève ou de l'horaire n'est pas dans la session")
+        return redirect('compte_prof')
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -2862,24 +2989,22 @@ def declaration_cours(request, eleve_id):
     # Récupérer tous les cours actifs associés à cet élève
     cours_actifs = Cours.objects.filter(mon_eleve=mon_eleve, is_active=True)
     
-    # Obtenir les horaires sélectionnés depuis la session
-    selected_horaires = request.session.get('selected_horaires', [])
-    # for id in selected_horaires:
-    #     messages.info(request, f"id= {id} ")
-    
     montant_total = Decimal('0.00')  # Initialiser le montant total
-
     if selected_horaires:
         # Récupérer les horaires associés aux cours actifs et calculer le montant pour chaque horaire
-        horaires_groupes = Horaire.objects.filter(id__in=selected_horaires, cours__in=cours_actifs)\
-            .values('date_cours', 'heure_debut', 'heure_fin', 'cours__matiere', 'duree', 'cours__prix_heure', 'statut_cours', 'contenu', 'id')\
-            .annotate(
-                montant=ExpressionWrapper(
-                    F('duree') * F('cours__prix_heure'),
-                    output_field=fields.DecimalField(decimal_places=2, max_digits=10)
-                )
-            )\
-            .order_by('date_cours')
+        horaires_groupes = Horaire.objects.filter(
+    id__in=[selected_horaires] if isinstance(selected_horaires, int) else selected_horaires,
+    cours__in=cours_actifs
+).values(
+    'date_cours', 'heure_debut', 'heure_fin', 'cours__matiere', 
+    'duree', 'cours__prix_heure', 'statut_cours', 'contenu', 'id'
+).annotate(
+    montant=ExpressionWrapper(
+        F('duree') * F('cours__prix_heure'),
+        output_field=fields.DecimalField(decimal_places=2, max_digits=10)
+    )
+).order_by('date_cours')
+
         # for hor in horaires_groupes:
         #     messages.info(request, f"hor.id = {hor['id']}")
         # Calculer la somme des montants
@@ -2996,6 +3121,8 @@ def declaration_cours(request, eleve_id):
     return render(request, 'accounts/declaration_cours.html', context)
 
 
+# views.py
+from django.core.paginator import Paginator
 
 def liste_declaration_cours(request):
     # Obtenir l'utilisateur actuel
@@ -3003,23 +3130,45 @@ def liste_declaration_cours(request):
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
     user = request.user
+    
     # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        messages.error(request, "Vous n'êtes pas connecté en tant que professeur")
         return redirect('signin')
+    
+    # Initialisation des variables
     statut_demande = 'En cours'
+    page = request.GET.get('page', 1)  # Récupère le numéro de page depuis l'URL
+    
+    # Gestion des filtres
     if 'btn_en_cours' in request.POST: statut_demande = 'En cours'
     if 'btn_attente' in request.POST: statut_demande = 'En attente'
-    
     if 'btn_annuler' in request.POST: statut_demande = 'Annuler'
     if 'btn_regler' in request.POST: statut_demande = 'Réaliser'
-    # Filtrer les demandes de paiement associées à l'utilisateur, en excluant celles qui sont annulées
-    demande_paiements = Demande_paiement.objects.filter(user=user, statut_demande=statut_demande)
-
-    if 'btn_tous' in request.POST: demande_paiements = Demande_paiement.objects.filter(user=user)
-    if 'btn_contester' in request.POST: demande_paiements = Demande_paiement.objects.filter(user=user, reclamation__isnull=False)
     
-    # Construire la liste des cours déclarés avec les détails nécessaires
+    # Base queryset
+    demande_paiements = Demande_paiement.objects.filter(user=user)
+    
+    # Application des filtres
+    if 'btn_tous' not in request.POST:
+        demande_paiements = demande_paiements.filter(statut_demande=statut_demande)
+    
+    if 'btn_contester' in request.POST: 
+        demande_paiements = demande_paiements.filter(reclamation__isnull=False)
+    
+    # Tri par date de modification (du plus récent au plus ancien)
+    demande_paiements = demande_paiements.order_by('-date_modification')
+    
+    # Pagination
+    paginator = Paginator(demande_paiements, 10)  # 10 éléments par page
+    try:
+        demande_paiements_page = paginator.page(page)
+    except PageNotAnInteger:
+        demande_paiements_page = paginator.page(1)
+    except EmptyPage:
+        demande_paiements_page = paginator.page(paginator.num_pages)
+    
+    # Construction de la liste des cours déclarés
     cours_declares = [
         {
             'id': enr.id,
@@ -3031,31 +3180,37 @@ def liste_declaration_cours(request):
             'email_eleve': enr.email_eleve,
             'reclamation': bool(enr.reclamation),
         }
-        for enr in demande_paiements
+        for enr in demande_paiements_page
     ]
+    cours_declares_liste = []
+    for enr in cours_declares:
+        cours_declares_liste.append((enr, encrypt_id(enr['id'])))
 
-    # Gérer les soumissions POST, en particulier pour le bouton "détaille"
+    # Gestion des boutons de détail
     if request.method == 'POST':
-        # Rechercher la clé correspondant à l'un des boutons de détail soumis
         detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
         if detaille_enr_key:
-            # Extraire l'ID de la demande de paiement à partir de la clé
-            demande_paiement_id = int(detaille_enr_key.split('btn_detaille_')[1])
+            demande_paiement_id = decrypt_id(detaille_enr_key.split('btn_detaille_')[1])
             try:
-                # Récupérer la demande de paiement correspondante
-                demande_enr = Demande_paiement.objects.get(id=demande_paiement_id)
-                # Rediriger vers la vue détaillée de la demande de règlement
-                return redirect('detaille_demande_reglement', demande_paiement_id=demande_enr.id)
+                request.session['demande_paiement_id'] = demande_paiement_id
+                return redirect('detaille_demande_reglement')
             except Demande_paiement.DoesNotExist:
-                # Afficher un message d'erreur si la demande n'existe pas
                 messages.error(request, f"La demande de paiement avec l'ID={demande_paiement_id} n'a pas été trouvée.")
-
-    # Passer les cours déclarés au template pour l'affichage
-    context = {'cours_declares': cours_declares}
+    
+    context = {
+        'cours_declares': cours_declares_liste,
+        'page_obj': demande_paiements_page,  # Pour la pagination
+        'statut_filtre': statut_demande,    # Pour afficher le filtre actif
+    }
     return render(request, 'accounts/liste_declaration_cours.html', context)
 
 
-def detaille_demande_reglement(request, demande_paiement_id):
+def detaille_demande_reglement(request):
+    demande_paiement_id = request.session.get('demande_paiement_id', None)
+    if not demande_paiement_id:
+        messages.error(request, "L'ID de la demande de paiement n'est pas dans la session")
+        return redirect('compte_prof')
+    
     # Récupérer la demande de paiement et les objets associés
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
     eleve = demande_paiement.eleve
@@ -3245,25 +3400,35 @@ def temoignage_mes_eleves(request):
     temoignages = Temoignage.objects.filter(user_prof=user_prof)
     # Récupérer les élèves associés à ces témoignages
     user_eleves = [temoignage.user_eleve for temoignage in temoignages]
+    user_eleves_liste =[]
+    for enr in user_eleves:
+        user_eleves_liste.append((enr, encrypt_id(enr.id)))
+
     if request.method == 'POST':
         # Rechercher la clé correspondant à l'un des boutons de détail soumis
         detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
         if detaille_enr_key:
             # Extraire l'ID de l'élève à partir de la clé
-            eleve_id = int(detaille_enr_key.split('btn_detaille_')[1])
+            eleve_id = decrypt_id(detaille_enr_key.split('btn_detaille_')[1])
             # Trouver un témoignage associé à cet élève et au professeur connecté
             temoignage_enr = Temoignage.objects.filter(user_eleve__id=eleve_id, user_prof=user_prof).first()
             if temoignage_enr:
                 # Rediriger vers la vue temoignage_detaille
-                return redirect('temoignage_detaille', temoignage_id=temoignage_enr.id)
+                request.session['temoignage_id'] = temoignage_enr.id
+                return redirect('temoignage_detaille')
             else:
                 # Afficher un message d'erreur si le témoignage n'existe pas
                 messages.error(request, f"Le témoignage pour l'élève avec l'ID={eleve_id} n'a pas été trouvé.")
 
-    return render(request, 'accounts/temoignage_mes_eleves.html', {'user_eleves': user_eleves})
+    return render(request, 'accounts/temoignage_mes_eleves.html', {'user_eleves': user_eleves_liste})
 
 
-def temoignage_detaille(request, temoignage_id):
+def temoignage_detaille(request):
+    temoignage_id = request.session.get('temoignage_id', None)
+    if not temoignage_id:
+        messages.error(request, "L'ID du témoignage n'st pas dans la session")
+        return redirect('compte_prof')
+    
     # Récupération de l'utilisateur connecté (professeur)
     user_prof = request.user
 
@@ -3730,7 +3895,8 @@ def reglement_nouveau_cours(request, enregistrement_direct='true'):
             try:
                 mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
                 logger.debug("Relation active trouvée avec l'élève : %s", mon_eleve)
-                return redirect(reverse('demande_reglement', args=[mon_eleve.id]))
+                request.session['mon_eleve_id'] = mon_eleve.id
+                return redirect('demande_reglement')
             except Mes_eleves.DoesNotExist:
                 messages.error(request, "Aucun lien actif trouvé avec cet élève.")
                 logger.warning("Relation Mes_eleves introuvable pour l'élève %s", eleve)
@@ -4330,7 +4496,8 @@ def ajout_cours_email(request):
         try:
             mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
             logger.debug("Relation active trouvée avec l'élève : %s", mon_eleve)
-            return redirect(reverse('demande_reglement', args=[mon_eleve.id]))
+            request.session['mon_eleve_id'] = mon_eleve.id
+            return redirect('demande_reglement')
         except Mes_eleves.DoesNotExist:
             messages.error(request, "Aucun lien actif trouvé avec cet élève.")
             logger.warning("Relation Mes_eleves introuvable pour l'élève %s", eleve)

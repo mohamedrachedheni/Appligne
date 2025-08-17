@@ -1,173 +1,466 @@
 {% extends 'base.html' %}
 {% load mathfilters %}
 {% load static %}
-{% block title %} | Compte professeur{% endblock %}
+{% block title %} | Expériences éducatives - Compte professeur{% endblock %}
 
 {% block content %}
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <!-- header Start -->
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h4 class="text-center text-white">Gérer mon compte</h4>
-                        <h2 class="text-center text-white">Consulter mes élèves</h2>
-                    </div>
-                </div>
-                <!-- header end -->
-            </div>
+<!-- Experience Update Section -->
+<div class="experience-update-container">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar Column -->
+        <div class="col-sm-12 col-md-4 col-lg-2 sidebar-col">
+            {% include 'partials/_sidebar.html' %}
         </div>
-    </div>
-</div>
-<!-- Header End -->
-
-<!-- mon compte début -->
-<div class="row justify-content-center">
-    <div class="col-sm-12 col-md-4 col-lg-2">
-        <!-- début sidebar -->
-        {% include 'partials/_sidebar.html' %}
-        <!-- fin sidebar -->
-    </div>
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <!-- Début page -->
-        <!-- formulaire créer compte prof début -->
-        <div class="container-xxl py-1">
-            <div class="container">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Mise à jour de votre profil</h6>
-                    <h1 class="mb-5">Modifier vos expériences dans l'éducation</h1>
-                </div>
-                <div class="col-md-12">
-                    {% include 'partials/_alerts.html' %}
-                </div>
-            </div>
-        </div>
-        <form method="POST" enctype="multipart/form-data" autocomplete="off" >
-            {% csrf_token %}
-
-            <!-- Expériences éducation début -->
-            <div class="container-xxl py-5">
-                <div class="container">
-                    <div class="container bg-light p-2">
-                        {% for experience in experiences %}
-                        {% with indice_1=forloop.counter|mul:2|sub:1 %}
-                        {% with indice_2=forloop.counter|mul:2 %}
-                        <div class="row   ajout-exper p-3" id="supprimer_div_{{ forloop.counter }}">
-                            <div class="col-lg-1 col-md-2 col-sm-2 position-relative">
-                                <input class="form-check-input check-pricipal" type="checkbox"
-                                    id="principal_id__{{ forloop.counter }}" name="principal_{{ forloop.counter }}"
-                                    {% if experience.principal %}checked{% endif %}>
-                                <label class="form-label">Principal</label>
-                            </div>
-                            <div class="col-lg-3 col-md-10 col-sm-10 position-relative">
-                                <label class="form-label">Type</label>
-                                <div class="dropdown"  >
-                                    <div class="input-group">
-                                        <input type="text" class="form-control form-control-autre"
-                                            id="experience_input_{{ forloop.counter }}"
-                                            name="experience_{{ forloop.counter }}" value="{{ experience.type }}"  >
-                                        <ul class="dropdown-menu"
-                                            id="dropdownMenuButton_{{ forloop.counter }}"
-                                            style="max-height: 300px; overflow-y:auto; width: 220px;" 
-                                            aria-labelledby="dropdownMenuButton_{{ forloop.counter }}">
-                                            {% for experience in experience_cathegories %}
-                                            <li><a class="dropdown-item" href="#"
-                                                    data-value="{{ experience.exp_cathegorie }}">{{ experience.exp_cathegorie }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                        <input type="hidden" id="selected_experience_{{ forloop.counter }}">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
-                                <label class="form-label">Début</label>
-                                <input type="text" class="form-control form-control-date"
-                                    id="date_id_{{ indice_1 }}" required name="date_debut_{{ indice_1 }}"
-                                    value="{{ experience.debut }}">
-                            </div>
-                            <div class="col-lg-2 col-md-6 col-sm-6 position-relative">
-                                <label class="form-label">Fin</label>
-                                <input type="text" class="form-control form-control-date"
-                                    id="date_id_{{ indice_2 }}" name="date_fin_{{ indice_2 }}"
-                                    value="{{ experience.fin }}">
-                            </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 g-3 ">
-                                <div class="row">
-                                    <div class="col-12 d-flex justify-content-center " >
-                                        <label class="form-check-label">Actuellement</label>
-                                    </div>
-                                </div>
-                                <div class="col-12  " >
-                                    <div class="form-check form-switch switch-column d-flex justify-content-center">
-                                        <input class="form-check-input mg-checkbox" type="checkbox" role="switch"
-                                                id="act_id_{{ forloop.counter }}" {% if experience.actuellement %}checked{% endif %}
-                                                onchange="toggleText()" style="margin-right: -5px;" name="act_{{ forloop.counter }}">
-
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-2 col-md-8 col-sm-6 position-relative" >
-                                <label class="form-label">Commentaires</label>
-                                <div class="row" >
-                                    <div class="col-lg-8 col-md-6 col-sm-6 position-relative">
-                                        <input type="text" class="form-control form-control-comm"
-                                            id="comm_id_{{ forloop.counter }}" name="comm_{{ forloop.counter }}"
-                                            value="{{ experience.commentaire }}">
-                                    
-                                    </div>
-                                    <div class="col-lg-4 col-md-6 col-sm-6 d-flex justify-content-center">
-                                        <button class="btn btn-sup" onclick="supprimerDiv('supprimer_div_{{ forloop.counter }}')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 26 26">
-                                                <path
-                                                    d="M 11.5 -0.03125 C 9.542969 -0.03125 7.96875 1.59375 7.96875 3.5625 L 7.96875 4 L 4 4 C 3.449219 4 3 4.449219 3 5 L 3 6 L 2 6 L 2 8 L 4 8 L 4 23 C 4 24.644531 5.355469 26 7 26 L 19 26 C 20.644531 26 22 24.644531 22 23 L 22 8 L 24 8 L 24 6 L 23 6 L 23 5 C 23 4.449219 22.550781 4 22 4 L 18.03125 4 L 18.03125 3.5625 C 18.03125 1.59375 16.457031 -0.03125 14.5 -0.03125 Z M 11.5 2.03125 L 14.5 2.03125 C 15.304688 2.03125 15.96875 2.6875 15.96875 3.5625 L 15.96875 4 L 10.03125 4 L 10.03125 3.5625 C 10.03125 2.6875 10.695313 2.03125 11.5 2.03125 Z M 6 8 L 11.125 8 C 11.25 8.011719 11.371094 8.03125 11.5 8.03125 L 14.5 8.03125 C 14.628906 8.03125 14.75 8.011719 14.875 8 L 20 8 L 20 23 C 20 23.5625 19.5625 24 19 24 L 7 24 C 6.4375 24 6 23.5625 6 23 Z M 8 10 L 8 22 L 10 22 L 10 10 Z M 12 10 L 12 22 L 14 22 L 14 10 Z M 16 10 L 16 22 L 18 22 L 18 10 Z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                        {% endwith %}
-                        {% endwith %}
-                        {% endfor %}
+        
+        <!-- Main Content Column -->
+        <div class="col-sm-12 col-md-8 col-lg-10 main-content-col px-5 ">
+            <!-- Experience Update Form -->
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" class="experience-form">
+                {% csrf_token %}
+                
+                <!-- Form Header -->
+                <div class="form-header-section">
+                    <div class="container text-center py-4">
+                        <h3 class="section-subtitle text-primary">Parcours professionnel</h3>
+                        <h1 class="section-title">Vos expériences éducatives</h1>
+                        <p class="section-description">Ajoutez et organisez vos différentes expériences dans l'enseignement</p>
+                        {% include 'partials/_alerts.html' %}
                     </div>
-                    <div class="row g-2 p-3">
+                </div>
+
+                <!-- Experience Cards -->
+                <div class="experience-cards-container">
+                    {% for experience in experiences %}
+                    {% with indice_1=forloop.counter|mul:2|sub:1 indice_2=forloop.counter|mul:2 %}
+                    <div class="experience-card" id="experience_card_{{ forloop.counter }}">
+                        <div class="experience-header">
+                            <div class="form-check form-check-primary">
+                                <input class="form-check-input check-principal" type="checkbox" 
+                                       id="principal_id__{{ forloop.counter }}" 
+                                       name="principal_{{ forloop.counter }}"
+                                       {% if experience.principal %}checked{% endif %}>
+                                <label class="form-check-label" for="principal_id__{{ forloop.counter }}">
+                                    Expérience principale
+                                </label>
+                            </div>
+                            <button type="button" class="btn-remove" onclick="removeExperience('experience_card_{{ forloop.counter }}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="experience-body">
+                            <!-- Experience Type -->
+                            <div class="form-group">
+                                <label for="experience_input_{{ forloop.counter }}">Type d'expérience</label>
+                                <div class="dropdown experience-dropdown">
+                                    <input type="text" class="form-control dropdown-toggle" 
+                                           id="experience_input_{{ forloop.counter }}"
+                                           name="experience_{{ forloop.counter }}" 
+                                           value="{{ experience.type }}"
+                                           data-bs-toggle="dropdown" aria-expanded="false">
+                                    <ul class="dropdown-menu experience-menu">
+                                        {% for exp in experience_cathegories %}
+                                        <li><a class="dropdown-item" href="#" 
+                                              data-value="{{ exp.exp_cathegorie }}">{{ exp.exp_cathegorie }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Date Range -->
+                            <div class="date-range-group">
+                                <div class="form-group">
+                                    <label for="date_id_{{ indice_1 }}">Date de début</label>
+                                    <input type="text" class="form-control datepicker" 
+                                           id="date_id_{{ indice_1 }}" 
+                                           name="date_debut_{{ indice_1 }}"
+                                           required value="{{ experience.debut }}"
+                                           placeholder="jj/mm/aaaa">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="date_id_{{ indice_2 }}">Date de fin</label>
+                                    <input type="text" class="form-control datepicker" 
+                                           id="date_id_{{ indice_2 }}" 
+                                           name="date_fin_{{ indice_2 }}"
+                                           value="{{ experience.fin }}"
+                                           placeholder="jj/mm/aaaa"
+                                           {% if experience.actuellement %}disabled{% endif %}>
+                                </div>
+                            </div>
+
+                            <!-- Currently Working -->
+                            <div class="form-group current-job-group">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="act_id_{{ forloop.counter }}" 
+                                           name="act_{{ forloop.counter }}"
+                                           {% if experience.actuellement %}checked{% endif %}
+                                           onchange="toggleDateField(this, 'date_id_{{ indice_2 }}')">
+                                    <label class="form-check-label" for="act_id_{{ forloop.counter }}">
+                                        Actuellement en poste
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Comments -->
+                            <div class="form-group">
+                                <label for="comm_id_{{ forloop.counter }}">Commentaires</label>
+                                <input type="text" class="form-control" 
+                                       id="comm_id_{{ forloop.counter }}" 
+                                       name="comm_{{ forloop.counter }}"
+                                       value="{{ experience.commentaire }}"
+                                       placeholder="Détails supplémentaires">
+                            </div>
+                        </div>
                     </div>
-                    <div class="row justify-content-between g-2 p-3">
-                        <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
-                            <a class="btn btn-primary w-100"
-                                href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre
-                                    profil</span></a>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{% url 'profil_prof' id_user=user.id %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-user me-2"></i> Voir mon profil
+                            </a>
                         </div>
-                        <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
-                            <a class="btn btn-primary w-100" href="{% url 'modifier_experience' %}"><span
-                                    style="color: white;">Allulez les modifications</span></a>
+                        <div class="col-md-4">
+                            <a class="btn btn-outline-secondary w-100" href="{% url 'modifier_experience' %}">
+                                <i class="fas fa-undo me-2"></i> Annuler les modifications
+                            </a>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
-                            <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                Enregistrer
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100" name="btn_enr">
+                                <i class="fas fa-save me-2"></i> Enregistrer
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
-<!-- Expériences éducation fin -->
-<!-- fin page -->
-<!-- mon compte fin -->
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 
 {% endblock %}
+
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_modifier_experience.js' %}"></script>
+<script>
+// Initialize datepickers
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr(".datepicker", {
+        dateFormat: "d/m/Y",
+        locale: "fr",
+        allowInput: true
+    });
+
+    // Handle experience type dropdown
+    document.querySelectorAll('.experience-menu .dropdown-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const input = this.closest('.dropdown').querySelector('input');
+            input.value = this.getAttribute('data-value');
+        });
+    });
+
+    // Add new experience
+    document.getElementById('btn-add-experience').addEventListener('click', function() {
+        // Implement logic to add new experience card
+        console.log('Add new experience functionality to be implemented');
+    });
+});
+
+// Toggle date field when "Currently working" is checked
+function toggleDateField(checkbox, dateFieldId) {
+    const dateField = document.getElementById(dateFieldId);
+    if (checkbox.checked) {
+        dateField.disabled = true;
+        dateField.value = '';
+    } else {
+        dateField.disabled = false;
+    }
+}
+
+// Remove experience card
+function removeExperience(cardId) {
+    if (confirm('Voulez-vous vraiment supprimer cette expérience ?')) {
+        document.getElementById(cardId).remove();
+    }
+}
+</script>
+
+<style>
+    /* Experience Update Container */
+.experience-update-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.sidebar-col {
+    background-color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.main-content-col {
+    padding: 2rem;
+}
+
+/* Form Header */
+.form-header-section {
+    margin-bottom: 2rem;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: #0d6efd;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.section-description {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Experience Cards */
+.experience-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.experience-card {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.experience-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: #ebebec;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.experience-body {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Checkbox and Switch Styles */
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-switch .form-check-input {
+    width: 2.5em;
+    height: 1.5em;
+}
+
+/* Date Range Group */
+.date-range-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Current Job Group */
+.current-job-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 1.75rem;
+}
+
+/* Remove Button */
+.btn-remove {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.btn-remove:hover {
+    color: #b02a37;
+}
+
+/* Experience Dropdown */
+.experience-dropdown {
+    position: relative;
+}
+
+.experience-menu {
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-outline-primary {
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-outline-secondary {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Back to Top Button */
+.btn-back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 99;
+}
+
+.btn-back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .sidebar-col {
+        order: 2;
+    }
+    
+    .main-content-col {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .experience-body {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-range-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions .row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
 {% endblock %}

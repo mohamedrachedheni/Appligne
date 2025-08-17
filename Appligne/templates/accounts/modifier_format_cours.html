@@ -1,118 +1,349 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Modifier compte professeur{% endblock %}
+{% block title %} | Modifier les formats de cours - Compte professeur{% endblock %}
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
-                        </div>
-                    </div>
-                    <!-- header end -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+<!-- Course Formats Configuration -->
+<div class="course-formats-container">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar Column -->
+        <div class="col-sm-12 col-md-4 col-lg-2 sidebar-col">
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Modifiez dans votre profil</h6>
-                        <h1 class="mb-5">Le format de vos cours</h1>
-                    </div>
-                    <div class="col-md-12">
+        
+        <!-- Main Content Column -->
+        <div class="col-sm-12 col-md-8 col-lg-10 main-content-col px-5">
+            <!-- Course Formats Form -->
+            <form method="POST" enctype="multipart/form-data" action="{% url 'modifier_format_cours' %}" class="course-formats-form">
+                {% csrf_token %}
+                
+                <!-- Form Header -->
+                <div class="form-header-section">
+                    <div class="container text-center py-4">
+                        <h3 class="section-subtitle text-primary">Configuration de votre offre</h3>
+                        <h1 class="section-title">Formats de cours proposés</h1>
+                        <p class="section-description">Sélectionnez les modalités d'enseignement que vous proposez</p>
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
-            <form method="POST" enctype="multipart/form-data"  action="{% url 'modifier_format_cours' %}" >
-                {% csrf_token %}
-                
-                <!-- Les formats de vos cours debut -->
-                <div class="container-xxl py-5" >
-                    <div class="container">
-                        
-                        <div class="container bg-light  p-5">
-                            <div class="row g-2 ">
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chk_a_domicile" name="chk_a_domicile"  {% if a_domicile %}checked{% endif %} >
-                                        <label class="form-check-label" for="chk_a_domecile">
-                                            Cours individuels chez l'éléve
-                                        </label>
+
+                <!-- Course Formats Card -->
+                <div class="form-card">
+                    <div class="course-formats-options">
+                        <!-- In-person Individual Lessons -->
+                        <div class="format-option {% if a_domicile %}active{% endif %}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk_a_domicile" 
+                                       name="chk_a_domicile" {% if a_domicile %}checked{% endif %}>
+                                <label class="form-check-label" for="chk_a_domicile">
+                                    <div class="format-icon">
+                                        <i class="fas fa-home"></i>
                                     </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox"  id="chk_webcam" name="chk_webcam" {% if webcam %}checked{% endif %} >
-                                        <label class="form-check-label" for="chk_webcam">
-                                            Cours individuels par webcam
-                                        </label>
+                                    <div class="format-details">
+                                        <h5>Cours individuels à domicile</h5>
+                                        <p>Enseignement personnalisé au domicile de l'élève</p>
                                     </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chk_stage" name="chk_stage" {% if stage %}checked{% endif %} >
-                                        <label class="form-check-label" for="chk_stage">
-                                            Stages intensifs pendant les vacances scolaires en présentiel
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chk_stage_webcam" name="chk_stage_webcam"  {% if stage_webcam %}checked{% endif %} >
-                                        <label class="form-check-label" for="chk_stage_webcam">
-                                            Cours en petits groupes par webcam
-                                        </label>
-                                    </div>
-                                </div>
+                                </label>
                             </div>
                         </div>
-                        <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
+
+                        <!-- Online Individual Lessons -->
+                        <div class="format-option {% if webcam %}active{% endif %}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk_webcam" 
+                                       name="chk_webcam" {% if webcam %}checked{% endif %}>
+                                <label class="form-check-label" for="chk_webcam">
+                                    <div class="format-icon">
+                                        <i class="fas fa-video"></i>
+                                    </div>
+                                    <div class="format-details">
+                                        <h5>Cours individuels en ligne</h5>
+                                        <p>Enseignement à distance par visioconférence</p>
+                                    </div>
+                                </label>
                             </div>
-                            
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                    Enregistrer
-                                </button>
+                        </div>
+
+                        <!-- Intensive In-person Workshops -->
+                        <div class="format-option {% if stage %}active{% endif %}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk_stage" 
+                                       name="chk_stage" {% if stage %}checked{% endif %}>
+                                <label class="form-check-label" for="chk_stage">
+                                    <div class="format-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="format-details">
+                                        <h5>Stages intensifs en présentiel</h5>
+                                        <p>Sessions concentrées pendant les vacances scolaires</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Online Group Lessons -->
+                        <div class="format-option {% if stage_webcam %}active{% endif %}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk_stage_webcam" 
+                                       name="chk_stage_webcam" {% if stage_webcam %}checked{% endif %}>
+                                <label class="form-check-label" for="chk_stage_webcam">
+                                    <div class="format-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="format-details">
+                                        <h5>Cours en petits groupes en ligne</h5>
+                                        <p>Enseignement collectif par visioconférence</p>
+                                    </div>
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Les formats de vos course fin -->
-                
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'profil_prof' id_user=user.id %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-user me-2"></i> Voir mon profil
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-warning w-100" name="btn_enr">
+                                <i class="fas fa-save me-2"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </form>
-            <!-- fin page -->
         </div>
     </div>
-    <!-- mon compte fin -->
+</div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 
 {% endblock %}
+
 {% block javascript %}
     <script src="{% static 'js/Code_en_plus_modifier_compte_prof.js' %}"></script>
+    <style>
+        /* Course Formats Configuration Styles */
+.course-formats-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.sidebar-col {
+    background-color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.main-content-col {
+    padding: 2rem;
+}
+
+/* Form Header */
+.form-header-section {
+    margin-bottom: 2rem;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: #0d6efd;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.section-description {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Form Card */
+.form-card {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+}
+
+/* Course Formats Options */
+.course-formats-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.format-option {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.format-option.active {
+    border-color: #0d6efd;
+    background-color: #f0f7ff;
+}
+
+.format-option:hover {
+    border-color: #adb5bd;
+}
+
+.form-check {
+    margin: 0;
+}
+
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.2em;
+}
+
+.form-check-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+    cursor: pointer;
+}
+
+.format-icon {
+    font-size: 1.5rem;
+    color: #0d6efd;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #e9f0ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.format-details h5 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+.format-details p {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary {
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border: none;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #ffca2c;
+}
+
+/* Back to Top Button */
+.btn-back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 99;
+}
+
+.btn-back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .sidebar-col {
+        order: 2;
+    }
+    
+    .main-content-col {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .form-card {
+        padding: 1.5rem;
+    }
+    
+    .form-check-label {
+        gap: 1rem;
+    }
+    
+    .format-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.2rem;
+    }
+    
+    .form-actions .row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+    </style>
 {% endblock %}

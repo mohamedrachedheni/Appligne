@@ -1,109 +1,420 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Modifier mot de pass{% endblock %}
+{% block title %} | Modification des identifiants de connexion{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-sm-12 col-md-4 col-lg-2  ">
-        <!-- Sidebar inclusion based on user role -->
-        {% if request.user.eleve %}
-            {% include 'partials/_sidebar_eleve.html' %}
-        {% elif request.user.professeur %}
-            {% include 'partials/_sidebar.html' %}
-        {% endif %}
-    </div>
+<div class="account-settings-container">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar Column -->
+        <div class="col-sm-12 col-md-4 col-lg-2 sidebar-col">
+            {% if request.user.eleve %}
+                {% include 'partials/_sidebar_eleve.html' %}
+            {% elif request.user.professeur %}
+                {% include 'partials/_sidebar.html' %}
+            {% endif %}
+        </div>
 
-    <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp py-5  " data-wow-delay="0.1s">
-        <div class="container-xxl py-1" >
-            <div class="container  ">
-                <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h3 class="section-title bg-white text-primary px-3">Modifier vos paramètres de connexion</h3>
-                </div>
-                <div class="col-md-12">
+        <!-- Main Content Column -->
+        <div class="col-sm-12 col-md-8 col-lg-10 main-content-col py-5 px-5">
+            <div class="container-xxl">
+                <!-- Form Header -->
+                <div class="form-header text-center py-4">
+                    <h3 class="section-subtitle text-primary">Sécurité du compte</h3>
+                    <h1 class="section-title">Modification des identifiants</h1>
+                    <p class="section-description">Mettez à jour vos informations de connexion</p>
                     {% include 'partials/_alerts.html' %}
                 </div>
-            </div>
-        </div>
-        <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
-            {% csrf_token %}
-            <div class="container-xxl py-5">
-                <div class="container">
-                    <div class="container bg-light py-5 " >
-                        <div class="row justify-content-center mx-0  "  >  <!-- mx-0 pour supprimer les marges horizontales -->
-                            <!-- Username input -->
-                            <div class="col-md-12 position-relative">
-                                <label for="user_nom_id" class="form-label">Nom de l'utilisateur</label>
-                                <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
-                                    placeholder="Entrez votre ancien nom d'utilisateur ici pour vous identifier"
-                                    value="{{ user_nom }}" autocomplete="new-password " style="height: 50px;" >
+
+                <!-- Password Update Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" class="password-update-form">
+                    {% csrf_token %}
+                    <div class="form-card">
+                        <div class="row g-4">
+                            <!-- Current Credentials Section -->
+                            <div class="col-12">
+                                <h5 class="form-section-title">
+                                    <i class="fas fa-user-shield me-2"></i>Identifiants actuels
+                                </h5>
                             </div>
 
-                            <!-- Password input with toggle -->
-                            <div class="form-group col-md-12 position-relative">
-                                <label for="mot_pass_id">Mot de passe</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="mot_pass_id" name="mot_pass"
-                                        placeholder="Entrez votre ancien mot de passe" required value="{{ mot_pass }}" style="height: 50px;" >
-                                    <div class="input-group-append">
-                                        <span class="input-group-text password-toggle" onclick="togglePassword('mot_pass_id')">
-                                            <i class="fas fa-eye input-group-text"></i>
-                                        </span>
-                                    </div>
+                            <!-- Current Username -->
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="user_nom_id" name="user_nom" 
+                                           placeholder="Nom d'utilisateur actuel" required value="{{ user_nom }}">
+                                    <label for="user_nom_id">Nom d'utilisateur actuel</label>
                                 </div>
                             </div>
 
-                            <!-- New Username input -->
-                            <div class="col-md-12 position-relative">
-                                <label for="nouveau_user_nom_id" class="form-label">Nouveau nom de l'utilisateur</label>
-                                <input type="text" class="form-control" id="nouveau_user_nom_id" name="nouveau_user_nom" required
-                                    placeholder="Entrez votre nouveau nom d'utilisateur ici" value="{{ nouveau_user_nom }}" autocomplete="off" style="height: 50px;" >
-                            </div>
-
-                            <!-- New Password input with toggle -->
-                            <div class="form-group col-md-12 position-relative">
-                                <label for="nouveau_mot_pass_id">Nouveau mot de passe</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="nouveau_mot_pass_id" name="nouveau_mot_pass"
-                                        placeholder="Entrez votre nouveau mot de passe" required value="{{ nouveau_mot_pass }}" style="height: 50px;" >
-                                    <div class="input-group-append">
-                                        <span class="input-group-text password-toggle" onclick="togglePassword('nouveau_mot_pass_id')" style="height: 50px;" >
-                                            <i class="fas fa-eye input-group-text"></i>
-                                        </span>
-                                    </div>
+                            <!-- Current Password -->
+                            <div class="col-md-12">
+                                <div class="form-floating password-input-group">
+                                    <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" 
+                                           placeholder="Mot de passe actuel" required>
+                                    <label for="mot_pass_id">Mot de passe actuel</label>
+                                    <span class="password-toggle" onclick="togglePassword('mot_pass_id')">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
                                 </div>
                             </div>
 
-                            <!-- Confirm New Password input with toggle -->
-                            <div class="form-group col-md-12 position-relative">
-                                <label for="confirmer_mot_pass_id">Confirmez le nouveau mot de passe</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmer_mot_pass_id" name="confirmer_mot_pass"
-                                        placeholder="Confirmez votre nouveau mot de passe" required value="{{ confirmer_mot_pass }}" style="height: 50px;" >
-                                    <div class="input-group-append">
-                                        <span class="input-group-text password-toggle" onclick="togglePassword('confirmer_mot_pass_id')"  >
-                                            <i class="fas fa-eye input-group-text"></i>
-                                        </span>
-                                    </div>
+                            <!-- New Credentials Section -->
+                            <div class="col-12 mt-4">
+                                <h5 class="form-section-title">
+                                    <i class="fas fa-key me-2"></i>Nouveaux identifiants
+                                </h5>
+                            </div>
+
+                            <!-- New Username -->
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="nouveau_user_nom_id" name="nouveau_user_nom" 
+                                           placeholder="Nouveau nom d'utilisateur" required value="{{ nouveau_user_nom }}">
+                                    <label for="nouveau_user_nom_id">Nouveau nom d'utilisateur</label>
                                 </div>
                             </div>
 
-                            <!-- Submit button -->
-                            <div class="row justify-content-end g-2 p-3">
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                    <button type="submit" class="btn btn-warning w-100" name="btn_enr">Enregistrer</button>
+                            <!-- New Password -->
+                            <div class="col-md-12">
+                                <div class="form-floating password-input-group">
+                                    <input type="password" class="form-control" id="nouveau_mot_pass_id" name="nouveau_mot_pass" 
+                                           placeholder="Nouveau mot de passe" required>
+                                    <label for="nouveau_mot_pass_id">Nouveau mot de passe</label>
+                                    <span class="password-toggle" onclick="togglePassword('nouveau_mot_pass_id')">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
                                 </div>
+                                <div class="password-strength-meter mt-2">
+                                    <div class="strength-bar"></div>
+                                    <small class="strength-text">Force du mot de passe: <span>Faible</span></small>
+                                </div>
+                            </div>
+
+                            <!-- Confirm New Password -->
+                            <div class="col-md-12">
+                                <div class="form-floating password-input-group">
+                                    <input type="password" class="form-control" id="confirmer_mot_pass_id" name="confirmer_mot_pass" 
+                                           placeholder="Confirmez le nouveau mot de passe" required>
+                                    <label for="confirmer_mot_pass_id">Confirmez le nouveau mot de passe</label>
+                                    <span class="password-toggle" onclick="togglePassword('confirmer_mot_pass_id')">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </div>
+                                <div class="password-match-feedback"></div>
+                            </div>
+
+                            <!-- Password Requirements -->
+                            <div class="col-12">
+                                <div class="password-requirements">
+                                    <h6>Exigences du mot de passe :</h6>
+                                    <ul>
+                                        <li class="req-length"><i class="fas fa-circle"></i> Minimum 8 caractères</li>
+                                        <li class="req-uppercase"><i class="fas fa-circle"></i> Au moins une majuscule</li>
+                                        <li class="req-number"><i class="fas fa-circle"></i> Au moins un chiffre</li>
+                                        <li class="req-special"><i class="fas fa-circle"></i> Au moins un caractère spécial</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary w-100 py-3" name="btn_enr">
+                                    <i class="fas fa-save me-2"></i> Mettre à jour les identifiants
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
-    
 </div>
 {% endblock %}
 
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_modifier_mot_pass.js' %}"></script>
+<script>
+// Password strength indicator
+document.getElementById('nouveau_mot_pass_id').addEventListener('input', function() {
+    const password = this.value;
+    const strengthBar = document.querySelector('.strength-bar');
+    const strengthText = document.querySelector('.strength-text span');
+    
+    // Reset classes
+    strengthBar.className = 'strength-bar';
+    
+    // Calculate strength
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.match(/[A-Z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^A-Za-z0-9]/)) strength++;
+    
+    // Update UI
+    if (password.length > 0) {
+        strengthBar.classList.add('level-' + strength);
+        
+        const strengthLabels = ['Faible', 'Moyen', 'Fort', 'Très fort'];
+        strengthText.textContent = strengthLabels[strength - 1] || '';
+    } else {
+        strengthText.textContent = '';
+    }
+});
+
+// Password match verification
+document.getElementById('confirmer_mot_pass_id').addEventListener('input', function() {
+    const confirmPassword = this.value;
+    const newPassword = document.getElementById('nouveau_mot_pass_id').value;
+    const feedback = document.querySelector('.password-match-feedback');
+    
+    if (confirmPassword.length > 0) {
+        if (confirmPassword === newPassword) {
+            feedback.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>Les mots de passe correspondent';
+            feedback.className = 'password-match-feedback text-success';
+        } else {
+            feedback.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>Les mots de passe ne correspondent pas';
+            feedback.className = 'password-match-feedback text-danger';
+        }
+    } else {
+        feedback.textContent = '';
+    }
+});
+
+// Toggle password visibility
+function togglePassword(id) {
+    const input = document.getElementById(id);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
+<style>
+    /* Account Settings Container */
+.account-settings-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.sidebar-col {
+    background-color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.main-content-col {
+    padding: 2rem;
+}
+
+/* Form Header */
+.form-header {
+    margin-bottom: 2rem;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: #0d6efd;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.section-description {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Form Card */
+.form-card {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}
+
+.form-section-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Form Inputs */
+.form-floating {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-control {
+    border-radius: 0.375rem;
+    padding: 1rem 1rem;
+    border: 1px solid #ced4da;
+    transition: all 0.2s ease;
+    height: calc(3.5rem + 2px);
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Password Input Groups */
+.password-input-group {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    z-index: 5;
+    color: #6c757d;
+}
+
+.password-toggle:hover {
+    color: #0d6efd;
+}
+
+/* Password Strength Meter */
+.password-strength-meter {
+    margin-top: 0.5rem;
+}
+
+.strength-bar {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+}
+
+.strength-bar.level-1 {
+    background: linear-gradient(to right, #dc3545 25%, #e9ecef 25%);
+}
+
+.strength-bar.level-2 {
+    background: linear-gradient(to right, #fd7e14 50%, #e9ecef 50%);
+}
+
+.strength-bar.level-3 {
+    background: linear-gradient(to right, #ffc107 75%, #e9ecef 75%);
+}
+
+.strength-bar.level-4 {
+    background: #28a745;
+}
+
+.strength-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.strength-text span {
+    font-weight: 600;
+}
+
+/* Password Match Feedback */
+.password-match-feedback {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Password Requirements */
+.password-requirements {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.password-requirements h6 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+
+.password-requirements li {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-requirements li i {
+    font-size: 0.5rem;
+}
+
+.password-requirements li.valid {
+    color: #28a745;
+}
+
+.password-requirements li.valid i {
+    color: #28a745;
+}
+
+/* Submit Button */
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    font-weight: 500;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .sidebar-col {
+        order: 2;
+    }
+    
+    .main-content-col {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .form-card {
+        padding: 1.5rem;
+    }
+    
+    .password-requirements ul {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

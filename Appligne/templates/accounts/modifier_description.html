@@ -4,460 +4,631 @@
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
-                        </div>
-                    </div>
-                    <!-- header end -->
-                </div>
+<!-- Début section principale -->
+<section class="teacher-profile-edit">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <!-- Sidebar -->
+            <div class="col-sm-12 col-md-4 col-lg-2 sidebar-col">
+                {% include 'partials/_sidebar.html' %}
             </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Modifiez dans votre profil</h6>
-                        <h1 class="mb-5">Le titre de votre fiche et les autres détailles</h1>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                </div>
-            </div>
-            <form method="POST" enctype="multipart/form-data"  >
-                {% csrf_token %}
             
-                <!-- Intitulez votre fiche de professeur debut -->
-                <div class="container-xxl py-5" id="intitulez_Votre_fiche">
-                    <div class="container">
-                        <div class="container bg-light  p-3">
-                            <div class="row g-2 ">
-                                <div class="col-lg-2 col-sm-12 position-relative">
-                                    <label for="date_modif_id" class="form-label">Dernière modification</label>
-                                    <input type="text" class="form-control" id="date_modif_id" placeholder="Prof de mathématique" name="date_modif" value="{{ date_modif|date:'d/m/Y' }}" readonly>
+            <!-- Contenu principal -->
+            <div class="col-sm-12 col-md-8 col-lg-10 main-content wow fadeInUp px-5 " data-wow-delay="0.1s">
+                
+                
+
+                <!-- Messages d'alerte -->
+                <div class="col-md-12 mb-4">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+
+                <!-- Formulaire -->
+                <form method="POST" enctype="multipart/form-data" class="teacher-profile-form">
+                    {% csrf_token %}
+                    
+                    <!-- Section 1 : Titre du profil -->
+                    <section id="profile-title-section" class="profile-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-heading me-2"></i>Intitulé de votre profil</h2>
+                            <p class="section-description">Créez un titre accrocheur qui résume votre expertise</p>
+                        </div>
+                        
+                        <div class="section-content card">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-lg-2 col-sm-12">
+                                        <div class="form-group">
+                                            <label for="date_modif_id" class="form-label">Dernière modification</label>
+                                            <input type="text" class="form-control" id="date_modif_id" 
+                                                   value="{{ date_modif|date:'d/m/Y' }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-10 col-sm-12">
+                                        <div class="form-group">
+                                            <label for="titre_fiche_id" class="form-label">Titre de votre profil*</label>
+                                            <input type="text" class="form-control" id="titre_fiche_id" required
+                                                   placeholder="Ex: Professeur expérimenté en mathématiques - Paris" 
+                                                   name="titre_fiche" value="{{titre_fiche}}">
+                                            <small class="form-text text-muted">Maximum 120 caractères</small>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-10 col-sm-12 position-relative">
-                                    <label for="titre_fiche_id" class="form-label">Titre de votre fiche</label>
-                                    <input type="text" class="form-control" id="titre_fiche_id" required
-                                        placeholder="Prof de mathématique" name="titre_fiche" value="{{titre_fiche}}" >
-                                </div>
-                            </div>
-                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
-                                <p class="mb-4">Optimisez l'impact de votre profil en le rendant attrayant pour les parents qui
-                                    recherchent un enseignant. Choisissez un titre percutant qui met en avant les informations
-                                    essentielles : les matières enseignées, la localisation, le format des cours, une expérience
-                                    marquante, ainsi que votre diplôme ou école.</p>
-                            </div>
-                            <!-- Button trigger modal -->
-                            <div class="containe">
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#exampleModal1">
-                                        En savoir plus
+                                
+                                <div class="section-guidance mt-4">
+                                    <div class="guidance-content">
+                                        <h5><i class="fas fa-lightbulb text-warning me-2"></i>Conseils pour un titre efficace :</h5>
+                                        <ul class="tips-list">
+                                            <li>Mentionnez vos matières principales</li>
+                                            <li>Indiquez votre localisation</li>
+                                            <li>Précisez votre type d'enseignement (en ligne, à domicile...)</li>
+                                            <li>Mettez en avant votre expérience ou diplôme</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#titleTipsModal">
+                                        <i class="fas fa-info-circle me-1"></i> Voir plus d'exemples
                                     </button>
                                 </div>
                             </div>
-            
-                            <!-- Modal Début -->
-                            <div class="modal fade " id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel"
-                                aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-scrollable ">
-                                    <div class="modal-content  ">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel1">Intitulez votre fiche de professeur
-                                            </h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body ">
-                                            <h5>Exemple de titre :</h5>
-                                            <p>"Enseignant passionné à <strong>[Nom de la ville]</strong> : Expert en
-                                                <strong>[Matières
-                                                    enseignées]</strong> | Cours dynamiques et engageants | Expérience remarquable
-                                                dans
-                                                <strong>[Domaine spécifique]</strong> | Diplômé de <strong>[Nom de
-                                                    l'école]</strong>"
-                                            </p>
-                                            <p>N'hésitez pas à personnaliser en fonction de votre situation spécifique et à ajuster
-                                                les
-                                                éléments en fonction de leur pertinence.</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Modal Fin -->
                         </div>
-            
-                        <div class="row justify-content-end g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                <a class="btn btn-primary w-100" href="#parcours"><span style="color: white;">Suivant</span></a>
-                            </div>
+                        
+                        <!-- Navigation entre sections -->
+                        <div class="section-navigation text-end mt-3">
+                            <a href="#parcours-section" class="btn btn-primary next-section">
+                                Suivant <i class="fas fa-arrow-down ms-2"></i>
+                            </a>
                         </div>
-                    </div>
-                </div>
-                <!-- Intitulez votre fiche de professeur fin -->
-            
-                <!-- Détaillez votre parcours debut -->
-                <div class="container-xxl py-5" id="parcours">
-                    <div class="container">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                            <h1 class="mb-5">Détaillez votre parcours</h1>
-                        </div>
-                        <div class="container bg-light  p-3">
-                            <div class="row g-2 ">
-                                <div class="col-12 position-relative">
-                                    <label for="parcours_id" class="form-label">Description</label>
-                                    <textarea class="form-control profil" id="parcours_id" rows="4"
-                                        name="parcours" aria-valuetext="{{parcours}}" >{{parcours}}</textarea>
-                                </div>
-                            </div>
-                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
-                                <p class="mb-4">Fournissez une présentation complète de votre parcours éducatif pour permettre aux
-                                    parents de mieux vous connaître avant de solliciter vos services.</p>
-                                <div class="row gy-2 gx-4 mb-4">
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Diplômes : Titulaire d'un
-                                            <strong>[Nom du diplôme]</strong> de <strong>[Nom de l'institution]</strong> dans
-                                            <strong>[Spécialisation]</strong>.
-                                        </p>
-                                    </div>
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Filières suivies : Ayant
-                                            suivi des filières enrichissantes en <strong>[Nom de la filière]</strong> et, j'ai
-                                            développé
-                                            une expertise approfondie dans ces domaines.</p>
-                                    </div>
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Classements et
-                                            distinctions :
-                                            Fier de mes réalisations, j'ai obtenu des classements élogieux et des distinctions
-                                            notables
-                                            au cours de mon parcours académique. Ces reconnaissances témoignent de mon engagement et
-                                            de
-                                            ma passion pour l'apprentissage.</p>
-                                    </div>
-                                </div>
-                                <!-- Button trigger modal -->
+                    </section>
 
-                                <div class="containe">
-                                    <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal2">
-                                        Exemple:
-                                        </button>
-                                    </div>
+                    <!-- Section 2 : Parcours académique -->
+                    <section id="parcours-section" class="profile-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-graduation-cap me-2"></i>Votre parcours académique</h2>
+                            <p class="section-description">Détaillez votre formation et vos qualifications</p>
+                        </div>
+                        
+                        <div class="section-content card">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="parcours_id" class="form-label">Description détaillée*</label>
+                                    <textarea class="form-control profil" id="parcours_id" rows="6"
+                                              name="parcours">{{parcours}}</textarea>
+                                    <small class="form-text text-muted">500 à 1500 caractères recommandés</small>
                                 </div>
                                 
-                                
-            
-                                <!-- Modal Début -->
-                                <div class="modal fade " id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel"
-                                    aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-scrollable">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel2">Détaillez votre parcours</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
+                                <div class="section-guidance mt-4">
+                                    <div class="guidance-content">
+                                        <h5><i class="fas fa-clipboard-check text-success me-2"></i>Éléments à inclure :</h5>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="feature-box">
+                                                    <div class="feature-icon bg-primary">
+                                                        <i class="fas fa-award"></i>
+                                                    </div>
+                                                    <h6>Diplômes obtenus</h6>
+                                                    <p>Mentionnez vos diplômes avec les établissements et années</p>
+                                                </div>
                                             </div>
-                                            <div class="modal-body">
-                                                <p>Découvrez davantage sur mon parcours éducatif, une invitation à explorer les
-                                                    fondements de ma passion pour l'enseignement avant même de formuler toute
-                                                    demande de
-                                                    cours :</p>
-                                                <p><strong>. Diplômes et Institution :</strong> Je suis titulaire d'un prestigieux
-                                                    <strong>[Nom du diplôme]</strong> délivré par <strong>[Nom de
-                                                        l'institution]</strong>, une formation rigoureuse qui a façonné ma
-                                                    compréhension
-                                                    approfondie dans le domaine de <strong>[Votre spécialisation]</strong>
-                                                </p>
-                                                <p><strong>. Filières d'études enrichissantes :</strong> Ma quête de connaissances
-                                                    s'est
-                                                    développée à travers des filières captivantes telles que <strong>[Nom de la
-                                                        filière]</strong> et <strong>[Nom de la filière]</strong>, des chemins
-                                                    académiques qui ont cultivé ma polyvalence et ma compréhension holistique du
-                                                    savoir.
-                                                </p>
-                                                <p><strong>. Classements élogieux et distinctions notables :</strong> Mon parcours a
-                                                    été
-                                                    ponctué de classements honorifiques et de distinctions remarquables, témoignant
-                                                    de
-                                                    ma détermination et de ma recherche constante de l'excellence. Ces
-                                                    reconnaissances
-                                                    sont le reflet de mon engagement envers l'apprentissage et la qualité.</p>
-                                                <p>Ces éléments de mon parcours, bien au-delà de simples annotations sur un CV, sont
-                                                    le
-                                                    socle de ma passion pour l'éducation. Ils incarnent ma conviction profonde que
-                                                    chaque étape de mon cheminement académique a contribué à forger la pédagogie
-                                                    réfléchie et l'enthousiasme que je mets à la disposition de chaque élève que
-                                                    j'ai la
-                                                    chance de guider.</p>
+                                            <div class="col-md-4">
+                                                <div class="feature-box">
+                                                    <div class="feature-icon bg-info">
+                                                        <i class="fas fa-book"></i>
+                                                    </div>
+                                                    <h6>Spécialisations</h6>
+                                                    <p>Décrivez vos domaines d'expertise particuliers</p>
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Fermer</button>
+                                            <div class="col-md-4">
+                                                <div class="feature-box">
+                                                    <div class="feature-icon bg-warning">
+                                                        <i class="fas fa-trophy"></i>
+                                                    </div>
+                                                    <h6>Distinctions</h6>
+                                                    <p>Ajoutez vos prix, classements ou reconnaissances</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- Modal Fin -->
-                            </div>
-            
-                            <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <a class="btn btn-primary w-100" href="#intitulez_Votre_fiche"><span
-                                            style="color: white;">Précédent</span></a>
-                                </div>
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <a class="btn btn-primary w-100" href="#pedagogie"><span style="color: white;">Suivant</span></a>
+                                    
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#academicTipsModal">
+                                        <i class="fas fa-info-circle me-1"></i> Exemple complet
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- Détaillez votre parcours fin -->
-            
-                <!-- Déroulement et pédagogie de votre cours debut -->
-                <div class="container-xxl py-5" id="pedagogie">
-                    <div class="container">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-                            <h1 class="mb-5">Déroulement et pédagogie de votre cours</h1>
+                        
+                        <!-- Navigation entre sections -->
+                        <div class="section-navigation d-flex justify-content-between mt-3">
+                            <a href="#profile-title-section" class="btn btn-outline-primary previous-section">
+                                <i class="fas fa-arrow-up me-2"></i> Précédent
+                            </a>
+                            <a href="#pedagogie-section" class="btn btn-primary next-section">
+                                Suivant <i class="fas fa-arrow-down ms-2"></i>
+                            </a>
                         </div>
-                        <div class="container bg-light  p-3">
-                            <div class="row g-2 ">
-                                <div class="col-12 position-relative">
-                                    <label for="pedagogie_id" class="form-label">Descrivez aux parents votre
-                                        pédagogie</label>
-                                    <textarea class="form-control profil" id="pedagogie_id" rows="4"
-                                        name="pedagogie" >{{pedagogie}}</textarea>
+                    </section>
+
+                    <!-- Section 3 : Méthodologie pédagogique -->
+                    <section id="pedagogie-section" class="profile-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-chalkboard-teacher me-2"></i>Votre approche pédagogique</h2>
+                            <p class="section-description">Expliquez votre méthode d'enseignement</p>
+                        </div>
+                        
+                        <div class="section-content card">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="pedagogie_id" class="form-label">Votre méthodologie*</label>
+                                    <textarea class="form-control profil" id="pedagogie_id" rows="6"
+                                              name="pedagogie">{{pedagogie}}</textarea>
+                                    <small class="form-text text-muted">Décrivez concrètement votre approche (500-1500 caractères)</small>
                                 </div>
-                            </div>
-                            <div class="col-12 wow fadeInUp p-3" data-wow-delay="0.3s">
-                                <div class="row gy-2 gx-4 mb-4">
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Pédagogie et
-                                                Déroulement du Cours :</strong> Stimuler la réflexion critique, favoriser la
-                                            participation active et encourager la compréhension profonde des concepts abordés.</p>
-                                    </div>
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Séance Type et
-                                                Préparation de Cours :</strong> Une brève révision établissant des connexions avec
-                                            les
-                                            nouveaux éléments à aborder, incluant des exercices pertinents, minutieusement préparés
-                                            en
-                                            fonction des besoins spécifiques de l’élève.</p>
-                                    </div>
-                                    <div class="col-12">
-                                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i><strong>Méthodes pour
-                                                Favoriser la Progression :</strong> Une évaluation régulière, identifiant les
-                                            domaines à
-                                            renforcer. Des retours constructifs sont fournis, accompagnés de conseils personnalisés.
-                                            J'encourage l'autonomie dans le processus d'apprentissage.</p>
-                                    </div>
-                                </div>
-                                <!-- Button trigger modal -->
-                                <div class="containe">
-                                    <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center"> 
-                                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModal3">
-                                            Exemple:
-                                        </button>
-                                    </div>
-                                </div>
-            
-                                <!-- Modal Début -->
-                                <div class="modal fade " id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel"
-                                    aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-scrollable">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel3">Déroulement et pédagogie de
-                                                    votre
-                                                    cours</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
+                                
+                                <div class="section-guidance mt-4">
+                                    <div class="guidance-content">
+                                        <h5><i class="fas fa-magic text-info me-2"></i>Points clés à aborder :</h5>
+                                        <div class="pedagogy-features">
+                                            <div class="feature-item">
+                                                <div class="feature-number">1</div>
+                                                <div class="feature-text">
+                                                    <strong>Structure du cours</strong> : Comment se déroule une séance type?
+                                                </div>
                                             </div>
-                                            <div class="modal-body">
-                                                <p>Explorez ma pédagogique et découvrez comment je façonne une expérience
-                                                    d'apprentissage enrichissante pour chaque élève, garantissant un progrès
-                                                    constant.
-                                                </p>
-                                                <p><strong>Pédagogie et Déroulement du Cours :</strong> Mon approche pédagogique
-                                                    repose
-                                                    sur l'interaction, l'engagement et la personnalisation. Chaque séance est conçue
-                                                    pour stimuler la réflexion critique, favoriser la participation active et
-                                                    encourager
-                                                    la compréhension profonde des concepts abordés. L'environnement de la classe est
-                                                    ouvert, encourageant les questions et les discussions, créant ainsi une
-                                                    dynamique
-                                                    propice à l'apprentissage.</p>
-                                                <p><strong>Séance Type et Préparation de Cours :</strong> Une séance type commence
-                                                    par
-                                                    une brève révision des concepts antérieurs, établissant des connexions avec les
-                                                    nouveaux éléments à aborder. Les supports de cours sont soigneusement préparés,
-                                                    incluant des exemples concrets et des exercices pertinents. Avant chaque séance,
-                                                    je
-                                                    m'investis dans une préparation minutieuse, ajustant le contenu en fonction des
-                                                    besoins spécifiques des élèves pour maximiser la pertinence et l'efficacité de
-                                                    chaque session.</p>
-                                                <p><strong>Soutien Continu entre les Séances :</strong> Je valorise la continuité de
-                                                    l'apprentissage. Entre chaque séance, des ressources complémentaires, des
-                                                    exercices
-                                                    supplémentaires et des conseils spécifiques sont mis à disposition. Cette
-                                                    approche
-                                                    vise à renforcer la compréhension et à fournir aux élèves les outils nécessaires
-                                                    pour progresser de manière autonome.</p>
-                                                <p><strong>Méthodes pour Favoriser la Progression :</strong> Pour assurer une
-                                                    progression optimale, j'adopte une évaluation régulière des performances des
-                                                    élèves,
-                                                    identifiant les points forts et les domaines à renforcer. Des retours
-                                                    constructifs
-                                                    sont fournis, accompagnés de conseils personnalisés pour guider les élèves dans
-                                                    leur
-                                                    développement. J'encourage également l'autonomie en stimulant l'initiative
-                                                    personnelle et la prise de responsabilité dans le processus d'apprentissage.</p>
-                                                <p>Chaque aspect de ma méthodologie est conçu pour créer une expérience
-                                                    d'apprentissage
-                                                    engageante, dynamique et adaptée à chaque élève, favorisant ainsi une
-                                                    progression
-                                                    continue et une maîtrise approfondie des sujets abordés.</p>
+                                            <div class="feature-item">
+                                                <div class="feature-number">2</div>
+                                                <div class="feature-text">
+                                                    <strong>Outils utilisés</strong> : Supports, technologies ou méthodes spécifiques
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Fermer</button>
+                                            <div class="feature-item">
+                                                <div class="feature-number">3</div>
+                                                <div class="feature-text">
+                                                    <strong>Suivi des élèves</strong> : Comment évaluez-vous la progression?
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- Modal Fin -->
-                            </div>
-            
-                            <div class="row justify-content-between g-2 p-3">
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <a class="btn btn-primary w-100" href="#parcours"><span style="color: white;">Précédent</span></a>
-                                </div>
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <a class="btn btn-primary w-100" href="#Video"><span style="color: white;">Suivant</span></a>
+                                    
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#pedagogyTipsModal">
+                                        <i class="fas fa-info-circle me-1"></i> Modèle de description
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- Déroulement et pédagogie de votre cours fin -->
-            
-                <!-- Vidéo de présentation début -->
-                <div class="container py-5" id="Video">
-                    <div class="container">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveau compte</h6>
-                            <h1 class="mb-5">Vidéo de présentation</h1>
+                        
+                        <!-- Navigation entre sections -->
+                        <div class="section-navigation d-flex justify-content-between mt-3">
+                            <a href="#parcours-section" class="btn btn-outline-primary previous-section">
+                                <i class="fas fa-arrow-up me-2"></i> Précédent
+                            </a>
+                            <a href="#video-section" class="btn btn-primary next-section">
+                                Suivant <i class="fas fa-arrow-down ms-2"></i>
+                            </a>
                         </div>
-                        <div class="container bg-light">
-                            <div class="row g-2">
-                                <div class="col-12 ">
-                                    <label for="video_id" class="form-label">Lien de votre vidéo</label>
+                    </section>
+
+                    <!-- Section 4 : Vidéo de présentation -->
+                    <section id="video-section" class="profile-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-video me-2"></i>Vidéo de présentation</h2>
+                            <p class="section-description">Ajoutez une vidéo pour personnaliser votre profil</p>
+                        </div>
+                        
+                        <div class="section-content card">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="video_id" class="form-label">Lien YouTube de votre vidéo</label>
+                                    <input type="url" class="form-control" id="video_id"
+                                           placeholder="https://www.youtube.com/watch?v=..." 
+                                           name="video_youtube_url" value="{{video_youtube_url}}">
+                                    <small class="form-text text-muted">Facultatif mais fortement recommandé</small>
                                 </div>
-                                <div class="col-12 ">
-                                    <input type="text" class="form-control" id="video_id"
-                                        placeholder="" name="video_youtube_url" value="{{video_youtube_url}}">
-                                </div>
-                                <div class="col-12 position-relative d-flex justify-content-center align-items-center">
-            
-            
-                                    <div class="embed-responsive embed-responsive-16by9">
-                                        <iframe class="embed-responsive-item"
-                                            src="{{video_youtube_url}}"
-                                            title="YouTube video player" frameborder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            allowfullscreen ></iframe>
+                                
+                                {% if video_youtube_url %}
+                                <div class="video-preview mt-4">
+                                    <h5><i class="fas fa-eye me-2"></i>Aperçu de votre vidéo actuelle :</h5>
+                                    <div class="ratio ratio-16x9">
+                                        <iframe src="{{video_youtube_url|default:''}}"
+                                                title="Votre vidéo de présentation" frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen></iframe>
                                     </div>
-            
-            
+                                </div>
+                                {% endif %}
+                                
+                                <div class="video-benefits mt-4">
+                                    <div class="benefits-content">
+                                        <h5><i class="fas fa-star text-warning me-2"></i>Pourquoi ajouter une vidéo ?</h5>
+                                        <ul class="benefits-list">
+                                            <li>Augmente votre crédibilité</li>
+                                            <li>Permet aux parents de mieux vous connaître</li>
+                                            <li>Améliore significativement votre visibilité</li>
+                                            <li>Différencie votre profil des autres enseignants</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-12 wow fadeInUp p-5" data-wow-delay="0.3s">
-                                <p class="mb-4">
-                                    Intégrer une vidéo YouTube à ton profil contribuera à embellir ta présentation en offrant une
-                                    perspective plus vivante de ta personnalité et en mettant en lumière ton expertise. Cette
-                                    approche
-                                    s'avère également être une stratégie efficace pour te démarquer de manière unique et captivante.
-                                </p>
+                        </div>
+                        
+                        <!-- Actions finales -->
+                        <div class="form-actions mt-5">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="{% url 'profil_prof' id_user=user.id %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-user-circle me-2"></i>Voir mon profil
+                                    </a>
+                                </div>
+                                <div>
+                                    <a href="#pedagogie-section" class="btn btn-outline-primary me-3">
+                                        <i class="fas fa-arrow-up me-2"></i> Précédent
+                                    </a>
+                                    <button type="submit" class="btn btn-success" name="btn_enr">
+                                        <i class="fas fa-save me-2"></i> Enregistrer les modifications
+                                    </button>
+                                </div>
                             </div>
                         </div>
-            
-                        <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                <a class="btn btn-primary w-100" href="#pedagogie"><span style="color: white;">Précédent</span></a>
-                            </div>
-                        </div>
-                        <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
-                            </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                    Enregistrer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Vidéo de présentation fin -->
-            </form>
-            <!-- fin page -->
+                    </section>
+                </form>
+            </div>
         </div>
     </div>
-    <!-- mon compte fin -->
+</section>
+
+<!-- Modals -->
+<!-- Modal pour les conseils sur le titre -->
+<div class="modal fade" id="titleTipsModal" tabindex="-1" aria-labelledby="titleTipsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="titleTipsModalLabel"><i class="fas fa-heading me-2"></i>Conseils pour votre titre</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h6><i class="fas fa-check-circle text-success me-2"></i>Exemples efficaces :</h6>
+                    <ul class="good-examples">
+                        <li>"Professeur agrégé de mathématiques avec 10 ans d'expérience - Cours à Paris et en ligne"</li>
+                        <li>"Enseignante en anglais diplômée de Cambridge - Préparation aux examens TOEFL/IELTS"</li>
+                        <li>"Docteur en physique donne cours particuliers niveau lycée et supérieur - Région Lyonnaise"</li>
+                    </ul>
+                </div>
+                
+                <div class="modal-section">
+                    <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>À éviter :</h6>
+                    <ul class="bad-examples">
+                        <li>"Donne cours de maths" (trop vague)</li>
+                        <li>"Super prof génial" (trop subjectif)</li>
+                        <li>"Enseignant depuis longtemps" (imprécis)</li>
+                    </ul>
+                </div>
+                
+                <div class="modal-section">
+                    <h6><i class="fas fa-lightbulb text-info me-2"></i>Structure recommandée :</h6>
+                    <p><strong>Qualification + Matière + Expérience + Localisation/Mode d'enseignement</strong></p>
+                    <p class="text-muted">Ex: "Professeur certifié de français, 5 ans d'expérience avec les collégiens - Cours en ligne"</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">J'ai compris</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les conseils sur le parcours académique -->
+<div class="modal fade" id="academicTipsModal" tabindex="-1" aria-labelledby="academicTipsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="academicTipsModalLabel"><i class="fas fa-graduation-cap me-2"></i>Exemple de parcours académique</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="example-content">
+                    <p><strong>Diplômes et formations :</strong></p>
+                    <p>"Titulaire d'un Master en Mathématiques Appliquées de l'Université Paris-Dauphine (2018), j'ai complété ma formation par un Certificat en Pédagogie Active (2020). Mon parcours académique inclut également une année d'échange à l'ETH Zurich, renforçant mon expertise en analyse numérique."</p>
+                    
+                    <p><strong>Spécialisations :</strong></p>
+                    <p>"Mes domaines de prédilection couvrent l'algèbre linéaire, l'analyse complexe et les probabilités. J'ai développé une approche particulière pour l'enseignement des concepts abstraits grâce à des applications concrètes."</p>
+                    
+                    <p><strong>Distinctions :</strong></p>
+                    <p>"Classé 2ème au Concours Général de Mathématiques (2014), j'ai reçu le Prix d'Excellence Pédagogique décerné par l'Association des Professeurs de Mathématiques en 2021."</p>
+                    
+                    <p class="text-muted mt-3">Ce texte fait environ 800 caractères. Votre description devrait idéalement se situer entre 500 et 1500 caractères.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info text-white" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les conseils sur la pédagogie -->
+<div class="modal fade" id="pedagogyTipsModal" tabindex="-1" aria-labelledby="pedagogyTipsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="pedagogyTipsModalLabel"><i class="fas fa-chalkboard-teacher me-2"></i>Exemple de méthodologie</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="example-content">
+                    <p><strong>Approche pédagogique :</strong></p>
+                    <p>"Ma méthode s'appuie sur la pédagogie différenciée, adaptant chaque cours au profil cognitif de l'élève. Je privilégie une approche interactive où l'élève est acteur de son apprentissage, à travers des mises en situation et des exercices pratiques."</p>
+                    
+                    <p><strong>Déroulement type :</strong></p>
+                    <p>"Une séance commence par une évaluation rapide des acquis, suivie d'une présentation synthétique des nouveaux concepts. Nous consacrons ensuite 60% du temps à des exercices progressifs, avec un feedback immédiat. Chaque cours se conclut par une fiche mémo personnalisée."</p>
+                    
+                    <p><strong>Outils et suivi :</strong></p>
+                    <p>"J'utilise des supports visuels (géogebra, vidéos) et propose un espace en ligne avec des ressources complémentaires. Un bilan mensuel détaillé permet de mesurer les progrès et d'ajuster notre approche."</p>
+                    
+                    <p class="text-muted mt-3">Cette description fait environ 1000 caractères. Variez la longueur selon votre style.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 
 {% endblock %}
-{% block javascript %}
-    <!-- <script src="{% static 'js/Code_en_plus_modifier_compte_prof.js' %}"></script> -->
-    <script>
-        // http://localhost:8000/profil_prof/2/
-// fonction pour redimentionner les Textarea selon leur contenu
-function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
 
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+{% block javascript %}
+<style>
+    /* Styles personnalisés pour la page */
+    .teacher-profile-edit {
+        padding: 2rem 0;
+        background-color: #f8f9fa;
     }
-}
-    </script>
-    <script>
-        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
-    </script>
+    
+    .sidebar-col {
+        background: white;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        padding-right: 0;
+    }
+    
+    .main-content {
+        padding: 0 2rem;
+    }
+    
+    .page-header {
+        margin-bottom: 3rem;
+    }
+    
+    .page-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    
+    .page-subtitle {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+    }
+    
+    .profile-section {
+        margin-bottom: 3rem;
+    }
+    
+    .section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-header h2 {
+        font-weight: 600;
+        color: #3498db;
+    }
+    
+    .section-description {
+        color: #7f8c8d;
+        margin-bottom: 0;
+    }
+    
+    .section-content {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: none;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-guidance {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-top: 2rem;
+    }
+    
+    .guidance-content h5 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .tips-list {
+        padding-left: 1.5rem;
+    }
+    
+    .tips-list li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-box {
+        text-align: center;
+        padding: 1rem;
+        height: 100%;
+    }
+    
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.25rem;
+    }
+    
+    .feature-box h6 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-box p {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+    }
+    
+    .pedagogy-features {
+        margin-top: 1.5rem;
+    }
+    
+    .feature-item {
+        display: flex;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+    }
+    
+    .feature-number {
+        background: #3498db;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+    }
+    
+    .video-preview {
+        margin-top: 2rem;
+    }
+    
+    .video-preview h5 {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .benefits-list {
+        column-count: 2;
+        padding-left: 1.5rem;
+    }
+    
+    .benefits-list li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-navigation {
+        margin-top: 2rem;
+    }
+    
+    .form-actions {
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Styles pour les modals */
+    .modal-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .good-examples li {
+        color: #27ae60;
+        margin-bottom: 0.5rem;
+    }
+    
+    .bad-examples li {
+        color: #e74c3c;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .benefits-list {
+            column-count: 1;
+        }
+        
+        .feature-box {
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
+
+<script>
+    // Fonction pour redimensionner les textarea selon leur contenu
+    function adjustTextareaHeight() {
+        const textareas = document.getElementsByClassName('form-control profil');
+
+        for (let i = 0; i < textareas.length; i++) {
+            const textarea = textareas[i];
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+        }
+    }
+    
+    // Appel initial et sur les changements
+    window.onload = adjustTextareaHeight;
+    document.addEventListener('input', adjustTextareaHeight);
+    
+    // Smooth scrolling pour la navigation entre sections
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Validation du formulaire
+    document.querySelector('.teacher-profile-form').addEventListener('submit', function(e) {
+        const requiredFields = this.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+        }
+    });
+</script>
 {% endblock %}

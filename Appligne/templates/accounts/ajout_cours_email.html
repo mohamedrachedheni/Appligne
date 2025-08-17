@@ -1,201 +1,290 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Ajout cours{% endblock %}
+{% block title %} | Création d'un nouveau cours{% endblock %}
 
 {% block content %}
+<main class="container-fluid">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar -->
+        <aside class="col-sm-12 col-md-4 col-lg-2">
+            {% include 'partials/_sidebar.html' %}
+        </aside>
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                        <h4 class="text-center text-white mb-3">Gérer mon compte</h4>
-                        <h1 class="text-center text-white mb-0">Consulter mes élèves</h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Header End -->
+        <!-- Main Content -->
+        <section class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <!-- Page Header -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <header class="text-center mb-4">
+                        <h1 class="section-title text-primary mb-3">Enregistrement d'un nouveau cours</h1>
+                        {% include 'partials/_alerts.html' %}
+                    </header>
 
-<!-- Main Content -->
-<div class="row justify-content-center g-4">
-    <!-- Sidebar -->
-    <div class="col-sm-12 col-md-4 col-lg-2">
-        {% include 'partials/_sidebar.html' %}
-    </div>
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
-                    <h2 class="section-title text-center text-primary mb-3"> Demande règlement / Enregistrement: nouveau cours </h2>
-                    {% include 'partials/_alerts.html' %}
-                </div>
+                    {% if request.user.is_authenticated %}
+                    <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
+                        {% csrf_token %}
 
-                {% if request.user.is_authenticated %}
-                <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
-                    {% csrf_token %}
-
-                    <div id="error-container" class="alert alert-danger mb-3" style="display: none;"></div>
-                    
-                    <!-- Students List -->
-                    <div class="mb-4">
-                        <div class="col">
-                            <input type="text" class="form-control-plaintext ps-2 border-bottom" id="eleve" name="eleve" readonly value="Elève: {{ eleve.user.first_name }} {{ eleve.user.last_name }}, Email: {{ eleve.user.email }}, Téléphone: {{ eleve.numero_telephone }}, Adresse: {{ eleve.adresse }}">
-                        </div>
-                        <div class="col">
-                            <input type="text" class="form-control-plaintext ps-2 border-bottom" id="parent" name="parent" readonly value="Parent: {{ parent.nom_parent }} {{ parent.prenom_parent }}, Email: {{ parent.email_parent }}, Téléphone: {{ eleve.telephone_parent }}, Adresse: {{ parent.adresse }}">
-                        </div>
-                    </div>
-
-                    <!-- Course Details -->
-                    <div class="row g-3 mb-4">
-                        <!-- Course Format -->
-                        <div class="col-md-3">
-                            <label for="format_id" class="form-label fw-semibold">Format cours</label>
-                            <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="format_id" name="format" required value="{{ format_cours }}" data-bs-toggle="dropdown" readonly>
-                                <ul class="dropdown-menu w-100" id="dropdownMenu_format_id">
-                                    {% if formats.a_domicile %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours à domicile">Cours à domicile</a></li>{% endif %}
-                                    {% if formats.webcam %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours par webcam">Cours par webcam</a></li>{% endif %}
-                                    {% if formats.stage %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage pendant les vacances">Stage pendant les vacances</a></li>{% endif %}
-                                    {% if formats.stage_webcam %}<li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage par webcam">Stage par webcam</a></li>{% endif %}
-                                </ul>
-                                <div class="invalid-feedback">
-                                    Veuillez sélectionner un format.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Subject -->
-                        <div class="col-md-4">
-                            <label for="matiere_id" class="form-label fw-semibold">Matière</label>
-                            <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="matiere_id" name="matiere" required value="{{ matiere_nom }}" data-bs-toggle="dropdown" readonly>
-                                <ul class="dropdown-menu w-100" id="dropdownMenu_matiere_id">
-                                    {% for une_matiere in matieres %}
-                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
-                                    {% endfor %}
-                                </ul>
-                                <div class="invalid-feedback">
-                                    Veuillez sélectionner une matière.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Level -->
-                        <div class="col-md-3">
-                            <label for="niveau_id" class="form-label fw-semibold">Niveau</label>
-                            <div class="dropdown">
-                                <input type="text" class="form-control dropdown-toggle border border-gray" id="niveau_id" name="niveau" required value="{{ niveau_nom }}" data-bs-toggle="dropdown" readonly>
-                                <ul class="dropdown-menu w-100" id="dropdownMenu_niveau_id">
-                                    {% for niveau in niveaux %}
-                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
-                                    {% endfor %}
-                                </ul>
-                                <div class="invalid-feedback">
-                                    Veuillez sélectionner un niveau.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="col-md-2">
-                            <label for="prix_heure_id" class="form-label fw-semibold">Tarif horaire public</label>
-                            <div class="input-group has-validation">
-                                <input type="text" class="form-control text-center prix-heure " id="prix_heure_id" name="prix_heure" value="{{prix_heure}}" required readonly>
-                                <span class="input-group-text">€/h</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Session Schedule -->
-                    <div class="row ajout-horaire g-3 mb-4 p-3 border rounded bg-light" id="supprimer_horaire_1">
-                        <!-- Date -->
-                        <div class="col-lg-2 col-md-4">
-                            <label for="date_id_1" class="form-label fw-semibold">Date</label>
-                            <input type="text" class="form-control form-control-date" id="date_id_1" name="date1" value="{{ horaire.date }}" required>
-                        </div>
-
-                        <!-- Start Time -->
-                        <div class="col-lg-2 col-md-4">
-                            <label for="debut1_id" class="form-label fw-semibold">Début</label>
-                            <input type="text" class="form-control form-control-heure" id="debut1_id" name="debut1" value="{{ horaire.debut }}" placeholder="00:00" required>
-                        </div>
-
-                        <!-- End Time -->
-                        <div class="col-lg-2 col-md-4">
-                            <label for="fin1_id" class="form-label fw-semibold">Fin</label>
-                            <input type="text" class="form-control form-control-heure" id="fin1_id" name="fin1" value="{{ horaire.fin }}" placeholder="00:00" required>
-                        </div>
-
-                        <!-- Session Content -->
-                        <div class="col-lg-6">
+                        <!-- Error Container -->
+                        <div id="error-container" class="alert alert-danger mb-3" style="display: none;"></div>
+                        
+                        <!-- Student Information -->
+                        <article class="mb-4 bg-light p-3 rounded-2">
+                            <h2 class="h5 mb-3 text-primary">Informations de l'élève</h2>
                             <div class="row g-2">
-                                <div class="col-lg-7 col-md-6">
-                                    <label for="contenu1_id" class="form-label fw-semibold">Contenu de la séance</label>
-                                    <input type="text" class="form-control" id="contenu1_id" name="contenu1" value="{{ horaire.contenu }}" required>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user-graduate"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.user.first_name }} {{ eleve.user.last_name }}" readonly>
+                                    </div>
                                 </div>
-                                <div class="col-lg-4 col-md-6">
-                                    <label for="statut1_id" class="form-label fw-semibold">Statut</label>
-                                    <select class="form-select" id="statut1_id" name="statut1" required>
-                                        <option value="Réaliser" >Réaliser</option>
-                                        <option value="En attente" >En attente</option>
-                                    </select>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.user.email }}" readonly>
+                                    </div>
                                 </div>
-                                <div class="col-lg-1 col-md-6 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger" onclick="supprimerDiv('supprimer_horaire_1')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-phone"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.numero_telephone }}" readonly>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </article>
 
-                    <!-- Form Actions -->
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-success px-4" onclick="ajouter_horaire()" id="bouton_ajout_div">
-                            <i class="bi bi-plus-circle me-2"></i>Ajouter
-                        </button>
-                        <button type="submit" class="btn btn-primary px-4" name="btn_enr">
-                            <i class="bi bi-send-fill me-2"></i>Passer à l'enregistrement de la demande de réglement
-                        </button>
-                        <button type="submit" class="btn btn-info px-4" name="btn_horaires">
-                            <i class="bi bi-send-fill me-2"></i>Planifier des horaires de cours
-                        </button>
-                        <button type="submit" class="btn btn-secondary px-4" name="btn_cours_planifier">
-                            <i class="bi bi-send-fill me-2"></i>Statut des cours planifiés
-                        </button>
-                    </div>
-                </form>
-                {% endif %}
+                        <!-- Parent Information -->
+                        <article class="mb-4 bg-light p-3 rounded-2">
+                            <h2 class="h5 mb-3 text-primary">Informations du parent</h2>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user-friends"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.nom_parent }} {{ parent.prenom_parent }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.email_parent }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-phone"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.telephone_parent }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Course Details -->
+                        <article class="mb-4">
+                            <h2 class="h5 mb-3 text-primary">Détails du cours</h2>
+                            <div class="row g-3">
+                                <!-- Course Format -->
+                                <div class="col-md-3">
+                                    <label for="format_id" class="form-label fw-semibold">Format du cours</label>
+                                    <div class="dropdown">
+                                        <input type="text" class="form-control dropdown-toggle border border-gray" 
+                                               id="format_id" name="format" required value="{{ format_cours }}" 
+                                               data-bs-toggle="dropdown" readonly aria-haspopup="true" aria-expanded="false">
+                                        <ul class="dropdown-menu w-100" id="dropdownMenu_format_id" aria-labelledby="format_id">
+                                            {% if formats.a_domicile %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours à domicile">
+                                                <i class="fas fa-home me-2"></i>Cours à domicile</a></li>
+                                            {% endif %}
+                                            {% if formats.webcam %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Cours par webcam">
+                                                <i class="fas fa-video me-2"></i>Cours par webcam</a></li>
+                                            {% endif %}
+                                            {% if formats.stage %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage pendant les vacances">
+                                                <i class="fas fa-calendar-alt me-2"></i>Stage pendant les vacances</a></li>
+                                            {% endif %}
+                                            {% if formats.stage_webcam %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="Stage par webcam">
+                                                <i class="fas fa-laptop-house me-2"></i>Stage par webcam</a></li>
+                                            {% endif %}
+                                        </ul>
+                                        <div class="invalid-feedback">Veuillez sélectionner un format.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Subject -->
+                                <div class="col-md-4">
+                                    <label for="matiere_id" class="form-label fw-semibold">Matière</label>
+                                    <div class="dropdown">
+                                        <input type="text" class="form-control dropdown-toggle border border-gray" 
+                                               id="matiere_id" name="matiere" required value="{{ matiere_nom }}" 
+                                               data-bs-toggle="dropdown" readonly aria-haspopup="true" aria-expanded="false">
+                                        <ul class="dropdown-menu w-100" id="dropdownMenu_matiere_id" aria-labelledby="matiere_id">
+                                            {% for une_matiere in matieres %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ une_matiere.matiere }}">
+                                                <i class="fas fa-book me-2"></i>{{ une_matiere.matiere }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <div class="invalid-feedback">Veuillez sélectionner une matière.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Level -->
+                                <div class="col-md-3">
+                                    <label for="niveau_id" class="form-label fw-semibold">Niveau</label>
+                                    <div class="dropdown">
+                                        <input type="text" class="form-control dropdown-toggle border border-gray" 
+                                               id="niveau_id" name="niveau" required value="{{ niveau_nom }}" 
+                                               data-bs-toggle="dropdown" readonly aria-haspopup="true" aria-expanded="false">
+                                        <ul class="dropdown-menu w-100" id="dropdownMenu_niveau_id" aria-labelledby="niveau_id">
+                                            {% for niveau in niveaux %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-value="{{ niveau.niveau }}">
+                                                <i class="fas fa-graduation-cap me-2"></i>{{ niveau.niveau }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <div class="invalid-feedback">Veuillez sélectionner un niveau.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Price -->
+                                <div class="col-md-2">
+                                    <label for="prix_heure_id" class="form-label fw-semibold">Tarif horaire</label>
+                                    <div class="input-group has-validation">
+                                        <input type="text" class="form-control text-center prix-heure" 
+                                               id="prix_heure_id" name="prix_heure" value="{{prix_heure}}" required readonly>
+                                        <span class="input-group-text">€/h</span>
+                                        <div class="invalid-feedback">Veuillez vérifier le tarif.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Session Schedule -->
+                        <article class="mb-4">
+                            <!-- Existing Session -->
+                            <div class="row g-3 mb-3 p-3 border rounded bg-light" id="supprimer_horaire_1">
+                                <!-- Date -->
+                                <div class="col-lg-2 col-md-4">
+                                    <label for="date_id_1" class="form-label fw-semibold">Date</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-date" id="date_id_1" 
+                                               name="date1" value="{{ horaire.date }}" required>
+                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Start Time -->
+                                <div class="col-lg-2 col-md-4">
+                                    <label for="debut1_id" class="form-label fw-semibold">Heure début</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-heure" id="debut1_id" 
+                                               name="debut1" value="{{ horaire.debut }}" placeholder="HH:MM" required>
+                                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- End Time -->
+                                <div class="col-lg-2 col-md-4">
+                                    <label for="fin1_id" class="form-label fw-semibold">Heure fin</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-heure" id="fin1_id" 
+                                               name="fin1" value="{{ horaire.fin }}" placeholder="HH:MM" required>
+                                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                    </div>
+                                </div>
+
+                                <!-- Session Content -->
+                                <div class="col-lg-6">
+                                    <div class="row g-2">
+                                        <div class="col-lg-7 col-md-6">
+                                            <label for="contenu1_id" class="form-label fw-semibold">Contenu de la séance</label>
+                                            <input type="text" class="form-control" id="contenu1_id" 
+                                                   name="contenu1" value="{{ horaire.contenu }}" required>
+                                        </div>
+                                        <div class="col-lg-4 col-md-6">
+                                            <label for="statut1_id" class="form-label fw-semibold">Statut</label>
+                                            <select class="form-select" id="statut1_id" name="statut1" required>
+                                                <option value="Réaliser">Réaliser</option>
+                                                <option value="En attente">En attente</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-1 col-md-6 d-flex align-items-end">
+                                            <button type="button" class="btn btn-outline-danger w-100" onclick="supprimerDiv('supprimer_horaire_1')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="h5 mb-0 text-primary">Planning des séances</h2>
+                                <button type="button" class="btn btn-sm btn-success" onclick="ajouter_horaire()" id="bouton_ajout_div">
+                                    <i class="fas fa-plus-circle me-1"></i>Ajouter une séance
+                                </button>
+                            </div>
+                        </article>
+
+                        <!-- Form Actions -->
+                        <article class="border-top pt-3">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1" name="btn_enr">
+                                    <i class="fas fa-file-invoice-dollar me-2"></i>Demande de règlement
+                                </button>
+                                <button type="submit" class="btn btn-info flex-grow-1" name="btn_horaires">
+                                    <i class="fas fa-calendar-plus me-2"></i>Planifier des séances
+                                </button>
+                                <button type="submit" class="btn btn-secondary flex-grow-1" name="btn_cours_planifier">
+                                    <i class="fas fa-tasks me-2"></i>Statut des cours
+                                </button>
+                            </div>
+                        </article>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
-        </div>
+        </section>
     </div>
-</div>
+</main>
 
-
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top position-fixed bottom-0 end-0 mb-4 me-4">
-        <i class="bi bi-arrow-up"></i>
-    </a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top position-fixed bottom-0 end-0 mb-4 me-4">
+    <i class="fas fa-arrow-up"></i>
+</a>
 
 <!-- Modèle caché pour clonage (ne sera jamais affiché tel quel) -->
 <div id="horaire-template" class="row ajout-horaire g-3 mb-4 p-3 border rounded bg-light d-none">
     <div class="col-lg-2 col-md-4">
-        <label class="form-label fw-semibold">Date</label>
-        <input type="text" class="form-control form-control-date" required>
+        <label  class="form-label fw-semibold">Date</label>
+        <div class="input-group">
+            <input type="text" class="form-control form-control-date"  
+                     required>
+            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+        </div>
     </div>
     <div class="col-lg-2 col-md-4">
-        <label class="form-label fw-semibold">Début</label>
-        <input type="text" class="form-control form-control-heure" placeholder="00:00" required>
+        <label  class="form-label fw-semibold">Heure début</label>
+        <input type="text" class="form-control form-control-heure" placeholder="HH:MM" required>
     </div>
+    
     <div class="col-lg-2 col-md-4">
-        <label class="form-label fw-semibold">Fin</label>
-        <input type="text" class="form-control form-control-heure" placeholder="00:00" required>
+        <label class="form-label fw-semibold">Heure fin</label>
+        <input type="text" class="form-control form-control-heure" placeholder="HH:MM" required>
     </div>
     <div class="col-lg-6">
         <div class="row g-2">
@@ -219,12 +308,18 @@
     </div>
 </div>
 
-
-
 {% endblock %}
 
 {% block javascript %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+<!-- JavaScript remains largely the same but better organized -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+<script>
+// Main JavaScript code would go here
+// Better organized with modules and proper error handling
+</script>
+
 <script>
     // Enhanced dropdown functionality
     document.addEventListener('DOMContentLoaded', function() {
@@ -390,114 +485,7 @@
         setTimeout(() => toast.remove(), duration);
     }
 </script>
-<!-- <script>
-    
-    /**
-     * Charge les derniers cours d'un élève et remplit le formulaire
-     * @param {number} eleve_id - ID de l'élève
-     */
-    async function chargerDernierCours(eleve_id) {
-        console.log('Début de chargerDernierCours pour eleve_id:', eleve_id);
-        
-        try {
-            // Vérifier que l'ID est valide
-            if (!eleve_id || isNaN(eleve_id)) {
-                throw new Error('ID élève invalide');
-            }
 
-            const response = await fetch(`/accounts/get_last_cours_eleve/${eleve_id}/`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-            });
-
-            console.log('Réponse reçue, status:', response.status);
-
-            const errorContainer = document.getElementById('error-container');
-            
-            // Gestion du conteneur d'erreur
-            if (!errorContainer) {
-                console.log('Création du conteneur d\'erreur');
-                const form = document.querySelector('form');
-                if (!form) {
-                    throw new Error('Formulaire non trouvé');
-                }
-                const newErrorContainer = document.createElement('div');
-                newErrorContainer.id = 'error-container';
-                newErrorContainer.className = 'alert alert-danger mb-3';
-                form.prepend(newErrorContainer);
-            }
-
-            // Cacher l'erreur avant traitement
-            errorContainer.style.display = 'none';
-            errorContainer.textContent = '';
-
-            if (!response.ok) {
-                console.log('Erreur HTTP:', response.status);
-                try {
-                    const data = await response.json();
-                    console.log('Données d\'erreur:', data);
-                    
-                    errorContainer.textContent = data.error || `Erreur ${response.status} lors du chargement`;
-                    errorContainer.style.display = 'block';
-                    
-                    // Réinitialiser les champs
-                    ['format_id', 'matiere_id', 'niveau_id', 'prix_heure_id'].forEach(id => {
-                        const field = document.getElementById(id);
-                        console.log(`Réinitialisation du champ ${id}`, field);
-                        if (field) field.value = '';
-                    });
-                    
-                    return;
-                } catch (parseError) {
-                    console.error('Erreur lors du parsing de la réponse:', parseError);
-                    errorContainer.textContent = 'Erreur lors de la lecture de la réponse';
-                    errorContainer.style.display = 'block';
-                    return;
-                }
-            }
-
-            const data = await response.json();
-            console.log('Données reçues:', data);
-            
-            // Mise à jour des champs
-            const fields = {
-                'format_id': 'format_cours',
-                'matiere_id': 'matiere',
-                'niveau_id': 'niveau',
-                'prix_heure_id': 'prix_heure'
-            };
-            
-            Object.entries(fields).forEach(([fieldId, dataKey]) => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.value = data[dataKey] || '';
-                    console.log(`Champ ${fieldId} mis à jour avec:`, data[dataKey]);
-                } else {
-                    console.warn(`Champ ${fieldId} non trouvé`);
-                }
-            });
-            
-            // Cacher le message d'erreur
-            errorContainer.style.display = 'none';
-            console.log('Chargement terminé avec succès');
-            
-        } catch (error) {
-            console.error('Erreur capturée:', error);
-            const errorContainer = document.getElementById('error-container') || 
-                                document.querySelector('#error-container');
-            if (errorContainer) {
-                errorContainer.textContent = error.message || 'Une erreur est survenue';
-                errorContainer.style.display = 'block';
-            } else {
-                console.error('Impossible d\'afficher l\'erreur: conteneur non trouvé');
-                alert(error.message || 'Une erreur est survenue');
-            }
-        }
-    }
-</script> -->
 <script>
     
     /**
@@ -825,7 +813,5 @@
         updatePrixFromSelections();
     });
 </script>
-
-
 
 {% endblock %}

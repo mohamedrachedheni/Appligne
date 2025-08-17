@@ -526,26 +526,55 @@ def email_recu(request):
 
 
 
-
 def email_detaille(request):
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
-    user = request.user # c'est selui qui va répondre à l'email ( le nouveau expéditeur)
-    # Vérifier si l'utilisateur a un profil de professeur associé
-    if not hasattr(user, 'eleve') and not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant qu'élève, ni en tant que professeur")
         return redirect('signin')
 
-    email_id = request.session.get('email_id',None)
-    email = Email_telecharge.objects.filter(id=email_id).first() # l'email envoyé par le prof et  reçu par l'élève si hasattr(user, 'professeur')
-    id_eleve = email.user_destinataire # ID estinataire de l'email
-    id_prof = email.user.id # ID expéditeur de l'email
-    user = User.objects.filter(id=id_eleve).first() # User qui va répondre à l'email ( c'est le même que user = request.user )
-    context={
-        'email':email,
-        'est_prof': True if hasattr(request.user, 'professeur') else False,
+    user = request.user
+
+    # Vérifier si l'utilisateur est élève ou professeur
+    if not hasattr(request.user, 'eleve') and not hasattr(request.user, 'professeur'):
+        messages.error(request, "Vous n'êtes pas connecté en tant qu'élève ni en tant que professeur.")
+        return redirect('signin')
+
+    email_id = request.session.get('email_id')
+    if not email_id:
+        messages.error(request, "Aucun email sélectionné.")
+        return redirect('compte_prof' if hasattr(request.user, 'professeur') else 'compte_eleve')
+
+    # Récupération de l'email
+    email = Email_telecharge.objects.filter(id=email_id).first()
+    if not email:
+        messages.error(request, "Email introuvable.")
+        return redirect('compte_prof' if hasattr(request.user, 'professeur') else 'compte_eleve')
+
+    # Identifiants utiles
+    id_eleve = email.user_destinataire
+    id_prof = email.user.id if email.user else None
+
+    est_mon_eleve = False
+    est_demande_cours = False
+
+    # Vérification si le professeur connecté a cet élève
+    if hasattr(request.user, 'professeur'):
+        est_mon_eleve = Mes_eleves.objects.filter(
+            user=request.user,  # Professeur
+            eleve__user__id=id_eleve,
+            is_active=True
+        ).exists()
+
+    # Vérification si c'est une demande de cours
+    est_demande_cours = Email_detaille.objects.filter(email=email).exists()
+
+    context = {
+        'email': email,
+        'est_mon_eleve': est_mon_eleve,
+        'est_demande_cours': est_demande_cours,
+        'id_eleve': id_eleve,
+        'id_prof': id_prof
     }
+
     if 'btn_ignorer' in request.POST:
         # Mettre à jour les champs de l'email reçu
         email.suivi = 'Mis à côté'

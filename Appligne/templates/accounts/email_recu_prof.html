@@ -4,128 +4,193 @@
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
+<!-- Main Content -->
+<div class="row justify-content-center">
+    <!-- Sidebar Column -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    
+    <!-- Main Content Column -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="container-xxl py-5">
+            <div class="container">
+                <!-- Alerts Section -->
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+                
+                <!-- Email Filter Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu_prof' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Page Header -->
+                    <div class="text-center wow fadeInUp py-4" data-wow-delay="0.1s">
+                        <h3 class="section-title bg-white text-center text-primary px-3">Emails reçus</h3>
+                    </div>
+                    
+                    <!-- Filter Buttons -->
+                    {% if emails %}
+                    <div class="container-xxl mb-4">
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
+                                    <i class="fas fa-envelope me-2"></i>Nouveaux
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_attente">
+                                    <i class="fas fa-clock me-2"></i>En attente
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
+                                    <i class="fas fa-times-circle me-2"></i>Ignorés
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
+                                    <i class="fas fa-reply me-2"></i>Répondus
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100" name="btn_tous">
+                                    <i class="fas fa-inbox me-2"></i>Tous
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <!-- header end -->
-                </div>
+                    {% endif %}
+                    
+                    <!-- Email List -->
+                    <div class="container-xxl bg-light p-4 rounded shadow-sm">
+                        {% if not emails %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-inbox fa-2x mb-3"></i>
+                            <h5 class="mb-0">Aucun email disponible</h5>
+                        </div>
+                        {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th style="min-width: 120px;">Date</th>
+                                        <th style="min-width: 150px;">Sujet</th>
+                                        <th>Statut</th>
+                                        <th style="min-width: 150px;">Élève</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for email, email_id in emails %}
+                                    <tr class="bg-white">
+                                        <!-- Date Column -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-calendar-alt text-primary me-2 d-none d-sm-inline"></i>
+                                                <span class="text-truncate" title="{{ email.date_telechargement }}">
+                                                    {{ email.date_telechargement|date:'d/m/Y' }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Subject Column -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-envelope text-primary me-2 d-none d-sm-inline"></i>
+                                                <span class="text-truncate" style="max-width: 150px;" title="{{ email.sujet }}">
+                                                    {{ email.sujet }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Status Column -->
+                                        <td>
+                                            <span class="badge w-100
+                                                {% if email.suivi == 'Répondu' %}bg-success
+                                                {% elif email.suivi == 'En attente' %}bg-warning text-dark
+                                                {% elif email.suivi == 'Ignoré' %}bg-secondary
+                                                {% else %}bg-primary{% endif %}">
+                                                {{ email.suivi }}
+                                            </span>
+                                        </td>
+                                        
+                                        <!-- Student Column -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-graduate text-primary me-2 d-none d-sm-inline"></i>
+                                                <span class="text-truncate" style="max-width: 150px;" 
+                                                      title="{{ email.user.first_name }} {{ email.user.last_name }}">
+                                                    {{ email.user.first_name }} {{ email.user.last_name }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Action Column -->
+                                        <td>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" name="btn_email_{{email_id}}">
+                                                <i class="fas fa-eye me-1"></i>
+                                                <span class="d-none d-sm-inline">Détails</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            !-- Pagination -->
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            
+                            <div class="text-center text-muted mt-2">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} - {{ page_obj.paginator.count }} emails au total
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-5 ">
-                <div class="container ">
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
-                    <!-- <div class="container bg-light  "> -->
-                        <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_recu_prof' %}">
-                            {% csrf_token %}
-                            <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
-                                style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                                <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
-                            </div>
-                            {% if emails %}
-                            <div class="container-xxl " >
-                                <div class="row justify-content-between g-2 p-3 ">
-                                    <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
-                                            Nouveaux
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_attente">
-                                            En attente
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
-                                            Ignorés
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
-                                            Répondus
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                        <button type="submit" class="btn btn-primary w-100" name="btn_tous">
-                                            Tous
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            <div class="container-xxl py-5 bg-light p-4 " >
-                                {% if not emails %}
-                                    <div class="col-md-12 position-relative">
-                                        <label for="email_id" class="form-label">Il n'y a pas d'email</label>
-                                    </div>
-                                {% endif %}
-                                        {% for email, email_id in emails %}
-                                            <div class="row  " style="margin-bottom: 30px;">
-                                                <div class="col-md-2 col-sm-12 position-relative ">
-                                                    <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement}}" readonly>
-                                                </div>
-                                                <div class="col-md-4 col-sm-12 position-relative">
-                                                    <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" readonly >
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 position-relative">
-                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Réponse</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi}}" readonly>
-                                                </div>
-                                                <div class="col-md-4 col-sm-12 position-relative">
-                                                    <div class="row  ">
-                                                        <label for="first_name_id_{{ forloop.counter }}" class="form-label">Elève</label>
-                                                        <div class="col-md-8 col-sm-12 position-relative mb-3">
-                                                
-                                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
-                                                                value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
-                                                            <button type="submit" class="btn btn-primary w-100" name="btn_email_{{email_id}}">
-                                                                Détaille
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                            </div>
-                                        {% endfor %}
-                                    <!-- </div> -->
-                                <!-- </div> -->
-                            </div>
-                        </form>
-                    <!-- </div> -->
-                </div>
-            </div> 
-        </div>
-    </div>
 </div>
-    <!-- mon compte fin -->
 
 <!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</a>
 
 {% endblock %}

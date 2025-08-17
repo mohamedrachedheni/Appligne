@@ -1,145 +1,141 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Détaille demandes de cours reçues{% endblock %}
+{% block title %} | Détails des demandes de cours reçues{% endblock %}
 
 {% block content %}
-
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+<main class="container-fluid">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar -->
+        <aside class="col-sm-12 col-md-4 col-lg-2">
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container-xxl py-1">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Envoyez une demande de cours</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
+        </aside>
+
+        <!-- Main Content -->
+        <section class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s  ">
+            <!-- Page Header -->
+            <header class="container-xxl py-4">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h1 class="section-title bg-white text-center text-primary px-3 mb-4">Détails de la demande de cours</h1>
                 </div>
-            </div>
-            <!-- Début Form-->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" >
+                {% include 'partials/_alerts.html' %}
+            </header>
+
+            <!-- Request Form -->
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
                 {% csrf_token %}
-            
-                <!-- fichiers prof debut -->
-                <div class="container-xxl py-5 " id="identite">
-                    <div class="container ">
-                        <div class="container bg-light  p-4">
-                            <div class="row justify-content-center">
-                                {% if admin %}
-                                <h6>De la part de l'administration</h6>
-                                {% endif %}
-                                <div class="col-12 position-relative">
-                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                    <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{email.sujet}}" readonly>
-                                </div>
-                                <div class="col-12 position-relative">
-                                    <label for="text_email_id" class="form-label">Contenu de votre email reçu :</label>
-                                    <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" placeholder="Au besoin, posez vos questions" readonly>
-                                        {{email.text_email}}
-                                    </textarea>
-                                </div>
-                                <div class="col-12">
-                                    <div class="row d-flex justify-content-center gap-3 mt-3">
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-warning w-100" name="btn_ignorer">
-                                                Ignorer
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-info w-100" name="btn_confirmer">
-                                                Bien reçu
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-secondary w-100" name="btn_repondre">
-                                                Répondre
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-primary w-100" name="btn_historique">
-                                                Voir réponse
-                                            </button>
-                                        </div>
-                                        {% if not admin %}
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-primary w-100" name="btn_ajout_eleve" {% if mon_eleve_exists %} disabled {% endif %}>
-                                                Ajout élève
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-primary w-100" name="btn_voire_eleve" {% if not mon_eleve_exists %} disabled {% endif %}>
-                                                Voir mon élève
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center mb-2">
-                                            <button type="submit" class="btn btn-success w-100" name="btn_ajout_cours" >
-                                                Ajout cours
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                
+                <!-- Email Details Section -->
+                <article class="container-xxl py-3  px-5 ">
+                    <div class="container">
+                        <div class="bg-light p-4 rounded-3 shadow-sm">
+                            {% if admin %}
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>Message de l'administration
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Email Subject -->
+                            <div class="mb-4">
+                                <label for="sujet_id" class="form-label fw-bold">Sujet</label>
+                                <input type="text" class="form-control form-control-lg border-primary" id="sujet_id" 
+                                       name="sujet" value="{{email.sujet}}" readonly>
                             </div>
                             
+                            <!-- Email Content -->
+                            <div class="mb-4">
+                                <label for="text_email_id" class="form-label fw-bold">Contenu du message</label>
+                                <textarea class="form-control border-primary auto-resize" id="text_email_id" 
+                                          rows="6" name="text_email" readonly>{{email.text_email}}</textarea>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                                {% if not email.reponse_email_id %}
+                                <button type="submit" class="btn btn-warning flex-grow-1" name="btn_ignorer">
+                                    <i class="fas fa-times-circle me-2"></i>Ignorer
+                                </button>
+                                <button type="submit" class="btn btn-info flex-grow-1" name="btn_confirmer">
+                                    <i class="fas fa-check-circle me-2"></i>Accuser réception
+                                </button>
+                                <button type="submit" class="btn btn-secondary flex-grow-1" name="btn_repondre">
+                                    <i class="fas fa-reply me-2"></i>Répondre
+                                </button>
+                                {% endif %}
+                                
+                                {% if email.reponse_email_id %}
+                                <button type="submit" class="btn btn-primary flex-grow-1" name="btn_historique">
+                                    <i class="fas fa-history me-2"></i>Voir la réponse
+                                </button>
+                                {% endif %}
+                                
+                                {% if not admin %}
+                                {% if not mon_eleve_exists %}
+                                <button type="submit" class="btn btn-primary flex-grow-1" name="btn_ajout_eleve">
+                                    <i class="fas fa-user-plus me-2"></i>Ajouter l'élève
+                                </button>
+                                {% endif %}
+                                
+                                {% if mon_eleve_exists %}
+                                <button type="submit" class="btn btn-primary flex-grow-1" name="btn_voire_eleve" 
+                                        {% if not mon_eleve_exists %}disabled{% endif %}>
+                                    <i class="fas fa-user-graduate me-2"></i>Voir l'élève
+                                </button>
+                                {% endif %}
+                                
+                                <button type="submit" class="btn btn-success flex-grow-1" name="btn_ajout_cours">
+                                    <i class="fas fa-book me-2"></i>Créer un cours
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <!-- fichiers prof Fin -->
+                </article>
             </form>
-
-
-
-
-
-
-            <!-- Fin Form -->
-        </div>
+        </section>
     </div>
-    <!-- mon compte fin -->
+</main>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" aria-label="Retour en haut">
+    <i class="bi bi-arrow-up"></i>
+</a>
 {% endblock %}
+
 {% block javascript %}
 <script>
-    // http://localhost:8000/profil_prof/2/
-    // fonction pour redimentionner les Textarea selon leur contenu
-    function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
+// Fonction pour redimensionner automatiquement les textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const autoResizeTextareas = () => {
+        document.querySelectorAll('.auto-resize').forEach(textarea => {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        });
+    };
+    
+    // Initial resize
+    autoResizeTextareas();
+    
+    // Optional: Add event listener for dynamic content changes
+    document.querySelectorAll('.auto-resize').forEach(textarea => {
+        textarea.addEventListener('input', autoResizeTextareas);
+    });
+});
 
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
-    }
-    }
-</script>
-<script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+// Validation du formulaire
+(function() {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    Array.prototype.slice.call(forms)
+        .forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+})();
 </script>
 {% endblock %}

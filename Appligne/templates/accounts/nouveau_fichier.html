@@ -1,130 +1,360 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Compte professeur{% endblock %}
+{% block title %} | Envoi de documents - Compte professeur{% endblock %}
 
 {% block content %}
 
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
-                        </div>
-                    </div>
-                    <!-- header end -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+<!-- Document Upload Section -->
+<div class="document-upload-container">
+    <div class="row justify-content-center g-0">
+        <!-- Sidebar Column -->
+        <div class="col-sm-12 col-md-4 col-lg-2 sidebar-col">
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Envoyez vos documents scannés</h6>
-                        <h1 class="mb-5">Non obligatoire</h1>
-                    </div>
-                    <div class="col-md-12">
+        
+        <!-- Main Content Column -->
+        <div class="col-sm-12 col-md-8 col-lg-10 main-content-col px-5">
+            <!-- Document Upload Form -->
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_fichier' %}" class="document-upload-form">
+                {% csrf_token %}
+                
+                <!-- Form Header -->
+                <div class="form-header-section">
+                    <div class="container text-center py-4">
+                        <h3 class="section-subtitle text-primary">Transmission de documents</h3>
+                        <h1 class="section-title">Vos justificatifs et diplômes</h1>
+                        <p class="section-description">Optionnel - Améliorez votre crédibilité en partageant vos qualifications</p>
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_fichier' %}"  >
-                {% csrf_token %}
-            
-                <!-- fichiers prof debut -->
-                <div class="container-xxl py-5 " id="identite">
-                    <div class="container ">
-                        <div class="container bg-light  p-4">
-                            <div class="row g-4">
-                                <div class="col-md-12 position-relative">
-                                    <label for="email_id" class="form-label">Vous pouvez envoyer vos documents scannés, justificatifs de votre parcours et de vos diplômes.</label>
+
+                <!-- Document Upload Card -->
+                <div class="document-upload-card">
+                    <div class="container">
+                        <div class="upload-instructions mb-4">
+                            <p class="instruction-text">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                Vous pouvez nous transmettre des copies scannées de vos diplômes, certifications ou tout autre document attestant de votre parcours académique et professionnel.
+                            </p>
+                        </div>
+
+                        <!-- Email Information -->
+                        <div class="form-section">
+                            <label for="email_id" class="form-label">Votre adresse email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email_id" name="email_user" value="{{email_prof}}" required>
+                            </div>
+                            <div class="form-text">Nous vous répondrons à cette adresse</div>
+                        </div>
+
+                        <!-- Email Subject -->
+                        <div class="form-section">
+                            <label for="sujet_id" class="form-label">Objet du message</label>
+                            <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{sujet}}" placeholder="Ex: Envoi de mes diplômes">
+                        </div>
+
+                        <!-- Email Content -->
+                        <div class="form-section">
+                            <label for="text_email_id" class="form-label">Votre message</label>
+                            <textarea class="form-control auto-resize" id="text_email_id" rows="4" name="text_email" placeholder="Précisez ici le contenu de votre message ou posez vos questions">{{text_email}}</textarea>
+                            <div class="form-text">Décrivez brièvement les documents joints</div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="form-section">
+                            <label for="fichiers_id" class="form-label">Documents à envoyer</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" class="form-control" id="fichiers_id" name="fichiers_list" multiple accept="image/*, .pdf, .doc, .docx" capture="camera">
+                                <div class="file-upload-info">
+                                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                                    <span>Glissez-déposez vos fichiers ou cliquez pour sélectionner</span>
                                 </div>
-                                <div class="col-md-12 position-relative">
-                                    <label for="email_id" class="form-label">Votre email : </label>
-                                    <div class="input-group has-validation">
-                                        <span class="input-group-text">@</span>
-                                        <input type="text" class="form-control" id="email_id"
-                                            aria-describedby="validationTooltipUsernamePrepend" name="email_user" value="{{email_prof}}" >
-                                    </div>
+                                <div class="form-text">Formats acceptés : JPG, PNG, PDF, DOC (max 5MB par fichier)</div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <a href="{% url 'profil_prof' id_user=user.id %}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-user me-2"></i> Voir mon profil
+                                    </a>
                                 </div>
-                                <div class="col-12 position-relative">
-                                    <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                    <input type="text" class="form-control" id="sujet_id"
-                                         name="sujet" value="{{sujet}}">
+                                <div class="col-md-4">
+                                    <a href="{% url 'modifier_format_cours' %}" class="btn btn-primary w-100">
+                                        <i class="fas fa-arrow-right me-2"></i> Étape suivante
+                                    </a>
                                 </div>
-                                <div class="col-12 position-relative">
-                                    <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
-                                    <textarea class="form-control profil" id="text_email_id" rows="4"
-                                        name="text_email" placeholder="Au besoin, posez vos questions" > {{text_email}} </textarea>
-                                </div>
-                                <div class="col-md-12 position-relative">
-                                    <label for="fichiers_id" class="form-label">Pièces justificatives ou autres documents scannés :</label>
-                                    <input type="file" accept="image/*" capture="camera" class="form-control" id="fichiers_id"
-                                        name="fichiers_list" multiple >
-                                    <!-- L'attribut "accept" avec la valeur "image/*" acceptera tous les types d'images -->
-                                    <!-- L'attribut "capture" avec la valeur "camera" ouvrira la caméra sur les appareils mobiles -->
-                                </div>
-                                <div class="row justify-content-between g-2 p-3  ">
-                                    <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                        <a class="btn btn-primary w-100" href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                        <a class="btn btn-primary w-100" href="{% url 'modifier_format_cours' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center ">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                            Envoyez
-                                        </button>
-                                    </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-warning w-100" name="btn_enr">
+                                        <i class="fas fa-paper-plane me-2"></i> Envoyer
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- fichiers prof Fin -->
             </form>
-            <!-- fin page -->
         </div>
     </div>
-    <!-- mon compte fin -->
+</div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary btn-back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 
 {% endblock %}
+
 {% block javascript %}
     <script>
-        // http://localhost:8000/profil_prof/2/
-// fonction pour redimentionner les Textarea selon leur contenu
-function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
+        // Fonction pour redimensionner les Textarea selon leur contenu
+        function adjustTextareaHeight() {
+            const textareas = document.querySelectorAll('.auto-resize');
 
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
-    }
-}
+            textareas.forEach(textarea => {
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            });
+        }
+
+        // Gestion de l'affichage des fichiers sélectionnés
+        document.getElementById('fichiers_id').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const fileInfo = document.querySelector('.file-upload-info');
+            
+            if (files.length > 0) {
+                fileInfo.innerHTML = `<i class="fas fa-check-circle text-success me-2"></i>${files.length} fichier(s) sélectionné(s)`;
+            } else {
+                fileInfo.innerHTML = `<i class="fas fa-cloud-upload-alt me-2"></i>Glissez-déposez vos fichiers ou cliquez pour sélectionner`;
+            }
+        });
+
+        window.onload = adjustTextareaHeight;
+        document.addEventListener('input', adjustTextareaHeight);
     </script>
-    <script>
-        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
-    </script>
+
+    <style>
+        /* Document Upload Styles */
+        .document-upload-container {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .sidebar-col {
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .main-content-col {
+            padding: 2rem;
+        }
+
+        /* Form Header */
+        .form-header-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            color: #0d6efd;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-description {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        /* Document Upload Card */
+        .document-upload-card {
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        }
+
+        .upload-instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .instruction-text {
+            margin-bottom: 0;
+            color: #495057;
+        }
+
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .form-control {
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ced4da;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        /* File Upload */
+        .file-upload-wrapper {
+            position: relative;
+        }
+
+        .file-upload-info {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6c757d;
+        }
+
+        #fichiers_id {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-wrapper .form-control {
+            height: calc(3.5rem + 2px);
+            padding-top: 1.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+        }
+
+        .file-upload-wrapper:hover .form-control {
+            border-color: #86b7fe;
+            background-color: #f0f7ff;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-primary {
+            border: 1px solid #0d6efd;
+            color: #0d6efd;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border: none;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #ffca2c;
+        }
+
+        /* Back to Top Button */
+        .btn-back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 99;
+        }
+
+        .btn-back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .sidebar-col {
+                order: 2;
+            }
+            
+            .main-content-col {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 1.75rem;
+            }
+            
+            .document-upload-card {
+                padding: 1.5rem;
+            }
+            
+            .form-actions .row {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
 {% endblock %}

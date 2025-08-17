@@ -4,156 +4,197 @@
 
 {% block content %}
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <!-- header Start -->
-                <div class="container ">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h4 class="text-center text-white ">Gérer mon compte</h4>
-                        <h2 class="text-center text-white">Consulter mes élèves</h2>
-                    </div>
-                </div>
-                <!-- header end -->
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Header End -->
-
-<!-- mon compte début -->
+<!-- Main Content -->
 <div class="row justify-content-center">
-    <div class="col-sm-12 col-md-4 col-lg-2  ">
-        <!-- début sidebar -->
+    <!-- Sidebar Column -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
         {% include 'partials/_sidebar.html' %}
-        <!-- fin sidebar -->
     </div>
-    <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-        <!-- Début page -->
-        <!-- formulaire créer compte prof début -->
+    
+    <!-- Main Content Column -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Page Header -->
         <div class="container-xxl py-1">
             <div class="container">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h6 class="section-title bg-white text-center text-primary px-3">Ajouter</h6>
-                    <h1 class="mb-5">Mise à jour mon élève</h1>
+                <div class="text-center wow fadeInUp py-4" data-wow-delay="0.1s">
+                    <h3 class="section-title bg-white text-center text-primary px-3">Mise à jour de mon élève</h3>
                 </div>
                 <div class="col-md-12">
                     {% include 'partials/_alerts.html' %}
                 </div>
             </div>
         </div>
+        
+        <!-- Student Update Form -->
         <form method="POST" enctype="multipart/form-data" autocomplete="off">
-            <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
             {% csrf_token %}
-
-            <!-- mon compte début -->
-            <!-- identité et coordonnees debut -->
-            <div class="container-xxl py-5 ">
-                <div class="container ">
-                    <div class="container bg-light  p-4">
-                        <div class="row g-4">
-                            <!-- Si le user n'est pas connecté -->
-                            {% if request.user.is_authenticated %}
-                            <div class="col-md-3 position-relative">
-                                <label for="first_name_id" class="form-label">Prénom de l'élève</label>
-                                <input type="text" class="form-control" id="first_name_id" name="first_name"
-                                    value="{{eleve.user.first_name}}" readonly>
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="last_name_id" class="form-label">Nom de l'élève</label>
-                                <input type="text" class="form-control" id="last_name_id" name="last_name"
-                                    value="{{eleve.user.last_name}}" readonly>
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="civilite_id" class="form-label">Civilité de l'élève</label>
-                                <input type="text" class="form-control" id="civilite_id" name="civilite"
-                                    value="{{eleve.civilite}}" readonly>
-                            </div>
-
-
-                            <div class="col-md-3 position-relative">
-                                <label for="email_id" class="form-label">Email de lélève</label>
-                                <input type="text" class="form-control" id="email_id" name="email"
-                                    value="{{eleve.user.email}}" readonly>
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label class="form-label" for="numero_telephone_id">Téléphone de l'élève</label>
-                                <input type="text" class="form-control" id="numero_telephone_id" name="numero_telephone"
-                                    value="{{eleve.numero_telephone}}" readonly>
-                            </div>
-
-                            <div class="col-md-3 position-relative ">
-                                <label for="date_naissance_id" class="form-label">Naissance de l'élève</label>
-                                <input type="text" class="form-control" id="date_naissance_id" name="date_naissance"
-                                    value="{{eleve.date_naissance}}" readonly>
-                            </div>
-                            <div class=" col-md-6   position-relative">
-                                <label for="adresse_id" class="form-label">Adresse de l'élève</label>
-                                <input type="text" class="form-control" id="adresse_id" name="adresse"
-                                    value="{{eleve.adresse}}" readonly>
-                            </div>
-
-                            <div class="col-md-2 position-relative">
-                                <label for="nom_parent_id" class="form-label">Prénom du parent</label>
-                                <input type="text" class="form-control" id="nom_parent_id" name="nom_parent"
-                                    value="{{parent.nom_parent}}" readonly>
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="prenom_parent_id" class="form-label">Nom du parent</label>
-                                <input type="text" class="form-control" id="prenom_parent_id" name="prenom_parent"
-                                    value="{{parent.prenom_parent}}" readonly>
-                            </div>
-                            <div class="col-md-2 position-relative">
-                                <label for="civilite_parent_id" class="form-label">Civilité du parent</label>
-                                <input type="text" class="form-control" id="civilite_parent_id" name="civilite_parent"
-                                    value="{{parent.civilite}}" readonly>
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="email_parent_id" class="form-label">Email du parent</label>
-                                <input type="text" class="form-control" id="email_parent_id" name="email_parent"
-                                    value="{{parent.email_parent}}" readonly>
-                            </div>
-                            <div class="col-md-2 position-relative">
-                                <label class="form-label" for="telephone_parent_id">Téléphone du parent :</label>
-                                <input type="text" class="form-control" id="telephone_parent_id" name="telephone_parent"
-                                    value="{{parent.telephone_parent}}" readonly>
-                            </div>
-                            <div class=" col-md-12   position-relative">
-                                <label for="remarque_id" class="form-label">Autres informations</label>
-                                <input type="text" class="form-control" id="remarque_id" name="remarque" value="{{mon_eleve.remarque}}">
-                            </div>
-                            
-                            <div class="row justify-content-between g-2 p-3 ">
-                                <div class="form-check col-lg-2 d-none ">
-                                    <input class="form-check-input" type="checkbox" id="is_active_id" name="is_active" {% if mon_eleve.is_active %} checked {% endif %} >
-                                    <label class="form-label" for="is_active_id">Est actif</label>
+            
+            <!-- Error Container -->
+            <div id="error-container" class="alert alert-danger mb-3" style="display: none;"></div>
+            
+            <div class="container-xxl py-5">
+                <div class="container">
+                    <div class="container bg-white p-4 rounded shadow-sm">
+                        <!-- Student Information -->
+                        <article class="mb-4 bg-light p-3 rounded-2">
+                            <h2 class="h5 mb-3 text-primary">Informations de l'élève</h2>
+                            <div class="row g-2">
+                                {% if request.user.is_authenticated %}
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user-graduate"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.user.first_name }}" readonly>
+                                    </div>
                                 </div>
-                                <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                        Enregistrer
-                                    </button>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user-graduate"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.user.last_name }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-venus-mars"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.civilite }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.date_naissance }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.user.email }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-phone"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.numero_telephone }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ eleve.adresse }}" readonly>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </article>
+
+                        <!-- Parent Information -->
+                        <article class="mb-4 bg-light p-3 rounded-2">
+                            <h2 class="h5 mb-3 text-primary">Informations du parent</h2>
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.nom_parent }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.prenom_parent }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-venus-mars"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.civilite }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.email_parent }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="fas fa-phone"></i>
+                                        </span>
+                                        <input type="text" class="form-control-plaintext ps-2" 
+                                               value="{{ parent.telephone_parent }}" readonly>
+                                    </div>
                                 </div>
                             </div>
-                            {% endif %}
+                        </article>
+
+                        <!-- Additional Information -->
+                        <article class="mb-4 bg-light p-3 rounded-2">
+                            <h2 class="h5 mb-3 text-primary">Informations complémentaires</h2>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label for="remarque_id" class="form-label">Remarques</label>
+                                    <textarea class="form-control" id="remarque_id" name="remarque" rows="3">{{ mon_eleve.remarque }}</textarea>
+                                    <small class="text-muted">Informations supplémentaires concernant l'élève</small>
+                                </div>
+                                <div class="form-check col-lg-2 d-none">
+                                    <input class="form-check-input" type="checkbox" id="is_active_id" name="is_active" {% if mon_eleve.is_active %} checked {% endif %}>
+                                    <label class="form-check-label" for="is_active_id">Actif</label>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-primary" name="btn_enr">
+                                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- identité et coordonnees Fin -->
         </form>
-        <!-- fin page -->
     </div>
 </div>
-<!-- mon compte fin -->
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</a>
 
 {% endblock %}
-{% block javascript %}
 
+{% block javascript %}
+<!-- You can add specific JavaScript here if needed -->
 {% endblock %}

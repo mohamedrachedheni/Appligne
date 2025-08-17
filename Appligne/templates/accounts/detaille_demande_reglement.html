@@ -1,164 +1,486 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Détail demande de règlement{% endblock %}
+{% block title %}Détail demande de règlement | {{ block.super }}{% endblock %}
 
 {% block content %}
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <!-- header Start -->
-                <div class="wow fadeInUp" data-wow-delay="0.1s">
-                    <h4 class="text-white">Gérer mon compte</h4>
-                    <h2 class="text-white">Consulter mes élèves</h2>
-                </div>
-                <!-- header end -->
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Header End -->
-
-<!-- mon compte début -->
-<div class="row justify-content-center">
-    <div class="col-sm-12 col-md-4 col-lg-2">
-        <!-- début sidebar -->
-        {% include 'partials/_sidebar.html' %}
-        <!-- fin sidebar -->
-    </div>
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <!-- Début page -->
-        <div class="container-xxl py-1">
-            <div class="container">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-primary px-3">Détail de l'état de demande de règlement</h6>
-                </div>
-                <div class="col-md-12">
-                    {% include 'partials/_alerts.html' %}
-                </div>
-            </div>
+<!-- Main Container -->
+<div class="container-fluid teacher-dashboard">
+    <div class="row g-0">
+        <!-- Sidebar Column -->
+        <div class="col-lg-2 sidebar-col d-none d-lg-block">
+            {% include 'partials/_sidebar.html' %}
         </div>
 
-        <form method="POST" enctype="multipart/form-data" autocomplete="off">
-            {% csrf_token %}
-
-            <!-- identité et coordonnées début -->
-            <div class="container-xxl py-5">
-                <div class="container">
-                    <div class="bg-light p-4">
-                        <div class="row g-1">
-                            {% if request.user.is_authenticated %}
-                            <div class="col-md-12">
-                                <input type="text" class="form-control" id="eleve_id" name="eleve" readonly
-                                    value="Élève: {{ eleve.user.last_name }} {{ eleve.user.first_name }} -- Téléphone: {{ eleve.numero_telephone }} -- Adresse: {{ eleve.adresse }}"
-                                    style="font-weight: bold;">
-                            </div>
-                            <div class="col-md-12">
-                                <input type="text" class="form-control" id="parent_id" name="parent" readonly
-                                    value="Parent: {{ parent.prenom_parent }} {{ parent.nom_parent }} -- Téléphone: {{ parent.telephone_parent }} -- Email: {{ parent.email_parent }}"
-                                    style="font-weight: bold;">
-                            </div>
-                            <div class="col-md-12">
-                                <input type="text" class="form-control" id="demande_id" name="demande" readonly
-                                    value="Montant: {{ demande_paiement.montant }} € -- Vue le: {% if demande_paiement.vue_le %} {{ demande_paiement.vue_le }} {% else %} Pas encore {% endif %} -- Demande: {{ demande_paiement.statut_demande }} -- Règlement: {% if demande_paiement.payment_id %} Effectué {% else %} Non effectué {% endif %} -- Date de création: {{ demande_paiement.date_creation }}"
-                                    style="font-weight: bold;">
-                            </div>
-
-                            <!-- Cours déclarés -->
-                            {% for enr_cours in cours_declares %}
-                            <div class="col-md-12">
-                                <input type="text" class="form-control" id="cours_id_{{ forloop.counter }}"
-                                    name="cours_{{ forloop.counter }}" readonly
-                                    value="{{ enr_cours.cours.format_cours }} -- {{ enr_cours.cours.matiere }} -- Niveau: {{ enr_cours.cours.niveau }}"
-                                    style="font-weight: bold;">
-                            </div>
-
-                            {% for enr_detaille in detaille_declares %}
-                            {% if enr_cours.cours.id == enr_detaille.enr.cours.id %}
-                            <div class="col-lg-12">
-                                <input type="text" class="form-control" id="matiere_id_{{ forloop.counter }}"
-                                    name="date_debut_{{ enr_cours.cours.id }}"
-                                    value="Le: {{ enr_detaille.enr.horaire.date_cours }} -- Début: {{ enr_detaille.enr.horaire.heure_debut }} -- Fin: {{ enr_detaille.enr.horaire.heure_fin }} -- Durée: {{ enr_detaille.enr.horaire.duree }} -- Prix/H: {{ enr_detaille.enr.prix_heure }} € -- Cours: {{ enr_detaille.enr.horaire.statut_cours }}"
-                                    readonly>
-                            </div>
-                            <hr>
-                            {% endif %}
-                            {% endfor %}
-                            {% endfor %}
-
-                            <!-- Messages envoyés et reçus -->
-                            <div class="col-md-12">
-                                <label for="sujet_id" class="form-label"><strong>Objet du message envoyé par le professeur</strong></label>
-                                <input type="text" class="form-control" id="sujet_id" name="sujet" value="{{ email.sujet }}" readonly>
-                            </div>
-                            <div class="col-lg-12">
-                                <label for="text_email_id" class="form-label"><strong>Message joint à la demande de règlement</strong></label>
-                                <textarea class="form-control profil" id="text_email_id" name="text_email" readonly>{{ email.text_email }}</textarea>
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="sujet_eleve_id" class="form-label"><strong>Objet de la réponse envoyée par l'élève</strong></label>
-                                <input type="text" class="form-control" id="sujet_eleve_id" name="sujet_eleve"
-                                    value="{% if email_eleve.sujet %}{{ email_eleve.sujet }}{% else %}Pas d'objet{% endif %}" readonly>
-                            </div>
-                            <div class="col-lg-12">
-                                <label for="text_email_eleve_id" class="form-label"><strong>Réponse de l'élève jointe à la demande de règlement</strong></label>
-                                <textarea class="form-control profil" id="text_email_eleve_id" name="text_email_eleve" readonly>{% if email_eleve.text_email %}{{ email_eleve.text_email }}{% else %}Pas de réponse{% endif %}</textarea>
-                            </div>
-
-                            <!-- Boutons d'action -->
-                            {% if demande_paiement.statut_demande == 'En attente' %}
-                            <div class="col-lg-3">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_rappelle">Envoyer un email de rappel</button>
-                            </div>
-                            <div class="col-lg-3">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_annuler">Annuler la déclaration</button>
-                            </div>
-                            {% endif %}
-                            {% if email_eleve.id %}
-                            <div class="col-lg-3">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_repondre">Répondre à l'email de l'élève</button>
-                            </div>
-                            {% endif %}
-                            {% if demande_paiement.reclamation.id  %}
-                            <div class="col-lg-3">
-                                <button type="submit" class="btn btn-warning w-100" name="btn_reclamation">Voire réclamation</button>
-                            </div>
-                            {% endif %}
-                            {% endif %}
+        <!-- Main Content Column -->
+        <div class="col-12 col-lg-10 main-content-col px-5">
+            <div class="container-fluid py-4">
+                <!-- Page Header -->
+                
+                    <div class="d-flex justify-content-between align-items-center py-4">
+                        
+                        <div class="status-badge">
+                            <span class="badge bg-{% if demande_paiement.statut_demande == 'En attente' %}warning text-dark{% elif demande_paiement.statut_demande == 'En cours' %}info{% elif demande_paiement.statut_demande == 'Réglée' %}success{% elif demande_paiement.statut_demande == 'Annulée' %}secondary{% else %}primary{% endif %}">
+                                {{ demande_paiement.statut_demande }}
+                            </span>
                         </div>
                     </div>
-                </div>
+                
+
+                <!-- Alerts Section -->
+                {% include 'partials/_alerts.html' %}
+
+                <!-- Main Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" class="modern-form">
+                    {% csrf_token %}
+
+                    <!-- Student & Parent Info Card -->
+                    <div class="card info-card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-user-graduate me-2"></i>Informations élève & parent
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Student Info -->
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-user me-2"></i>Élève
+                                        </div>
+                                        <div class="info-content">
+                                            <h5>{{ eleve.user.last_name }} {{ eleve.user.first_name }}</h5>
+                                            <div class="contact-info">
+                                                <span><i class="fas fa-phone me-1"></i> {{ eleve.numero_telephone }}</span>
+                                                <span><i class="fas fa-map-marker-alt me-1"></i> {{ eleve.adresse }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Parent Info -->
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-user-friends me-2"></i>Parent
+                                        </div>
+                                        <div class="info-content">
+                                            <h5>{{ parent.prenom_parent }} {{ parent.nom_parent }}</h5>
+                                            <div class="contact-info">
+                                                <span><i class="fas fa-phone me-1"></i> {{ parent.telephone_parent }}</span>
+                                                <span><i class="fas fa-envelope me-1"></i> {{ parent.email_parent }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Details Card -->
+                    <div class="card info-card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-money-bill-wave me-2"></i>Détails du paiement
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="payment-detail">
+                                        <div class="detail-label">Montant total</div>
+                                        <div class="detail-value">{{ demande_paiement.montant }} €</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="payment-detail">
+                                        <div class="detail-label">Date de création</div>
+                                        <div class="detail-value">{{ demande_paiement.date_creation }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="payment-detail">
+                                        <div class="detail-label">Statut du paiement</div>
+                                        <div class="detail-value">
+                                            {% if demande_paiement.payment_id %}
+                                                <span class="text-success"><i class="fas fa-check-circle me-1"></i> Effectué</span>
+                                            {% else %}
+                                                <span class="text-warning"><i class="fas fa-clock me-1"></i> En attente</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Courses Details Card -->
+                    <div class="card info-card mb-4">
+                        <div class="card-header bg-light text-white">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-book me-2"></i>Cours déclarés
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="accordion" id="coursesAccordion">
+                                {% for enr_cours in cours_declares %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                                            <i class="fas fa-book-open me-2"></i>
+                                            {{ enr_cours.cours.matiere }} - {{ enr_cours.cours.niveau }} ({{ enr_cours.cours.format_cours }})
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#coursesAccordion">
+                                        <div class="accordion-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Heure</th>
+                                                            <th>Durée</th>
+                                                            <th>Prix</th>
+                                                            <th>Statut</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for enr_detaille in detaille_declares %}
+                                                            {% if enr_cours.cours.id == enr_detaille.enr.cours.id %}
+                                                            <tr>
+                                                                <td>{{ enr_detaille.enr.horaire.date_cours }}</td>
+                                                                <td>{{ enr_detaille.enr.horaire.heure_debut }} - {{ enr_detaille.enr.horaire.heure_fin }}</td>
+                                                                <td>{{ enr_detaille.enr.horaire.duree }}</td>
+                                                                <td>{{ enr_detaille.enr.prix_heure }} €</td>
+                                                                <td>
+                                                                    <span class="badge bg-{% if enr_detaille.enr.horaire.statut_cours == 'Terminé' %}success{% else %}warning text-dark{% endif %}">
+                                                                        {{ enr_detaille.enr.horaire.statut_cours }}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Section -->
+                    <div class="row g-4">
+                        <!-- Teacher Message -->
+                        <div class="col-lg-6">
+                            <div class="card message-card">
+                                <div class="card-header bg-primary text-white">
+                                    <h3 class="card-title mb-0">
+                                        <i class="fas fa-paper-plane me-2"></i>Votre message
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="message-header">
+                                        <h5>{{ email.sujet }}</h5>
+                                        <div class="message-date">Envoyé le {{ email.date_creation }}</div>
+                                    </div>
+                                    <div class="message-content">
+                                        {{ email.text_email|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student Response -->
+                        <div class="col-lg-6">
+                            <div class="card message-card">
+                                <div class="card-header bg-info text-white">
+                                    <h3 class="card-title mb-0">
+                                        <i class="fas fa-reply me-2"></i>Réponse de l'élève
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    {% if email_eleve.text_email %}
+                                        <div class="message-header">
+                                            <h5>{% if email_eleve.sujet %}{{ email_eleve.sujet }}{% else %}Pas d'objet{% endif %}</h5>
+                                            <div class="message-date">Reçu le {{ email_eleve.date_creation }}</div>
+                                        </div>
+                                        <div class="message-content">
+                                            {{ email_eleve.text_email|linebreaks }}
+                                        </div>
+                                    {% else %}
+                                        <div class="no-response">
+                                            <i class="fas fa-envelope-open-text fa-3x mb-3"></i>
+                                            <h5>Aucune réponse reçue</h5>
+                                            <p>L'élève n'a pas encore répondu à votre demande</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons mt-5">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'liste_declaration_cours' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                                </a>
+                            </div>
+                            <div>
+                                {% if demande_paiement.statut_demande == 'En attente' %}
+                                <button type="submit" class="btn btn-warning me-2" name="btn_rappelle">
+                                    <i class="fas fa-bell me-2"></i>Envoyer un rappel
+                                </button>
+                                <button type="submit" class="btn btn-danger me-2" name="btn_annuler">
+                                    <i class="fas fa-times-circle me-2"></i>Annuler la déclaration
+                                </button>
+                                {% endif %}
+                                
+                                {% if email_eleve.id %}
+                                <button type="submit" class="btn btn-primary me-2" name="btn_repondre">
+                                    <i class="fas fa-reply me-2"></i>Répondre
+                                </button>
+                                {% endif %}
+                                
+                                {% if demande_paiement.reclamation.id %}
+                                <button type="submit" class="btn btn-warning" name="btn_reclamation">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Voir la réclamation
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <!-- identité et coordonnées Fin -->
-        </form>
-        <!-- fin page -->
+        </div>
     </div>
 </div>
-<!-- mon compte fin -->
 
 <!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 
 {% endblock %}
-{% block javascript %}
-<script>
-    // http://localhost:8000/profil_prof/2/
-    // fonction pour redimentionner les Textarea selon leur contenu
-    function adjustTextareaHeight() {
-    const textareas = document.getElementsByClassName('form-control profil');
 
-    for (let i = 0; i < textareas.length; i++) {
-        const textarea = textareas[i];
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+{% block javascript %}
+<style>
+    /* Modern Dashboard Styles */
+    .teacher-dashboard {
+        background-color: #f8f9fa;
+        min-height: 100vh;
     }
+    
+    .sidebar-col {
+        background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
-</script>
+    
+    .main-content-col {
+        padding: 20px;
+    }
+    
+    .page-header {
+        padding: 20px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .page-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .status-badge .badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+    }
+    
+    /* Card Styles */
+    .info-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+    
+    .info-card .card-header {
+        padding: 15px 20px;
+        border-bottom: none;
+    }
+    
+    .info-card .card-body {
+        padding: 25px;
+    }
+    
+    /* Info Item Styles */
+    .info-item {
+        display: flex;
+        margin-bottom: 15px;
+    }
+    
+    .info-label {
+        width: 120px;
+        font-weight: 600;
+        color: #6c757d;
+    }
+    
+    .info-content h5 {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #2c3e50;
+    }
+    
+    .contact-info span {
+        display: block;
+        margin-bottom: 3px;
+        color: #6c757d;
+    }
+    
+    /* Payment Detail Styles */
+    .payment-detail {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        height: 100%;
+    }
+    
+    .detail-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    /* Accordion Styles */
+    .accordion-item {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+    
+    .accordion-button {
+        font-weight: 500;
+        padding: 15px 20px;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    /* Message Card Styles */
+    .message-card {
+        height: 100%;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    
+    .message-card .card-header {
+        padding: 15px 20px;
+        border-bottom: none;
+    }
+    
+    .message-header {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .message-header h5 {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .message-date {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .message-content {
+        line-height: 1.6;
+        color: #495057;
+    }
+    
+    .no-response {
+        text-align: center;
+        padding: 30px 0;
+        color: #6c757d;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        padding: 20px 0;
+        border-top: 1px solid #eee;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+        .sidebar-col {
+            display: none;
+        }
+        
+        .main-content-col {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .info-item {
+            flex-direction: column;
+        }
+        
+        .info-label {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .action-buttons .d-flex {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+
 <script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+    // Function to adjust textarea height
+    function adjustTextareaHeight() {
+        const textareas = document.querySelectorAll('.message-content');
+        
+        textareas.forEach(textarea => {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        });
+    }
+    
+    // Initialize on load and on content changes
+    window.addEventListener('load', adjustTextareaHeight);
+    window.addEventListener('resize', adjustTextareaHeight);
+    
+    // Initialize Bootstrap tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
 </script>
 {% endblock %}

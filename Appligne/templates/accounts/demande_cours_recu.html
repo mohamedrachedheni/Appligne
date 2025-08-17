@@ -3,91 +3,143 @@
 {% block title %} | Compte professeur{% endblock %}
 
 {% block content %}
-
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h4 class="text-center text-white ">Gérer mon compte</h4>
-                            <h2 class="text-center text-white">Consulter mes élèves</h2>
-                        </div>
-                    </div>
-                    <!-- header end -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-    <!-- mon compte début -->
+<!-- Début du contenu principal -->
+<main class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+        <!-- Sidebar -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
         </div>
+        
+        <!-- Contenu principal -->
         <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-            <!-- Début page -->
-            <div class="container-xxl py-1">
+            <!-- En-tête de section -->
+            <section class="container-xxl py-1">
                 <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Nouvelles demandes de cours</h6>
+                    <div class="text-center wow fadeInUp py-4" data-wow-delay="0.1s">
+                        <h3 class="section-title bg-white text-center text-primary px-3">Nouvelles demandes de cours</h3>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Formulaire de demandes de cours -->
             <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'demande_cours_recu' %}">
                 {% csrf_token %}
-                <div class="container-xxl py-5">
+                <section class="container-xxl py-5">
                     <div class="container">
-                        <div class="container bg-light p-4">
-                            {% for email_detaille in email_detailles %}
-                                <div class="row  " style="margin-bottom: 30px;" >
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="date_id_{{ forloop.counter }}" class="form-label">Date</label>
-                                        <input type="text" class="form-control form-control-intitule" id="date_id_{{ forloop.counter }}"  value="{{email_detaille.email.date_telechargement}}" readonly>
+                        <div class="container bg-light p-4 rounded shadow-sm">
+                            {% for email_detaille, id in email_detailles_liste %}
+                                <article class="row mb-4 p-3 bg-white rounded" style="margin-bottom: 30px;">
+                                    <!-- Date -->
+                                    <div class="col-md-2 col-sm-12 mb-3">
+                                        <label for="date_id_{{ forloop.counter }}" class="form-label fw-bold">Date</label>
+                                        <input type="text" class="form-control form-control-sm" id="date_id_{{ forloop.counter }}" value="{{email_detaille.email.date_telechargement}}" readonly>
                                     </div>
-                                    <div class="col-md-3 col-sm-12 position-relative">
-                                        <label for="eleve_id_{{ forloop.counter }}" class="form-label">Élève</label>
-                                        <input type="text" class="form-control form-control-intitule" id="eleve_id_{{ forloop.counter }}"  value="{{email_detaille.user_nom}}" readonly >
+                                    
+                                    <!-- Élève -->
+                                    <div class="col-md-3 col-sm-12 mb-3">
+                                        <label for="eleve_id_{{ forloop.counter }}" class="form-label fw-bold">Élève</label>
+                                        <input type="text" class="form-control form-control-sm" id="eleve_id_{{ forloop.counter }}" value="{{email_detaille.user_nom}}" readonly>
                                     </div>
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="intitule_id_{{ forloop.counter }}" class="form-label">Matière</label>
-                                        <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.matiere}}" readonly>
+                                    
+                                    <!-- Matière -->
+                                    <div class="col-md-2 col-sm-12 mb-3">
+                                        <label for="intitule_id_{{ forloop.counter }}" class="form-label fw-bold">Matière</label>
+                                        <input type="text" class="form-control form-control-sm" id="intitule_id_{{ forloop.counter }}" value="{{email_detaille.matiere}}" readonly>
                                     </div>
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="intitule_id_{{ forloop.counter }}" class="form-label">Niveau</label>
-                                        <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}"  value="{{email_detaille.niveau}}" readonly>
+                                    
+                                    <!-- Niveau -->
+                                    <div class="col-md-2 col-sm-12 mb-3">
+                                        <label for="niveau_id_{{ forloop.counter }}" class="form-label fw-bold">Niveau</label>
+                                        <input type="text" class="form-control form-control-sm" id="niveau_id_{{ forloop.counter }}" value="{{email_detaille.niveau}}" readonly>
                                     </div>
-                                    <div class="col-md-3 col-sm-12 position-relative">
-                                        <div class="row ajout-dipl p3">
-                                            <label for="intitule_id_{{ forloop.counter }}" class="form-label">Format cours</label>
-                                            <div class="col-md-7 col-sm-12 position-relative mb-2"> 
-                                                <input type="text" class="form-control form-control-intitule" id="intitule_id_{{ forloop.counter }}" value="{{email_detaille.format_cours}}" readonly>
+                                    
+                                    <!-- Format cours + bouton Détails -->
+                                    <div class="col-md-3 col-sm-12 mb-3">
+                                        <div class="row">
+                                            <label class="form-label fw-bold">Format cours</label>
+                                            <div class="col-md-7 col-sm-12 mb-2"> 
+                                                <input type="text" class="form-control form-control-sm"
+                                                {% if email_detaille.format_cours == 'a_domicile' %} 
+                                                value="Cours à domicile" 
+                                                {% elif email_detaille.format_cours == 'webcam' %}
+                                                value="Cours par webcam" 
+                                                {% elif email_detaille.format_cours == 'stage' %}
+                                                value="Stage pendant les vacances" 
+                                                {% elif email_detaille.format_cours == 'stage_webcam' %}
+                                                value="Stage par webcam"
+                                                {% else %}
+                                                value="Non défini"
+                                                {% endif %}
+                                                readonly>
                                             </div>
-                                            <div class="col-md-5 col-sm-12 "><a class="btn btn-primary w-100" name="btn_détaille_{{ email.id }}" href="{% url 'demande_cours_recu_eleve' email_id=email_detaille.email.id %}" ><span
-                                                        style="color: white;">
-                                                Détaille</span></a>
+                                            <div class="col-md-5 col-sm-12">
+                                                <!-- <a class="btn btn-primary w-100 btn-sm" href=" 'demande_cours_recu_eleve' email_id=email_detaille.email.id ">
+                                                    <i class="fas fa-info-circle me-1"></i> Détails
+                                                </a> -->
+                                                <button type="submit" class="btn btn-primary w-100 btn-sm" name="btn_email_recu_{{id}}" >
+                                                    <i class="fas fa-info-circle me-1"></i> Détails
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
+                                </article>
+                            {% empty %}
+                                <div class="alert alert-info text-center">
+                                    Aucune nouvelle demande de cours pour le moment.
                                 </div>
                             {% endfor %}
                         </div>
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-center mt-4">
+                            <nav aria-label="Pagination">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1" aria-label="Première">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédente">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivante">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Dernière">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
-                </div>                        
+                </section>                        
             </form>
         </div>
     </div>
-    <!-- mon compte fin -->
+</main>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
-
+<!-- Bouton retour en haut -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" aria-label="Retour en haut">
+    <i class="bi bi-arrow-up"></i>
+</a>
 {% endblock %}

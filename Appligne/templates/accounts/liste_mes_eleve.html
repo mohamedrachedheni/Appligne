@@ -1,109 +1,111 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | La liste de mes élèves{% endblock %}
+{% block title %} | Mes élèves{% endblock %}
 
 {% block content %}
 
-<!-- Section d'en-tête -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <!-- Texte d'introduction -->
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h4 class="text-white">Gérer mon compte</h4>
-                    <h2 class="text-white">Consulter mes élèves</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Section principale -->
 <div class="row justify-content-center">
+    <!-- Sidebar -->
     <div class="col-sm-12 col-md-4 col-lg-2">
-        <!-- Inclusion de la barre latérale -->
         {% include 'partials/_sidebar.html' %}
     </div>
+
+    <!-- Main Content -->
     <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <!-- Contenu principal de la page -->
-        <div class="container-xxl py-1">
+        <div class="container-xxl py-3">
             <div class="container">
-                <!-- Titre de la section -->
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-primary px-3"> {% if is_active %} Mes élèves actifs {% else %} Mes élèves non actifs {% endif %} </h6>
+                <!-- Page Header -->
+                <div class="text-center mb-4">
+                    <h3 class="section-title bg-white text-primary px-3 d-inline-block">Mes élèves</h3>
+                    <p class="text-muted mt-2">Gérez vos élèves, leurs informations et leurs règlements</p>
                 </div>
-                <!-- Inclusion des alertes -->
-                <div class="col-md-12">
+
+                <!-- Alerts -->
+                <div class="col-md-12 mb-3">
                     {% include 'partials/_alerts.html' %}
                 </div>
+
+                <!-- Eleves List -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off">
+                    {% csrf_token %}
+
+                    {% if request.user.is_authenticated %}
+                        {% if mes_eleves_liste %}
+                            <div class="table-responsive shadow-sm">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Nom & Prénom</th>
+                                            <th>Téléphone</th>
+                                            <th>Adresse</th>
+                                            <th>Dernière mise à jour</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for eleve, eleve_id in mes_eleves_liste %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar avatar-sm bg-primary text-white rounded-circle me-2">
+                                                            {{ eleve.eleve.user.first_name|first }}{{ eleve.eleve.user.last_name|first }}
+                                                        </div>
+                                                        <div>
+                                                            <strong>{{ eleve.eleve.user.last_name }} {{ eleve.eleve.user.first_name }}</strong><br>
+                                                            <small class="text-muted">{{ eleve.eleve.user.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ eleve.eleve.numero_telephone }}</td>
+                                                <td>{{ eleve.eleve.adresse }}</td>
+                                                <td>{{ eleve.date_modification|date:"d/m/Y H:i" }}</td>
+                                                <td class="text-center">
+                                                    <div class="btn-group" role="group">
+                                                        <button type="submit" name="btn_eleve_{{ eleve_id }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-user me-1"></i> Détails
+                                                        </button>
+                                                        <button type="submit" name="btn_reglement_{{ eleve_id }}" class="btn btn-sm btn-outline-success">
+                                                            <i class="fas fa-receipt me-1"></i> Règlement
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <!-- Empty State -->
+                            <div class="text-center py-5">
+                                <i class="fas fa-user-graduate text-muted fa-4x mb-3"></i>
+                                <h5 class="text-muted">Aucun élève enregistré</h5>
+                                <p class="text-muted">Ajoutez vos premiers élèves pour commencer à suivre leurs cours et règlements.</p>
+                                <a href="{% url 'ajouter_mes_eleve' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i> Ajouter un élève
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </form>
             </div>
         </div>
-        <!-- Formulaire pour gérer les élèves -->
-        <form method="POST" enctype="multipart/form-data" autocomplete="off">
-            {% csrf_token %}
-
-            <!-- Liste des élèves -->
-            <div class="container-xxl py-5">
-                <div class="container">
-                    <div class="container " >
-                        <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary" name="btn_active">
-                                    Les élèves actifs
-                                </button>
-                            </div>
-                            <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary" name="btn_non_active">
-                                    Les élèves non actifs
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="container bg-light p-2">
-                        <div class="row g-1">
-                            <!-- Vérifie si l'utilisateur est authentifié -->
-                            {% if request.user.is_authenticated %}
-                                <!-- Boucle sur chaque élève associé au professeur -->
-                                {% for eleve in mes_eleves %}
-                                    <p><strong>{{ eleve.eleve.user.last_name }}</strong> <strong>{{ eleve.eleve.user.first_name }}</strong></p>
-                                    <div class="col-lg-10">
-                                        <!-- Informations sur l'élève -->
-                                        <input type="text" class="form-control" id="eleve_id_{{ forloop.counter }}" 
-                                            name="eleve_{{ forloop.counter }}" readonly
-                                            value="[Màj le: {{eleve.date_modification}}] -- Téléphone: {{ eleve.eleve.numero_telephone }} -- Adresse: {{ eleve.eleve.adresse }}">
-                                    </div>
-                                        <!-- Bouton pour voir les détaille élève -->
-                                    <!-- Bouton pour voir les cours -->
-
-                                            <div class="col-lg-1 col-sm-12">
-                                                <a class="btn btn-warning w-100 " href="{% url 'modifier_mes_eleve' mon_eleve_id=eleve.id%}">Elève</a>
-                                            </div>
-                                            <div class="col-lg-1 col-sm-12 d-none ">
-                                                <button type="submit" class="btn btn-warning w-100 " name="btn_cours_{{eleve.id}}" {% if not is_active %} disabled  {% endif %} >
-                                                    Cours
-                                                </button>
-                                            </div>
-                                            <!-- Bouton pour voir le règlement -->
-                                            <div class="col-lg-1 col-sm-12  ">
-                                                <button type="submit" class="btn btn-warning w-100 " name="btn_reglement_{{eleve.id}}" {% if not is_active %} disabled  {% endif %} >Règlement</button>
-                                            </div>
-                                        
-                                    
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 
-<!-- Bouton retour en haut -->
+<!-- Back to Top Button -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+<style>
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        font-weight: 600;
+    }
+</style>
 
 {% endblock %}
 {% block javascript %}
-
 {% endblock %}

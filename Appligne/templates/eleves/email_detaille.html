@@ -3,24 +3,38 @@
 {% block title %} | Détails Email Élève{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row g-0">
+<div class="row justify-content-center">
+    <!-- <div class="row "> -->
         <!-- Sidebar Column -->
-        <div class="col-lg-2 d-none d-lg-block">
-            {% include 'partials/_sidebar_eleve.html' %}
-        </div>
+        {% if request.user.is_authenticated and request.user.eleve %}
+            <div class="col-sm-12 col-md-4 col-lg-2">
+                {% include 'partials/_sidebar_eleve.html' %}
+            </div>
+        {% elif request.user.is_authenticated and request.user.professeur %}
+            <div class="col-sm-12 col-md-4 col-lg-2">
+                {% include 'partials/_sidebar.html' %}
+            </div>
+        {% elif request.user.is_authenticated and request.user.is_staff and request.user.is_active %}
+            <div class="col-sm-12 col-md-4 col-lg-2">
+                {% include 'partials/_sidebar_admin.html' %}
+            </div>
+        {% endif %}
+
 
         <!-- Main Content Column -->
-        <div class="col-lg-10 col-md-12">
-            <div class="container-fluid py-4 px-4">
+        <div class="col-lg-10 col-md-8   px-3">
+            <div class="container-fluid py-4 px-4 px-lg-5">
                 <!-- Header Section -->
-                
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                    <h3 class="section-title bg-white text-center text-primary px-3"><i class="fas fa-envelope-open-text me-2"></i>Détails de l'email</h3>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-primary mb-0">
+                        <i class="fas fa-envelope-open-text me-2"></i>Détails du message
+                    </h2>
+                    <div class="d-flex">
+                        <span class="badge bg-{% if email.suivi == 'Répondu' %}success{% elif email.suivi == 'En attente' %}warning text-dark{% elif email.suivi == 'Ignoré' %}secondary{% else %}primary{% endif %} align-self-center">
+                            {{ email.suivi|default:"Nouveau" }}
+                        </span>
+                    </div>
                 </div>
-                    
-                
 
                 <!-- Alerts Section -->
                 <div class="row mb-4">
@@ -33,65 +47,99 @@
                 <form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'email_detaille' %}">
                     {% csrf_token %}
                     
-                    <!-- Email Content Card -->
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <!-- Sujet -->
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">Sujet</label>
-                                    <input type="text" class="form-control bg-light" value="{{email.sujet}}" readonly>
+                    <!-- Email Metadata -->
+                    <div class="card shadow-sm mb-3 border-0">
+                        <div class="card-body bg-light rounded-top">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        
+                                        <span class="fw-bold">De :</span>
+                                        <span class="ms-2">{{ email.user.first_name }} {{ email.user.last_name }}</span>
+                                    </div>
                                 </div>
-                                
-                                <!-- Contenu -->
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">Contenu</label>
-                                    <textarea class="form-control auto-resize bg-light" rows="6" readonly>{{email.text_email}}</textarea>
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                        <span class="fw-bold">Date :</span>
+                                        <span class="ms-2">{{ email.date_telechargement|date:"d/m/Y H:i" }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Email Content Card -->
+                    <div class="card shadow-sm mb-4 border-0">
+                        <div class="card-header bg-primary text-white rounded-top">
+                            <h5 class="mb-0">Sujet: {{ email.sujet }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="email-content bg-white p-3 rounded">
+                                <div class="form-group mb-4">
+                                    <label class="form-label fw-bold text-muted mb-2">Message :</label>
+                                    <div class="bg-light p-3 rounded border">
+                                        {{ email.text_email|linebreaksbr }}
+                                    </div>
+                                </div>
+                                
+                                {% if email.piece_jointe %}
+                                <div class="form-group">
+                                    <label class="form-label fw-bold text-muted mb-2">Pièce jointe :</label>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-paperclip text-primary me-2"></i>
+                                        <a href="{{ email.piece_jointe.url }}" class="text-decoration-none" target="_blank">
+                                            {{ email.piece_jointe.name|cut:"uploads/pieces_jointes/" }}
+                                        </a>
+                                        <span class="text-muted ms-2">({{ email.piece_jointe.size|filesizeformat }})</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Action Buttons -->
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <div class="row g-3 justify-content-center">
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <button type="submit" class="btn btn-warning w-100" name="btn_ignorer">
+                                {% if not email.reponse_email_id %}
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-outline-danger w-100 py-2" name="btn_ignorer">
                                         <i class="fas fa-times-circle me-2"></i>Ignorer
                                     </button>
                                 </div>
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <button type="submit" class="btn btn-info w-100" name="btn_confirmer">
-                                        <i class="fas fa-check-circle me-2"></i>Bien reçu
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-outline-success w-100 py-2" name="btn_confirmer">
+                                        <i class="fas fa-check-circle me-2"></i>Confirmer
                                     </button>
                                 </div>
                                 
-                                {% if not email.reponse_email_id %}
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <button type="submit" class="btn btn-primary w-100" name="btn_repondre">
+                                
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-primary w-100 py-2" name="btn_repondre">
                                         <i class="fas fa-reply me-2"></i>Répondre
                                     </button>
                                 </div>
+                                {% else %}
+                                <!-- <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-info w-100 py-2" name="btn_historique">
+                                        <i class="fas fa-history me-2"></i>Historique
+                                    </button>
+                                </div> -->
                                 {% endif %}
                                 
-                                {% if email.reponse_email_id %}
-                                <div class="col-lg-2 col-md-4 col-6 d-none">
-                                    <button type="submit" class="btn btn-success w-100" name="btn_historique">
-                                        <i class="fas fa-history me-2"></i>Voir réponse
+                                {% if est_mon_eleve %}
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-outline-secondary w-100 py-2" name="btn_ajout_eleve">
+                                        <i class="fas fa-user-plus me-2"></i>Élève
                                     </button>
                                 </div>
                                 {% endif %}
-                                
-                                {% if est_prof and request.user.is_authenticated %}
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <button type="submit" class="btn btn-secondary w-100" name="btn_ajout_eleve">
-                                        <i class="fas fa-user-plus me-2"></i>Ajouter élève
-                                    </button>
-                                </div>
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <button type="submit" class="btn btn-success w-100" name="btn_ajout_cours">
-                                        <i class="fas fa-plus-circle me-2"></i>Ajouter cours
+                                {% if est_demande_cours %}
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <button type="submit" class="btn btn-success w-100 py-2" name="btn_ajout_cours">
+                                        <i class="fas fa-plus-circle me-2"></i>Cours
                                     </button>
                                 </div>
                                 {% endif %}
@@ -101,11 +149,11 @@
                 </form>
             </div>
         </div>
-    </div>
+    <!-- </div> -->
 </div>
 
 <!-- Back to Top Button -->
-<a href="#" class="btn btn-primary btn-lg-square back-to-top position-fixed">
+<a href="#" class="btn btn-primary btn-lg-square back-to-top">
     <i class="fas fa-arrow-up"></i>
 </a>
 
@@ -121,50 +169,55 @@
         align-items: center;
         justify-content: center;
         z-index: 99;
-        opacity: 0.7;
+        opacity: 0.8;
         transition: all 0.3s;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     .back-to-top:hover {
         opacity: 1;
         transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .card {
-        border: none;
-        border-radius: 10px;
+        border-radius: 8px;
+        overflow: hidden;
     }
     
-    .card-header {
-        border-radius: 10px 10px 0 0 !important;
+    .email-content {
+        min-height: 200px;
     }
     
-    .auto-resize {
-        min-height: 150px;
-        resize: none;
-        overflow-y: hidden;
+    .btn {
+        transition: all 0.2s;
     }
     
+    .btn:hover {
+        transform: translateY(-2px);
+    }
     
+    .bg-light {
+        background-color: #f8f9fa!important;
+    }
 </style>
 {% endblock %}
 
 {% block javascript %}
 <script>
-    // Auto-resize textareas
+    // Auto-resize textareas (if needed)
     document.addEventListener('DOMContentLoaded', function() {
-        const textareas = document.querySelectorAll('.auto-resize');
+        // Format dates if needed
+        const dates = document.querySelectorAll('.formatted-date');
+        dates.forEach(dateElement => {
+            const rawDate = dateElement.textContent;
+            dateElement.textContent = new Date(rawDate).toLocaleString();
+        });
         
-        textareas.forEach(textarea => {
-            // Initial adjustment
-            textarea.style.height = 'auto';
-            textarea.style.height = (textarea.scrollHeight) + 'px';
-            
-            // Adjust on input
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
+        // Tooltips initialization
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
 </script>

@@ -1,115 +1,236 @@
+<!-- liste_declaration_cours.html -->
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Déclaration cours{% endblock %}
+{% block title %} | Déclaration de cours{% endblock %}
 
 {% block content %}
 
-<!-- Header Start -->
-<div class="container-fluid bg-primary py-5 mb-5 page-header">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-                <div class="container">
-                    <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                        <h4 class="text-center text-white">Gérer mon compte</h4>
-                        <h2 class="text-center text-white">Consulter mes élèves</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Header End -->
-
-<!-- Mon compte début -->
 <div class="row justify-content-center">
+    <!-- Sidebar -->
     <div class="col-sm-12 col-md-4 col-lg-2">
-        <!-- Début sidebar -->
         {% include 'partials/_sidebar.html' %}
-        <!-- Fin sidebar -->
     </div>
-    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container-xxl py-1">
+
+    <!-- Main content -->
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp px-5" data-wow-delay="0.1s">
+        <div class="container-xxl py-3" style="background-color:ghostwhite;">
             <div class="container">
                 
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="section-title bg-white text-center text-primary px-3">
-                        Etat par élève des déclarations des cours pour règlement
-                    </h6>
+                <!-- Page Title -->
+                <div class="text-center mb-4 py-4">
+                    <h3 class="section-title text-primary px-3 d-inline-block">
+                        Déclarations des cours par élève
+                    </h3>
+                    <p class="text-muted mt-2">Suivez l'état des demandes pour règlement</p>
                 </div>
-                <div class="col-md-12">
+
+                <!-- Alerts -->
+                <div class="col-md-12 mb-3">
                     {% include 'partials/_alerts.html' %}
                 </div>
-            </div>
-        </div>
-        <form method="POST" enctype="multipart/form-data" autocomplete="off">
-            {% csrf_token %}
-            <div class="container-xxl py-5">
-                <div class="container " >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_tous">
+
+                <!-- Filters -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="row g-2 mb-4">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100" name="btn_tous">
                                 Tous
                             </button>
                         </div>
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'En cours' %}btn-info text-white{% else %}btn-outline-info{% endif %} w-100" name="btn_en_cours">
                                 En cours
                             </button>
                         </div>
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_attente">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'En attente' %}btn-warning text-dark{% else %}btn-outline-warning{% endif %} w-100" name="btn_attente">
                                 En attente
                             </button>
                         </div>
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_contester">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'Contestée' %}btn-danger{% else %}btn-outline-danger{% endif %} w-100" name="btn_contester">
                                 Contestées
                             </button>
                         </div>
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_annuler">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'Annuler' %}btn-secondary{% else %}btn-outline-secondary{% endif %} w-100" name="btn_annuler">
                                 Annulées
                             </button>
                         </div>
-                        <div class="col-lg-2 col-sm-12">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_regler">
+                        <div class="col-6 col-md-2">
+                            <button type="submit" class="btn {% if statut_filtre == 'Réaliser' %}btn-success{% else %}btn-outline-success{% endif %} w-100" name="btn_regler">
                                 Réglées
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="container bg-light p-4">
-                    <div class="row g-1">
-                        {% if request.user.is_authenticated %}
-                            <!-- Liste des cours déclarés -->
-                            {% for enr in cours_declares %}
-                                <div class="col-lg-10 position-relative mb-3">
-                                    <input type="text" class="form-control" id="demande_{{ enr.id }}" 
-                                           name="demande_{{ enr.id }}"
-                                           value="le: {{ enr.date_modification }} -- Elève: {{ enr.mon_eleve.eleve.user.last_name }} {{ enr.mon_eleve.eleve.user.first_name }} -- Montant total: {{ enr.montant|floatformat:2 }} &euro; -- Demande: {{ enr.statut_demande }} -- {% if enr.vue_le %} Vue le: {{enr.vue_le}} {% if enr.email_eleve %}voir email reçu{% else %}Pas d'email reçu{% endif %} {% else %}Non vue{% endif %}"
-                                           readonly>
-                                </div>
-                                <div class="col-lg-2 position-relative mb-3">
-                                    <button type="submit" class="btn {%  if enr.reclamation %} btn-warning {% else %} btn-primary {% endif %} w-100" name="btn_detaille_{{ enr.id }}">
-                                        {%  if enr.reclamation %} Détail / réclamation {% else %} Détail {% endif %}
-                                    </button>
-                                </div>
-                                <hr>
-                            {% endfor %}
+
+                    <!-- Liste des cours déclarés -->
+                    {% if request.user.is_authenticated %}
+                        {% if cours_declares %}
+                            <div class="row g-3">
+                                {% for enr, enr_id in cours_declares %}
+                                    <div class="col-12">
+                                        <div class="card shadow-sm border-0">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h5 class="mb-1">
+                                                            {{ enr.mon_eleve.eleve.user.last_name }} {{ enr.mon_eleve.eleve.user.first_name }}
+                                                        </h5>
+                                                        <p class="text-muted mb-1">
+                                                            <i class="bi bi-calendar"></i> Déclaré le {{ enr.date_modification }}
+                                                        </p>
+                                                        <p class="mb-1">
+                                                            <strong>Montant : </strong> {{ enr.montant|floatformat:2 }} € 
+                                                        </p>
+                                                        <p class="mb-0">
+                                                            <strong>Statut : </strong>
+                                                            {% if enr.statut_demande == "En cours" %}
+                                                                <span class="badge bg-info">En cours</span>
+                                                            {% elif enr.statut_demande == "En attente" %}
+                                                                <span class="badge bg-warning text-dark">En attente</span>
+                                                            {% elif enr.statut_demande == "Contestée" %}
+                                                                <span class="badge bg-danger">Contestée</span>
+                                                            {% elif enr.statut_demande == "Annulée" %}
+                                                                <span class="badge bg-secondary">Annulée</span>
+                                                            {% elif enr.statut_demande == "Réglée" %}
+                                                                <span class="badge bg-success">Réglée</span>
+                                                            {% else %}
+                                                                <span class="badge bg-light text-dark">{{ enr.statut_demande }}</span>
+                                                            {% endif %}
+                                                        </p>
+                                                        <small class="text-muted">
+                                                            {% if enr.vue_le %}
+                                                                Vue le {{ enr.vue_le|date:"d/m/Y H:i" }} —
+                                                                {% if enr.email_eleve %}
+                                                                    <span class="text-success">Email reçu</span>
+                                                                {% else %}
+                                                                    <span class="text-danger">Pas d'email reçu</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="text-muted">Non vue</span>
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                    <div>
+                                                        <button type="submit" class="btn {% if enr.reclamation %}btn-warning{% else %}btn-primary{% endif %}" 
+                                                                name="btn_detaille_{{ enr_id }}">
+                                                            {% if enr.reclamation %}
+                                                                <i class="bi bi-exclamation-triangle me-1"></i> Détail / Réclamation
+                                                            {% else %}
+                                                                <i class="bi bi-eye me-1"></i> Détail
+                                                            {% endif %}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;&laquo;</span>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;</span>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;&raquo;</span>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                                <p class="text-center text-muted">
+                                    Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} éléments
+                                </p>
+                            </nav>
+                            
+                        {% else %}
+                            <!-- Empty state -->
+                            <div class="text-center py-5">
+                                <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3 text-muted">Aucune déclaration trouvée</h5>
+                                <p class="text-muted">Les déclarations de cours s'afficheront ici une fois envoyées.</p>
+                            </div>
                         {% endif %}
-                    </div>
-                </div>
+                    {% endif %}
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
-<!-- Mon compte fin -->
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 
 {% endblock %}
-{% block javascript %}
 
+{% block javascript %}
+<script>
+    // Script pour conserver les paramètres de filtre lors de la pagination
+    document.addEventListener('DOMContentLoaded', function() {
+        const paginationLinks = document.querySelectorAll('.page-link');
+        
+        paginationLinks.forEach(link => {
+            if (link.href) {
+                const url = new URL(link.href);
+                const currentParams = new URLSearchParams(window.location.search);
+                
+                // Conserver tous les paramètres existants sauf 'page'
+                currentParams.forEach((value, key) => {
+                    if (key !== 'page' && !url.searchParams.has(key)) {
+                        url.searchParams.set(key, value);
+                    }
+                });
+                
+                link.href = url.toString();
+            }
+        });
+    });
+</script>
 {% endblock %}
