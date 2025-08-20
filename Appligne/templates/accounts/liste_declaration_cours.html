@@ -30,8 +30,8 @@
                 </div>
 
                 <!-- Filters -->
-                <form method="POST" enctype="multipart/form-data" autocomplete="off">
-                    {% csrf_token %}
+                <form method="GET" enctype="multipart/form-data" autocomplete="off">
+                    <!--  csrf_token  -->
                     <div class="row g-2 mb-4">
                         <div class="col-6 col-md-2">
                             <button type="submit" class="btn {% if statut_filtre == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100" name="btn_tous">
@@ -114,14 +114,17 @@
                                                         </small>
                                                     </div>
                                                     <div>
-                                                        <button type="submit" class="btn {% if enr.reclamation %}btn-warning{% else %}btn-primary{% endif %}" 
-                                                                name="btn_detaille_{{ enr_id }}">
-                                                            {% if enr.reclamation %}
-                                                                <i class="bi bi-exclamation-triangle me-1"></i> Détail / Réclamation
-                                                            {% else %}
-                                                                <i class="bi bi-eye me-1"></i> Détail
-                                                            {% endif %}
-                                                        </button>
+                                                        <form method="POST">
+                                                        {% csrf_token %}
+                                                            <button type="submit" class="btn {% if enr.reclamation %}btn-warning{% else %}btn-primary{% endif %}" 
+                                                                    name="btn_detaille_{{ enr_id }}">
+                                                                {% if enr.reclamation %}
+                                                                    <i class="bi bi-exclamation-triangle me-1"></i> Détail / Réclamation
+                                                                {% else %}
+                                                                    <i class="bi bi-eye me-1"></i> Détail
+                                                                {% endif %}
+                                                            </button>
+                                                        </form> 
                                                     </div>
                                                 </div>
                                             </div>

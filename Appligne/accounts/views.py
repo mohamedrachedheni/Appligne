@@ -2242,7 +2242,8 @@ def ajouter_cours(request):
         cours.save()
 
         messages.success(request, "L'enregistrement du cours est effectué.")
-        return redirect('ajouter_horaire', cours_id=cours.id)
+        request.session['cours_id'] = cours.id
+        return redirect('ajouter_horaire')
     
     # Affichage du formulaire
     return render(request, 'accounts/ajouter_cours.html', context)
@@ -2250,7 +2251,11 @@ def ajouter_cours(request):
 from django.utils.dateparse import parse_date
 from datetime import datetime
 
-def ajouter_horaire(request, cours_id): # Ajouter des séance de cours près défini
+def ajouter_horaire(request): # Ajouter des séance de cours près défini
+    cours_id = request.session.get('cours_id', None)
+    if not cours_id:
+        messages.error(request, "L'ID du cours n'est pas dans le session")
+        return redirect('compte_prof')
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
@@ -2659,7 +2664,8 @@ def horaire_cours_mon_eleve(request):
     if request.method == 'POST':
         # Gestion de l'ajout d'un horaire
         if 'btn_ajout' in request.POST:
-            return redirect('ajouter_horaire', cours_id=cours_id)
+            request.session['cours_id'] = cours_id
+            return redirect('ajouter_horaire')
         
         # Gestion de la modification du prix de l'heure
         if 'btn_prix' in request.POST:
@@ -3141,19 +3147,19 @@ def liste_declaration_cours(request):
     page = request.GET.get('page', 1)  # Récupère le numéro de page depuis l'URL
     
     # Gestion des filtres
-    if 'btn_en_cours' in request.POST: statut_demande = 'En cours'
-    if 'btn_attente' in request.POST: statut_demande = 'En attente'
-    if 'btn_annuler' in request.POST: statut_demande = 'Annuler'
-    if 'btn_regler' in request.POST: statut_demande = 'Réaliser'
+    if 'btn_en_cours' in request.GET: statut_demande = 'En cours'
+    if 'btn_attente' in request.GET: statut_demande = 'En attente'
+    if 'btn_annuler' in request.GET: statut_demande = 'Annuler'
+    if 'btn_regler' in request.GET: statut_demande = 'Réaliser'
     
     # Base queryset
     demande_paiements = Demande_paiement.objects.filter(user=user)
     
     # Application des filtres
-    if 'btn_tous' not in request.POST:
+    if 'btn_tous' not in request.GET:
         demande_paiements = demande_paiements.filter(statut_demande=statut_demande)
     
-    if 'btn_contester' in request.POST: 
+    if 'btn_contester' in request.GET: 
         demande_paiements = demande_paiements.filter(reclamation__isnull=False)
     
     # Tri par date de modification (du plus récent au plus ancien)
@@ -3488,177 +3494,121 @@ def temoignages_partial(request, id_user):
     return render(request, 'partials/temoignages.html', {'temoignages': temoignages})
 
 
-
+from django.core.paginator import Paginator
 def liste_payment(request):
-    """
-        Vue permettant d'afficher les paiements des élèves.
+    date_format = "%d/%m/%Y"
 
-    Fonctionnalités :
-    - Filtrer les paiements selon une période donnée (dates de début et de fin).
-    - Appliquer des filtres selon le statut du paiement (en attente, approuvé, annulé, etc.).
-    - Associer chaque paiement à sa demande de paiement et à un éventuel accord de règlement.
-    """
-    date_format = "%d/%m/%Y" # Assurez-vous que ce format est défini quelque part dans votre code
-
-    # Récupérer le user
     user = request.user
     if not user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
         return redirect('signin')   
-    user = request.user
-    # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'professeur'):
-        messages.error(request, "Vous n'etes pas connecté en tant que prof")
+        messages.error(request, "Vous n'êtes pas connecté en tant que prof")
         return redirect('signin')
 
-
-    # Récupérer les demandes de paiement du professeur et les paiements associés
     demande_paiement = Demande_paiement.objects.filter(user=user)
     if not demande_paiement:
-        messages.error(request, "Vous n'avez pas encore effectuer Des demandes de paiement.")
+        messages.error(request, "Vous n'avez pas encore effectué de demandes de paiement.")
         return redirect('compte_prof')
 
-    # Récupérer les paiements liés aux demandes de paiement
     paiement = Payment.objects.filter(
         model='demande_paiement',
         model_id__in=demande_paiement.values_list('id', flat=True)
     )
 
-    # Récupération des dates minimales et maximales depuis les paiements associés aux demandes du professeur
     dates = paiement.aggregate(
         min_date=Min('date_creation'), 
         max_date=Max('date_creation')
     )
-
-    # Définition des valeurs par défaut
     date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
     date_max = dates['max_date'] or timezone.now().date()
 
-    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
-    
-    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
-    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+    # 🔹 On récupère depuis GET
+    date_debut_str = request.GET.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.GET.get('date_fin', date_max.strftime(date_format))
+    status_str = request.GET.get('status')
 
     try:
-        # Conversion des dates en objets de type date
         date_debut = datetime.strptime(date_debut_str, date_format).date()
         date_fin = datetime.strptime(date_fin_str, date_format).date()
-
-        # Vérification de la cohérence des dates
         if date_debut > date_fin:
-            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
-
+            raise ValueError("La date de début doit être <= à la date de fin.")
     except ValueError as e:
-        # Gestion des erreurs en cas de format de date invalide
         messages.error(request, f"Erreur de date : {e}")
-        return render(request, 'accounts/compte_prof.html', {
-            'paiements': [], 
-            'professeurs': [], 
-            'date_debut': date_debut_str,  # Renvoi des valeurs sous forme de chaîne en cas d'erreur
-            'date_fin': date_fin_str
-        })
+        return redirect('compte_prof')
 
-    # Définition des critères de filtrage des paiements
-    filters = {
-        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
-    }
+    filters = {'date_creation__range': (date_debut, date_fin + timedelta(days=1))}
+    if status_str:
+        if status_str == "Réclamé":
+            filters['reclamation__isnull'] = False
+        elif status_str == "Sans accord":
+            filters['accord_reglement_id'] = None
+        else:
+            filters['status'] = status_str
 
-    # Correspondance des boutons de filtrage aux statuts de paiement
-    status_filter = {
-        'btn_en_ettente': 'En attente',
-        'btn_approuve': 'Approuvé',
-        'btn_invalide': 'Invalide',
-        'btn_annule': 'Annulé',
-    }
-
-    # Application du filtre de statut en fonction du bouton cliqué
-    status_str = None
-    for btn, status in status_filter.items():
-        if btn in request.POST:
-            filters['status'] = status
-            status_str = status
-            break
-
-    # Filtrage des paiements contestés (réclamation)
-    if 'btn_reclame' in request.POST:
-        filters['reclamation__isnull'] = False  # Paiements contestés par l'élève
-        status_str = "Réclamé"
-
-    # Filtrage des paiements sans accord de règlement
-    if 'btn_sans_accord' in request.POST:
-        filters['accord_reglement_id'] = None  # Paiements contestés par l'élève
-        status_str = "Sans accord"
-
-    # Récupération des paiements en fonction des filtres
     payments = paiement.filter(**filters).order_by('-date_creation')
 
-    # Initialisation des listes pour stocker les résultats
     paiements = []
-
-    # Parcours des paiements récupérés pour associer les informations nécessaires
     for payment in payments:
-        # Récupération de la demande de paiement associée
         demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
-        if not demande_paiement: continue  # Ignorer les paiements sans demande associée
-
-        # Récupérer l'élève
+        if not demande_paiement:
+            continue
         eleve = demande_paiement.eleve.user
-        
-        accord_reglement = None
+        accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first() if payment.accord_reglement_id else None
+        paiements.append((eleve, payment, encrypt_id(payment.id), accord_reglement, encrypt_id(accord_reglement.id) if payment.accord_reglement_id else None))
 
-        # Vérification et récupération de l'accord de règlement associé
-        if payment.accord_reglement_id:
-            accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first()
+    # Pagination
+    paginator = Paginator(paiements, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-        # Ajout des informations collectées à la liste des paiements
-        # accord_reglement_id = encrypt_id(payment.accord_reglement_id)
-        paiements.append((eleve, payment, accord_reglement))
+
 
     # Extraction de l'ID du paiement choisi dans le formulaire
     paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
     # Vérification du nombre d'IDs extraits
     if paiement_ids:
         if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            paypent_id_decryp = decrypt_id(paiement_ids[0])
             professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
             if professeur:
-                paiement = Payment.objects.filter(id=paiement_ids[0]).first() # il faut que le paiement est pour le professeur
+                paiement = Payment.objects.filter(id=paypent_id_decryp).first() # il faut que le paiement est pour le professeur
                 if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
-                    messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paiement_ids[0]}")
+                    messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paypent_id_decryp}")
                     return redirect('compte_prof')
-            request.session['payment_id'] = paiement_ids[0]
+            request.session['payment_id'] = paypent_id_decryp
             return redirect('admin_payment_demande_paiement')
         elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_prof')
-
+    
     # Extraction de l'ID du règlement choisi dans le formulaire
     accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
     if accord_ids:
         # Vérification du nombre d'IDs extraits
         if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            accord_id_decryp = decrypt_id(accord_ids[0])
             professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
             if professeur:
-                reglement = AccordReglement.objects.filter(id=accord_ids[0], professeur = professeur).first() # il faut que le règlement est pour le professeur
+                reglement = AccordReglement.objects.filter(id=accord_id_decryp, professeur = professeur).first() # il faut que le règlement est pour le professeur
                 if professeur and not reglement: # Si non il y a eu une manipulation des données du template
-                    messages.error(request, f"le règlement sélectionné n'est pas attrubuté au professeur, règlement_id= {accord_ids[0]}")
+                    messages.error(request, f"le règlement sélectionné n'est pas attrubuté au professeur, règlement_id= {accord_id_decryp}")
                     return redirect('compte_prof')
-            request.session['accord_id'] = int(accord_ids[0])
+            request.session['accord_id'] = int(accord_id_decryp)
             return redirect('admin_reglement_detaille')
 
         elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_prof')
-        
 
-    # Préparation du contexte pour l'affichage dans le template
     context = {
-        'paiements': paiements,
+        'paiements': page_obj,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'status_str': status_str,
     }
-    
     return render(request, 'accounts/liste_payment.html', context)
+
 
 
 

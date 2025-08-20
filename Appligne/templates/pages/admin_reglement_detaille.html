@@ -1,126 +1,223 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Détaille accord reglement{% endblock %}
+{% block title %} | Détail accord règlement{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
-            {% include 'partials/_sidebar_admin.html' %}
+
+    <div class="row ">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar-container bg-light">
+            {% if request.user.is_authenticated and request.user.is_staff and request.user.is_active %}
+                {% include 'partials/_sidebar_admin.html' %}
             {% else %}
-            {% include 'partials/_sidebar.html' %}
+                {% include 'partials/_sidebar.html' %}
             {% endif %}
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Détails de l'accord de règlement pour le professeur</h6>
-                    </div>
-                    <div class="col-md-12">
+
+        <!-- Main Content -->
+        <main class="col-md-9 col-lg-10 ">
+            <div class="container-fluid py-4">
+                <!-- Header Section -->
+                <div class="container">
+                    <h1 class="page-title text-center text-primary">
+                        <i class="fas fa-file-contract me-2"></i>Détails de l'accord de règlement
+                    </h1>
+                    <p class="text-muted text-center">Consultation des détails du règlement pour le professeur</p>
+                </div>
+
+                <!-- Alerts Section -->
+                <div class="row">
+                    <div class="col-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
-            <form method="POST" enctype="multipart/form-data" >
-                {% csrf_token %}
 
-                {% if  request.user.is_authenticated and request.user.is_active %}
-                    <div class="container-xxl py-5">
-                        <div class="container">
-                            <div class="container bg-light mb-3 py-5">
-                                <div class="row  g-2 ">
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="admin_id" class="form-label">Administrateur</label>
-                                        <input type="text" class="form-control form-control-intitule" id="admin_id" value="{{accord_reglement.admin_user.first_name}}" readonly >
-                                    </div>
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="prof_id" class="form-label">Professeur</label>
-                                        <input type="text" class="form-control form-control-intitule" id="prof_id" value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly >
-                                    </div>
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="statut_id" class="form-label">Statut de l'accord</label>
-                                        <input type="text" class="form-control form-control-intitule" id="statut_id" value="{{accord_reglement.status}}" readonly >
-                                    </div>
-                                    <div class="col-md-2 col-sm-12 position-relative">
-                                        <label for="mnt_ttl_id" class="form-label">Total à règler</label>
-                                        <input type="text" class="form-control form-control-intitule" id="mnt_ttl_id" value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly >
-                                    </div>
-                                    <div class="col-md-2 col-sm-12 position-relative ">
-                                        <label for="due_date_id" class="form-label">Echéance</label>
-                                        <input type="text" class="form-control form-control-intitule" id="due_date_id"  value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly >
-                                    </div>
-                                    <div class="col-md-2 col-sm-12 position-relative ">
-                                        <label for="transfere_id" class="form-label">Transfère</label>
-                                        <input type="text" class="form-control form-control-intitule" id="transfere_id" {% if accord_reglement.date_trensfere %} value="{{accord_reglement.date_trensfere|date:'d/m/Y'}} / id= {{accord_reglement.transfere_id}}" {% else %} value="Pas de transfère" {% endif %} readonly >
+                <!-- Accord Details Form -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if request.user.is_authenticated and request.user.is_active %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle text-primary me-2"></i>Informations générales
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Admin Info -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Administrateur</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user-shield"></i></span>
+                                            <input type="text" class="form-control" value="{{accord_reglement.admin_user.first_name}}" readonly>
+                                        </div>
                                     </div>
                                 </div>
-                                <br>
-                                <hr>
-                                {% for id, description, professor_share, reclamation  in detaille %}
-                                            <div class="row  g-2 ">
-                                                <div class="col-md-8 col-sm-12 position-relative">
-                                                    <label for="description_id_{{ id }}" class="form-label">description</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="description_id_{{ id }}"  value="{{description}}" readonly >
-                                                </div>
-                                                <div class="col-md-4 col-sm-12 position-relative">
-                                                    <label for="professor_share{{ id }}" class="form-label">Montant à règler</label>
-                                                    <div class="row  g-2 ">
-                                                        <div class="col-md-6 col-sm-12 position-relative">
-                                                            <input type="text" class="form-control form-control-intitule" id="professor_share{{ id }}"  value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly >
-                                                        </div>
-                                                        <div class="col-md-6 col-sm-12 position-relative">
-                                                            <button type="submit" class="btn {% if not reclamation %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
-                                                                {% if not reclamation %}Détaille{% else %}Contesté{% endif %}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                {% endfor %}
-                                <hr>
-                                <div class="col-lg-12">
-                                    <label for="text_email" class="form-label"><strong>Message lié à l'accord de règlement</strong></label>
-                                    <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
-                                </div>
-                                {% if  request.user.is_authenticated  and request.user.is_active and request.user.is_staff or request.user.eleve and request.user.is_active%}
-                                <div class="row  " style="margin-bottom: 10px;">
-                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <button type="submit" class="btn btn-warning col-12" name="btn_detaille_reglement" {% if accord_reglement.status == 'Réalisé' %} disabled {% endif %} >
-                                            Passez à la modification de l'accord de règlement
-                                        </button>
+
+                                <!-- Professor Info -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Professeur</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-chalkboard-teacher"></i></span>
+                                            <input type="text" class="form-control" value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly>
+                                        </div>
                                     </div>
                                 </div>
-                                {% endif %}
+
+                                <!-- Status -->
+                                <div class="col-md-6 col-lg-2">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Statut</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                {% if accord_reglement.status == 'Réalisé' %}
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                {% else %}
+                                                    <i class="fas fa-clock text-warning"></i>
+                                                {% endif %}
+                                            </span>
+                                            <input type="text" class="form-control" value="{{accord_reglement.status}}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Amount -->
+                                <div class="col-md-6 col-lg-2">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Montant total</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-euro-sign"></i></span>
+                                            <input type="text" class="form-control" value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Due Date -->
+                                <div class="col-md-6 col-lg-2">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Échéance</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                            <input type="text" class="form-control" value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Transfer Info -->
+                                <div class="col-md-6 col-lg-2">
+                                    <div class="form-group">
+                                        <label class="form-label fw-bold">Transfert</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-exchange-alt"></i></span>
+                                            <input type="text" class="form-control" 
+                                                {% if accord_reglement.date_trensfere %} 
+                                                    value="{{accord_reglement.date_trensfere|date:'d/m/Y'}} (ID: {{accord_reglement.transfere_id}})" 
+                                                {% else %} 
+                                                    value="Non transféré" 
+                                                {% endif %} 
+                                                readonly>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                {% endif %}
-            </form>
-        </div>
+
+                    <!-- Details Section -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-list-ul text-primary me-2"></i>Détail des éléments
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for id, description, professor_share, reclamation in detaille %}
+                            <div class="row g-3 mb-3 align-items-center">
+                                <!-- Description -->
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label class="form-label">Description</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                                            <input type="text" class="form-control" value="{{description}}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Amount and Action -->
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Montant à régler</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-euro-sign"></i></span>
+                                            <input type="text" class="form-control" value="{{professor_share|default:'0.00'|floatformat:2}} €" readonly>
+                                            <button type="submit" class="btn {% if not reclamation %}btn-primary{% else %}btn-danger{% endif %}" name="btn_paiement_id{{id}}">
+                                                {% if not reclamation %}
+                                                    <i class="fas fa-search me-1"></i>Détail
+                                                {% else %}
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Contesté
+                                                {% endif %}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Message Section -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-envelope text-primary me-2"></i>Message associé
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <textarea class="form-control message-content" rows="4" readonly>{{texte_email}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    {% if request.user.is_authenticated and request.user.is_active and request.user.is_staff or request.user.eleve and request.user.is_active %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-warning" name="btn_detaille_reglement" {% if accord_reglement.status == 'Réalisé' %}disabled{% endif %}>
+                            <i class="fas fa-edit me-1"></i>Modifier l'accord
+                        </button>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </form>
+            </div>
+        </main>
     </div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</a>
 {% endblock %}
 
 {% block javascript %}
 <script>
-    // http://localhost:8000/profil_prof/2/
-// fonction pour redimentionner les Textarea selon leur contenu
+// Function to adjust textarea height based on content
 function adjustTextareaHeight() {
-const textareas = document.getElementsByClassName('form-control profil');
+    const textareas = document.querySelectorAll('.message-content');
+    
+    textareas.forEach(textarea => {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+    });
+}
 
-for (let i = 0; i < textareas.length; i++) {
-    const textarea = textareas[i];
-    textarea.style.height = 'auto';
-    textarea.style.height = (textarea.scrollHeight - 2) + 'px';
-}
-}
-</script>
-<script>
-    window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-    document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
+// Initialize on load and on content changes
+window.addEventListener('load', adjustTextareaHeight);
+document.addEventListener('input', adjustTextareaHeight);
 </script>
 {% endblock %}

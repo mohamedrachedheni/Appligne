@@ -1,156 +1,250 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Liste règlements professeur{% endblock %}
+{% block title %} | Gestion des Règlements Professeurs{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
+
+<div class="container-fluid">
+    <div class="row g-0">
+        <!-- Sidebar améliorée -->
+        <div class="col-md-3 col-lg-2 d-none d-md-block pe-2 border-end bg-light">
             {% include 'partials/_sidebar.html' %}
-            <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <div class="container-xxl py-1" >
-                <div class="container  ">
-                    <div class="text-center wow fadeInUp py-4 " data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Suivi des règlements du professeur par période et échéance</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
+
+        <!-- Contenu Principal -->
+        <main class="col-md-9 col-lg-10 ps-md-4">
+            <!-- En-tête modernisé -->
+            <div class="d-flex justify-content-between align-items-center py-4 border-bottom">
+                <div>
+                    <h2 class="h4 fw-bold text-primary mb-0">
+                        <i class="bi bi-cash-stack me-2"></i>Suivi des Règlements
+                    </h2>
+                    <p class="text-muted small mb-0">Gestion des paiements par période et échéance</p>
+                </div>
+                <div class="alert-container small">
+                    {% include 'partials/_alerts.html' %}
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" >
+
+            <!-- Formulaire de Filtrage -->
+            <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <!-- boutons début -->
-                <div class="container-xxl bg-light" >
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_1" class="form-label">Début période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_debut" placeholder="Sélectionnez une date" value="{{ date_debut|date:'d/m/Y' }}" >
-                        </div>
-                        <div class="col-md-6 col-sm-12 position-relative text-center">
-                            <h1>Règlements Professeur</h1>
-                        </div>
-                        <div class="col-md-3 col-sm-12 position-relative ">
-                            <label for="date_id_2" class="form-label">Fin période</label>
-                            <input type="text" class="form-control form-control-date " required name="date_fin" placeholder="Sélectionnez une date" value="{{ date_fin|date:'d/m/Y' }}" >
-                        </div>                           
-                    </div>
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_ettente">
-                                En attente
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_en_cours">
-                                En cours
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_realiser">
-                                Réalisé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_annule">
-                                Annulé
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary w-100" name="btn_invalide">
-                                Invalide
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-sm-12  justify-content-center">
-                            <div class="col-md-10 col-sm-12 position-relative ">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_tous">Tous</button>
+                
+                <!-- Date Range Card -->
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <!-- Date Début -->
+                            <div class="col-md-3">
+                                <label for="date_debut" class="form-label fw-semibold small">Début période</label>
+                                <div class="input-group date" id="datepicker_debut">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           id="date_debut" name="date_debut" required
+                                           placeholder="jj/mm/aaaa" 
+                                           value="{{ date_debut|date:'d/m/Y' }}"
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 text-center">
+                                <h3 class="h5 text-primary mb-0">
+                                    <i class="bi bi-person-video3 me-2"></i>Règlements Professeurs
+                                </h3>
+                            </div>
+                            
+                            <!-- Date Fin -->
+                            <div class="col-md-3">
+                                <label for="date_fin" class="form-label fw-semibold small">Fin période</label>
+                                <div class="input-group date" id="datepicker_fin">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           id="date_fin" name="date_fin" required
+                                           placeholder="jj/mm/aaaa" 
+                                           value="{{ date_fin|date:'d/m/Y' }}"
+                                           autocomplete="off">
+                                </div>
                             </div>
                         </div>
-                        {% if statut == 'En attente' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement en attente sont confirmés, mais le transfert au professeur n’a pas encore été effectué par l’administrateur.
-                            </h6>
+                    </div>
+                </div>
+
+                <!-- Card Filtres -->
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" name="btn_en_ettente">
+                                    <i class="bi bi-hourglass me-1"></i> En attente
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" name="btn_en_cours">
+                                    <i class="bi bi-arrow-repeat me-1"></i> En cours
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" name="btn_realiser">
+                                    <i class="bi bi-check-circle me-1"></i> Réalisé
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" name="btn_annule">
+                                    <i class="bi bi-x-circle me-1"></i> Annulé
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" name="btn_invalide">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Invalide
+                                </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <button type="submit" class="btn btn-sm btn-primary w-100" name="btn_tous">
+                                    <i class="bi bi-collection me-1"></i> Tous
+                                </button>
+                            </div>
                         </div>
-                        {% elif statut == 'En cours' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement en cours sont enregistrés après confirmation des paiements et en attente de validation bancaire pour le transfert, effectué par l'administrateur, au professeur.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Réalisé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement réalisés sont enregistrés après confirmation des paiements et validés une fois le transfert au professeur approuvé par la banque.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Invalide' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement invalides concernent des paiements d’élèves confirmés, mais dont le transfert au professeur est refusé par la banque pour un vice de transfert. Une explication est alors envoyée au professeur.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Annulé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement annulés concernent des paiements d’élèves confirmés et enregistrés par l’administrateur, qui annule ensuite l’accord sans effectuer de transfert bancaire. Une explication est alors envoyée au professeur.
-                            </h6>
+
+                        <!-- Description Statut -->
+                        {% if statut %}
+                        <div class="alert alert-info mt-3 p-2 small">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <div>
+                                    {% if statut == 'En attente' %}
+                                    Les accords en attente sont confirmés mais non transférés.
+                                    {% elif statut == 'En cours' %}
+                                    Paiements confirmés en attente de validation bancaire.
+                                    {% elif statut == 'Réalisé' %}
+                                    Transferts au professeur approuvés par la banque.
+                                    {% elif statut == 'Invalide' %}
+                                    Transferts refusés par la banque (vice de transfert).
+                                    {% elif statut == 'Annulé' %}
+                                    Accords annulés avant transfert bancaire.
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
                 </div>
-                <!-- boutons fin -->
-                {% if  request.user.is_authenticated  and request.user.is_active %}
-                    <div class="container-xxl py-3">
-                        <div class="container">
-                            <div class="container bg-light">
-                                {% if not accord_reglement_approveds %}
-                                    <div class="col-md-12 text-center">
-                                        <h4>Il n'y a pas de règlements pour cette période</h4>
-                                    </div>
-                                {% endif %}
-                                {% for accord_reglement , approved in accord_reglement_approveds %}
-                                    <div class="row ">
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="statut_id_{{ forloop.counter }}" class="form-label">Statut</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="statut_id_{{ forloop.counter }}"  value="{{accord_reglement.status}}" readonly name="status_accord_id{{accord_reglement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative ">
-                                                    <label for="due_date_id_{{ forloop.counter }}" class="form-label">Echéance</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_reglement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="reponse_id_{{ forloop.counter }}" class="form-label">Règlement</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_reglement.id}}" >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative p-4 g-2 ">
-                                                    <button type="submit" class="btn {% if approved %} btn-primary {% else %} btn-danger {% endif %} w-100 " name="btn_detaille_reglement_id{{ accord_reglement.id }}" >
-                                                        {% if approved %}Détaille{% else %}Contesté{% endif %}
-                                                    </button>
-                                                </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
+
+                <!-- Liste des Règlements -->
+                {% if request.user.is_authenticated and request.user.is_active %}
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-body p-0">
+                        {% if not accord_reglement_approveds %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-receipt text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">Aucun règlement trouvé</h5>
+                            <p class="text-muted small">Modifiez les critères de recherche</p>
                         </div>
+                        {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="small">Statut</th>
+                                        <th class="small">Échéance</th>
+                                        <th class="small text-end">Montant</th>
+                                        <th class="small text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for accord_reglement, approved in accord_reglement_approveds %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge rounded-pill 
+                                                {% if accord_reglement.status == 'Réalisé' %}bg-success
+                                                {% elif accord_reglement.status == 'En attente' %}bg-warning text-dark
+                                                {% elif accord_reglement.status == 'En cours' %}bg-info
+                                                {% elif accord_reglement.status == 'Annulé' %}bg-secondary
+                                                {% else %}bg-danger
+                                                {% endif %} small">
+                                                {{ accord_reglement.status }}
+                                            </span>
+                                        </td>
+                                        <td class="small">{{ accord_reglement.due_date|date:"d/m/Y" }}</td>
+                                        <td class="text-end fw-bold small">{{ accord_reglement.total_amount|default:"0.00"|floatformat:2 }} €</td>
+                                        <td class="text-center">
+                                            <button type="submit" 
+                                                    class="btn btn-sm {% if approved %}btn-outline-primary{% else %}btn-outline-danger{% endif %}" 
+                                                    name="btn_detaille_reglement_id{{ accord_reglement.id }}">
+                                                <i class="bi {% if approved %}bi-eye{% else %}bi-exclamation-triangle{% endif %}"></i>
+                                                <span class="d-none d-md-inline">{% if approved %}Détails{% else %}Contesté{% endif %}</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
                     </div>
+                </div>
                 {% endif %}
             </form>
-        </div>
+        </main>
     </div>
+</div>
 
-<!-- Back to Top -->
-<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<!-- Back to Top amélioré -->
+<a href="#" class="btn btn-primary btn-sm rounded-circle shadow back-to-top position-fixed" style="bottom: 20px; right: 20px;">
+    <i class="bi bi-arrow-up"></i>
+</a>
+
 {% endblock %}
 
 {% block javascript %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-fr.js"></script>
-<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
+
 <script>
-    
+$(document).ready(function() {
+    // Configuration commune des datepickers
+    var datepickerOptions = {
+        dateFormat: 'dd/mm/yy',
+        firstDay: 1,
+        monthNames: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+        dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'],
+        onSelect: function(dateText, inst) {
+            // Garder le focus sur le champ après sélection
+            $(this).focus();
+            
+            // Mise à jour des contraintes de date
+            if (this.id === 'date_debut') {
+                $("#date_fin").datepicker("option", "minDate", dateText);
+            } else {
+                $("#date_debut").datepicker("option", "maxDate", dateText);
+            }
+        },
+        beforeShow: function(input, inst) {
+            // Correction du z-index pour que le calendrier apparaisse au-dessus des autres éléments
+            setTimeout(function() {
+                inst.dpDiv.css({'z-index': 9999});
+            }, 0);
+        }
+    };
+
+    // Initialisation des datepickers
+    $("#date_debut").datepicker(datepickerOptions);
+    $("#date_fin").datepicker(datepickerOptions);
+
+    // Empêcher la saisie manuelle
+    $(".form-control-date").on('keydown', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // Fermer le calendrier quand on clique ailleurs
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.hasDatepicker').length && !$(e.target).closest('.ui-datepicker').length) {
+            $('.ui-datepicker').hide();
+        }
+    });
+});
 </script>
+
+<script src="{% static 'js/Code_en_plus_admin_reglement.js' %}"></script>
 {% endblock %}
