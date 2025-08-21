@@ -2579,12 +2579,25 @@ def admin_reglement_detaille(request):
     texte_email = f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
     
     # Récupération optimisée des détails de l'accord, avec accès direct aux attributs nécessaires
+    # Récupération des données
     detaille = list(
         DetailAccordReglement.objects
         .filter(accord=accord_reglement)
         .select_related('payment')  # Optimisation pour éviter des requêtes supplémentaires
         .values_list('payment__id', 'description', 'professor_share', 'payment__reclamation_id')
     )
+
+    # Transformation en detail_list
+    detail_list = []
+    for enr in detaille:
+        payment_id, description, professor_share, reclamation_id = enr
+        detail_list.append((
+            encrypt_id(payment_id),  # Remplace l'ID par sa version encryptée
+            description,
+            professor_share,
+            reclamation_id
+        ))
+
 
     if 'btn_detaille_reglement' in request.POST:
         # Stockage l'ID de l'accord de règlement dans la session avant redirection
@@ -2596,14 +2609,15 @@ def admin_reglement_detaille(request):
     # Vérification du nombre d'IDs extraits
     if paiement_ids:
         if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            paiement_id_decrypt = decrypt_id(paiement_ids[0])
             professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
             if professeur:
-                paiement = Payment.objects.filter(id=paiement_ids[0]).first() # il faut que le paiement est pour le professeur
+                paiement = Payment.objects.filter(id=paiement_id_decrypt).first() # il faut que le paiement est pour le professeur
                 if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
-                    messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paiement_ids[0]}")
+                    messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paiement_id_decrypt}")
                     return redirect('compte_prof')
                 
-            request.session['payment_id'] = paiement_ids[0]
+            request.session['payment_id'] = paiement_id_decrypt
             return redirect('admin_payment_demande_paiement')
         elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
@@ -2614,7 +2628,7 @@ def admin_reglement_detaille(request):
     context = {
         'accord_reglement': accord_reglement,
         'texte_email': texte_email,
-        'detaille': detaille,
+        'detaille': detail_list,
     }
     
     return render(request, 'pages/admin_reglement_detaille.html', context)

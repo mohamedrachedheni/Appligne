@@ -3729,20 +3729,21 @@ def liste_reglement(request):
             if  payment.reclamation: 
                 approved = False
                 break
-        accord_reglement_approveds.append((accord_reglement , approved))
+        accord_reglement_approveds.append((accord_reglement , encrypt_id(accord_reglement.id), approved))
     
     # Extraction de l'ID du règlement choisi dans le formulaire
     accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
     if accord_ids:
         # Vérification du nombre d'IDs extraits
         if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            accord_id_decryp = decrypt_id(accord_ids[0])
             professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
             if professeur:
-                reglement = AccordReglement.objects.filter(id=accord_ids[0], professeur = professeur).first() # il faut que le règlement est pour le professeur
+                reglement = AccordReglement.objects.filter(id=accord_id_decryp, professeur = professeur).first() # il faut que le règlement est pour le professeur
                 if professeur and not reglement: # Si non il y a eu une manipulation des données du template
                     messages.error(request, f"le règlement sélectionné n'est pas attrubuté au professeur, règlement_id= {accord_ids[0]}")
                     return redirect('compte_prof')
-            request.session['accord_id'] = int(accord_ids[0])
+            request.session['accord_id'] = int(accord_id_decryp)
             return redirect('admin_reglement_detaille')
 
         elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système

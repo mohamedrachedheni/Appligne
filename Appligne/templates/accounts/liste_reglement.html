@@ -151,7 +151,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for accord_reglement, approved in accord_reglement_approveds %}
+                                    {% for accord_reglement, accord_reglement_id, approved in accord_reglement_approveds %}
                                     <tr>
                                         <td>
                                             <span class="badge rounded-pill 
@@ -169,7 +169,7 @@
                                         <td class="text-center">
                                             <button type="submit" 
                                                     class="btn btn-sm {% if approved %}btn-outline-primary{% else %}btn-outline-danger{% endif %}" 
-                                                    name="btn_detaille_reglement_id{{ accord_reglement.id }}">
+                                                    name="btn_detaille_reglement_id{{ accord_reglement_id }}">
                                                 <i class="bi {% if approved %}bi-eye{% else %}bi-exclamation-triangle{% endif %}"></i>
                                                 <span class="d-none d-md-inline">{% if approved %}Détails{% else %}Contesté{% endif %}</span>
                                             </button>
