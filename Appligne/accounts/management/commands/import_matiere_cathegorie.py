@@ -32,9 +32,9 @@ class Command(BaseCommand):
                             mat_cathegorie=matiere_categorie,
                             mat_cat_ordre=matiere_cat_ordre
                         )
-                        self.stdout.write(self.style.SUCCESS(f"Ligne {index}: Matiere '{matier_cathegorie}' ajoutée."))
+                        self.stdout.write(self.style.SUCCESS(f"Ligne {index}: Matiere '{matiere_categorie}' ajoutée."))
                     else:
-                        self.stdout.write(self.style.WARNING(f"Ligne {index}: Matiere '{matier_cathegorie}' existe déjà."))
+                        self.stdout.write(self.style.WARNING(f"Ligne {index}: Matiere '{matiere_categorie}' existe déjà."))
                 else:
                     self.stdout.write(self.style.ERROR(f"Ligne {index}: Colonnes vides trouvées."))
             else:
