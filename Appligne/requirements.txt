@@ -1,17 +1,32 @@
-asgiref==3.7.2
-distlib==0.3.6
+# Django et dépendances principales
 Django==4.2.3
-django-clearcache==1.2.1
-filelock==3.9.0
-Pillow==10.1.0
-platformdirs==3.0.0
-psycopg2-binary==2.9.6
-python-magic==0.4.27
+asgiref==3.7.2
 sqlparse==0.4.4
 tzdata==2023.3
+
+# Gestion d'environnement et configuration
 virtualenv==20.19.0
 python-decouple==3.5
+
+# Bases de données
+mysqlclient==2.3.1
+psycopg2-binary==2.9.6  # si jamais PostgreSQL est utilisé en dev/test
+
+# Frontend / templates
 django-mathfilters==1.0.0
+django-clearcache==1.2.1
+Pillow==10.1.0
+python-magic==0.4.27
+
+# PDF et génération de fichiers
+xhtml2pdf==0.2.8
+filelock==3.9.0
+platformdirs==3.0.0
+
+# Requêtes HTTP et APIs
 requests==2.31.0
 google-api-python-client==2.121.0
+stripe==6.64.0
 
+# Authentification JWT
+PyJWT==2.8.0
