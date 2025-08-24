@@ -24,17 +24,17 @@ class Command(BaseCommand):
 
         for index, row in enumerate(rows, start=2):
             if row and len(row) >= 2:  # Vérifier que la ligne a au moins 2 colonnes
-                mat_cathegorie, mat_cat_ordre = row[0], row[1]
+                matiere_categorie, matiere_cat_ordre = row[0], row[1]
                 
-                if mat_cathegorie and mat_cat_ordre:  # Vérifier que les colonnes ne sont pas vides
-                    if not Matiere_cathegorie.objects.filter(mat_cathegorie=mat_cathegorie).exists():
+                if matiere_categorie and matiere_cat_ordre:  # Vérifier que les colonnes ne sont pas vides
+                    if not Matiere_cathegorie.objects.filter(mat_cathegorie=matiere_categorie).exists():
                         Matiere_cathegorie.objects.create(
-                            mat_cathegorie=mat_cathegorie,
-                            mat_cat_ordre=mat_cat_ordre
+                            mat_cathegorie=matiere_categorie,
+                            mat_cat_ordre=matiere_cat_ordre
                         )
-                        self.stdout.write(self.style.SUCCESS(f"Ligne {index}: Matiere '{mat_cathegorie}' ajoutée."))
+                        self.stdout.write(self.style.SUCCESS(f"Ligne {index}: Matiere '{matier_cathegorie}' ajoutée."))
                     else:
-                        self.stdout.write(self.style.WARNING(f"Ligne {index}: Matiere '{mat_cathegorie}' existe déjà."))
+                        self.stdout.write(self.style.WARNING(f"Ligne {index}: Matiere '{matier_cathegorie}' existe déjà."))
                 else:
                     self.stdout.write(self.style.ERROR(f"Ligne {index}: Colonnes vides trouvées."))
             else:
