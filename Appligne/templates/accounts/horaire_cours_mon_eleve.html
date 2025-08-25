@@ -91,7 +91,7 @@
                                     <!-- Date Field -->
                                     <div class="col-lg-2 col-md-4">
                                         <label class="form-label fw-semibold small">Date</label>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter }}"
                                             name="date_{{ enr_horaire.id }}" value="{{ enr_horaire.date }}"
                                             {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
                                     </div>
@@ -101,13 +101,13 @@
                                         <div class="row g-1">
                                             <div class="col-6">
                                                 <label class="form-label fw-semibold small">Début</label>
-                                                <input type="text" class="form-control form-control-sm" 
+                                                <input type="text" class="form-control form-control-heure" 
                                                     name="debut_{{ enr_horaire.id }}" value="{{ enr_horaire.debut }}"
                                                     {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
                                             </div>
                                             <div class="col-6">
                                                 <label class="form-label fw-semibold small">Fin</label>
-                                                <input type="text" class="form-control form-control-sm" 
+                                                <input type="text" class="form-control form-control-heure" 
                                                     name="fin_{{ enr_horaire.id }}" value="{{ enr_horaire.fin }}"
                                                     {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
                                             </div>
