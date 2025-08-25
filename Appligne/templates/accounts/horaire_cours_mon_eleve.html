@@ -69,7 +69,7 @@
             </div>
 
             <!-- Session Management Form -->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" id="sessionForm">
                 {% csrf_token %}
 
                 <!-- Sessions List Card -->
@@ -142,8 +142,12 @@
                                             
                                             <div class="col-md-6">
                                                 <div class="d-flex justify-content-end gap-2">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                        name="btn_sup_{{ enr_horaire.id }}"
+                                                    <!-- Bouton Supprimer avec déclencheur de modale -->
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                        data-session-id="{{ enr_horaire.id }}"
+                                                        data-session-date="{{ enr_horaire.date }}"
+                                                        data-session-time="{{ enr_horaire.debut }} - {{ enr_horaire.fin }}"
                                                         {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
                                                         <i class="bi bi-trash me-1"></i>Supprimer
                                                     </button>
@@ -215,6 +219,41 @@
     </div>
 </div>
 
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="confirmationModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette séance ?</p>
+                <div class="alert alert-info">
+                    <strong>Détails de la séance :</strong>
+                    <div id="sessionDetails" class="mt-2">
+                        <!-- Les détails seront injectés par JavaScript -->
+                    </div>
+                </div>
+                <p class="text-danger">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Annuler
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash-fill me-1"></i>Confirmer la suppression
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Back to Top Button - Modern Style -->
 <button onclick="topFunction()" id="backToTopBtn" class="btn btn-primary rounded-circle shadow" title="Retour en haut">
     <i class="bi bi-arrow-up"></i>
@@ -241,5 +280,51 @@ function topFunction() {
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 }
+
+// Gestion de la modale de confirmation de suppression
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmationModal = document.getElementById('confirmationModal');
+    const sessionDetails = document.getElementById('sessionDetails');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const sessionForm = document.getElementById('sessionForm');
+    
+    let currentSessionId = null;
+    
+    // Lorsque la modale s'ouvre, récupérer les données de la séance
+    confirmationModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        currentSessionId = button.getAttribute('data-session-id');
+        const sessionDate = button.getAttribute('data-session-date');
+        const sessionTime = button.getAttribute('data-session-time');
+        
+        // Afficher les détails dans la modale
+        sessionDetails.innerHTML = `
+            <div><strong>Date:</strong> ${sessionDate}</div>
+            <div><strong>Horaire:</strong> ${sessionTime}</div>
+        `;
+    });
+    
+    // Lorsqu'on confirme la suppression
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (currentSessionId) {
+            // Créer un champ caché pour indiquer la suppression
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'btn_sup_' + currentSessionId;
+            hiddenInput.value = '1';
+            sessionForm.appendChild(hiddenInput);
+            
+            // Soumettre le formulaire
+            sessionForm.submit();
+        }
+    });
+    
+    // Nettoyer le champ caché lorsque la modale est fermée
+    confirmationModal.addEventListener('hidden.bs.modal', function() {
+        const hiddenInputs = document.querySelectorAll('input[name^="btn_sup_"]');
+        hiddenInputs.forEach(input => input.remove());
+        currentSessionId = null;
+    });
+});
 </script>
 {% endblock %}
