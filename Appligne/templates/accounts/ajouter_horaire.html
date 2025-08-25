@@ -62,7 +62,7 @@
                             <!-- Date -->
                             <div class="col-lg-2 col-md-4">
                                 <label for="date_id_{{ forloop.counter }}" class="form-label fw-semibold">Date</label>
-                                <input type="text" class="form-control datepicker" 
+                                <input type="text" class="form-control form-control-date" 
                                        id="date_id_{{ forloop.counter }}" name="date{{ forloop.counter }}"
                                        value="{{ horaire.date }}" required>
                             </div>
@@ -70,14 +70,14 @@
                             <!-- Heures -->
                             <div class="col-lg-2 col-md-4">
                                 <label for="debut{{ forloop.counter }}_id" class="form-label fw-semibold">Début</label>
-                                <input type="text" class="form-control timepicker" 
+                                <input type="text" class="form-control form-control-heure" 
                                        id="debut{{ forloop.counter }}_id" name="debut{{ forloop.counter }}"
                                        value="{{ horaire.debut }}" placeholder="HH:MM" required>
                             </div>
                             
                             <div class="col-lg-2 col-md-4">
                                 <label for="fin{{ forloop.counter }}_id" class="form-label fw-semibold">Fin</label>
-                                <input type="text" class="form-control timepicker" 
+                                <input type="text" class="form-control form-control-heure" 
                                        id="fin{{ forloop.counter }}_id" name="fin{{ forloop.counter }}"
                                        value="{{ horaire.fin }}" placeholder="HH:MM" required>
                             </div>
