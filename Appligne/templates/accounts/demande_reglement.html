@@ -87,7 +87,8 @@
                                                                     <input class="form-check-input me-2 " 
                                                                         type="checkbox" 
                                                                         id="chk_{{ enr_horaire_id }}" 
-                                                                        name="chk_{{ enr_horaire_id }}"
+                                                                        name="chk"
+                                                                        value="{{ enr_horaire_id }}"
                                                                         {% if enr_horaire.payment_id or enr_horaire.demande_paiement_id or enr_horaire.statut == "Annuler" %}disabled{% endif %}
                                                                         >
                                                                     

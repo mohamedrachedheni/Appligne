@@ -2932,36 +2932,25 @@ def demande_reglement(request):
     # Gestion du formulaire de demande de règlement
     if request.method == 'POST' and 'btn_reglement' in request.POST:
         # Récupérer les horaires sélectionnés à partir des cases cochées
-        chk_keys = [key for key in request.POST.keys() if key.startswith('chk_')]
-        # On récupère uniquement les clés qui correspondent au format attendu
-        chk_keys = [
-            key for key in request.POST.keys()
-            if key.startswith('chk_')
-        ]
+        chk_values = request.POST.getlist('chk')
+        if chk_values:
+            chk_keys_decryp = []
+            for raw_value in chk_values:
+                decrypted = decrypt_id(raw_value)
+                if not decrypted:
+                    messages.error(request, f"Impossible de décrypter {raw_value}")
+                    return redirect('compte_prof')
 
-        if chk_keys:
-            btn_key = chk_keys[0]  # Premier bouton trouvé
+                chk_key_decryp = int(decrypted)
+                chk_keys_decryp.append(chk_key_decryp)
 
-            # On isole la partie chiffrée
-            encrypted_part = btn_key.removeprefix('chk_').strip()
+                    
+            request.session['eleve_id'] = eleve_id
+            request.session['selected_horaires'] = chk_keys_decryp
+            return redirect('declaration_cours')
+                
 
-            try:
-                # Déchiffrement de l'ID 
-                enr_id = decrypt_id(encrypted_part)
-
-                # Vérifie que l'ID est bien un entier positif
-                if not isinstance(enr_id, int) or enr_id <= 0:
-                    raise ValueError("ID déchiffré invalide") 
-
-                request.session['selected_horaires'] = enr_id
-                request.session['eleve_id'] = eleve_id
-                return redirect('declaration_cours') # rediriger vers la vue appropriée
-
-            except ValueError as e:
-                messages.error(request, str(e))
-
-            except Exception as e:
-                messages.error(request, f"Une erreur est survenue : {e}")
+        
         else: messages.error(request, "Pour déclarer un cours et demander le paiement, vous devez cocher au moins une case active")
 
     # Rendre le template avec le contexte
@@ -2969,7 +2958,6 @@ def demande_reglement(request):
 
 
 def declaration_cours(request):
-
     eleve_id = request.session.get('eleve_id', None)
     selected_horaires = request.session.get('selected_horaires', [])
     if not eleve_id or not selected_horaires:
@@ -2996,122 +2984,123 @@ def declaration_cours(request):
     cours_actifs = Cours.objects.filter(mon_eleve=mon_eleve, is_active=True)
     
     montant_total = Decimal('0.00')  # Initialiser le montant total
-    if selected_horaires:
-        # Récupérer les horaires associés aux cours actifs et calculer le montant pour chaque horaire
-        horaires_groupes = Horaire.objects.filter(
+    # if selected_horaires:
+    # Récupérer les horaires associés aux cours actifs et calculer le montant pour chaque horaire
+    horaires_groupes = Horaire.objects.filter(
     id__in=[selected_horaires] if isinstance(selected_horaires, int) else selected_horaires,
-    cours__in=cours_actifs
-).values(
-    'date_cours', 'heure_debut', 'heure_fin', 'cours__matiere', 
-    'duree', 'cours__prix_heure', 'statut_cours', 'contenu', 'id'
-).annotate(
-    montant=ExpressionWrapper(
-        F('duree') * F('cours__prix_heure'),
-        output_field=fields.DecimalField(decimal_places=2, max_digits=10)
-    )
-).order_by('date_cours')
+    cours__in=cours_actifs).values(
+        'date_cours', 'heure_debut', 'heure_fin', 'cours__matiere', 
+        'duree', 'cours__prix_heure', 'statut_cours', 'contenu', 'id'
+    ).annotate(
+        montant=ExpressionWrapper(
+            F('duree') * F('cours__prix_heure'),
+            output_field=fields.DecimalField(decimal_places=2, max_digits=10)
+        )
+    ).order_by('date_cours')                       
 
-        # for hor in horaires_groupes:
-        #     messages.info(request, f"hor.id = {hor['id']}")
-        # Calculer la somme des montants
-        montant_total = horaires_groupes.aggregate(
-            total_montant=Sum('montant')
-        )['total_montant'] or Decimal('0.00')
+    # Calculer la somme des montants
+    montant_total = horaires_groupes.aggregate(
+        total_montant=Sum('montant')
+    )['total_montant'] or Decimal('0.00')
 
-        # Arrondir le montant total à deux chiffres après la virgule
-        montant_total = montant_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        # Passer les informations au contexte
-        context = {
-            'mon_eleve': mon_eleve,
-            'cours_actifs': cours_actifs,
-            'horaires_groupes': horaires_groupes,
-            'montant_total': montant_total,
-            'parent': parent,
-            'professeur': professeur,
-        }
-        if request.method == 'POST' and 'btn_declaration' in request.POST:
-            # Validation des données
-            if not montant_total or montant_total <= 0:
-                messages.error(request, "Une erreur s'est produite lors du calcul du montant total à régler. Veuillez contacter le programmeur.")
-                return render(request, 'accounts/declaration_cours.html', context)
-            
-            # pas besion car les données, les données existent déjà dans la session, et dans horaires_groupes, en plus le code est faux car il ne tient compte que d'un seule enregistrement
-            # Vérification de l'existance des enregistrements horaires (pas besion)
-            matiere_keys = [key for key in request.POST if key.startswith('matiere_')]
-            for matiere_key in matiere_keys:
+    # Arrondir le montant total à deux chiffres après la virgule
+    montant_total = montant_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    # Passer les informations au contexte
+    # context = {
+    #     'mon_eleve': mon_eleve,
+    #     'cours_actifs': cours_actifs,
+    #     'horaires_groupes': horaires_groupes,
+    #     'montant_total': montant_total,
+    #     'parent': parent,
+    #     'professeur': professeur,
+    # }
+    if request.method == 'POST' and 'btn_declaration' in request.POST:
+        # Validation des données
+        if not montant_total or montant_total <= 0:
+            messages.error(request, "Une erreur s'est produite lors du calcul du montant total à régler. Veuillez contacter le programmeur.")
+            return render(request, 'accounts/declaration_cours.html', context)
+        
+        # pas besion car les données, les données existent déjà dans la session, et dans horaires_groupes, en plus le code est faux car il ne tient compte que d'un seule enregistrement
+        # Vérification de l'existance des enregistrements horaires (pas besion)
+        # matiere_keys = [key for key in request.POST if key.startswith('matiere_')]
+        # for matiere_key in matiere_keys:
+        #     try:
+        #         horaire_id = int(matiere_key.split('matiere_')[1])
+        #         horaire = Horaire.objects.get(id=horaire_id)
+        #     except (ValueError, Horaire.DoesNotExist):
+        #         messages.error(request, "Une erreur s'est produite lors de la récupération des enregistrements horaires. Veuillez contacter le programmeur.")
+        #         return render(request, 'accounts/declaration_cours.html', context)
+        
+        # Envoi de l'email si nécessaire (il faut rediriger l'email à admin pour generer un lien de paiement avec une date d'échéance)
+        sujet = request.POST.get('sujet', 'Demande de règlement de cours')
+        text_email = request.POST.get('text_email', None)
+        if sujet or text_email:
+            email_prof = professeur.user.email
+            destinations = [ settings.ADMIN_EMAIL]
+            if parent and parent.email_parent:
+                destinations.append(parent.email_parent)
+
+            # Validation des emails dans destinations
+            email_validator = EmailValidator() # Initialiser le validateur d'email
+            for destination in destinations:
                 try:
-                    horaire_id = int(matiere_key.split('matiere_')[1])
-                    horaire = Horaire.objects.get(id=horaire_id)
-                except (ValueError, Horaire.DoesNotExist):
-                    messages.error(request, "Une erreur s'est produite lors de la récupération des enregistrements horaires. Veuillez contacter le programmeur.")
-                    return render(request, 'accounts/declaration_cours.html', context)
-            
-            # Envoi de l'email si nécessaire (il faut rediriger l'email à admin pour generer un lien de paiement avec une date d'échéance)
-            sujet = request.POST.get('sujet', 'Demande de règlement de cours')
-            text_email = request.POST.get('text_email', None)
-            if sujet or text_email:
-                email_prof = professeur.user.email
-                destinations = [ settings.ADMIN_EMAIL]
-                if parent and parent.email_parent:
-                    destinations.append(parent.email_parent)
+                    email_validator(destination)
+                except ValidationError:
+                    messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")    
 
-                # Validation des emails dans destinations
-                email_validator = EmailValidator() # Initialiser le validateur d'email
-                for destination in destinations:
-                    try:
-                        email_validator(destination)
-                    except ValidationError:
-                        messages.error(request, f"L'adresse email du destinataire {destination} est invalide.<br>Veuillez vérifier l'adresse avec le professeur.")    
-
-                try:
-                    send_mail(
-                        sujet,
-                        text_email,
-                        email_prof,
-                        destinations,
-                        fail_silently=False,
-                    )
-                    messages.success(request, "L'email de la demande de règlement a été envoyé avec succès.")
-                except Exception as e:
-                    messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
-                
-                # Enregistrement de l'email envoyé
-                email_telecharge = Email_telecharge(
-                    user=user, email_telecharge=email_prof, text_email=text_email,
-                    user_destinataire=eleve.user.id, sujet=sujet
+            try:
+                send_mail(
+                    sujet,
+                    text_email,
+                    email_prof,
+                    destinations,
+                    fail_silently=False,
                 )
-                email_telecharge.save()
-
-            # Enregistrement de la demande de paiement
-            demande_paiement = Demande_paiement(
-                user=user, mon_eleve=mon_eleve, eleve=eleve, montant=montant_total, email=email_telecharge.id if email_telecharge else None
+                messages.success(request, "L'email de la demande de règlement a été envoyé avec succès.")
+            except Exception as e:
+                messages.error(request, f"Une erreur s'est produite lors de l'envoi de l'email : {str(e)}")
+            
+            # Enregistrement de l'email envoyé
+            email_telecharge = Email_telecharge(
+                user=user, email_telecharge=email_prof, text_email=text_email,
+                user_destinataire=eleve.user.id, sujet=sujet
             )
-            demande_paiement.save()
+            email_telecharge.save()
 
-            # Enregistrement des détails de la demande de paiement
-            for matiere_key in matiere_keys: # pas besion car les enregistrements existent dans la session et dans horaires_groupes
-                horaire_id = int(matiere_key.split('matiere_')[1])
-                # messages.info(request, f"horaire_id = {horaire_id} ")
-                horaire = Horaire.objects.get(id=horaire_id)
-                detail_demande_paiement = Detail_demande_paiement(
-                    demande_paiement=demande_paiement, cours=horaire.cours, 
-                    prix_heure=horaire.cours.prix_heure, horaire=horaire
-                )
-                detail_demande_paiement.save()
+        # Enregistrement de la demande de paiement
+        demande_paiement = Demande_paiement(
+            user=user, mon_eleve=mon_eleve, eleve=eleve, montant=montant_total, email=email_telecharge.id if email_telecharge else None
+        )
+        demande_paiement.save()
 
-                # Mettre à jour l'état de l'horaire avec l'ID de la demande de paiement
-                horaire.demande_paiement_id = demande_paiement.id
-                horaire.save()
+        # S'assurer que c'est une liste même si c'est un int
+        if isinstance(selected_horaires, int):
+            selected_horaires = [selected_horaires]
 
-            messages.success(request, "La demande de règlement et ses détails ont été enregistrés avec succès.")
-            
-            # Nettoyage de la session
-            request.session.pop('selected_horaires', None)
-            return redirect('compte_prof')
-    
-    else:
-        messages.error(request, 'Le cours est déjà déclaré')
+        # Enregistrement des détails de la demande de paiement
+        for horaire_id in selected_horaires: # pas besion car les enregistrements existent dans la session et dans horaires_groupes
+            # horaire_id = int(matiere_key.split('matiere_')[1])
+            # messages.info(request, f"horaire_id = {horaire_id} ")
+            horaire = Horaire.objects.get(id=horaire_id)
+            detail_demande_paiement = Detail_demande_paiement(
+                demande_paiement=demande_paiement, cours=horaire.cours, 
+                prix_heure=horaire.cours.prix_heure, horaire=horaire
+            )
+            detail_demande_paiement.save()
+
+            # Mettre à jour l'état de l'horaire avec l'ID de la demande de paiement
+            horaire.demande_paiement_id = demande_paiement.id
+            horaire.save()
+
+        messages.success(request, "La demande de règlement et ses détails ont été enregistrés avec succès.")
+        
+        # Nettoyage de la session
+        request.session.pop('selected_horaires', None)
         return redirect('compte_prof')
+    
+    # else:
+    #     messages.error(request, 'Le cours est déjà déclaré')
+    #     return redirect('compte_prof')
     
 
     # Passer les informations au contexte
