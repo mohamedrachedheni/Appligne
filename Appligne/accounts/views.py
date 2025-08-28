@@ -3181,16 +3181,21 @@ def liste_declaration_cours(request):
     for enr in cours_declares:
         cours_declares_liste.append((enr, encrypt_id(enr['id'])))
 
+
     # Gestion des boutons de détail
-    if request.method == 'POST':
-        detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
-        if detaille_enr_key:
-            demande_paiement_id = decrypt_id(detaille_enr_key.split('btn_detaille_')[1])
-            try:
-                request.session['demande_paiement_id'] = demande_paiement_id
-                return redirect('detaille_demande_reglement')
-            except Demande_paiement.DoesNotExist:
-                messages.error(request, f"La demande de paiement avec l'ID={demande_paiement_id} n'a pas été trouvée.")
+    detaille_enr_key = next((key for key in request.POST if key.startswith('btn_detaille_')), None)
+
+    if detaille_enr_key:
+        demande_paiement_id_chiffre = detaille_enr_key.removeprefix('btn_detaille_')  # Python 3.9+
+        try:
+            demande_paiement_id = decrypt_id(demande_paiement_id_chiffre)
+            request.session['demande_paiement_id'] = demande_paiement_id
+            return redirect('detaille_demande_reglement')
+        except Demande_paiement.DoesNotExist:
+            messages.error(
+                request,
+                f"La demande de paiement avec l'ID={demande_paiement_id} n'a pas été trouvée."
+            )
     
     context = {
         'cours_declares': cours_declares_liste,

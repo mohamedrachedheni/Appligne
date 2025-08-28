@@ -230,7 +230,7 @@
                                                         {% elif accordReglement.status == 'Invalide' %}bg-danger
                                                         {% elif accordReglement.status == 'En cours' %}bg-info
                                                         {% endif %}">
-                                                        {{ accordReglement.due_date|date:"d/m/Y" }}
+                                                        {{ accordReglement.status }} / {{ accordReglement.due_date|date:"d/m/Y" }}
                                                     </span>
                                                 </div>
                                             {% else %}
