@@ -11,7 +11,7 @@ python-dotenv==1.0.1   # ✅ ajout pour charger les fichiers .env
 # mysqlclient==2.2.4
 
 # Bases de données
-mysqlclient==2.3.1
+mysqlclient==2.2.7
 # psycopg2-binary==2.9.6  # si jamais PostgreSQL est utilisé en dev/test
 
 # Frontend / templates
