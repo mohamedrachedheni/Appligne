@@ -7,6 +7,8 @@ tzdata==2023.3
 # Gestion d'environnement et configuration
 virtualenv==20.19.0
 python-decouple==3.5
+python-dotenv==1.0.1   # ✅ ajout pour charger les fichiers .env
+mysqlclient==2.2.4
 
 # Bases de données
 mysqlclient==2.3.1
