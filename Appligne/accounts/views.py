@@ -2373,10 +2373,12 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
             horaires = [{'date': '', 'debut': '', 'fin': '', 'contenu': '', 'statut': 'En attente'} for _ in range(4)]
 
     # Gestion de la suppression d'un horaire
-    sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
+    sup_enr_keys = next((key for key in request.POST if key.startswith('btn_sup_')), None)
     if sup_enr_keys:
-        horaire_id = int(sup_enr_keys[0].split('btn_sup_')[1])
+        horaire_id_encrypt = sup_enr_keys.removeprefix('btn_sup_') # Python 9.3 +
         try:
+            horaire_id = decrypt_id(horaire_id_encrypt)
+            request.session['horaire_id'] = horaire_id
             horaire_to_delete = Horaire.objects.get(id=horaire_id)
             horaire_to_delete.delete()
             messages.success(request, f"Horaire supprimé avec succès.")
@@ -2398,7 +2400,7 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
                                     'Règlement en cours' if enr.demande_paiement_id else
                                     'Non réglé'
                                 ),
-            'id': enr.id
+            'id': encrypt_id(enr.id)
         }
         for enr in Horaire.objects.filter(cours=mon_cours)
     ]
@@ -3253,32 +3255,15 @@ def detaille_demande_reglement(request):
 
     # Gestion de l'annulation de la demande de paiement
     if request.method == 'POST' and 'btn_annuler' in request.POST:
+        # la demande de paiement et déjà supposée ne pas existée dans la table de paiement
         if demande_paiement.statut_demande in ['En attente', 'Contester'] and not demande_paiement.payment_id:
-            # # Vérification des horaires pour annulation
-            # for enr in detail_demande_paiements:
-            #     horaire = Horaire.objects.filter(id=enr.horaire.id).first()
-            #     if  horaire.payment_id:
-            #         messages.error(
-            #             request,
-            #             f"L'annulation ne peut pas être effectuée : un horaire ne satisfait pas les conditions.<br>"
-            #             f" Horaire_demande paiement : {horaire.payment_id}"
-            #         )
-            #         return render(request, 'accounts/detaille_demande_reglement.html', context)
-
-            # Annuler la demande de paiement et les horaires associés
-            demande_paiement.statut_demande = Demande_paiement.ANNULER
+            demande_paiement.statut_demande = 'Annuler'
             demande_paiement.save()
-
-            for enr in detail_demande_paiements:
-                horaire = Horaire.objects.filter(id=enr.horaire.id).first()
-                horaire.statut_cours = Horaire.ANNULER
-                horaire.save()
-
             messages.success(request, 'La demande de paiement a été annulée.')
+            return redirect('compte_prof')
         else:
-            messages.error(request, "La demande de paiement est déjà réglée ou ne peut être annulée.")
-
-        return render(request, 'accounts/detaille_demande_reglement.html', context)
+            messages.error(request, "La demande de paiement ne peut être annulée.")
+            return render(request, 'accounts/detaille_demande_reglement.html', context)
     # Gère le bouton "Réclamation"
     if 'btn_reclamation' in request.POST:
         if demande_paiement.reclamation and demande_paiement.reclamation.id:

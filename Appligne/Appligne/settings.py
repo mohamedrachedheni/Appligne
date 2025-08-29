@@ -16,6 +16,13 @@ from pathlib import Path
 from decouple import config
 import os
 from datetime import datetime
+from django.conf import settings
+# Par défaut, la variable DEBUG n’est pas envoyée automatiquement dans 
+# les templates, donc il faut l’exposer. Voici comment faire :
+def debug_context(request):
+    return {
+        'DEBUG': settings.DEBUG
+    }
 
 
 
@@ -82,15 +89,28 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'Appligne.settings.debug_context',  # ajoute ton processor ici le 29/08/2025 pour rendre debug_context reconnue dans les templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
     },
+    
 ]
 
 WSGI_APPLICATION = 'Appligne.wsgi.application'
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Charger le .env
+
+DEBUG = os.getenv("DEBUG", "True") == "True"
+
+if DEBUG:
+    NAME_DATABASE = os.getenv("NAME_DATABASE_DEV")
+else:
+    NAME_DATABASE = os.getenv("NAME_DATABASE_PROD")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

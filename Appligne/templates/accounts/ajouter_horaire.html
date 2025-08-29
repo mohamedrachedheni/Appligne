@@ -22,7 +22,7 @@
             </div>
 
             <!-- Formulaire Principal -->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate id="mainForm">
                 {% csrf_token %}
 
                 <!-- Section Informations de Base -->
@@ -166,8 +166,14 @@
                                                value="{{ enr_horaire.statut_reglement }}" readonly>
                                     </div>
                                     <div class="col-md-2">
-                                        <button type="submit" class="btn btn-outline-danger w-100" 
-                                                name="btn_sup_{{enr_horaire.id}}" 
+                                        <button type="button" class="btn btn-outline-danger w-100" 
+                                                data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                data-horaire-id="{{ enr_horaire.id }}"
+                                                data-horaire-date="{{ enr_horaire.date }}"
+                                                data-horaire-debut="{{ enr_horaire.debut }}"
+                                                data-horaire-fin="{{ enr_horaire.fin }}"
+                                                data-horaire-contenu="{{ enr_horaire.contenu }}"
+                                                data-horaire-statut="{{ enr_horaire.statut }}"
                                                 {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %}>
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -183,6 +189,54 @@
     </div>
 </div>
 
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Êtes-vous sûr de vouloir supprimer cette séance ?</p>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Détails de la séance :</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Date:</span>
+                                <span id="modal-date"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Heure:</span>
+                                <span id="modal-heure"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Contenu:</span>
+                                <span id="modal-contenu" class="text-end"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Statut:</span>
+                                <span id="modal-statut"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="POST" id="deleteForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" name="btn_sup" id="confirmDeleteBtn">
+                        <i class="bi bi-trash-fill me-1"></i>Supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bouton Retour en Haut - Style moderne -->
 <a href="#" class="btn btn-primary btn-lg rounded-circle shadow back-to-top position-fixed bottom-0 end-0 mb-4 me-4">
     <i class="bi bi-arrow-up"></i>
@@ -192,4 +246,32 @@
 
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_ajout_horaire.js' %}"></script>
+<script>
+    // Gestion de la modal de confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmationModal = document.getElementById('confirmationModal');
+        const deleteForm = document.getElementById('deleteForm');
+        
+        confirmationModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const horaireId = button.getAttribute('data-horaire-id');
+            const date = button.getAttribute('data-horaire-date');
+            const debut = button.getAttribute('data-horaire-debut');
+            const fin = button.getAttribute('data-horaire-fin');
+            const contenu = button.getAttribute('data-horaire-contenu');
+            const statut = button.getAttribute('data-horaire-statut');
+            
+            // Mettre à jour le contenu de la modal
+            document.getElementById('modal-date').textContent = date;
+            document.getElementById('modal-heure').textContent = debut + ' - ' + fin;
+            document.getElementById('modal-contenu').textContent = contenu;
+            document.getElementById('modal-statut').textContent = statut;
+            
+            // Configurer le formulaire de suppression
+            deleteForm.action = ''; // L'URL actuelle
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            confirmDeleteBtn.name = 'btn_sup_' + horaireId;
+        });
+    });
+</script>
 {% endblock %}

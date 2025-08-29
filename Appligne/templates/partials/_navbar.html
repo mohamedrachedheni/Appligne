@@ -1,5 +1,6 @@
 <!-- Navbar -->
 {% load static %}
+
 <!-- Spinner -->
 <div id="spinner" 
      class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 
@@ -101,11 +102,14 @@
                                 <a class="dropdown-item" href="{% url 'seconnecter' %}">
                                     <i class="fas fa-sign-in-alt me-2"></i>Connexion
                                 </a>
-                            </li><li>
+                            </li>
+                            {% if DEBUG %}
+                            <li>
                                 <a class="dropdown-item" href="{% url 'signin' %}">
                                     <i class="fas fa-sign-in-alt me-2"></i>Connexion +
                                 </a>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
                 {% endif %}
