@@ -36,8 +36,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-yjb=-9#-u7!9%++z)*)au0z*j_nsognm2mt#=jem%y=5cfx0%l'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = [config('ALLOWED_HOST1', "localhost")]
 
@@ -100,6 +98,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Appligne.wsgi.application'
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+
 import os
 from dotenv import load_dotenv
 
@@ -118,7 +120,7 @@ else:
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME':  config('NAME_DATABASE', default=False),
+        'NAME': NAME_DATABASE,
         'USER': config('USER_DATABASE', default=False),
         'PASSWORD': config('PASSWORD_DATABASE', default=False),
         'HOST': config('HOST_DATABASE', default=False),   # ou l'adresse de votre serveur MySQL
@@ -173,6 +175,7 @@ STATIC_URL = 'static/'
 MEDIA_ROOT = BASE_DIR /  'media'
 
 MEDIA_URL = 'media/'
+
 
 
 # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
