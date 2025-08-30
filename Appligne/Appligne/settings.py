@@ -16,13 +16,6 @@ from pathlib import Path
 from decouple import config
 import os
 from datetime import datetime
-from django.conf import settings
-# Par défaut, la variable DEBUG n’est pas envoyée automatiquement dans 
-# les templates, donc il faut l’exposer. Voici comment faire :
-def debug_context(request):
-    return {
-        'DEBUG': settings.DEBUG
-    }
 
 
 
@@ -36,6 +29,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-yjb=-9#-u7!9%++z)*)au0z*j_nsognm2mt#=jem%y=5cfx0%l'
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
 ALLOWED_HOSTS = [config('ALLOWED_HOST1', "localhost")]
 
@@ -87,32 +82,15 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'Appligne.settings.debug_context',  # ajoute ton processor ici le 29/08/2025 pour rendre debug_context reconnue dans les templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
     },
-    
 ]
 
 WSGI_APPLICATION = 'Appligne.wsgi.application'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-
-import os
-from dotenv import load_dotenv
-
-load_dotenv()  # Charger le .env
-
-DEBUG = os.getenv("DEBUG", "True") == "True"
-
-if DEBUG:
-    NAME_DATABASE = os.getenv("NAME_DATABASE_DEV")
-else:
-    NAME_DATABASE = os.getenv("NAME_DATABASE_PROD")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -120,7 +98,7 @@ else:
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': NAME_DATABASE,
+        'NAME':  config('NAME_DATABASE', default=False),
         'USER': config('USER_DATABASE', default=False),
         'PASSWORD': config('PASSWORD_DATABASE', default=False),
         'HOST': config('HOST_DATABASE', default=False),   # ou l'adresse de votre serveur MySQL
@@ -175,7 +153,6 @@ STATIC_URL = 'static/'
 MEDIA_ROOT = BASE_DIR /  'media'
 
 MEDIA_URL = 'media/'
-
 
 
 # adapter la config MYSQL_PATHS selon l’OS (Windows, PythonAnywhere (Linux))
