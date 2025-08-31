@@ -751,7 +751,10 @@ def nouveau_fichier(request):
                     extension_fichier = os.path.splitext(nom_fichier)[1].lower()
                     prof_doc_telecharge = Prof_doc_telecharge(user=user, doc_telecharge=fichier, email_telecharge=email_telecharge)
                     prof_doc_telecharge.save()
-                return redirect('modifier_format_cours')
+            # voire si format_cours existe si non passer au format_cours
+            # voire si tous les prix sont définis
+            
+            return redirect('compte_prof')
         else: messages.error(request, "Vous devez ajouter un texte pour votre email")
     return render(request, 'accounts/nouveau_fichier.html', {'text_email': text_email, 'email_prof': email_prof, 'sujet': sujet})
 

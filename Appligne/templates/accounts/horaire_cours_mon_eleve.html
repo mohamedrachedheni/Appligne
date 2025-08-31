@@ -4,220 +4,222 @@
 
 {% block content %}
 
-<div class="container-fluid">
-    <div class="row g-0">
-        <!-- Sidebar - Version moderne -->
-        <div class="col-md-3 col-lg-2 d-none d-md-block pe-2">
+
+    <div class="row justify-content-center">
+        <!-- Sidebar Column -->
+        <div class="col-sm-12 col-md-4 col-lg-2">
             {% include 'partials/_sidebar.html' %}
         </div>
 
         <!-- Main Content - Version professionnelle -->
-        <main class="col-md-9 col-lg-10 ps-3">
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="container-xxl py-1">
             <!-- Header Section -->
-            <div class="d-flex justify-content-between align-items-center mb-4 pt-3 border-bottom">
-                <h2 class="fw-bold text-primary">
-                    <i class="bi bi-calendar2-week me-2"></i>Gestion des séances
-                </h2>
-                <div class="alert-container">
-                    {% include 'partials/_alerts.html' %}
-                </div>
-            </div>
-
-            <!-- Student and Course Info Card -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Student Info -->
-                        <div class="col-md-6 mb-3">
-                            <h5 class="fw-semibold text-secondary">
-                                <i class="bi bi-person-circle me-2"></i>Élève
-                            </h5>
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <span class="badge bg-info text-dark">
-                                        <i class="bi bi-clock-history me-1"></i>
-                                        Màj: {{ mon_eleve.date_modification|date:"d/m/Y" }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <h4 class="mb-0">{{ mon_eleve.eleve.user.last_name }} {{ mon_eleve.eleve.user.first_name }}</h4>
-                                    <small class="text-muted">
-                                        <i class="bi bi-telephone me-1"></i>{{ mon_eleve.eleve.numero_telephone }}
-                                        <i class="bi bi-geo-alt ms-2 me-1"></i>{{ mon_eleve.eleve.adresse }}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Course Info -->
-                        <div class="col-md-6 mb-3">
-                            <h5 class="fw-semibold text-secondary">
-                                <i class="bi bi-book me-2"></i>Cours
-                            </h5>
-                            <div class="d-flex flex-column">
-                                <h4 class="mb-1">{{ mon_cours.matiere }} ({{ mon_cours.niveau }})</h4>
-                                <div class="d-flex">
-                                    <span class="badge bg-light text-dark me-2">
-                                        <i class="bi bi-currency-euro me-1"></i>{{ mon_cours.prix_heure }} €/h
-                                    </span>
-                                    
-                                </div>
-                            </div>
-                        </div>
+                <div class="d-flex justify-content-between align-items-center mb-4 pt-3 border-bottom">
+                    <h2 class="fw-bold text-primary">
+                        <i class="bi bi-calendar2-week me-2"></i>Gestion des séances
+                    </h2>
+                    <div class="alert-container">
+                        {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
-            </div>
 
-            <!-- Session Management Form -->
-            <form method="POST" enctype="multipart/form-data" autocomplete="off" id="sessionForm">
-                {% csrf_token %}
-
-                <!-- Sessions List Card -->
+                <!-- Student and Course Info Card -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-list-check me-2"></i>Séances planifiées
-                        </h5>
-                        <span class="badge bg-primary">
-                            {{ page_obj.paginator.count }} séance(s)
-                        </span>
-                    </div>
-                    
                     <div class="card-body">
-                        {% if request.user.is_authenticated %}
-                            {% for enr_horaire in enr_horaires %}
-                            <div class="session-item mb-3 p-3 border rounded {% if enr_horaire.statut_reglement != 'Non réglé' %}bg-light{% endif %}">
-                                <div class="row g-3 align-items-center">
-                                    <!-- Date Field -->
-                                    <div class="col-lg-2 col-md-4">
-                                        <label class="form-label fw-semibold small">Date</label>
-                                        <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter }}"
-                                            name="date_{{ enr_horaire.id }}" value="{{ enr_horaire.date }}"
-                                            {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                        <div class="row">
+                            <!-- Student Info -->
+                            <div class="col-md-6 mb-3">
+                                <h5 class="fw-semibold text-secondary">
+                                    <i class="bi bi-person-circle me-2"></i>Élève
+                                </h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-clock-history me-1"></i>
+                                            Màj: {{ mon_eleve.date_modification|date:"d/m/Y" }}
+                                        </span>
                                     </div>
+                                    <div>
+                                        <h4 class="mb-0">{{ mon_eleve.eleve.user.last_name }} {{ mon_eleve.eleve.user.first_name }}</h4>
+                                        <small class="text-muted">
+                                            <i class="bi bi-telephone me-1"></i>{{ mon_eleve.eleve.numero_telephone }}
+                                            <i class="bi bi-geo-alt ms-2 me-1"></i>{{ mon_eleve.eleve.adresse }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    <!-- Time Fields -->
-                                    <div class="col-lg-2 col-md-4">
-                                        <div class="row g-1">
-                                            <div class="col-6">
-                                                <label class="form-label fw-semibold small">Début</label>
-                                                <input type="text" class="form-control form-control-heure" 
-                                                    name="debut_{{ enr_horaire.id }}" value="{{ enr_horaire.debut }}"
-                                                    {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label fw-semibold small">Fin</label>
-                                                <input type="text" class="form-control form-control-heure" 
-                                                    name="fin_{{ enr_horaire.id }}" value="{{ enr_horaire.fin }}"
-                                                    {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                            <!-- Course Info -->
+                            <div class="col-md-6 mb-3">
+                                <h5 class="fw-semibold text-secondary">
+                                    <i class="bi bi-book me-2"></i>Cours
+                                </h5>
+                                <div class="d-flex flex-column">
+                                    <h4 class="mb-1">{{ mon_cours.matiere }} ({{ mon_cours.niveau }})</h4>
+                                    <div class="d-flex">
+                                        <span class="badge bg-light text-dark me-2">
+                                            <i class="bi bi-currency-euro me-1"></i>{{ mon_cours.prix_heure }} €/h
+                                        </span>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Management Form -->
+                <form method="POST" enctype="multipart/form-data" autocomplete="off" id="sessionForm">
+                    {% csrf_token %}
+
+                    <!-- Sessions List Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>Séances planifiées
+                            </h5>
+                            <span class="badge bg-primary">
+                                {{ page_obj.paginator.count }} séance(s)
+                            </span>
+                        </div>
+                        
+                        <div class="card-body">
+                            {% if request.user.is_authenticated %}
+                                {% for enr_horaire in enr_horaires %}
+                                <div class="session-item mb-3 p-3 border rounded {% if enr_horaire.statut_reglement != 'Non réglé' %}bg-light{% endif %}">
+                                    <div class="row g-3 align-items-center">
+                                        <!-- Date Field -->
+                                        <div class="col-lg-2 col-md-4">
+                                            <label class="form-label fw-semibold small">Date</label>
+                                            <input type="text" class="form-control form-control-date" id="date_id_{{ forloop.counter }}"
+                                                name="date_{{ enr_horaire.id }}" value="{{ enr_horaire.date }}"
+                                                {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                        </div>
+
+                                        <!-- Time Fields -->
+                                        <div class="col-lg-2 col-md-4">
+                                            <div class="row g-1">
+                                                <div class="col-6">
+                                                    <label class="form-label fw-semibold small">Début</label>
+                                                    <input type="text" class="form-control form-control-heure" 
+                                                        name="debut_{{ enr_horaire.id }}" value="{{ enr_horaire.debut }}"
+                                                        {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label fw-semibold small">Fin</label>
+                                                    <input type="text" class="form-control form-control-heure" 
+                                                        name="fin_{{ enr_horaire.id }}" value="{{ enr_horaire.fin }}"
+                                                        {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Content Field -->
-                                    <div class="col-lg-3 col-md-4">
-                                        <label class="form-label fw-semibold small">Contenu</label>
-                                        <input type="text" class="form-control form-control-sm" 
-                                            name="contenu_{{ enr_horaire.id }}" value="{{ enr_horaire.contenu }}"
-                                            {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
-                                    </div>
+                                        <!-- Content Field -->
+                                        <div class="col-lg-3 col-md-4">
+                                            <label class="form-label fw-semibold small">Contenu</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                name="contenu_{{ enr_horaire.id }}" value="{{ enr_horaire.contenu }}"
+                                                {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                        </div>
 
-                                    <!-- Status and Actions -->
-                                    <div class="col-lg-5 col-md-12">
-                                        <div class="row g-2 align-items-end">
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold small">Statut</label>
-                                                <select class="form-select form-select-sm" name="statut_{{ enr_horaire.id }}"
-                                                    {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
-                                                    <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
-                                                    <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réalisé</option>
-                                                </select>
-                                            </div>
-                                            
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold small">Paiement</label>
-                                                <input type="text" class="form-control form-control-sm bg-light" 
-                                                    value="{{ enr_horaire.statut_reglement }}" readonly>
-                                            </div>
-                                            
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-end gap-2">
-                                                    <!-- Bouton Supprimer avec déclencheur de modale -->
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                        data-bs-toggle="modal" data-bs-target="#confirmationModal"
-                                                        data-session-id="{{ enr_horaire.id }}"
-                                                        data-session-date="{{ enr_horaire.date }}"
-                                                        data-session-time="{{ enr_horaire.debut }} - {{ enr_horaire.fin }}"
+                                        <!-- Status and Actions -->
+                                        <div class="col-lg-5 col-md-12">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold small">Statut</label>
+                                                    <select class="form-select form-select-sm" name="statut_{{ enr_horaire.id }}"
                                                         {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
-                                                        <i class="bi bi-trash me-1"></i>Supprimer
-                                                    </button>
-                                                    <button type="submit" class="btn btn-sm btn-warning" 
-                                                        name="btn_modif_{{ enr_horaire.id }}"
-                                                        {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
-                                                        <i class="bi bi-pencil me-1"></i>Modifier
-                                                    </button>
+                                                        <option value="En attente" {% if enr_horaire.statut == 'En attente' %}selected{% endif %}>En attente</option>
+                                                        <option value="Réaliser" {% if enr_horaire.statut == 'Réaliser' %}selected{% endif %}>Réalisé</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold small">Paiement</label>
+                                                    <input type="text" class="form-control form-control-sm bg-light" 
+                                                        value="{{ enr_horaire.statut_reglement }}" readonly>
+                                                </div>
+                                                
+                                                <div class="col-md-6">
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        <!-- Bouton Supprimer avec déclencheur de modale -->
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                            data-session-id="{{ enr_horaire.id }}"
+                                                            data-session-date="{{ enr_horaire.date }}"
+                                                            data-session-time="{{ enr_horaire.debut }} - {{ enr_horaire.fin }}"
+                                                            {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                                            <i class="bi bi-trash me-1"></i>Supprimer
+                                                        </button>
+                                                        <button type="submit" class="btn btn-sm btn-warning" 
+                                                            name="btn_modif_{{ enr_horaire.id }}"
+                                                            {% if enr_horaire.statut_reglement != 'Non réglé' %}disabled{% endif %} {% if not mon_cours.is_active %}disabled{% endif %}>
+                                                            <i class="bi bi-pencil me-1"></i>Modifier
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            {% endfor %}
+                                {% endfor %}
 
-                            <!-- Pagination -->
-                            {% if page_obj.paginator.num_pages > 1 %}
-                            <nav class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    {% if page_obj.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=1" aria-label="First">
-                                                <i class="bi bi-chevron-double-left"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                                <i class="bi bi-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                    {% endif %}
-
-                                    {% for num in page_obj.paginator.page_range %}
-                                        {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                <!-- Pagination -->
+                                {% if page_obj.paginator.num_pages > 1 %}
+                                <nav class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1" aria-label="First">
+                                                    <i class="bi bi-chevron-double-left"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </a>
                                             </li>
                                         {% endif %}
-                                    {% endfor %}
 
-                                    {% if page_obj.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                                <i class="bi bi-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                                                <i class="bi bi-chevron-double-right"></i>
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                                    <i class="bi bi-chevron-double-right"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+
+                                <!-- Add Sessions Button -->
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="submit" class="btn btn-success" name="btn_ajout" {% if not mon_cours.is_active %}disabled{% endif %}>
+                                        <i class="bi bi-plus-circle me-2"></i>Ajouter des séances
+                                    </button>
+                                </div>
                             {% endif %}
-
-                            <!-- Add Sessions Button -->
-                            <div class="d-flex justify-content-end mt-4">
-                                <button type="submit" class="btn btn-success" name="btn_ajout" {% if not mon_cours.is_active %}disabled{% endif %}>
-                                    <i class="bi bi-plus-circle me-2"></i>Ajouter des séances
-                                </button>
-                            </div>
-                        {% endif %}
+                        </div>
                     </div>
-                </div>
-            </form>
-        </main>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
+
 
 <!-- Modal de confirmation de suppression -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
