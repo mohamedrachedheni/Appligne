@@ -1,109 +1,173 @@
+<!-- admin_liste_email_recu.html -->
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Home{% endblock %}
+{% block title %} | Emails reçus{% endblock %}
 
 {% block content %}
-
-
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
+    <div class="row justify-content-center admin-email-container">
+        <div class="col-sm-12 col-md-4 col-lg-2 sidebar-column">
             <!-- début sidebar -->
             {% include 'partials/_sidebar_admin.html' %}
             <!-- fin sidebar -->
         </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
+        <div class="col-sm-12 col-md-8 col-lg-10 content-column wow fadeInUp" data-wow-delay="0.1s">
             <!-- Début page -->
             <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
+            <div class="container-xxl py-1">
                 <div class="container">
                     <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                         <h6 class="section-title bg-white text-center text-primary px-3">Emails reçus</h6>
+                        <h2 class="mb-4">Gestion des messages</h2>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
                     </div>
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
+            
+            <form method="POST" enctype="multipart/form-data" id="professeurForm">
                 {% csrf_token %}
-                {% if  request.user.is_authenticated and request.user.is_staff and request.user.is_active %}
-                
-                    <div class="container-xxl " >
-                        <div class="row justify-content-between g-2 p-3 ">
-                            <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_nouveau">
-                                    Nouveaux
+                {% if request.user.is_authenticated and request.user.is_staff and request.user.is_active %}
+                    <!-- Filtres par statut -->
+                    <div class="container-xxl filter-container">
+                        <div class="row g-2 p-3 status-filters">
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-status btn-new w-100" name="btn_nouveau" id="btn_nouveau">
+                                    <i class="fas fa-envelope me-2"></i> Nouveaux
+                                    <span class="filter-badge" id="badge_nouveau">{{ nouveaux_count|default:'' }}</span>
                                 </button>
                             </div>
-                            <div class="col-lg-3 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_attente">
-                                    En attente
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-status btn-waiting w-100" name="btn_attente" id="btn_attente">
+                                    <i class="fas fa-clock me-2"></i> En attente
+                                    <span class="filter-badge" id="badge_attente">{{ attente_count|default:'' }}</span>
                                 </button>
                             </div>
-                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_ignore">
-                                    Ignorés
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-status btn-ignored w-100" name="btn_ignore" id="btn_ignore">
+                                    <i class="fas fa-times-circle me-2"></i> Ignorés
+                                    <span class="filter-badge" id="badge_ignore">{{ ignores_count|default:'' }}</span>
                                 </button>
                             </div>
-                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_repondu">
-                                    Répondus
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-status btn-answered w-100" name="btn_repondu" id="btn_repondu">
+                                    <i class="fas fa-reply me-2"></i> Répondus
+                                    <span class="filter-badge" id="badge_repondu">{{ repondu_count|default:'' }}</span>
                                 </button>
                             </div>
-                            <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary w-100" name="btn_tous">
-                                    Tous
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-status btn-all w-100" name="btn_tous" id="btn_tous">
+                                    <i class="fas fa-list me-2"></i> Tous
+                                    <span class="filter-badge" id="badge_tous">{{ tous_count|default:'' }}</span>
                                 </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 col-6 d-flex justify-content-center">
+                                <div class="search-box w-100">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" placeholder="Rechercher..." class="form-control" id="emailSearch">
+                                </div>
                             </div>
                         </div>
                     </div>
-                
 
-                    <!-- Liste élèves début -->
-                    <div class="container-xxl py-5">
+                    <!-- Liste emails début -->
+                    <div class="container-xxl py-3">
                         <div class="container">
-                            <div class="container bg-light">
-                                {% if not list_email %}
-                                    <div class="col-md-12 position-relative">
-                                        <h4>Il n'y a pas d'email</h4>
+                            <div class="email-list-container bg-light p-4 rounded shadow-sm">
+                                {% if not page_obj %}
+                                    <div class="no-emails text-center py-5">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <h4 class="text-muted">Aucun email trouvé</h4>
+                                        <p class="text-muted">Vous n'avez aucun email dans cette catégorie.</p>
                                     </div>
                                 {% endif %}
-                                {% for email, id in list_email %}
-                                    <div class="row  " style="margin-bottom: 30px;">
-                                        <div class="col-md-2 col-sm-12 position-relative ">
-                                            <label for="date_telechargement_id_{{ forloop.counter }}" class="form-label">Date d'envoi</label>
-                                            <input type="text" class="form-control form-control-intitule" id="date_telechargement_id_{{ forloop.counter }}"  value="{{email.date_telechargement|date:'d/m/Y'}}" readonly>
-                                        </div>
-                                        <div class="col-md-4 col-sm-12 position-relative">
-                                            <label for="sujet_id_{{ forloop.counter }}" class="form-label">Sujet</label>
-                                            <input type="text" class="form-control form-control-intitule" id="sujet_id_{{ forloop.counter }}"  value="{{email.sujet}}" readonly >
-                                        </div>
-                                        <div class="col-md-3 col-sm-12 position-relative">
-                                            <label for="first_name_id_{{ forloop.counter }}" class="form-label">De la part de:</label>
-                                            <input type="text" class="form-control form-control-intitule" id="first_name_id_{{ forloop.counter }}"
-                                                        value="{{email.user.first_name}}  {{email.user.last_name}}" readonly>
-                                        </div>
-                                        <div class="col-md-3 col-sm-12 position-relative">
-                                            <div class="row  ">
-                                                <label for="reponse_id_{{ forloop.counter }}" class="form-label">Retour</label>
-                                                <div class="col-md-7 col-sm-12 position-relative mb-3">
-                                                    <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{email.suivi|default:''}}" readonly>
+                                
+                                {% for email, id in page_obj %}
+                                    <div class="email-item card mb-3 {% if email.suivi == 'Nouveau' %}email-new{% elif email.suivi == 'Répondu' %}email-answered{% elif email.suivi == 'Ignoré' %}email-ignored{% endif %}">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-lg-1 col-md-2 col-sm-12 text-center mb-2 mb-md-0">
+                                                    <div class="email-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center">
+                                                        {{ email.user.first_name|first|upper }}{{ email.user.last_name|first|upper }}
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-5 col-sm-12 d-flex justify-content-center mb-3">
-                                                    <button type="submit" class="btn btn-primary w-100" name="btn_detaille_email_{{id}}">
-                                                        Détaille
+                                                <div class="col-lg-2 col-md-3 col-sm-12">
+                                                    <label class="form-label small text-muted">Date</label>
+                                                    <div class="email-date fw-bold">{{ email.date_telechargement|date:'d/m/Y' }}</div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-4 col-sm-12">
+                                                    <label class="form-label small text-muted">Sujet</label>
+                                                    <div class="email-subject text-truncate fw-bold">{{ email.sujet }}</div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-3 col-sm-12">
+                                                    <label class="form-label small text-muted">Expéditeur</label>
+                                                    <div class="email-sender">{{ email.user.first_name }} {{ email.user.last_name }}</div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-12">
+                                                    <label class="form-label small text-muted">Statut</label>
+                                                    <div class="email-status">
+                                                        <span class="badge {% if email.suivi == 'Nouveau' %}bg-primary{% elif email.suivi == 'Répondu' %}bg-success{% elif email.suivi == 'Ignoré' %}bg-secondary{% else %}bg-info{% endif %} rounded-pill">
+                                                            {{ email.suivi|default:"Non traité" }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-1 col-md-2 col-sm-12 text-end">
+                                                    <button type="submit" class="btn btn-details btn-sm" name="btn_detaille_email_{{id}}" title="Voir les détails">
+                                                        <i class="fas fa-eye"></i> Détails
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 {% endfor %}
+                                
+
+                                <!-- Pagination -->
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&laquo;</span>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&raquo;</span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+
                             </div>
                         </div>
                     </div>
-                    <!-- Liste élève fin -->
+                    <!-- Liste emails fin -->
                 {% endif %}
+                
+                <!-- Champ caché pour conserver le filtre actuel lors de la pagination -->
+                <input type="hidden" name="current_filter" value="{{ current_filter }}">
             </form>
         </div>
     </div>
@@ -144,7 +208,7 @@
             });
     
             // Ajouter un événement de clic pour les options des menus déroulants
-            const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+            const dropdownItems = document.querySelectorAll('.input-group .dropdown-menu .dropdown-item');
             dropdownItems.forEach(function (dropdownItem) {
                 dropdownItem.addEventListener('click', function (event) {
                     // Empêcher le comportement par défaut (éviter la navigation)
@@ -175,6 +239,373 @@
         });
     </script>
     
-    
-    
+    <!-- Nouveau code JavaScript pour les animations des boutons de tri -->
+    <script>
+        // Animation pour les boutons de filtre
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sélectionner tous les boutons de filtre
+            const filterButtons = document.querySelectorAll('.btn-status');
+            
+            // Ajouter des écouteurs d'événements pour chaque bouton
+            filterButtons.forEach(button => {
+                // Animation au survol
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px) scale(1.05)';
+                    this.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                });
+                
+                // Animation quand la souris quitte le bouton
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                });
+                
+                // Animation au clic
+                button.addEventListener('mousedown', function() {
+                    this.style.transform = 'translateY(1px) scale(0.98)';
+                });
+                
+                button.addEventListener('mouseup', function() {
+                    this.style.transform = 'translateY(-3px) scale(1.05)';
+                });
+            });
+            
+            // Animation pour les badges de comptage
+            const badges = document.querySelectorAll('.filter-badge');
+            badges.forEach(badge => {
+                if (badge.textContent.trim() !== '') {
+                    badge.classList.add('pulse-animation');
+                    
+                    // Arrêter l'animation après 2 secondes
+                    setTimeout(() => {
+                        badge.classList.remove('pulse-animation');
+                    }, 2000);
+                }
+            });
+            
+            // Effet de chargement lors du filtrage
+            const form = document.getElementById('professeurForm');
+            form.addEventListener('submit', function(e) {
+                const clickedButton = e.submitter;
+                if (clickedButton && clickedButton.classList.contains('btn-status')) {
+                    // Ajouter une classe de chargement au bouton cliqué
+                    clickedButton.classList.add('loading');
+                    
+                    // Afficher un indicateur de chargement
+                    const originalText = clickedButton.innerHTML;
+                    clickedButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+                    
+                    // Restaurer le texte original après 2 secondes (au cas où la requête échouerait)
+                    setTimeout(() => {
+                        clickedButton.innerHTML = originalText;
+                        clickedButton.classList.remove('loading');
+                    }, 2000);
+                }
+            });
+            
+            // Recherche en temps réel (simulation)
+            const searchInput = document.getElementById('emailSearch');
+            if (searchInput) {
+                searchInput.addEventListener('focus', function() {
+                    this.parentElement.style.boxShadow = '0 0 0 3px rgba(13, 110, 253, 0.25)';
+                    this.parentElement.style.borderRadius = '8px';
+                });
+                
+                searchInput.addEventListener('blur', function() {
+                    this.parentElement.style.boxShadow = 'none';
+                });
+                
+                // Animation de recherche (juste visuelle)
+                searchInput.addEventListener('input', function() {
+                    if (this.value.length > 2) {
+                        this.parentElement.querySelector('.fa-search').style.color = '#0d6efd';
+                    } else {
+                        this.parentElement.querySelector('.fa-search').style.color = '#6c757d';
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}
+
+<style>
+/* Styles pour l'interface des emails */
+.admin-email-container {
+    min-height: calc(100vh - 150px);
+}
+
+.sidebar-column {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding-right: 0;
+}
+
+.content-column {
+    padding: 20px;
+}
+
+.filter-container {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.status-filters {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.btn-status {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-status::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-status:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+.btn-new {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-waiting {
+    background-color: #ffc107;
+    color: black;
+}
+
+.btn-ignored {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-answered {
+    background-color: #198754;
+    color: white;
+}
+
+.btn-all {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.btn-status:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-status.loading {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.filter-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.filter-badge.pulse-animation {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.search-box {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.search-box .fas.fa-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.search-box input {
+    padding-left: 35px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.email-list-container {
+    border-radius: 12px;
+}
+
+.email-item {
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.email-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.email-new {
+    border-left: 4px solid #0d6efd;
+}
+
+.email-answered {
+    border-left: 4px solid #198754;
+}
+
+.email-ignored {
+    border-left: 4px solid #6c757d;
+}
+
+.email-avatar {
+    width: 45px;
+    height: 45px;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.email-date, .email-subject, .email-sender {
+    font-size: 0.95rem;
+}
+
+.btn-details {
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-details:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.no-emails {
+    padding: 40px 0;
+}
+
+/* Styles pour la pagination */
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    border: none;
+    color: #0d6efd;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar-column {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .status-filters .col-6 {
+        margin-bottom: 10px;
+    }
+    
+    .email-item .col-sm-12 {
+        margin-bottom: 10px;
+    }
+    
+    .btn-details {
+        width: 100%;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .filter-badge {
+        top: -5px;
+        right: -5px;
+        width: 18px;
+        height: 18px;
+        font-size: 0.6rem;
+    }
+}
+</style>

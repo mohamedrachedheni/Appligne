@@ -759,22 +759,26 @@ def nouveau_fichier(request):
     return render(request, 'accounts/nouveau_fichier.html', {'text_email': text_email, 'email_prof': email_prof, 'sujet': sujet})
 
 
+
 def votre_compte(request):
-    # Récupérer l'utilisateur actuel
     user = request.user
-    if user.is_authenticated and user.is_active :
-        # messages.success(request, f"Vous etes connecté. {user.first_name}")
-        # Vérifier si l'utilisateur a un profil de professeur associé
-        if hasattr(user, 'professeur') :
+    if user.is_authenticated and user.is_active:
+        prof = getattr(user, 'professeur', None)
+        eleve = getattr(user, 'eleve', None)
+
+        if prof is not None:
             return redirect('compte_prof')
-        # Vérifier si l'utilisateur a un profil d'élève associé
-        elif hasattr(user, 'eleve'):
+        elif eleve is not None:
             return redirect('compte_eleve')
-        # Si l'utilisateur est superuser et staff
-        elif  user.is_staff :  # à gérer le cas des administrateurs plus tard
+        elif user.is_staff:
             return redirect('compte_administrateur')
+        else:
+            messages.info(request, "Vous n'êtes pas autorisé à accéder au compte")
+            return redirect('signin')
+
     messages.error(request, "Vous devez être connecté pour effectuer cette action.")
     return redirect('signin')
+
 
 def compte_prof(request):
     # Récupérer l'utilisateur actuel
@@ -4029,7 +4033,11 @@ def resume_declaration(request):
                 # Récupération des objets nécessaires à l'enregistrement
                 eleve = Eleve.objects.get(id=detail_demande['eleve_id'])
                 parent = Parent.objects.filter(user=eleve.user).first()
-                mon_eleve = Mes_eleves.objects.get(eleve=eleve, user=user)
+                mon_eleve, created = Mes_eleves.objects.get_or_create(user=user, eleve=eleve)
+                if not mon_eleve.is_active:
+                    mon_eleve.is_active = True
+                    mon_eleve.save()
+                logger.debug("Relation (créée=%s) trouvée avec l'élève : %s", created, mon_eleve)
                 prix_heure_arrondi = round(float(detail_demande['prix_heure']), 2)
 
                 # Création ou récupération du cours existant
@@ -4427,7 +4435,10 @@ def ajout_cours_email(request):
     # --- Redirection vers la planification des cours ---
     if 'btn_cours_planifier' in request.POST:
         try:
-            mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
+            mon_eleve = Mes_eleves.objects.filter(user=user, eleve=eleve, is_active=True).first()
+            if not mon_eleve:
+                messages.error(request, " Cet élève n’est pas encore inscrit dans la liste « Mes élèves ».")
+                return redirect('ajout_cours_email')
             logger.debug("Relation active trouvée avec l'élève : %s", mon_eleve)
             request.session['mon_eleve_id'] = mon_eleve.id
             return redirect('demande_reglement')

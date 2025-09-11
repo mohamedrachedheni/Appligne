@@ -1,212 +1,467 @@
-<!-- Sidebar Elève -->
+<!-- _sidebare_eleve -->
 {% load static %}
-<!-- Sidebar Professionnelle -->
-<nav id="sidebar" style="background-color: #e3f2fd;">
-    <div class="p-4 pt-5">
-        <div class="sidebar-header mb-4 text-center">
-            <h4 class="fw-bold">Menu Élève</h4>
-            <hr class="border-2 border-top border-dark opacity-75">
+    <!-- Début de la sidebar améliorée pour élève -->
+    <nav id="eleve-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>Menu élève</h3>
+            <button type="button" id="sidebarCollapse" class="btn btn-sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-        
-        <ul class="list-unstyled components">
-            <!-- Section Profil -->
-            <li class="mb-2">
-                <a href="#profileMenu" data-toggle="collapse" aria-expanded="false" 
-                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
-                    <span><i class="fas fa-user-circle me-2"></i>Mon Profil</span>
-                    <i class="fas fa-angle-down"></i>
-                </a>
-                <ul class="collapse list-unstyled ps-3 mt-2" id="profileMenu">
-                    <li class="mb-1">
-                        <a href="{% url 'compte_eleve' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-eye me-2"></i>Voir mon compte
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'modifier_mot_pass' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-key me-2"></i>Modifier mot de passe
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            
-            <!-- Section Coordonnées -->
-            <li class="mb-2">
-                <a href="#coordonneesMenu" data-toggle="collapse" aria-expanded="false" 
-                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
-                    <span><i class="fas fa-address-book me-2"></i>Mes Coordonnées</span>
-                    <i class="fas fa-angle-down"></i>
-                </a>
-                <ul class="collapse list-unstyled ps-3 mt-2" id="coordonneesMenu">
-                    <li class="mb-1">
-                        <a href="{% url 'modifier_coordonnee_eleve' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-user-edit me-2"></i>Coordonnées élève
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'modifier_coordonnee_parent' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-user-friends me-2"></i>Coordonnées parent
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            
-            <!-- Section Cours -->
-            <li class="mb-2">
-                <a href="#coursMenu" data-toggle="collapse" aria-expanded="false" 
-                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
-                    <span><i class="fas fa-book-open me-2"></i>Mes Cours</span>
-                    <i class="fas fa-angle-down"></i>
-                </a>
-                <ul class="collapse list-unstyled ps-3 mt-2" id="coursMenu">
-                    <li class="mb-1">
-                        <a href="{% url 'liste_prof' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-plus-circle me-2"></i>Demander un cours
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'email_recu' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-envelope me-2"></i>Emails reçus
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'liste_paiement_eleve' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-receipt me-2"></i>Historique paiements
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'demande_paiement_eleve' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-file-invoice-dollar me-2"></i>Demandes de paiement
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'liste_remboursement' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-money-bill-wave me-2"></i>Remboursements
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            
-            <!-- Section Support -->
-            <li class="mb-2">
-                <a href="#supportMenu" data-toggle="collapse" aria-expanded="false" 
-                   class="dropdown-toggle d-flex justify-content-between align-items-center text-dark fw-bold">
-                    <span><i class="fas fa-headset me-2"></i>Support</span>
-                    <i class="fas fa-angle-down"></i>
-                </a>
-                <ul class="collapse list-unstyled ps-3 mt-2" id="supportMenu">
-                    <li class="mb-1">
-                        <a href="{% url 'nouvelle_reclamation' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-plus me-2"></i>Nouvelle réclamation
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'reclamations' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-list me-2"></i>Mes réclamations
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'temoignage_eleve' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-comment-alt me-2"></i>Laisser un témoignage
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'admin_faq' %}" 
-                           class="d-block py-2 text-dark hover-blue">
-                            <i class="fas fa-question-circle me-2"></i>FAQ / Assistance
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'index' %}" 
-                           class="d-block py-2 text-primary hover-blue">
-                            <img src="{% static 'img/logo.png' %}" alt="Appligne" height="30" class="me-2">Page principale
-                        </a>
-                    </li>
-                    <li class="mb-1">
-                        <a href="{% url 'logout' %}" 
-                           class="d-block py-2 text-danger hover-blue">
-                            <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-</nav>
 
-<style>
-    #sidebar {
-        min-width: 280px;
-        max-width: 280px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-        background-color: #e3f2fd !important; /* Force le bleu clair */
+        <div class="sidebar-content">
+            <ul class="list-unstyled components">
+                <!-- Section Profil -->
+                <li class="sidebar-section">
+                    <a href="#profileMenu" data-toggle="collapse" aria-expanded="false" class="sidebar-header">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        <span>Mon Profil</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="collapse list-unstyled sidebar-submenu" id="profileMenu">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-eye mr-2"></i>
+                                Voir mon compte
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-key mr-2"></i>
+                                Modifier mot de passe
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Section Coordonnées -->
+                <li class="sidebar-section">
+                    <a href="#coordonneesMenu" data-toggle="collapse" aria-expanded="false" class="sidebar-header">
+                        <i class="fas fa-address-book mr-2"></i>
+                        <span>Mes Coordonnées</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="collapse list-unstyled sidebar-submenu" id="coordonneesMenu">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-user-edit mr-2"></i>
+                                Coordonnées élève
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-user-friends mr-2"></i>
+                                Coordonnées parent
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Section Cours -->
+                <li class="sidebar-section">
+                    <a href="#coursMenu" data-toggle="collapse" aria-expanded="false" class="sidebar-header">
+                        <i class="fas fa-book-open mr-2"></i>
+                        <span>Mes Cours</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="collapse list-unstyled sidebar-submenu" id="coursMenu">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Demander un cours
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-envelope mr-2"></i>
+                                Emails reçus
+                                <span class="badge badge-pill badge-primary notification-badge">5</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-receipt mr-2"></i>
+                                Historique paiements
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-file-invoice-dollar mr-2"></i>
+                                Demandes de paiement
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-money-bill-wave mr-2"></i>
+                                Remboursements
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Section Support -->
+                <li class="sidebar-section">
+                    <a href="#supportMenu" data-toggle="collapse" aria-expanded="false" class="sidebar-header">
+                        <i class="fas fa-headset mr-2"></i>
+                        <span>Support</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="collapse list-unstyled sidebar-submenu" id="supportMenu">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-plus mr-2"></i>
+                                Nouvelle réclamation
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-list mr-2"></i>
+                                Mes réclamations
+                                <span class="badge badge-pill badge-danger notification-badge">2</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-comment-alt mr-2"></i>
+                                Laisser un témoignage
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">
+                                <i class="fas fa-question-circle mr-2"></i>
+                                FAQ / Assistance
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Liens importants -->
+                <li class="sidebar-section">
+                    <a href="#" class="sidebar-header">
+                        <i class="fas fa-home mr-2"></i>
+                        <span>Page principale</span>
+                    </a>
+                </li>
+                
+                <li class="sidebar-section">
+                    <a href="#" class="sidebar-header system-admin-link">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <span>Se déconnecter</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">Élève</div>
+                    <div class="user-role">Utilisateur</div>
+                </div>
+            </div>
+            <a href="#" class="logout-btn">
+                <i class="fas fa-sign-out-alt mr-1"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </nav>
+
+    <style>
+    /* Styles pour la sidebar améliorée */
+    .sidebar {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: #fff;
+        width: 280px;
+        min-height: 100vh;
+        transition: all 0.3s;
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+        position: fixed;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
     }
     
-    #sidebar .sidebar-header h4 {
-        color: #0d6efd; /* Bleu primaire */
-        font-weight: 700;
+    .sidebar.collapsed {
+        width: 80px;
     }
     
-    #sidebar .hover-blue:hover {
-        color: #0d6efd !important; /* Bleu primaire au survol */
-        text-decoration: none;
-        padding-left: 5px;
-        background-color: rgba(13, 110, 253, 0.1);
+    .sidebar-header {
+        padding: 20px 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     
-    #sidebar .dropdown-toggle {
-        color: #212529 !important; /* Noir pour meilleure lisibilité */
-        transition: all 0.2s;
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
     }
     
-    #sidebar .dropdown-toggle:hover {
-        color: #0d6efd !important;
+    .btn-sidebar-toggle {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
     }
     
-    #sidebar .active {
-        background-color: rgba(13, 110, 253, 0.15);
-        border-left: 3px solid #0d6efd;
-    }
-    
-    #sidebar a {
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    
-    #sidebar i {
-        color: #0d6efd; /* Icônes en bleu */
-        width: 20px;
-        text-align: center;
+    .sidebar-content {
+        flex: 1;
+        padding: 15px 0;
+
+        /* ✅ Forcer le scroll vertical si contenu dépasse */
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(100vh - 70px); /* 70px ≈ hauteur du header de la sidebar */
     }
 
-    .dropdown-toggle::after {
-        display: none !important;
+    .sidebar-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    
+    .sidebar-section {
+        margin-bottom: 5px;
     }
     
-    @media (max-width: 991.98px) {
-        #sidebar {
-            position: fixed;
-            z-index: 1000;
-            margin-left: -280px;
+    .sidebar-header {
+        padding: 12px 15px;
+        color: #fff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar-header:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-left: 3px solid #3498db;
+    }
+    
+    .sidebar-header[aria-expanded="true"] {
+        background: rgba(255, 255, 255, 0.15);
+        border-left: 3px solid #2ecc71;
+    }
+    
+    .sidebar-header[aria-expanded="true"] .dropdown-icon {
+        transform: rotate(180deg);
+    }
+    
+    .sidebar-submenu {
+        padding: 5px 0;
+        background: rgba(0, 0, 0, 0.15);
+    }
+    
+    .sidebar-subheader {
+        padding: 8px 15px 8px 30px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #ecf0f1;
+        opacity: 0.7;
+        letter-spacing: 0.5px;
+    }
+    
+    .sidebar-item {
+        padding: 0;
+    }
+    
+    .sidebar-link {
+        padding: 10px 15px 10px 30px;
+        color: #ecf0f1;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .sidebar-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .sidebar-link:before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        height: 6px;
+        width: 6px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+    }
+    
+    .sidebar-link:hover:before {
+        background: #3498db;
+    }
+    
+    .notification-badge {
+        margin-left: auto;
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+    
+    .system-admin-link {
+        background: rgba(231, 76, 60, 0.2);
+        border-left: 3px solid #e74c3c !important;
+    }
+    
+    .system-admin-link:hover {
+        background: rgba(231, 76, 60, 0.3) !important;
+    }
+    
+    .sidebar-footer {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .user-avatar {
+        font-size: 2rem;
+        margin-right: 10px;
+        color: #ecf0f1;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .user-role {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+    
+    .logout-btn {
+        display: block;
+        width: 100%;
+        padding: 8px 15px;
+        text-align: center;
+        color: #ecf0f1;
+        background: rgba(231, 76, 60, 0.2);
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .logout-btn:hover {
+        background: rgba(231, 76, 60, 0.4);
+        color: #fff;
+        text-decoration: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 80px;
         }
-        #sidebar.active {
-            margin-left: 0;
+        
+        .sidebar:not(.collapsed) {
+            width: 280px;
+        }
+        
+        .sidebar-header h3, 
+        .sidebar-header span,
+        .user-details,
+        .logout-btn span {
+            display: none;
+        }
+        
+        .sidebar:not(.collapsed) .sidebar-header h3,
+        .sidebar:not(.collapsed) .sidebar-header span,
+        .sidebar:not(.collapsed) .user-details,
+        .sidebar:not(.collapsed) .logout-btn span {
+            display: block;
+        }
+        
+        .sidebar-header {
+            justify-content: center;
+        }
+        
+        .sidebar:not(.collapsed) .sidebar-header {
+            justify-content: space-between;
         }
     }
+
+    /* Sidebar complètement masqué en petit écran */
+    @media (max-width: 768px) {
+        .sidebar.collapsed {
+            width: 0 !important;
+            left: -280px;
+            overflow: hidden;
+        }
+    }
+
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle sidebar collapse (⚡ ici on cible "eleve-sidebar")
+        document.getElementById('sidebarCollapse').addEventListener('click', function() {
+            document.getElementById('eleve-sidebar').classList.toggle('collapsed');
+        });
+        
+        // Garder le sous-menu ouvert si l'élément est actif
+        const currentUrl = window.location.pathname;
+        const sidebarLinks = document.querySelectorAll('#eleve-sidebar .sidebar-link');
+        
+        sidebarLinks.forEach(link => {
+            if (link.getAttribute('href') === currentUrl) {
+                link.classList.add('active');
+                // Remonter pour ouvrir les menus parents
+                let parentMenu = link.closest('.sidebar-submenu');
+                while (parentMenu) {
+                    const parentToggle = document.querySelector(`[href="#${parentMenu.id}"]`);
+                    if (parentToggle) {
+                        parentToggle.setAttribute('aria-expanded', 'true');
+                        parentMenu.classList.add('show');
+                    }
+                    parentMenu = parentMenu.parentElement.closest('.sidebar-submenu');
+                }
+            }
+        });
+        
+        // Gestion responsive
+        function handleResize() {
+            const sidebar = document.getElementById('eleve-sidebar');
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Appel initial
+    });
+</script>

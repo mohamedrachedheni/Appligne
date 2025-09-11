@@ -1,160 +1,159 @@
 {% extends 'base_2.html' %}
 {% load static %}
-{% block title %} | Home{% endblock %}
+{% block title %} | Accueil{% endblock %}
 
 {% block content %}
 
-
-
-<!-- Cherchez votre prof début -->
+<!-- Recherche de professeur - Début -->
 <div class="contaire">
-    <form method="POST" enctype="multipart/form-data" autocomplete="off" id="liste_prof_id" action="{% url 'index' %}" >
+    <form method="POST" enctype="multipart/form-data" autocomplete="off" id="liste_prof_id" action="{% url 'index' %}">
         {% csrf_token %}
-    <!-- Header début -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="col-md-12">
-                {% include 'partials/_alerts.html' %}
-            </div>
-            <div class="container   shadow-sm rounded mb-4 p-4 container-recherche " >
-                <div class="container " >
-                    <div class="row g-1 ">
-                        <!-- format cours -->
-                        <div class="col-md-4 position-relative">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="a_domicile" id="a_domicile_id" {% if radio_name == 'a_domicile' %} checked {% endif %} >
-                                <label class="form-check-label text-white " for="a_domicile_id">
-                                Cours particuliers à domicile
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="webcam" id="webcam_id" {% if radio_name == 'webcam' %} checked {% endif %} >
-                                <label class="form-check-label text-white " for="webcam_id">
-                                Cours particuliers en ligne
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="stage" id="stage_id" {% if radio_name == 'stage' %} checked {% endif %} >
-                                <label class="form-check-label text-white " for="stage_id">
-                                Stage Vacances scolaires
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="stage_webcam" id="stage_webcam_id" {% if radio_name == 'stage_webcam' %} checked {% endif %} >
-                                <label class="form-check-label text-white " for="stage_webcam_id">
-                                Cours en groupe à distance par webcam
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-8 position-relative">
-                            <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-                                style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                                <h5 class="  text-center  px-3 text-white">Recherchez maintenant</h5>
-                                <h3 class="mb-1 text-white">Votre meilleur professeur</h3>
-                            </div>
-                        </div>
-                        <!-- Matière -->
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label text-white ">Matière</label>
-                            <div class="dropdown">
-                                <div class="input-group">
-                                    <input type="text" class="form-control"
-                                        id="matiere_id"
-                                        name="matiere" value="{{matiere_defaut}}" readonly >
-                                    <ul class="dropdown-menu"
-                                        id="dropdownMenu_matiere_id"
-                                        style="max-height: 300px; overflow-y:auto; width: 300px;" 
-                                        aria-labelledby="dropdownMenu_matiere_id">
-                                        {% for une_matiere in matieres %}
-                                        <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="une_matiere_{{ forloop.counter }}"
-                                                data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                    <input type="hidden" id="selected_experience_id">
+        <!-- En-tête - Début -->
+        <div class="container-fluid bg-primary py-5 mb-5 page-header">
+            <div class="container py-5">
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
+                </div>
+                <div class="container shadow-sm rounded mb-4 p-4 container-recherche">
+                    <div class="container">
+                        <div class="row g-1">
+                            <!-- Format cours -->
+                            <div class="col-md-4 position-relative">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="a_domicile" id="a_domicile_id" {% if radio_name == 'a_domicile' %} checked {% endif %}>
+                                    <label class="form-check-label text-white" for="a_domicile_id">
+                                        Cours particuliers à domicile
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="webcam" id="webcam_id" {% if radio_name == 'webcam' %} checked {% endif %}>
+                                    <label class="form-check-label text-white" for="webcam_id">
+                                        Cours particuliers en ligne
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="stage" id="stage_id" {% if radio_name == 'stage' %} checked {% endif %}>
+                                    <label class="form-check-label text-white" for="stage_id">
+                                        Stage Vacances scolaires
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="stage_webcam" id="stage_webcam_id" {% if radio_name == 'stage_webcam' %} checked {% endif %}>
+                                    <label class="form-check-label text-white" for="stage_webcam_id">
+                                        Cours en groupe à distance par webcam
+                                    </label>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Niveaux -->
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label text-white ">Niveau</label>
-                            <div class="dropdown">
-                                <div class="input-group">
-                                    <input type="text" class="form-control"
-                                        id="niveau_id"
-                                        name="niveau" value="{{niveau_defaut}}" readonly >
-                                    <ul class="dropdown-menu"
-                                        id="dropdownMenu_niveau_id"
-                                        style="max-height: 300px; overflow-y:auto; width: 300px;" 
-                                        aria-labelledby="dropdownMenu_niveau_id">
-                                        {% for niveau in niveaux %}
-                                        <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="niveau_{{ forloop.counter }}"
-                                                data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                    <input type="hidden" id="selected_niveau_id">
+                            <div class="col-md-8 position-relative">
+                                <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
+                                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                                    <h5 class="text-center px-3 text-white">Recherchez maintenant</h5>
+                                    <h3 class="mb-1 text-white">Votre meilleur professeur</h3>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Régions -->
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label text-white ">Région</label>
-                            <div class="dropdown">
-                                <div class="input-group">
-                                    <input type="text" class="form-control form-control-input"
-                                        id="region_id"
-                                        name="region" value="{{region_defaut}}" readonly >
-                                    <ul class="dropdown-menu"
-                                        id="dropdownMenu_region_id"
-                                        style="max-height: 300px; overflow-y:auto; width: 200px;" 
-                                        aria-labelledby="dropdownMenu_region_id">
-                                        {% for region in regions %}
-                                        <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="region_{{ forloop.counter }}"
-                                                data-value="{{ region.region }}">{{ region.region }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                    <input type="hidden" id="selected_region_id">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Département -->
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label text-white ">Département</label>
-                            <div class="row g-1">
-                                <div class="col-md-9 position-relative">
-                                    <div class="dropdown">
-                                        <div class="input-group">
-                                            <input type="text" class="form-control form-control-input "
-                                                id="departement_id"
-                                                name="departement" value="{{departement_defaut}}" readonly >
-                                            <ul class="dropdown-menu"
-                                                id="dropdownMenu_departement_id"
-                                                style="max-height: 300px; overflow-y:auto; width: 200px;" 
-                                                aria-labelledby="dropdownMenu_departement_id">
-                                                {% for departement in departements %}
-                                                <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="departement_{{ forloop.counter }}"
-                                                        data-value="{{ departement.departement }}">{{ departement.departement }}</a></li>
-                                                {% endfor %}
-                                            </ul>
-                                            <input type="hidden" id="selected_departement_id">
-                                        </div>
+                            <!-- Matière -->
+                            <div class="col-md-3 position-relative">
+                                <label class="form-label text-white">Matière</label>
+                                <div class="dropdown">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                            id="matiere_id"
+                                            name="matiere" value="{{matiere_defaut}}" readonly>
+                                        <ul class="dropdown-menu"
+                                            id="dropdownMenu_matiere_id"
+                                            style="max-height: 300px; overflow-y:auto; width: 300px;" 
+                                            aria-labelledby="dropdownMenu_matiere_id">
+                                            {% for une_matiere in matieres %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="une_matiere_{{ forloop.counter }}"
+                                                    data-value="{{ une_matiere.matiere }}">{{ une_matiere.matiere }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <input type="hidden" id="selected_experience_id">
                                     </div>
                                 </div>
-                                <!-- Bouton Rechercher -->
-                                <div class="col-md-3 d-flex justify-content-center position-relative  ">
-                                    <button class="btn btn-primary" type="submit" name="btn_rechercher">Rechercher</button>
+                            </div>
+                            <!-- Niveaux -->
+                            <div class="col-md-3 position-relative">
+                                <label class="form-label text-white">Niveau</label>
+                                <div class="dropdown">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                            id="niveau_id"
+                                            name="niveau" value="{{niveau_defaut}}" readonly>
+                                        <ul class="dropdown-menu"
+                                            id="dropdownMenu_niveau_id"
+                                            style="max-height: 300px; overflow-y:auto; width: 300px;" 
+                                            aria-labelledby="dropdownMenu_niveau_id">
+                                            {% for niveau in niveaux %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="niveau_{{ forloop.counter }}"
+                                                    data-value="{{ niveau.niveau }}">{{ niveau.niveau }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <input type="hidden" id="selected_niveau_id">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>                        
+                            <!-- Régions -->
+                            <div class="col-md-3 position-relative">
+                                <label class="form-label text-white">Région</label>
+                                <div class="dropdown">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-input"
+                                            id="region_id"
+                                            name="region" value="{{region_defaut}}" readonly>
+                                        <ul class="dropdown-menu"
+                                            id="dropdownMenu_region_id"
+                                            style="max-height: 300px; overflow-y:auto; width: 200px;" 
+                                            aria-labelledby="dropdownMenu_region_id">
+                                            {% for region in regions %}
+                                            <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="region_{{ forloop.counter }}"
+                                                    data-value="{{ region.region }}">{{ region.region }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <input type="hidden" id="selected_region_id">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Département -->
+                            <div class="col-md-3 position-relative">
+                                <label class="form-label text-white">Département</label>
+                                <div class="row g-1">
+                                    <div class="col-md-9 position-relative">
+                                        <div class="dropdown">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control form-control-input"
+                                                    id="departement_id"
+                                                    name="departement" value="{{departement_defaut}}" readonly>
+                                                <ul class="dropdown-menu"
+                                                    id="dropdownMenu_departement_id"
+                                                    style="max-height: 300px; overflow-y:auto; width: 200px;" 
+                                                    aria-labelledby="dropdownMenu_departement_id">
+                                                    {% for departement in departements %}
+                                                    <li><a class="dropdown-item dropdown-item-demande" href="#" data-target="departement_{{ forloop.counter }}"
+                                                            data-value="{{ departement.departement }}">{{ departement.departement }}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="selected_departement_id">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Bouton Rechercher -->
+                                    <div class="col-md-3 d-flex justify-content-center position-relative">
+                                        <button class="btn btn-primary" type="submit" name="btn_rechercher">Rechercher</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Header fin -->
-</form>
+        <!-- En-tête - Fin -->
+    </form>
 </div>
-<!--Cherchez votre prof fin -->
-<!-- Service début -->
+<!-- Recherche de professeur - Fin -->
+
+<!-- Services - Début -->
 <div class="container-xxl py-5">
     <div class="container">
         <div class="row g-4">
@@ -190,16 +189,16 @@
                     <div class="p-4">
                         <i class="fa fa-3x fa-users-rectangle text-primary mb-4"></i>
                         <h5 class="mb-3">Stage en ligne</h5>
-                        <p>En s’inscrivant dans nos stages en ligne en petit groupe : Des cours interactifs, personnalisés et adaptés au rythme d'apprentissage de vos enfants, vous maximisez leur potentiel académique, depuis le confort de la maison.</p>
+                        <p>En s'inscrivant dans nos stages en ligne en petit groupe : Des cours interactifs, personnalisés et adaptés au rythme d'apprentissage de vos enfants, vous maximisez leur potentiel académique, depuis le confort de la maison.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Service fin -->
+<!-- Services - Fin -->
 
-<!-- Comment ça marche début -->
+<!-- Comment ça marche - Début -->
 <div class="container-xxl py-5 category">
     <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
@@ -219,23 +218,23 @@
             </div>
             <div class="row g-3">
                 <div class="col-lg-4 col-sm-12">
-                    <a href="{% url 'liste_prof' %}">
-                        <div class="service-item text-center pt-3">
-                            <div class="p-4">
-                                <h5 class="mb-3">Recherchez votre cours</h5>
-                                <p>Identifiez en quelques instants le stage ou le cours particulier qui vous convient.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <a href="{% url 'nouveau_compte_eleve' %}"">
+                    <a href="{% url 'nouveau_compte_eleve' %}">
                         <div class="btn" data-bs-toggle="modal" data-bs-target="#creerCompteClient">
                             <div class="service-item text-center pt-3">
                                 <div class="p-4">
                                     <h5 class="mb-3">Créez votre compte</h5>
                                     <p>Remplissez vos infos de compte en 2 minutes.</p>
                                 </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <a href="{% url 'liste_prof' %}">
+                        <div class="service-item text-center pt-3">
+                            <div class="p-4">
+                                <h5 class="mb-3">Sélectionnez facilement un professeur</h5>
+                                <p>adapté à votre niveau, à la matière, au type de cours, à votre localisation et à son profil.</p>
                             </div>
                         </div>
                     </a>
@@ -252,15 +251,15 @@
         </div>
     </div>
 </div>
-<!-- Comment ça marche fin -->
+<!-- Comment ça marche - Fin -->
 
-<!-- Devenir Prof début -->
+<!-- Devenir Prof - Début -->
 <div class="container-xxl py-5">
     <div class="container">
         <div class="row g-5">
             <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="min-height: 400px;">
                 <div class="position-relative h-100">
-                    <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg' %}" alt="" style="object-fit: cover;">
+                    <img class="img-fluid position-absolute w-100 h-100" src="{% static 'img/about.jpg' %}" alt="Devenir professeur" style="object-fit: cover;">
                 </div>
             </div>
             <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
@@ -289,32 +288,32 @@
                         <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>La zone d'activité</p>
                     </div>
                 </div>
-                <div class="btn  d-flex justify-content-center position-relative" data-bs-target="#creerCompteProf" data-bs-toggle="modal">
+                <div class="btn d-flex justify-content-center position-relative" data-bs-target="#creerCompteProf" data-bs-toggle="modal">
                     <a href="{% url 'nouveau_compte_prof' %}" class="btn btn-primary py-3 px-5 mt-2">S'inscrire en tant que prof</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Devenir Prof fin -->
+<!-- Devenir Prof - Fin -->
 
-<!-- FAQs début -->
+<!-- FAQ - Début -->
 <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
     <div class="container">
         <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
             <h1>Foire Aux Questions</h1>
         </div>
-    <div class="col-md-12">
-        {% include 'partials/_alerts.html' %}
-    </div>
-        <div class="container bg-light" >
-            <div class="row justify-content-between g-2 p-3 " >
+        <div class="col-md-12">
+            {% include 'partials/_alerts.html' %}
+        </div>
+        <div class="container bg-light">
+            <div class="row justify-content-between g-2 p-3">
                 <div class="col-lg-2 col-sm-12 d-flex justify-content-center">
-                    <label for="role" class="form-label" >Filtrer par public :</label>
+                    <label for="role" class="form-label">Filtrer par public :</label>
                 </div>
                 <div class="col-lg-6 col-sm-12 d-flex justify-content-center">
-                    <select id="role" name="role" class="form-select" >
+                    <select id="role" name="role" class="form-select">
                         {% if not request.user.eleve and not request.user.professeur and request.user.is_authenticated %}
                         <option value="staff">Staff</option>
                         {% endif %}
@@ -335,7 +334,7 @@
                 <div class="col-lg-4 col-sm-12 d-flex justify-content-center">
                     <input type="text" id="keyword" name="keyword" placeholder="Mot-clé..." class="form-control" />
                 </div>
-                <div id="faq-container"  >
+                <div id="faq-container">
                     {% include 'pages/faq_items.html' %}
                 </div>
                 <div id="faq-pagination">
@@ -345,8 +344,9 @@
         </div>                   
     </div>
 </div>
-<!--FAQs fin-->
-<!-- Testimonial Start -->
+<!-- FAQ - Fin -->
+
+<!-- Témoignages - Début -->
 <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
     <div class="container">
         <div class="text-center">
@@ -358,45 +358,28 @@
             <div class="testimonial-item text-center">
                 <a href="{% url 'profil_prof' id_user=temoignage.user_prof.id %}">
                     <img class="border rounded-circle p-2 mx-auto mb-3" src="{{ temoignage.user_prof.professeur.photo.url }}"
-                    style="width: 80px; height: 80px;">
+                    style="width: 80px; height: 80px;" alt="Photo de {{ temoignage.user_prof.username }}">
                 </a>
                 <h5 class="mb-0">{{temoignage.user_eleve.username}}</h5>
                 <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0" style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal; ">
+                    <p class="mb-0" style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: normal;">
                         {{temoignage.text_eleve|slice:":300" }}
                     </p>
                 </div>
             </div>
             {% endfor %}
-            <!-- <div class="testimonial-item text-center">
-                <h5 class="mb-0">Kenza</h5>
-                <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0 temoignage-text">Actuellement élève en PC, les cours proposés par son prof sont le moyen pour moi d'appliquer et d'approfondir les notions étudiées en cours par le biais d'exercices bien choisis.</p>
-                </div>
-            </div>
-            <div class="testimonial-item text-center">
-                <h5 class="mb-0 temoignage-text">Amalia</h5>
-                <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0">Il est très investi dans son travail et dans la réussite de ses élèves. Il est très pédagogue et à l'écoute. C'est un vrai plaisir de suivre ses méthodes et de progresser à ses côtés !</p>
-                </div>
-            </div>
-            <div class="testimonial-item text-center">
-                <h5 class="mb-0 temoignage-text">Vincent</h5>
-                <div class="testimonial-text bg-light text-center p-4">
-                    <p class="mb-0">Notre fils est élève de prépa PC. Il rencontrait des difficultés en maths lors de sa première année. L'aide de son prof pendant les vacances d'été et depuis le début de l'année a déjà porté ses fruits. Il se sent plus confiant et a le sentiment d'avoir renforcé sa méthode de travail.</p>
-                </div>
-            </div> -->
         </div>
     </div>
 </div>
-<!-- Testimonial End -->
+<!-- Témoignages - Fin -->
 
-<!-- Back to Top -->
+<!-- Bouton retour en haut -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
 
 {% endblock %}
+
 {% block javascript %}
 <script src="{% static 'js/Code_en_plus_liste_prof.js' %}"></script>
 <script src="{% static 'js/faq.js' %}"></script>
-
+<script></script>
 {% endblock %}

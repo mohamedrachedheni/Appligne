@@ -1,97 +1,465 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Home{% endblock %}
+{% block title %} | Répondre à l'email{% endblock %}
 
 {% block content %}
-
-
-    <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-4 col-lg-2  ">
-            <!-- début sidebar -->
-            {% include 'partials/_sidebar_admin.html' %}
-            <!-- fin sidebar -->
-        </div>
-        <div class=" col-sm-12 col-md-8 col-lg-10  wow fadeInUp  " data-wow-delay="0.1s">
-            <!-- Début page -->
-            <!-- formulaire créer compte prof début -->
-            <div class="container-xxl py-1" >
-                <div class="container">
-                    <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
-                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                        <h6 class="section-title bg-white text-center text-primary px-3">Répondre à l'email</h6>
-                    </div>
-                    <div class="col-md-12">
-                        {% include 'partials/_alerts.html' %}
-                    </div>
+<div class="row justify-content-center admin-email-container">
+    <div class="col-sm-12 col-md-4 col-lg-2 sidebar-column">
+        <!-- début sidebar -->
+        {% include 'partials/_sidebar_admin.html' %}
+        <!-- fin sidebar -->
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 content-column wow fadeInUp" data-wow-delay="0.1s">
+        <!-- Début page -->
+        <div class="container-xxl py-1">
+            <div class="container">
+                <div class="text-center wow fadeInUp py-1" data-wow-delay="0.1s"
+                    style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                    <h6 class="section-title bg-white text-center text-primary px-3">Répondre à l'email</h6>
+                    <h2 class="mb-3">Composer votre réponse</h2>
+                    <p class="text-muted">Rédigez votre message en réponse à l'email reçu</p>
+                </div>
+                <div class="col-md-12">
+                    {% include 'partials/_alerts.html' %}
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data" id="professeurForm" >
-                {% csrf_token %}
-                {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="emailReplyForm">
+            {% csrf_token %}
+            {% if request.user.is_authenticated and request.user.is_staff and request.user.is_active %}
+                <!-- Email details and reply form -->
+                <div class="container-xxl py-3">
+                    <div class="container">
+                        <div class="email-reply-container bg-light p-4 rounded shadow-sm">
+                            <!-- Email Header -->
+                            <div class="email-header mb-4 p-3 bg-white rounded shadow-sm">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="email-avatar bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                        {{ email_user|first|upper }}
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0">Répondre à {{ email_user }}</h5>
+                                        <small class="text-muted">Expéditeur original</small>
+                                    </div>
+                                </div>
+                                <div class="email-meta">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Sujet original:</strong> {{ sujet }}</p>
+                                        </div>
+                                        <div class="col-md-6 text-md-end">
+                                            <p class="mb-1 text-muted"><small>Réponse à envoyer en tant que {{ request.user.email }}</small></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- Liste élèves début -->
-                    <div class="container-xxl py-5">
-                        <div class="container">
-                            <div class="container bg-light">
+                            <!-- Reply Form -->
+                            <div class="email-form">
                                 <div class="row g-4">
                                     <div class="col-12 position-relative">
-                                        <label for="email_adresse_id" class="form-label">Email expéditeur</label>
-                                        <input type="text" class="form-control" id="email_adresse_id"
-                                             name="email_adresse" value="{{email_user}}" >
-                                    </div>
-                                    <div class="col-12 position-relative">
-                                        <label for="sujet_id" class="form-label">Sujet de l'email</label>
-                                        <input type="text" class="form-control" id="sujet_id"
-                                             name="sujet" value="{{sujet}}" >
-                                    </div>
-                                    <div class="col-12 position-relative">
-                                        <label for="text_email_id" class="form-label">Contenu de votre email à envoyer :</label>
-                                        <textarea class="form-control profil" id="text_email_id" rows="4" name="text_email" >
-                                                {{text_email}}
-                                            </textarea>
-                                            
-                                            
-                                    </div>
-                                    <div class="row justify-content-between g-2 p-3 ">
-                                        <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                            <a class="btn btn-primary w-100" href="{% url 'admin_liste_email_recu' %}"><span style="color: white;">Liste des emails</span></a>
+                                        <label for="email_adresse_id" class="form-label fw-bold">Destinataire <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                            <input type="email" class="form-control" id="email_adresse_id" name="email_adresse" value="{{ email_user }}" required>
                                         </div>
-                                        <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
-                                            <button type="submit" class="btn btn-warning w-100" name="btn_enr">
-                                                Envoyez
-                                            </button>
+                                        <div class="form-text">L'adresse email du destinataire</div>
+                                    </div>
+                                    
+                                    <div class="col-12 position-relative">
+                                        <label for="sujet_id" class="form-label fw-bold">Sujet <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                            <input type="text" class="form-control" id="sujet_id" name="sujet" value="RE: {{ sujet }}" required>
+                                        </div>
+                                        <div class="form-text">Le sujet de votre réponse</div>
+                                    </div>
+                                    
+                                    <div class="col-12 position-relative">
+                                        <label for="text_email_id" class="form-label fw-bold">Votre message <span class="text-danger">*</span></label>
+                                        <div class="email-editor-container">
+                                            <div class="editor-toolbar mb-2 bg-light p-2 rounded d-flex flex-wrap gap-1">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="bold" title="Gras">
+                                                    <i class="fas fa-bold"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="italic" title="Italique">
+                                                    <i class="fas fa-italic"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="underline" title="Souligné">
+                                                    <i class="fas fa-underline"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="insertUnorderedList" title="Liste à puces">
+                                                    <i class="fas fa-list-ul"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="insertOrderedList" title="Liste numérotée">
+                                                    <i class="fas fa-list-ol"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-command="createLink" title="Insérer un lien">
+                                                    <i class="fas fa-link"></i>
+                                                </button>
+                                            </div>
+                                            <textarea class="form-control profil email-editor" id="text_email_id" name="text_email" rows="8" required>{{ text_email }}</textarea>
+                                            <div class="form-text d-flex justify-content-between mt-1">
+                                                <span>Rédigez votre message de réponse</span>
+                                                <span id="charCount">0 caractères</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="save_template" name="save_template">
+                                            <label class="form-check-label" for="save_template">
+                                                Sauvegarder comme modèle de réponse
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 bg-white rounded shadow-sm">
+                                            <a class="btn btn-outline-primary" href="{% url 'admin_liste_email_recu' %}">
+                                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                                            </a>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-outline-secondary" id="previewBtn">
+                                                    <i class="fas fa-eye me-2"></i>Aperçu
+                                                </button>
+                                                <button type="submit" class="btn btn-success" name="btn_enr" id="sendBtn">
+                                                    <i class="fas fa-paper-plane me-2"></i>Envoyer la réponse
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Liste élève fin -->
-                {% endif %}
-            </form>
-        </div>
+                </div>
+            {% endif %}
+        </form>
     </div>
+</div>
 
 <!-- Back to Top -->
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Aperçu de votre message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="email-preview-container">
+                    <div class="preview-header mb-4 p-3 bg-light rounded">
+                        <p><strong>À:</strong> <span id="preview-to">{{ email_user }}</span></p>
+                        <p><strong>Sujet:</strong> <span id="preview-subject">RE: {{ sujet }}</span></p>
+                    </div>
+                    <div class="preview-content p-3 bg-white rounded" id="preview-content">
+                        <!-- Content will be inserted by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="editFromPreview">Modifier</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascript %}
-    <script>
-        // http://localhost:8000/profil_prof/2/
-        // fonction pour redimentionner les Textarea selon leur contenu
-        function adjustTextareaHeight() {
+<script>
+    // Fonction pour redimensionner les Textarea selon leur contenu
+    function adjustTextareaHeight() {
         const textareas = document.getElementsByClassName('form-control profil');
-
         for (let i = 0; i < textareas.length; i++) {
             const textarea = textareas[i];
             textarea.style.height = 'auto';
-            textarea.style.height = (textarea.scrollHeight - 2) + 'px';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
         }
+    }
+
+    // Compteur de caractères
+    function updateCharCount() {
+        const textarea = document.getElementById('text_email_id');
+        const charCount = document.getElementById('charCount');
+        if (textarea && charCount) {
+            charCount.textContent = textarea.value.length + ' caractères';
         }
-    </script>
-    <script>
-        window.onload = adjustTextareaHeight; // Appel lors du chargement de la page
-        document.addEventListener('input', adjustTextareaHeight); // Appel sur changement de contenu
-    </script>
+    }
+
+    // Éditeur de texte avec contenteditable div
+    function setupTextEditor() {
+        const formatButtons = document.querySelectorAll('.format-btn');
+        
+        formatButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const command = this.getAttribute('data-command');
+                const textarea = document.getElementById('text_email_id');
+                
+                // Sauvegarder la position du curseur
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                const selectedText = textarea.value.substring(startPos, endPos);
+                
+                let newText = '';
+                
+                switch(command) {
+                    case 'bold':
+                        newText = '<strong>' + selectedText + '</strong>';
+                        break;
+                    case 'italic':
+                        newText = '<em>' + selectedText + '</em>';
+                        break;
+                    case 'underline':
+                        newText = '<u>' + selectedText + '</u>';
+                        break;
+                    case 'insertUnorderedList':
+                        newText = '\n• ' + selectedText.replace(/\n/g, '\n• ');
+                        break;
+                    case 'insertOrderedList':
+                        let counter = 1;
+                        newText = selectedText.split('\n').map(line => {
+                            return line ? `${counter++}. ${line}` : '';
+                        }).join('\n');
+                        break;
+                    case 'createLink':
+                        const url = prompt('Entrez l\'URL:', 'https://');
+                        if (url) {
+                            newText = '<a href="' + url + '" target="_blank">' + (selectedText || 'Lien') + '</a>';
+                        } else {
+                            return; // Annuler si l'utilisateur n'a pas entré d'URL
+                        }
+                        break;
+                }
+                
+                // Remplacer le texte sélectionné
+                if (newText !== '') {
+                    textarea.value = textarea.value.substring(0, startPos) + newText + textarea.value.substring(endPos);
+                    
+                    // Restaurer la position du curseur
+                    const newCursorPos = startPos + newText.length;
+                    textarea.setSelectionRange(newCursorPos, newCursorPos);
+                    
+                    // Mettre à jour le compteur
+                    updateCharCount();
+                    adjustTextareaHeight();
+                }
+            });
+        });
+    }
+
+    // Aperçu du message
+    function setupPreview() {
+        const previewBtn = document.getElementById('previewBtn');
+        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const previewContent = document.getElementById('preview-content');
+        const textarea = document.getElementById('text_email_id');
+        
+        previewBtn.addEventListener('click', function() {
+            // Convertir le texte en HTML basique pour l'aperçu
+            let htmlContent = textarea.value
+                .replace(/\n/g, '<br>')
+                .replace(/<strong>(.*?)<\/strong>/g, '<strong>$1</strong>')
+                .replace(/<em>(.*?)<\/em>/g, '<em>$1</em>')
+                .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
+                .replace(/<a href="(.*?)" target="_blank">(.*?)<\/a>/g, '<a href="$1" target="_blank">$2</a>');
+            
+            previewContent.innerHTML = htmlContent;
+            previewModal.show();
+        });
+        
+        document.getElementById('editFromPreview').addEventListener('click', function() {
+            previewModal.hide();
+        });
+    }
+
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        adjustTextareaHeight();
+        updateCharCount();
+        setupTextEditor();
+        setupPreview();
+        setupSendButton();
+        setupAutoSave();
+        
+        // Écouter les changements dans le textarea
+        const textarea = document.getElementById('text_email_id');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                adjustTextareaHeight();
+                updateCharCount();
+            });
+            
+            // Initialiser le compteur de caractères
+            updateCharCount();
+        }
+    });
+</script>
+
+<style>
+.admin-email-container {
+    min-height: calc(100vh - 150px);
+}
+
+.sidebar-column {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding-right: 0;
+}
+
+.content-column {
+    padding: 20px;
+}
+
+.email-reply-container {
+    border-radius: 12px;
+}
+
+.email-header {
+    border-left: 4px solid #0d6efd;
+}
+
+.email-avatar {
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.email-meta {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.editor-toolbar {
+    border: 1px solid #dee2e6;
+    border-radius: 6px 6px 0 0;
+}
+
+.email-editor {
+    border-radius: 0 0 6px 6px;
+    resize: vertical;
+    min-height: 200px;
+    transition: all 0.3s ease;
+}
+
+.email-editor:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.format-btn {
+    transition: all 0.2s ease;
+}
+
+.format-btn:hover {
+    background-color: #0d6efd !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+.form-text {
+    font-size: 0.85rem;
+}
+
+#charCount {
+    font-weight: 500;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+#sendBtn {
+    position: relative;
+    overflow: hidden;
+}
+
+#sendBtn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+#sendBtn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+.preview-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.preview-content {
+    min-height: 200px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+/* Style pour la notification toast */
+.toast {
+    background-color: white;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar-column {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .d-flex.gap-2 {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .editor-toolbar {
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}

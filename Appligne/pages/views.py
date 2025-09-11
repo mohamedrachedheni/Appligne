@@ -340,20 +340,22 @@ def profil_prof(request, id_user):
         matiere_id = None
 
     if niveau_id and matiere_id:
-        prof_mat_niv = Prof_mat_niv.objects.get(user=user, matiere=matiere_id, niveau=niveau_id)
-        
-        format = request.session.get('radio_name', None)
-        if format == "a_domicile":
-            format_cour = "Cours à domicile"
-        elif format == "webcam":
-            format_cour = "Cours par webcam"
-        elif format == "stage":
-            format_cour = "Stage pendant les vacances"
+        prof_mat_niv = Prof_mat_niv.objects.filter(user=user, matiere=matiere_id, niveau=niveau_id).first()
+        if prof_mat_niv:
+            format = request.session.get('radio_name', None)
+            if format == "a_domicile":
+                format_cour = "Cours à domicile"
+            elif format == "webcam":
+                format_cour = "Cours par webcam"
+            elif format == "stage":
+                format_cour = "Stage pendant les vacances"
+            else:
+                format_cour = "Stage par webcam"
+            
+            prix_heure_obj = Prix_heure.objects.filter(user=user, format=format_cour, prof_mat_niv=prof_mat_niv.id).first()
+            prix_heure = str(prix_heure_obj.prix_heure) if prix_heure_obj else 'N/A'
         else:
-            format_cour = "Stage par webcam"
-        
-        prix_heure_obj = Prix_heure.objects.filter(user=user, format=format_cour, prof_mat_niv=prof_mat_niv).first()
-        prix_heure = str(prix_heure_obj.prix_heure) if prix_heure_obj else 'N/A'
+            prix_heure = 'N/A'
     else:
         prix_heure = 'N/A'
 
@@ -1369,6 +1371,7 @@ def admin_compte_eleve(request, user_id=0):
 
     # Modifier l'enregistrement électionné dans la table user
     if request.method == 'POST' and 'btn_enr_user_eleve' in request.POST:
+        messages.info(request, "info  btn_enr_user_eleve ")
         # récupérer les données du template
         username = request.POST.get('username', user_eleve_select.username).strip()
         first_name = request.POST.get('first_name', user_eleve_select.first_name).strip()
@@ -1571,6 +1574,10 @@ def admin_compte_eleve(request, user_id=0):
     return render(request, 'pages/admin_compte_eleve.html', context)
 
 
+# from django.core.paginator import Paginator
+# from django.contrib import messages
+# from django.shortcuts import render, redirect
+# from django.contrib.auth.decorators import user_passes_test
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
@@ -1604,7 +1611,6 @@ def admin_liste_email_recu(request):
         # Gestion des boutons de détails
         email_ids = [key.split('btn_detaille_email_')[1] for key in request.POST if key.startswith('btn_detaille_email_')]
         if email_ids:
-            
             if len(email_ids) == 1:
                 request.session['email_id'] = decrypt_id(email_ids[0])
                 return redirect('admin_detaille_email')
@@ -1612,8 +1618,13 @@ def admin_liste_email_recu(request):
                 messages.error(request, "Erreur système, veuillez contacter le support technique.")
                 return redirect('compte_administrateur')
 
+    # ---------------- Pagination ----------------
+    page_number = request.GET.get('page', 1)  # page courante
+    paginator = Paginator(list_email, 10)  # 10 emails par page
+    page_obj = paginator.get_page(page_number)
 
-    return render(request, 'pages/admin_liste_email_recu.html', {'list_email': list_email})
+    # Passer page_obj à la template
+    return render(request, 'pages/admin_liste_email_recu.html', {'page_obj': page_obj})
 
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
@@ -1740,7 +1751,6 @@ def admin_reponse_email(request):
     email_user = user.email
     context={'text_email': text_email, 'sujet': sujet, 'email_user': email_user}
     if 'btn_enr' in request.POST:
-        
         text_email = request.POST.get('text_email', '').strip()
         sujet = request.POST.get('sujet', '').strip()
         email_user = request.POST.get('email_adresse', '').strip() # la priorité est à l'email reçu du POST
