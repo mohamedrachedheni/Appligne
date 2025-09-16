@@ -278,7 +278,7 @@ LOGGING = {
 
 
 
-# entregistrement de message logs
+# enregistrement de message logs
 today = datetime.now()
 log_dir = os.path.join(BASE_DIR, 'logs', today.strftime("%Y"), today.strftime("%m"))
 os.makedirs(log_dir, exist_ok=True)

@@ -101,6 +101,7 @@
                             FAQs GPT
                         </a>
                     </li>
+                    
                 </ul>
             </li>
 
@@ -112,6 +113,19 @@
                     <span>Administration système</span>
                 </a>
                 {% endif %}
+            </li>
+            <!-- Liens importants -->
+            <li class="sidebar-section">
+                <a href="{% url 'index' %}" class="sidebar-header">
+                    <i class="fas fa-home mr-2"></i>
+                    <span>Page principale</span>
+                </a>
+            </li>
+            <li class="sidebar-section">
+                <a href="{% url 'logout' %}" class="sidebar-header system-admin-link">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span>Se déconnecter</span>
+                </a>
             </li>
         </ul>
     </div>
@@ -150,6 +164,7 @@
         margin: 0;
         font-size: 1.2rem;
         font-weight: 600;
+        color: #fff;
     }
     
     .btn-sidebar-toggle {

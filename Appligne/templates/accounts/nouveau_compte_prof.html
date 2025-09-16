@@ -1,151 +1,344 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block title %} | Home{% endblock %}
-
-{% block content %}
-
-<!-- formulaire créer compte prof début -->
-<!-- method="POST" pour sécuriser les données -->
-<div class="container-xxl py-5 " id="identite">
-    <div class="container ">
-        <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
-            style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte</h6>
-            <h1 class="mb-5">Votre identité et vos coordonnées</h1>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création de compte professeur</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-gradient-primary-to-secondary {
+            background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+        }
+        
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 1rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #4e54c8;
+            box-shadow: 0 0 0 0.25rem rgba(78, 84, 200, 0.25);
+        }
+        
+        .input-group-text {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease;
+        }
+        
+        .input-group:focus-within .input-group-text {
+            background-color: #e9ecef;
+        }
+        
+        .btn-primary {
+            background-color: #4e54c8;
+            border-color: #4e54c8;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3f44a7;
+            border-color: #3f44a7;
+        }
+        
+        .btn-outline-primary {
+            color: #4e54c8;
+            border-color: #4e54c8;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #4e54c8;
+            color: white;
+        }
+        
+        .password-toggle {
+            cursor: pointer;
+        }
+        
+        .section-title {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .phone-error {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        
+        .year-error {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        
+        .password-strength .progress {
+            border-radius: 3px;
+            height: 5px;
+        }
+        
+        .progress-bar-weak {
+            background-color: #dc3545;
+            width: 33%;
+        }
+        
+        .progress-bar-medium {
+            background-color: #ffc107;
+            width: 66%;
+        }
+        
+        .progress-bar-strong {
+            background-color: #198754;
+            width: 100%;
+        }
+        
+        .password-feedback {
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        
+        .wow {
+            visibility: visible;
+            animation-duration: 1s;
+        }
+        
+        .photo-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-top: 10px;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+        
+        .fadeInUp {
+            animation-name: fadeInUp;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="bg-gradient-primary-to-secondary text-white py-5">
+        <div class="container py-4">
+            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="section-title text-center mb-2">Inscription Professeur</h6>
+                <h1 class="display-5 fw-bold mb-3">Créez votre compte professeur</h1>
+                <p class="lead mb-0">Rejoignez notre communauté éducative et partagez votre expertise</p>
+            </div>
         </div>
-        <div class="col-md-12">
-            {% include 'partials/_alerts.html' %}
-        </div>
-    </div>
-</div>
+    </section>
 
-
-<form method="POST" enctype="multipart/form-data" >
-    {% csrf_token %}
-    
-    <!-- mon compte début -->
-    <!-- identité et coordonnees debut -->
-    <div class="container-xxl py-5 " id="identite">
-        <div class="container ">
-            
-
-            <div class="container bg-light  p-5">
-                <div class="row g-4">
-                    <!-- Si le user n'est pas connecté -->
-                    {% if not request.user.is_authenticated %}
-                    <div class="col-md-4 position-relative">
-                        <label for="user_nom_id" class="form-label">Nom de l'utilisateur</label>
-                        <!-- autocomplete="off" ne marche pas ?? -->
-                        <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
-                            title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{user_nom}}" autocomplete="off" >
+    <!-- Registration Form -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-white py-4">
+                        <h3 class="text-center mb-0">Informations personnelles</h3>
+                        <p class="text-muted text-center mb-0">Tous les champs marqués d'un <span class="text-danger">*</span> sont obligatoires</p>
                     </div>
-                    <!--<div class="col-md-4 position-relative">
-                        <label for="mot_pass_id" class="form-label">Mot de passe</label>
-                        <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" required value="{{mot_pass}}" autocomplete="off" >
-                    </div>-->
-                    <div class="form-group col-md-4 position-relative" >
-                        <label for="mot_pass_id">Mot de passe</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" required value="{{mot_pass}}" autocomplete="off">
-                            <div class="input-group-append "  style="height:38px; ">
-                                <span class="input-group-text password-toggle" onclick="togglePassword('mot_pass_id')">
-                                    <i class="fas fa-eye input-group-text"></i>
-                                </span>
-                            </div>
-                        </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
                     </div>
                     
-                    <div class="form-group col-md-4 position-relative">
-                        <label for="mot_pass_id">Confirmer mot de passe</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="conf_mot_pass_id" name="conf_mot_pass"  required value="{{conf_mot_pass}}" autocomplete="off"  >
-                            <div class="input-group-append" style="height:38px; " >
-                                <span class="input-group-text password-toggle " onclick="togglePassword('conf_mot_pass_id')">
-                                    <i class="fas fa-eye input-group-text"></i>
-                                </span>
+                    <div class="card-body p-4 p-md-5">
+                        <form method="POST" enctype="multipart/form-data" id="teacherRegistrationForm">
+                            {% csrf_token %}
+                            <!-- User Account Section -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="mb-3 border-bottom pb-2">Compte utilisateur</h5>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="user_nom_id" class="form-label fw-semibold">Nom d'utilisateur <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control" id="user_nom_id" name="user_nom" 
+                                               placeholder="Choisissez un nom d'utilisateur" required autocomplete="off">
+                                    </div>
+                                    <div class="form-text">Ce nom vous identifiera sur la plateforme</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="email_id" class="form-label fw-semibold">Adresse email <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                        <input type="email" class="form-control" id="email_id" name="email" 
+                                               placeholder="votre@email.com" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="mot_pass_id" class="form-label fw-semibold">Mot de passe <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control password-field" id="mot_pass_id" 
+                                               name="mot_pass" placeholder="Créez un mot de passe sécurisé" required autocomplete="new-password">
+                                        <button type="button" class="btn btn-outline-secondary password-toggle" onclick="togglePassword('mot_pass_id')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="password-strength mt-2">
+                                        <div class="progress">
+                                            <div class="progress-bar" id="passwordStrengthBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <div id="passwordStrengthText" class="password-feedback"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="conf_mot_pass_id" class="form-label fw-semibold">Confirmer le mot de passe <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control password-field" id="conf_mot_pass_id" 
+                                               name="conf_mot_pass" placeholder="Confirmez votre mot de passe" required autocomplete="new-password">
+                                        <button type="button" class="btn btn-outline-secondary password-toggle" onclick="togglePassword('conf_mot_pass_id')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text" id="passwordMatchText"></div>
+                                </div>
                             </div>
-                        </div>         
+                            
+                            <!-- Personal Information Section -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="mb-3 border-bottom pb-2">Informations personnelles</h5>
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="validationTooltipCivil" class="form-label fw-semibold">Civilité <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="validationTooltipCivil" name="civilite" required>
+                                        <option value="" disabled selected>Sélectionnez</option>
+                                        <option value="Homme">Monsieur</option>
+                                        <option value="Femme">Madame</option>
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="prenom_id" class="form-label fw-semibold">Prénom <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                                        <input type="text" class="form-control" id="prenom_id" name="prenom" 
+                                               placeholder="Votre prénom" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-5 mb-3">
+                                    <label for="validationTooltipNom" class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                                        <input type="text" class="form-control" id="validationTooltipNom" name="nom" 
+                                               placeholder="Votre nom" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="date_id_1" class="form-label fw-semibold">Date de naissance <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                        <input type="date" class="form-control" id="date_id_1"  required 
+                                               max="2023-12-31">
+                                        <!-- Champ caché qui sera envoyé en POST -->
+                                        <input type="hidden" name="date_naiss" id="date_naiss_hidden">
+                                    </div>
+                                    <div class="year-error" id="yearError">L'année ne doit pas dépasser 4 chiffres.</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone_id" class="form-label fw-semibold">Numéro de téléphone <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                        <input type="text" class="form-control" id="phone_id" name="phone"
+                                               placeholder="00 00 00 00 00" required 
+                                               pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}"
+                                               onkeypress="return isNumberKey(event)">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="formatPhoneNumber()">
+                                            <i class="fas fa-magic"></i> Formater
+                                        </button>
+                                    </div>
+                                    <div class="phone-error" id="phoneError">Format attendu: 00 00 00 00 00 (10 chiffres avec espaces)</div>
+                                    <div class="form-text">Format: 00 00 00 00 00</div>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="adresse_id" class="form-label fw-semibold">Adresse <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-home"></i></span>
+                                        <input type="text" class="form-control" id="adresse_id" name="adresse" 
+                                               placeholder="Votre adresse complète" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="photo_id" class="form-label fw-semibold">Photo de profil</label>
+                                    <div class="input-group">
+                                        <input type="file" accept="image/*" class="form-control" id="photo_id" name="photo" onchange="previewImage(this)">
+                                        <label class="input-group-text" for="photo_id"><i class="fas fa-camera"></i></label>
+                                    </div>
+                                    <div class="form-text">Formats acceptés: JPG, PNG. Taille max: 5MB</div>
+                                    <div class="mt-2" id="photoPreview"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg py-3 fw-semibold" name="btn_enr" id="submitButton">
+                                            <i class="fas fa-user-plus me-2"></i>Créer mon compte
+                                        </button>
+                                    </div>
+                                    <div class="text-center mt-3">
+                                        <p class="mb-0">Vous avez déjà un compte? <a href="#" class="text-decoration-none">Connectez-vous ici</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <!--<div class="col-md-4 position-relative">
-                        <label for="conf_mot_pass_id" class="form-label">Confirmer mot de passe</label>
-                        <input type="password" class="form-control" id="conf_mot_pass_id" name="conf_mot_pass" required value="{{conf_mot_pass}}" >
-                    </div>-->
-                    <div class="col-md-4 position-relative">
-                        <label for="validationTooltipCivil" class="form-label">Civilité</label>
-                        <select class="form-select" id="validationTooltipCivil" name="civilite">
-                            <option value="Homme" {% if civilite == 'Homme' %}selected{% endif %}>Monsieur</option>
-                            <option value="Femme" {% if civilite == 'Femme' %}selected{% endif %}>Madame</option>
-                            <option value="Autre" {% if civilite == 'Autre' %}selected{% endif %}>Autre</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="prenom_id" class="form-label">Prénom</label>
-                        <input type="text" class="form-control" id="prenom_id" name="prenom" required value="{{prenom}}" >
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="validationTooltipNom" class="form-label">Nom</label>
-                        <input type="text" class="form-control" id="validationTooltipNom" name="nom" required value="{{nom}}" >
-                    </div>
-
-                    <div class=" col-md-6   position-relative">
-                        <label for="adresse_id" class="form-label">Adresse</label>
-                        <input type="text" class="form-control" id="adresse_id" name="adresse" required value="{{adresse}}" >
-                    </div>
-                    <div class="col-md-6 position-relative">
-                        <label for="validationTooltipUsername" class="form-label">Email </label>
-                        <div class="input-group has-validation">
-                            <span class="input-group-text">@</span>
-                            <input type="text" class="form-control" id="email_id"
-                                aria-describedby="validationTooltipUsernamePrepend" name="email" required value="{{email}}" >
-                        </div>
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label class="form-label" for="phone_id">Numéro de téléphone :</label>
-                        <input type="text" class="form-control" id="phone_id" name="phone"
-                            pattern="[0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2} [0-9]{2}" placeholder="00 00 00 00 00"
-                            required value="{{phone}}" >
-                    </div>
-
-                    <div class="col-md-4 position-relative ">
-                        <label for="date_id" class="form-label">Date de naissance</label>
-                        <input type="text" class="form-control form-control-date" id="date_id_1" placeholder="Sélectionnez une date"
-                            name="date_naiss" required value="{{date_naiss}}" >
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="photo_id" class="form-label">Photo d'identité</label>
-                        <input type="file" accept="image/*" capture="camera" class="form-control" id="photo_id" name="photo" >
-                    </div>
-                    <div class="row justify-content-end g-2 p-3 ">
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <button type="submit" class="btn btn-warning" name="btn_enr">
-                                Enregistrer
-                            </button>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="row justify-content-between g-2 p-3 ">
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a class="btn btn-primary " href="{% url 'profil_prof' id_user=user.id %}"><span style="color: white;">Voir votre profil</span></a>
-                        </div>
-                        <div class="col-lg-3 col-md-4 col-sm-6">
-                            <a class="btn btn-primary" href="{% url 'nouveau_fichier' %}"><span style="color: white;">Passez à l'étape suivante</span></a>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    <!-- identité et coordonnees Fin -->
-</form>
-{% endblock %}
 
-{% block javascript %}
-    <script src="{% static 'js/Code_en_plus_nouveau_compte_prof.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Fonction pour n'accepter que des chiffres dans le champ téléphone
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                return false;
+            }
+            return true;
+        }
+        
+        // Fonction pour afficher/masquer le mot de passe
         function togglePassword(fieldId) {
-            var field = document.getElementById(fieldId);
-            var icon = field.nextElementSibling.querySelector('i');
+            const field = document.getElementById(fieldId);
+            const icon = field.parentElement.querySelector('.password-toggle i');
+            
             if (field.type === "password") {
                 field.type = "text";
                 icon.classList.remove('fa-eye');
@@ -156,5 +349,247 @@
                 icon.classList.add('fa-eye');
             }
         }
+        
+        // Fonction pour formater automatiquement le numéro de téléphone
+        function formatPhoneNumber() {
+            const phoneInput = document.getElementById('phone_id');
+            let phoneNumber = phoneInput.value.replace(/\D/g, ''); // Supprimer tous les caractères non numériques
+            
+            if (phoneNumber.length !== 10) {
+                document.getElementById('phoneError').style.display = 'block';
+                phoneInput.classList.add('is-invalid');
+                return;
+            }
+            
+            // Formater le numéro: 00 00 00 00 00
+            const formattedNumber = phoneNumber.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            phoneInput.value = formattedNumber;
+            phoneInput.classList.remove('is-invalid');
+            document.getElementById('phoneError').style.display = 'none';
+        }
+        
+        // Fonction pour prévisualiser l'image
+        function previewImage(input) {
+            const preview = document.getElementById('photoPreview');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Vérifier la taille du fichier (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Le fichier est trop volumineux. Taille maximale: 5MB');
+                    input.value = '';
+                    preview.innerHTML = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" class="photo-preview" alt="Aperçu de l'image">`;
+                }
+                
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+        
+        // Validation du numéro de téléphone en temps réel
+        document.getElementById('phone_id').addEventListener('input', function(e) {
+            const phoneInput = e.target;
+            const phoneError = document.getElementById('phoneError');
+            let phoneNumber = phoneInput.value.replace(/\D/g, '');
+            
+            // Validation basique de la longueur
+            if (phoneNumber.length > 10) {
+                phoneNumber = phoneNumber.substring(0, 10);
+            }
+            
+            // Mise à jour de la valeur avec formatage partiel
+            if (phoneNumber.length > 0) {
+                let formattedValue = '';
+                for (let i = 0; i < phoneNumber.length; i++) {
+                    if (i > 0 && i % 2 === 0) {
+                        formattedValue += ' ';
+                    }
+                    formattedValue += phoneNumber[i];
+                }
+                phoneInput.value = formattedValue;
+            }
+            
+            // Validation finale
+            if (phoneNumber.length === 10) {
+                phoneInput.classList.remove('is-invalid');
+                phoneInput.classList.add('is-valid');
+                phoneError.style.display = 'none';
+            } else if (phoneNumber.length > 0) {
+                phoneInput.classList.remove('is-valid');
+                phoneInput.classList.add('is-invalid');
+                phoneError.style.display = 'block';
+            } else {
+                phoneInput.classList.remove('is-valid', 'is-invalid');
+                phoneError.style.display = 'none';
+            }
+        });
+        
+        // Validation de l'année de naissance
+        document.getElementById('date_id_1').addEventListener('change', function(e) {
+            const dateInput = e.target;
+            const yearError = document.getElementById('yearError');
+            const selectedDate = new Date(dateInput.value);
+            const currentYear = new Date().getFullYear();
+            
+            // Vérifier que l'année a 4 chiffres et est raisonnable (entre 1900 et l'année actuelle)
+            if (selectedDate.getFullYear() < 1900 || selectedDate.getFullYear() > currentYear) {
+                dateInput.classList.remove('is-valid');
+                dateInput.classList.add('is-invalid');
+                yearError.style.display = 'block';
+            } else {
+                dateInput.classList.remove('is-invalid');
+                dateInput.classList.add('is-valid');
+                yearError.style.display = 'none';
+            }
+        });
+        
+        // Vérification de la correspondance des mots de passe
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordField = document.getElementById('mot_pass_id');
+            const confirmPasswordField = document.getElementById('conf_mot_pass_id');
+            const matchText = document.getElementById('passwordMatchText');
+            
+            if (passwordField && confirmPasswordField) {
+                function checkPasswordMatch() {
+                    if (passwordField.value && confirmPasswordField.value) {
+                        if (passwordField.value === confirmPasswordField.value) {
+                            matchText.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Les mots de passe correspondent</span>';
+                            confirmPasswordField.classList.remove('is-invalid');
+                            confirmPasswordField.classList.add('is-valid');
+                        } else {
+                            matchText.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Les mots de passe ne correspondent pas</span>';
+                            confirmPasswordField.classList.remove('is-valid');
+                            confirmPasswordField.classList.add('is-invalid');
+                        }
+                    } else {
+                        matchText.textContent = '';
+                        confirmPasswordField.classList.remove('is-valid', 'is-invalid');
+                    }
+                }
+                
+                passwordField.addEventListener('input', checkPasswordMatch);
+                confirmPasswordField.addEventListener('input', checkPasswordMatch);
+            }
+            
+            // Indicateur de force du mot de passe
+            if (passwordField) {
+                passwordField.addEventListener('input', function() {
+                    const strengthBar = document.getElementById('passwordStrengthBar');
+                    const strengthText = document.getElementById('passwordStrengthText');
+                    const password = passwordField.value;
+                    
+                    // Réinitialiser
+                    strengthBar.classList.remove('progress-bar-weak', 'progress-bar-medium', 'progress-bar-strong');
+                    
+                    if (password.length === 0) {
+                        strengthBar.style.width = '0%';
+                        strengthText.textContent = '';
+                        return;
+                    }
+                    
+                    // Calcul de la force
+                    let strength = 0;
+                    
+                    // Longueur
+                    if (password.length > 5) strength += 1;
+                    if (password.length > 8) strength += 1;
+                    
+                    // Lettres minuscules et majuscules
+                    if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) strength += 1;
+                    
+                    // Chiffres
+                    if (password.match(/([0-9])/)) strength += 1;
+                    
+                    // Caractères spéciaux
+                    if (password.match(/([!,@,#,$,%,^,&,*,?,_,~])/)) strength += 1;
+                    
+                    // Appliquer le style en fonction de la force
+                    if (strength < 2) {
+                        strengthBar.classList.add('progress-bar-weak');
+                        strengthText.innerHTML = '<span class="text-danger">Faible</span>';
+                    } else if (strength < 4) {
+                        strengthBar.classList.add('progress-bar-medium');
+                        strengthText.innerHTML = '<span class="text-warning">Moyen</span>';
+                    } else {
+                        strengthBar.classList.add('progress-bar-strong');
+                        strengthText.innerHTML = '<span class="text-success">Fort</span>';
+                    }
+                });
+            }
+            
+            // Validation du formulaire
+            const form = document.getElementById('teacherRegistrationForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    
+                    // Vérification du format du téléphone
+                    const phoneInput = document.getElementById('phone_id');
+                    const phoneNumber = phoneInput.value.replace(/\D/g, '');
+                    
+                    if (phoneNumber.length !== 10) {
+                        isValid = false;
+                        phoneInput.classList.add('is-invalid');
+                        document.getElementById('phoneError').style.display = 'block';
+                        
+                        // Scroll to error
+                        phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    // Vérification de la date de naissance
+                    const dateInput = document.getElementById('date_id_1');
+                    const selectedDate = new Date(dateInput.value);
+                    const currentYear = new Date().getFullYear();
+                    
+                    if (selectedDate.getFullYear() < 1900 || selectedDate.getFullYear() > currentYear) {
+                        isValid = false;
+                        dateInput.classList.add('is-invalid');
+                        document.getElementById('yearError').style.display = 'block';
+                        
+                        // Scroll to error
+                        dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    // Vérification des mots de passe
+                    if (passwordField && confirmPasswordField) {
+                        if (passwordField.value !== confirmPasswordField.value) {
+                            isValid = false;
+                            confirmPasswordField.classList.add('is-invalid');
+                            matchText.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Les mots de passe doivent correspondre</span>';
+                            
+                            // Scroll to error
+                            confirmPasswordField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
     </script>
-{% endblock %}
+    <script>
+        document.getElementById("teacherRegistrationForm").addEventListener("submit", function(e) {
+            const dateInput = document.getElementById("date_id_1").value;
+            if (dateInput) {
+                // Conversion "YYYY-MM-DD" -> "DD/MM/YYYY"
+                const parts = dateInput.split("-");
+                if (parts.length === 3) {
+                    const formatted = parts[2] + "/" + parts[1] + "/" + parts[0];
+                    document.getElementById("date_naiss_hidden").value = formatted;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

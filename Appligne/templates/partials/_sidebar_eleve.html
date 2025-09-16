@@ -136,36 +136,19 @@
                 </li>
 
                 <!-- Liens importants -->
-                <li class="sidebar-section">
-                    <a href="#" class="sidebar-header">
-                        <i class="fas fa-home mr-2"></i>
-                        <span>Page principale</span>
-                    </a>
-                </li>
-                
-                <li class="sidebar-section">
-                    <a href="#" class="sidebar-header system-admin-link">
-                        <i class="fas fa-sign-out-alt mr-2"></i>
-                        <span>Se déconnecter</span>
-                    </a>
-                </li>
+            <li class="sidebar-section">
+                <a href="{% url 'index' %}" class="sidebar-header">
+                    <i class="fas fa-home mr-2"></i>
+                    <span>Page principale</span>
+                </a>
+            </li>
+            <li class="sidebar-section">
+                <a href="{% url 'logout' %}" class="sidebar-header system-admin-link">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span>Se déconnecter</span>
+                </a>
+            </li>
             </ul>
-        </div>
-
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div class="user-details">
-                    <div class="user-name">Élève</div>
-                    <div class="user-role">Utilisateur</div>
-                </div>
-            </div>
-            <a href="#" class="logout-btn">
-                <i class="fas fa-sign-out-alt mr-1"></i>
-                <span>Déconnexion</span>
-            </a>
         </div>
     </nav>
 
@@ -201,6 +184,7 @@
         margin: 0;
         font-size: 1.2rem;
         font-weight: 600;
+        color: #fff;
     }
     
     .btn-sidebar-toggle {

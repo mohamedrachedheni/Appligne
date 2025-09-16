@@ -268,7 +268,6 @@
                     <span>Page principale</span>
                 </a>
             </li>
-            
             <li class="sidebar-section">
                 <a href="{% url 'logout' %}" class="sidebar-header system-admin-link">
                     <i class="fas fa-sign-out-alt mr-2"></i>
@@ -276,22 +275,6 @@
                 </a>
             </li>
         </ul>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-info">
-            <div class="user-avatar">
-                <i class="fas fa-chalkboard-teacher"></i>
-            </div>
-            <div class="user-details">
-                <div class="user-name">Professeur</div>
-                <div class="user-role">Enseignant</div>
-            </div>
-        </div>
-        <a href="{% url 'logout' %}" class="logout-btn">
-            <i class="fas fa-sign-out-alt mr-1"></i>
-            <span>Déconnexion</span>
-        </a>
     </div>
 </nav>
 <!-- Fin de la sidebar améliorée pour professeur -->
@@ -328,6 +311,7 @@
         margin: 0;
         font-size: 1.2rem;
         font-weight: 600;
+        color: #fff;
     }
     
     .btn-sidebar-toggle {

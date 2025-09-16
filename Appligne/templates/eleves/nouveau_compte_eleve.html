@@ -1,130 +1,147 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Home{% endblock %}
+{% block title %} | Création de compte élève{% endblock %}
 
 {% block content %}
-
-<!-- formulaire créer compte prof début -->
-<!-- method="POST" pour sécuriser les données -->
-<div class="container-xxl py-5 " id="identite">
-    <div class="container ">
+<div class="container-xxl py-5" id="identite">
+    <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s"
             style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-            <h6 class="section-title bg-white text-center text-primary px-3">Créer un nouveaux compte élève</h6>
-            <h1 class="mb-5">Votre identité </h1>
+            <h6 class="section-title bg-white text-center text-primary px-3">Inscription</h6>
+            <h1 class="mb-4">Créer votre compte élève</h1>
+            <p class="mb-5 text-muted">Remplissez les informations requises pour finaliser votre inscription</p>
         </div>
+        
         <div class="col-md-12">
             {% include 'partials/_alerts.html' %}
         </div>
     </div>
 </div>
 
-
-<!-- <form method="POST" enctype="multipart/form-data" autocomplete="off" style="display: none;" action="{% url 'nouveau_compte_eleve' %}" >
-    {% csrf_token %} -->
-
-
-<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_compte_eleve' %}"  >
+<form method="POST" enctype="multipart/form-data" autocomplete="off" action="{% url 'nouveau_compte_eleve' %}" id="student-registration-form">
     {% csrf_token %}
-
-
-
-    <!-- {% csrf_token %} obligatoire juste après la balise <form> pour que django accepte method="POST" -->
     
-    
-
-    <!-- mon compte début -->
-    <!-- identité et coordonnees debut -->
-    <div class="container-xxl py-5 " id="identite">
-        <div class="container ">
-            <div class="container bg-light  p-5">
-                {% if not request.user.is_authenticated %}
-                <div class="row g-4">
-                    <div class="col-md-4 position-relative">
-                        <label for="user_nom_id" class="form-label">Nom de l'utilisateur</label>
-                        <!-- autocomplete="off" ne marche pas ?? -->
-                        <input type="text" class="form-control" id="user_nom_id" name="user_nom" required
-                            title="Entrez votre nom d'utilisateur ici pour vous identifier" value="{{user_nom}}" autocomplete="off" >
+    <!-- Section identité et coordonnées -->
+    <div class="container-xxl py-5" id="identite">
+        <div class="container">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <h4 class="card-title mb-2">Identité et coordonnées</h4>
+                        <p class="text-muted">Les champs marqués d'un astérisque (*) sont obligatoires</p>
                     </div>
-                    <!--<div class="col-md-4 position-relative">
-                        <label for="mot_pass_id" class="form-label">Mot de passe</label>
-                        <input type="password" class="form-control" id="mot_pass_id" name="mot_pass" required value="{{mot_pass}}" autocomplete="off" >
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="conf_mot_pass_id" class="form-label">Confirmer mot de passe</label>
-                        <input type="password" class="form-control" id="conf_mot_pass_id" name="conf_mot_pass" required value="{{conf_mot_pass}}" >
-                    </div>-->
-                    <div class="form-group col-md-4 position-relative">
-                        <label for="mot_pass_id">Mot de passe</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="mot_pass_id" name="mot_pass"  required value="{{mot_pass}}" autocomplete="off"  >
-                            <div class="input-group-append" style="height:38px; ">
-                                <span class="input-group-text password-toggle " onclick="togglePassword('mot_pass_id')">
-                                    <i class="fas fa-eye input-group-text"></i>
-                                </span>
+                    
+                    {% if not request.user.is_authenticated %}
+                    <div class="row g-4">
+                        <!-- Nom d'utilisateur -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="user_nom_id" name="user_nom" 
+                                    placeholder="Nom d'utilisateur" required value="{{user_nom}}" autocomplete="off">
+                                <label for="user_nom_id">Nom d'utilisateur *</label>
                             </div>
-                        </div>         
-                    </div>
-                    <div class="form-group col-md-4 position-relative">
-                        <label for="mot_pass_id">Confirmer mot de passe</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="conf_mot_pass_id" name="conf_mot_pass"  required value="{{conf_mot_pass}}" autocomplete="off"  >
-                            <div class="input-group-append" style="height:38px; ">
-                                <span class="input-group-text password-toggle " onclick="togglePassword('conf_mot_pass_id')">
-                                    <i class="fas fa-eye input-group-text"></i>
-                                </span>
+                            <div class="form-text">Ce nom vous servira à vous connecter</div>
+                        </div>
+                        
+                        <!-- Mot de passe -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="mot_pass_id" 
+                                        name="mot_pass" placeholder="Mot de passe" required value="{{mot_pass}}" autocomplete="off">
+                                    <span class="input-group-text password-toggle" onclick="togglePassword('mot_pass_id')">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                    <label for="mot_pass_id">Mot de passe *</label>
+                                </div>
                             </div>
-                        </div>         
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="prenom_id" class="form-label">Prénom</label>
-                        <input type="text" class="form-control" id="prenom_id" name="prenom" required value="{{prenom}}" >
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="validationTooltipNom" class="form-label">Nom</label>
-                        <input type="text" class="form-control" id="validationTooltipNom" name="nom" required value="{{nom}}" >
-                    </div>
-                    <div class="col-md-4 position-relative">
-                        <label for="validationTooltipUsername" class="form-label">Email </label>
-                        <div class="input-group has-validation">
-                            <span class="input-group-text">@</span>
-                            <input type="text" class="form-control" id="email_id"
-                                aria-describedby="validationTooltipUsernamePrepend" name="email" required value="{{email}}" >
+                            <div class="form-text">8 caractères minimum avec chiffres et lettres</div>
+                        </div>
+                        
+                        <!-- Confirmation mot de passe -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="conf_mot_pass_id" 
+                                        name="conf_mot_pass" placeholder="Confirmer le mot de passe" required value="{{conf_mot_pass}}" autocomplete="off">
+                                    <span class="input-group-text password-toggle" onclick="togglePassword('conf_mot_pass_id')">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                    <label for="conf_mot_pass_id">Confirmer le mot de passe *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prénom -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="prenom_id" 
+                                    name="prenom" placeholder="Prénom" required value="{{prenom}}">
+                                <label for="prenom_id">Prénom *</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Nom -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="validationTooltipNom" 
+                                    name="nom" placeholder="Nom" required value="{{nom}}">
+                                <label for="validationTooltipNom">Nom *</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="email" class="form-control" id="email_id"
+                                        name="email" placeholder="Adresse email" required value="{{email}}">
+                                    <label for="email_id">Adresse email *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bouton d'enregistrement -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-lg px-4" name="btn_enr">
+                                    <i class="fas fa-user-plus me-2"></i>Créer mon compte
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="row justify-content-end g-2 p-3 ">
-                        <div class="col-lg-1 col-md-4 col-sm-6">
-                            <button type="submit" class="btn btn-warning" name="btn_enr">
-                                Enregistrer
-                            </button>
+                    {% else %}
+                    <!-- Interface pour utilisateur déjà connecté -->
+                    <div class="text-center py-4">
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                            <h4>Vous êtes déjà connecté</h4>
+                            <p class="text-muted">Vous pouvez maintenant chercher un professeur ou compléter votre profil</p>
+                        </div>
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <a href="#" class="btn btn-outline-primary btn-lg px-4" name="btn_cherche_prof">
+                                <i class="fas fa-search me-2"></i>Chercher un professeur
+                            </a>
+                            <a href="#" class="btn btn-primary btn-lg px-4" name="btn_suivant">
+                                <i class="fas fa-arrow-right me-2"></i>Compléter mon profil
+                            </a>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="row justify-content-between g-2 p-3 ">
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <button  class="btn btn-primary" name="btn_cherche_prof">
-                            Cherchez votre professeur
-                        </button>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <button  class="btn btn-primary" name="btn_suivant">
-                            Continuez l'enregistrement
-                        </button>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
-    <!-- identité et coordonnees Fin -->
 </form>
 {% endblock %}
+
 {% block javascript %}
 <script>
     function togglePassword(fieldId) {
-        var field = document.getElementById(fieldId);
-        var icon = field.nextElementSibling.querySelector('i');
+        const field = document.getElementById(fieldId);
+        const icon = field.parentElement.querySelector('i');
+        
         if (field.type === "password") {
             field.type = "text";
             icon.classList.remove('fa-eye');
@@ -135,5 +152,18 @@
             icon.classList.add('fa-eye');
         }
     }
+    
+    // Validation du formulaire
+    document.getElementById('student-registration-form').addEventListener('submit', function(e) {
+        const password = document.getElementById('mot_pass_id').value;
+        const confirmPassword = document.getElementById('conf_mot_pass_id').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Les mots de passe ne correspondent pas');
+        }
+        
+        // Validation supplémentaire pourrait être ajoutée ici
+    });
 </script>
 {% endblock %}
