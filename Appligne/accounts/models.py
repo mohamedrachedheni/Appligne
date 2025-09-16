@@ -486,7 +486,7 @@ class Payment(models.Model):
     # payment_register_data = models.JSONField(null=True, blank=True)  # à enlever
     # order_id = models.CharField(max_length=255, null=True, blank=True)  # à enlever
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
+    # payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
     payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
     payment_body = models.JSONField(null=True, blank=True)
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
