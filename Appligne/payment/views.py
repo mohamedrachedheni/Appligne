@@ -80,7 +80,7 @@ def create_checkout_session(request):
             # invoice.invoice_number = Invoice().generate_invoice_number()
             invoice.user = request.user
             invoice.total = cart.total
-            invoice.status = 'draft'
+            invoice.status = 'draft' # draft : brouillon
             invoice.save()
             logger.info(f"[{request.user}] ➤ Facture existante mise à jour avec le panier ID {cart.id}")
 
@@ -164,10 +164,11 @@ def payment_success(request):
         """
         try: # Tentative de récupération de la session et de la facture
             session = stripe.checkout.Session.retrieve(session_id) # On récupère les détails de la session Stripe via l’API. Cela contient des informations comme payment_status, metadata, etc.
-            # invoice = Invoice.objects.get(id=session.metadata.invoice_id, user=request.user) # À partir de metadata (défini lors de la création de la session Stripe), on récupère l’id de la facture. On filtre aussi par user=request.user pour sécurité (un utilisateur ne peut pas accéder à la facture d’un autre).
+            # on peut introduire plusieurs teste, 
+            # vérifier le user:request.user.id==session.metadata.get('user_id')
+            # vérifier le montant
             # Vérifier que metadata et invoice_id existent
             invoice_id = session.metadata.get('invoice_id') if session.metadata else None
-
             if not invoice_id:
                 logger.warning("❌ invoice_id absent dans les metadata Stripe")
                 messages.error(request, "Identifiant de facture introuvable.")
@@ -175,6 +176,10 @@ def payment_success(request):
 
             # Récupérer la facture
             logger.info(f"Traitement du paiement pour la facture {invoice_id}, utilisateur {request.user.id}")
+            # À partir de metadata (défini lors de la création de la session Stripe), 
+            # on récupère l’id de la facture. On filtre aussi par user=request.user 
+            # pour sécurité (un utilisateur ne peut pas accéder à la facture d’un autre).
+            # vérifier le user:request.user.id==session.metadata.get('user_id')
             invoice = Invoice.objects.get(id=invoice_id, user=request.user)
             
 
@@ -213,10 +218,11 @@ def payment_success(request):
 
                 # màj table payment, màj table demande_paiement, màj table Horaire
                 # Historique prof nb d'élèves, nb d'heure payées, 
+                # envoyé par la view: eleve_demande_paiement 
                 prof_id = request.session.get('prof_id')
                 if not prof_id:
                     logger.error("prof_id introuvable dans la session")
-                    messages.error(request, "Informations de session manquantes")
+                    messages.error(request, "Informations de session manquantes: L'ID du professeur manque")
                     return render(request, 'payment/success.html')
                 prof = get_object_or_404(User, id=prof_id)
                 demande_paiement_id = request.session.get('demande_paiement_id_decript')
@@ -232,7 +238,7 @@ def payment_success(request):
                         'reference': session.payment_intent,  # À adapter selon la passerelle de paiement
                         # 'expiration_date': timezone.now(), # À supprimer du model Payment
                         'amount': round(session.amount_total/100,2),
-                        'currency': 'fr',
+                        'currency': 'eur', # à modifier (session.curreny)
                         # 'payment_register_data': f"PP_d{demande_paiement.id}", # À supprimer du model Payment
                         'payment_body': session,
                     }
@@ -348,7 +354,6 @@ def payment_cancel(request):
     2. Échec de paiement (carte refusée, etc.)
     3. Expiration de la session de paiement
     4. Problème technique avec Stripe
-    
     Pour chaque cas, on fournit un message approprié et des actions possibles.
     """
     
@@ -371,7 +376,9 @@ def payment_cancel(request):
             if payment:
                 payment_status = payment.status
             
-            # Cas 1: Paiement déjà marqué comme annulé/échoué (venant de Stripe) avant même de recréer un nouveau paiement
+            # Cas 1: Paiement déjà marqué comme annulé/échoué (venant de Stripe) 
+            # avant même de recréer un nouveau paiement
+            #### Attention: avérifier la logique du teste ####
             if payment_status in ['Annulé', 'Invalide']:
                 logger.warning(f"Paiement {payment.reference} déjà marqué comme {payment_status}")
                 context.update({
@@ -433,6 +440,8 @@ def payment_cancel(request):
         })
     
     return render(request, 'payment/cancel.html', context)
+
+
 
 """
 Désactive la protection CSRF (Cross-Site Request Forgery).

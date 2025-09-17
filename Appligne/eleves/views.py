@@ -823,7 +823,7 @@ def temoignage_eleve(request):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
 
-    slug_pattern = f'Elv{user.id}'
+    slug_pattern = f'Elv{user.id}' # à améliorer la méthode exemple: slug_pattern = f'Elv{user.id};' 
     
     # Filtrer les paiements approuvés de l'élève contenant son identifiant dans le slug
     payments = Payment.objects.filter(status='Approuvé', slug__icontains=slug_pattern)
@@ -833,7 +833,7 @@ def temoignage_eleve(request):
         messages.info(request, "Vous ne pouvez donner votre témoignage que si vous avez réglé au moins un cours.")
         return redirect('compte_eleve')
     
-    # Récupérer les IDs des professeurs basés sur les paiements
+    # Récupérer les IDs des professeurs basés sur les paiements à modifier car le champ slug sera supprimer
     list_prof_ids = []
     for payment in payments:
         slug = payment.slug
@@ -1623,7 +1623,9 @@ def eleve_demande_paiement(request):
                 messages.error(request, "La demande de règlement est déjà payée")
                 return redirect('compte_eleve')
             from payment.views import create_checkout_session
+            #1. vider la table Cart du user
             Cart.objects.filter(user=request.user).delete()
+            #2. créer un nouveau Cart lié au user
             cart = Cart.objects.create(user=request.user)
             for cours, prix_public in cours_prix_publics:
                 for cours_paiement, horaire in horaires:
@@ -1635,6 +1637,7 @@ def eleve_demande_paiement(request):
                             f", durée : {horaire.duree}h"
                         )
                         total_price_cents = int(horaire.duree * cours.prix_heure * 100)
+                        #3. remplir CartItem
                         CartItem.objects.create(
                             cart=cart,
                             cours=description,
@@ -1644,7 +1647,7 @@ def eleve_demande_paiement(request):
             logger.info("Panier Stripe préparé pour l'élève %s", user)
             # Seule le paiement est créé (En attente), les autres tables liées au paiement non
             # leur tour commence aprés confirmation du paiement
-            # Création ou mise à jour de l'enregistrement Payment
+            #4. Création ou mise à jour de l'enregistrement Payment
             payment, created = Payment.objects.update_or_create(
                 model="demande_paiement",
                 model_id=demande_paiement.id,
@@ -1652,12 +1655,12 @@ def eleve_demande_paiement(request):
                     'status': 'En attente',  # À changer par "Approuvé" après validation
                     'amount': demande_paiement.montant,
                     # 'expiration_date': timezone.now(),
-                    'currency': "Euro",
-                    'language': "Français",
+                    'currency': "eur",
+                    'language': "Français", # à enlever pas important
                 }
             )
 
-            # en liant cart au payment on peut lier invoice au payment dans la view create_checkout_session
+            #5. lier cart au payment pour lier invoice au payment dans la view create_checkout_session
             cart.payment = payment
             cart.save()
             if created:
@@ -1665,12 +1668,13 @@ def eleve_demande_paiement(request):
             else:
                 logger.info(f"♻️ Paiement existant mis à jour : ID={payment.id}, Montant={payment.amount}")
             
-            # mise à jour Demande_paiement mais l'ID du paiement n'est pas encore défini
+            #6. mise à jour Demande_paiement mais l'ID du paiement dans la table Demande_paiement n'est pas encore défini car il n'est pas encore effectué
             demande_paiement.statut_demande = "En cours" # # à changer par Approuvé
             demande_paiement.save()
             request.session['payment_id'] = payment.id
             request.session['prof_id'] = prof.id
             request.session['demande_paiement_id_decript'] = demande_paiement_id_decript 
+            #7. passer à la page de paiement de Stripe (create_checkout_session)
             return create_checkout_session(request)
         
         # Passer à la création d'une nouvelle réclamation liée à la demande de paiement

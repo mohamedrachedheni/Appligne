@@ -35,9 +35,21 @@ class Professeur(models.Model):
     civilite = models.CharField(max_length=10, choices=CIVILITE_CHOICES, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     numero_telephone = models.CharField(max_length=15, blank=True, null=True)
-    date_naissance = models.DateField(null=True)
-    adresse = models.CharField(max_length=255, null=False)
+    date_naissance = models.DateField(null=True, blank=True)
+    adresse = models.CharField(max_length=255, blank=True, null=True)
     photo = models.ImageField(upload_to='photos/%y/%m/%d/', blank=True, null=True)
+    # --- Champs pour Stripe Connect ---
+    stripe_account_id = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="ID du compte Stripe Connect Express (ex: acct_1234ABCD)"
+    )
+    stripe_onboarding_complete = models.BooleanField(
+        default=False,
+        help_text="Indique si le professeur a terminé l'onboarding Stripe Express"
+    )
+
     
 
     def __str__(self):
@@ -466,29 +478,22 @@ class Payment(models.Model):
         (INVALID, 'Invalide'), # ('failed', 'Échoué'),
     ]
 
-    model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement)
+    model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement)
     model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
-    slug = models.CharField(max_length=255)  # à enlever
-    reference = models.CharField(max_length=255)  
-    # payment_attempts = models.PositiveIntegerField(default=1)  # à enlever
-    # expiration_date = models.DateTimeField()  # à enlever
+    slug = models.CharField(max_length=255)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)
+    reference = models.CharField(max_length=255)  # ’ID du PaymentIntent que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
     amount = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
         validators=[MinValueValidator(Decimal('0.01'))], 
         null=True, 
         blank=True
-    )  # Montant du paiement
-    currency = models.CharField(max_length=10)  # Devise
-    # source = models.CharField(max_length=255, default='desktop')  # à enlever
-    language = models.CharField(max_length=10)  # Langue utilisée
-    # membership_number = models.CharField(max_length=255, null=True, blank=True)  # à enlever
-    # payment_register_data = models.JSONField(null=True, blank=True)  # à enlever
-    # order_id = models.CharField(max_length=255, null=True, blank=True)  # à enlever
+    )  # Montant du paiement (round(session.amount_total/100,2))
+    currency = models.CharField(max_length=10)  # Devise (session.currency)
+    language = models.CharField(max_length=10)  # Langue utilisée (à supprimer non utilisé)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    # payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
     payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
-    payment_body = models.JSONField(null=True, blank=True)
+    payment_body = models.JSONField(null=True, blank=True) # contient le corps brut de la requête (les données JSON envoyées par Stripe)
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
