@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} | Détaille accord remboursement{% endblock %}
+{% block title %} | Détail accord remboursement{% endblock %}
 
 {% block content %}
     <div class="row justify-content-center">
@@ -72,7 +72,7 @@
                                                         </div>
                                                         <div class="col-md-6 col-sm-12 position-relative">
                                                             <button type="submit" class="btn {% if not reclamation %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
-                                                                {% if not reclamation %}Détaille{% else %}Contesté{% endif %}
+                                                                {% if not reclamation %}Détail{% else %}Contesté{% endif %}
                                                             </button>
                                                         </div>
                                                     </div>

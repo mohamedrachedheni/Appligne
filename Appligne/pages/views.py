@@ -2193,7 +2193,7 @@ def admin_accord_reglement(request):
                     accord_reglement.save()
                     
                     
-                    # Enregistrement des détailles des accords de règlements
+                    # Enregistrement des détails des accords de règlements
                     for date_versement, payment, user_eleve in payments:
                         if date_versement == date_request: # car les accords de règlements sont groupés par date de règlement
                             detaille_accord_reglement = DetailAccordReglement(
@@ -2240,7 +2240,7 @@ def admin_reglement(request):
     affiche les règlements effectués par l'administrateur 
     pour une période donnée, permet de passer à la mise à 
     jour des enregistrements sélectionnés et
-    de visualiser les détaillesdes accord de règlements
+    de visualiser les détailsdes accord de règlements
     """
     
     teste = True # pour controler les validations
@@ -2437,10 +2437,10 @@ def admin_reglement_email(request):
             text_email = f"Une transaction d'un montant de {accord_reglement.total_amount:.2f}€ a été créditée sur votre compte, conformément à votre accord de règlement pour l'échéance du {accord_reglement.due_date.strftime('%d/%m/%Y')}. Nous restons à votre disposition pour toute information complémentaire et vous remercions de votre confiance."
         elif nouv_status_accord=="Annulé": 
             sujet +="annulé"
-            text_email = f"Nous regrettons de vous informer que votre accord de règlement pour le {accord_reglement.due_date.strftime('%d/%m/%Y')}, d'un montant de {accord_reglement.total_amount:.2f}€, a été annulé. \n(Pour plus de détaille voire texte explicatif).\n Nous vous prions de nous excuser pour ce désagrément et restons à votre disposition pour toute information complémentaire. Nous vous remercions de votre compréhension et de votre confiance."
+            text_email = f"Nous regrettons de vous informer que votre accord de règlement pour le {accord_reglement.due_date.strftime('%d/%m/%Y')}, d'un montant de {accord_reglement.total_amount:.2f}€, a été annulé. \n(Pour plus de détail voire texte explicatif).\n Nous vous prions de nous excuser pour ce désagrément et restons à votre disposition pour toute information complémentaire. Nous vous remercions de votre compréhension et de votre confiance."
         elif nouv_status_accord=="Invalide": 
             sujet +="non validé"
-            text_email = f"Nous regrettons de vous informer que votre accord de règlement pour le {accord_reglement.due_date.strftime('%d/%m/%Y')}, d'un montant de {accord_reglement.total_amount:.2f}€, n'a pas été validé en raison d'un incident survenu lors de l'initiation de la transaction bancaire.  \n(Pour plus de détaille voire texte explicatif).\n Nous vous prions de nous excuser pour ce désagrément et restons à votre disposition pour toute information complémentaire. Nous vous remercions de votre compréhension et de votre confiance."
+            text_email = f"Nous regrettons de vous informer que votre accord de règlement pour le {accord_reglement.due_date.strftime('%d/%m/%Y')}, d'un montant de {accord_reglement.total_amount:.2f}€, n'a pas été validé en raison d'un incident survenu lors de l'initiation de la transaction bancaire.  \n(Pour plus de détail voire texte explicatif).\n Nous vous prions de nous excuser pour ce désagrément et restons à votre disposition pour toute information complémentaire. Nous vous remercions de votre compréhension et de votre confiance."
 
 
         accord_reglement_modifs.append((accord_reglement, date_operation_reglement, nouv_status_accord, approved, text_email, sujet ))
@@ -2714,7 +2714,7 @@ def admin_payment_demande_paiement(request):
         request.session['reclamation_payment_id'] = payment_id
         return redirect('nouvelle_reclamation')
     
-    # Voire lae détaille de la réclamation
+    # Voire détail de la réclamation
     if 'btn_reclamation' in request.POST:
         if payment.reclamation.id:
             request.session['reclamation_id'] = payment.reclamation.id
@@ -3031,8 +3031,8 @@ def admin_accord_reglement_modifier(request):
         accord_reglement.save()
         msg += str(f"Mise à jour de accord de règlement du {date_reglement}.\n")
         
-        # Avant la suppression des anciens détailles des accords de règlements 
-        # il faux mettre à jour les enregisrements de Payment et Demande_paiement liés au ancien détaille de règlement
+        # Avant la suppression des anciens détails des accords de règlements 
+        # il faux mettre à jour les enregisrements de Payment et Demande_paiement liés au ancien détail de règlement
         # comme s'il n'y a pas eu d'accord de règlement
         for payment_id in ancien_payment_accords:
             payment_ancien = Payment.objects.filter(id=payment_id).first()
@@ -3050,12 +3050,12 @@ def admin_accord_reglement_modifier(request):
                 msg += str(f"Mettre à jour les anciens enregisrements de Demande_paiement.\n")
 
 
-        # Mise à jour des détailles des accords de règlements
-        # Suppression des anciens détailles des accords de règlements
+        # Mise à jour des détails des accords de règlements
+        # Suppression des anciens détails des accords de règlements
         DetailAccordReglement.objects.filter(accord=accord_id).delete()
-        msg += str(f"Suppression des anciens détailles des accords de règlements.\n")
+        msg += str(f"Suppression des anciens détails des accords de règlements.\n")
 
-        # Ajout des nouveaux détailles des accords de règlements
+        # Ajout des nouveaux détails des accords de règlements
         for  payment, user_eleve in payments:
             detaille_accord_reglement = DetailAccordReglement(
                 accord=accord_reglement, 
@@ -3066,7 +3066,7 @@ def admin_accord_reglement_modifier(request):
                             ", Montant payé: " + str(payment.amount) + "€"
             )
             detaille_accord_reglement.save()
-            msg += str(f"Ajout des nouveaux détailles des accords de règlements id={detaille_accord_reglement.id}.\n")
+            msg += str(f"Ajout des nouveaux détails des accords de règlements id={detaille_accord_reglement.id}.\n")
 
             # Mise à jour de l'enregistrement payment
             payment.accord_reglement_id=accord_reglement.id
@@ -4020,7 +4020,7 @@ def admin_accord_remboursement(request):
                             due_date=due_date )
                         accord_remboursement.save()
 
-                        # Enregistrement des détailles des accords de remboursement
+                        # Enregistrement des détails des accords de remboursement
                         for date_versement, payment, amount in payments_list:
                             if date_versement == date_request: # car les accords de remboursements sont groupés par date de règlement
                                 detaille_accord_remboursement = DetailAccordRemboursement(
@@ -4072,7 +4072,7 @@ def admin_remboursement(request):
     affiche les remboursements effectués par l'administrateur 
     pour une période donnée, permet de passer à la mise à 
     jour des enregistrements sélectionnés et
-    de visualiser les détaillesdes accord de remboursements
+    de visualiser les détails des accord de remboursements
     """
     
     teste = True # pour controler les validations
@@ -4909,8 +4909,8 @@ def admin_accord_remboursement_modifier(request):
         accord_remboursement.save()
         msg += str(f"Mise à jour de accord de remboursement du {date_remboursement}.\n")
         
-        # Avant la suppression des anciens détailles des accords de règlements 
-        # il faux mettre à jour les enregisrements de Payment liés au ancien détaille de remboursement
+        # Avant la suppression des anciens détails des accords de règlements 
+        # il faux mettre à jour les enregisrements de Payment liés au ancien détail de remboursement
         # comme s'il n'y a pas eu d'accord de remboursement
         for payment_id in ancien_payment_accords:
             payment_ancien = Payment.objects.filter(id=decrypt_id(payment_id)).first()
@@ -4920,12 +4920,12 @@ def admin_accord_remboursement_modifier(request):
                 payment_ancien.save()
                 msg += str(f"Mettre à jour les anciens enregisrements de Payment.\n")
 
-        # Mise à jour des détailles des accords de remboyrsements
-        # Suppression des anciens détailles des accords de remboursement
+        # Mise à jour des détails des accords de remboyrsements
+        # Suppression des anciens détails des accords de remboursement
         DetailAccordRemboursement.objects.filter(accord=accord_id).delete()
-        msg += str(f"Suppression des anciens détailles des accords de remboursements.\n")
+        msg += str(f"Suppression des anciens détails des accords de remboursements.\n")
 
-        # Ajout des nouveaux détailles des accords de règlements
+        # Ajout des nouveaux détails des accords de règlements
         for  payment, user_eleve, refunded_amount in payments:
             detaille_accord_remboursement = DetailAccordRemboursement(
                 accord=accord_remboursement, 
@@ -4936,7 +4936,7 @@ def admin_accord_remboursement_modifier(request):
                             ", Montant payé: " + str(payment.amount) + "€"
             )
             detaille_accord_remboursement.save()
-            msg += str(f"Ajout des nouveaux détailles des accords de remboursement id={detaille_accord_remboursement.id}.\n")
+            msg += str(f"Ajout des nouveaux détails des accords de remboursement id={detaille_accord_remboursement.id}.\n")
 
             # Mise à jour de l'enregistrement payment
             payment.accord_reglement_id=accord_remboursement.id
@@ -5405,7 +5405,7 @@ def demande_paiement_admin(request):
     Fonctionnalités :
     - Filtrer les demandes de paiements selon une période donnée (dates de début et de fin).
     - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
-    - Affiche les détailles des demandes de paiements
+    - Affiche les détails des demandes de paiements
     - fait passer vers l'affectation de lien de paiement avec échéance pour chaque demande de paiement
     """
 
@@ -5664,3 +5664,134 @@ def admin_demande_paiement(request):
 
     # Rendu de la page HTML avec le contexte préparé
     return render(request, 'pages/admin_demande_paiement.html', context)
+
+# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
+@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
+def compte_reglement_prof(request):
+    """
+    affiche les règlements effectués par l'administrateur 
+    pour une période donnée, permet de passer à la mise à 
+    jour des enregistrements sélectionnés et
+    de visualiser les détails des accord de règlements
+    """
+    
+    teste = True # pour controler les validations
+    date_format = "%d/%m/%Y" # Format date
+
+    # Récupération des dates minimales et maximales depuis la base de données
+    dates = AccordReglement.objects.filter(
+        ~Q(status='Réalisé'),  # Exclure les enregistrements avec status='Réalisé'
+        transfere_id__isnull=True,
+        date_trensfere__isnull=True
+    ).aggregate(
+        min_date=Min('due_date'),
+        max_date=Max('due_date')
+    )
+
+    # Définition des valeurs par défaut
+    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = dates['max_date'] or timezone.now().date()
+
+    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
+    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
+    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
+
+    # # début et fin de période de tri [date_debut_str , date_fin_str]
+    # date_fin_str = request.POST.get('date_fin', timezone.now().date().strftime(date_format))
+    # date_debut_str = request.POST.get('date_debut', (timezone.now().date() - timedelta(days=15)).strftime(date_format))
+    statut=""
+    date_now = timezone.now().date()
+    # Validation du format des dates
+    try:
+        date_debut = datetime.strptime(date_debut_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de début de période invalide: {date_debut_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_debut = None
+
+    try:
+        date_fin = datetime.strptime(date_fin_str, date_format).date()
+    except ValueError:
+        messages.error(request, f"Format de la date de fin de période invalide: {date_fin_str}. Utilisez jj/mm/aaaa.")
+        teste = False
+        date_fin = None
+
+    # Vérification que la date de début est bien avant la date de fin
+    if teste:
+        if date_debut > date_fin:
+            messages.error(request, "La date de début doit être inférieure ou égale à la date de fin de période.")
+            teste = False
+
+    # Fonction interne pour récupérer les paiements en attente de règlement
+    def get_reglements(date_debut, date_fin, filter_criteria=None):
+        if filter_criteria is None:
+            filter_criteria = {}
+
+        return AccordReglement.objects.filter(
+            due_date__range=(date_debut , date_fin + timedelta(days=1)),
+            **filter_criteria
+        ).order_by('due_date') # [date_debut , date_fin]
+
+    # Récupérer tous les accords de reglements
+    accord_reglements = get_reglements(date_debut, date_fin)
+
+    # Vérification du type de requête et application des filtres en fonction du bouton cliqué
+    if 'btn_tous' in request.POST:
+        # Filtrer pour tous les emails
+        accord_reglements = get_reglements(date_debut, date_fin)
+    elif 'btn_en_ettente' in request.POST:
+        # Filtrer pour les paiements en attente
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En attente'})
+        statut = "En attente"
+    elif 'btn_en_cours' in request.POST:
+        # Filtrer pour les paiements approuvés
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En cours'})
+        statut = "En cours"
+    elif 'btn_invalide' in request.POST:
+        # Filtrer pour les paiements invalides
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Invalide'})
+        statut = "Invalide"
+    elif 'btn_annule' in request.POST:
+        # Filtrer pour les paiements annulés
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Annulé'})
+        statut = "Annulé"
+    elif 'btn_realiser' in request.POST:
+        # Filtrer pour les paiements réclamés par les élèves
+        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Réalisé'})
+        statut = "Réalisé"
+
+    accord_reglement_approveds = []
+    for accord_reglement in accord_reglements:
+        payments = Payment.objects.filter(id__in=DetailAccordReglement.objects.filter(accord=accord_reglement).values_list('payment_id', flat=True))
+        # si un des paiement est non approuvé par l'élève alors approved = False
+        approved =True
+        for payment in payments:
+            if payment.reclamation: 
+                approved = False
+                break
+        accord_reglement_approveds.append((accord_reglement , approved))
+    
+    # Extraction de l'ID du règlement choisi dans le formulaire
+    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
+    if accord_ids:
+        # Vérification du nombre d'IDs extraits
+        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            request.session['accord_id'] = int(accord_ids[0])
+            return redirect('admin_reglement_detaille')
+
+        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+            messages.error(request, "Erreur système, veuillez contacter le support technique.")
+            return redirect('compte_administrateur')
+
+
+
+
+    
+    context = {
+        'accord_reglement_approveds': accord_reglement_approveds,
+        'date_fin':date_fin,
+        'date_debut':date_debut,
+        'statut': statut,
+        'date_now':date_now
+    }
+    return render(request, 'pages/compte_reglement_prof.html', context)

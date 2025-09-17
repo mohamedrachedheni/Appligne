@@ -20,7 +20,7 @@
                     <div class="text-center wow fadeInUp py-4" data-wow-delay="0.1s"
                         style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
                         <h3 class="section-title bg-white text-center text-primary px-3">Ajoutez à votre profil</h3>
-                        <h1 class="mb-5">Les détailles des matières que vous enseignez</h1>
+                        <h1 class="mb-5">Les détails des matières que vous enseignez</h1>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
@@ -30,7 +30,7 @@
 <form method="POST" enctype="multipart/form-data" id="formNouvelleMatiere" action="{% url 'nouveau_matiere' %}" >
     {% csrf_token %}
     
-    <!-- Les détailles des matières debut -->
+    <!-- Les détails des matières debut -->
     <div class="container-xxl py-5" >
            <div class="container">
             <div class="container bg-light  p-4">
@@ -266,7 +266,7 @@
             </div>
         </div>
     </div>
-    <!-- Les détailles des matières fin -->
+    <!-- Les détails des matières fin -->
     
 </form>
             <!-- fin page -->

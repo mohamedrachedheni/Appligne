@@ -44,5 +44,5 @@ urlpatterns = [
     path('password_reset_confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
     path('demande_paiement_admin', views.demande_paiement_admin, name='demande_paiement_admin'),
     path('admin_demande_paiement', views.admin_demande_paiement, name='admin_demande_paiement'),
-
+    path('compte_reglement_prof', views.compte_reglement_prof, name='compte_reglement_prof'),
 ]

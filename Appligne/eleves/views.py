@@ -420,7 +420,7 @@ Cordialement,
                                                     text_email=text_email, 
                                                     user_destinataire=user_destinataire ) # user.id du destinataire
             email_telecharge.save()
-            # Enregistrement dans la table détaille email
+            # Enregistrement dans la table détail email
             email_detaille = Email_detaille(email=email_telecharge, user_nom=nom_parent + " / " + nom_eleve, matiere=matiere_defaut, niveau=niveau_defaut, format_cours=radio_name )
             email_detaille.save()
             messages.success(request, "Le contenu de l'email est enregistré dans le compte du professeur")
@@ -1365,7 +1365,7 @@ def demande_paiement_eleve(request):
     Fonctionnalités :
     - Filtrer les demandes de paiements selon une période donnée (dates de début et de fin).
     - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
-    - Affiche les détailles des demandes de paiements
+    - Affiche les détails des demandes de paiements
     - fait passer vers l'execution du paiement
     - Pagination des résultats
     """
