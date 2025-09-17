@@ -20,13 +20,13 @@
                     </a>
                     <ul class="collapse list-unstyled sidebar-submenu" id="profileMenu">
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'compte_eleve' %}" class="sidebar-link">
                                 <i class="fas fa-eye mr-2"></i>
                                 Voir mon compte
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'modifier_mot_pass' %}" class="sidebar-link">
                                 <i class="fas fa-key mr-2"></i>
                                 Modifier mot de passe
                             </a>
@@ -43,13 +43,13 @@
                     </a>
                     <ul class="collapse list-unstyled sidebar-submenu" id="coordonneesMenu">
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'modifier_coordonnee_eleve' %}" class="sidebar-link">
                                 <i class="fas fa-user-edit mr-2"></i>
                                 Coordonnées élève
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'modifier_coordonnee_parent' %}" class="sidebar-link">
                                 <i class="fas fa-user-friends mr-2"></i>
                                 Coordonnées parent
                             </a>
@@ -66,32 +66,32 @@
                     </a>
                     <ul class="collapse list-unstyled sidebar-submenu" id="coursMenu">
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'liste_prof' %}" class="sidebar-link">
                                 <i class="fas fa-plus-circle mr-2"></i>
                                 Demander un cours
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'email_recu' %}" class="sidebar-link">
                                 <i class="fas fa-envelope mr-2"></i>
                                 Emails reçus
                                 <span class="badge badge-pill badge-primary notification-badge">5</span>
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'liste_paiement_eleve' %}" class="sidebar-link">
                                 <i class="fas fa-receipt mr-2"></i>
                                 Historique paiements
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'demande_paiement_eleve' %}" class="sidebar-link">
                                 <i class="fas fa-file-invoice-dollar mr-2"></i>
                                 Demandes de paiement
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'liste_remboursement' %}" class="sidebar-link">
                                 <i class="fas fa-money-bill-wave mr-2"></i>
                                 Remboursements
                             </a>
@@ -108,26 +108,26 @@
                     </a>
                     <ul class="collapse list-unstyled sidebar-submenu" id="supportMenu">
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'nouvelle_reclamation' %}" class="sidebar-link">
                                 <i class="fas fa-plus mr-2"></i>
                                 Nouvelle réclamation
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'reclamations' %}" class="sidebar-link">
                                 <i class="fas fa-list mr-2"></i>
                                 Mes réclamations
                                 <span class="badge badge-pill badge-danger notification-badge">2</span>
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'temoignage_eleve' %}" class="sidebar-link">
                                 <i class="fas fa-comment-alt mr-2"></i>
                                 Laisser un témoignage
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">
+                            <a href="{% url 'admin_faq' %}" class="sidebar-link">
                                 <i class="fas fa-question-circle mr-2"></i>
                                 FAQ / Assistance
                             </a>

@@ -115,7 +115,7 @@ def nouveau_compte_eleve(request):
                             messages.error(request, "Le mot de passe doit contenir au moins 8 caractères.")
                         else:
                             # définir un forma pour l'email
-                            patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
+                            patt = r"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
                             # si le format de l'email est correcte
                             if re.match(patt, email) and is_added :
                                 # ajouter le user
@@ -236,7 +236,7 @@ def modifier_coordonnee_eleve(request):
             messages.error(request, "Le format de la date de naissence n'est pas valide. donnez une date sous la forme jj/mm/aaa tel que : 12/06/1990")
             return render(request, 'eleves/modifier_coordonnee_eleve.html', context)
         # définir un forma pour l'email
-        patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
+        patt = r"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
         # si le format de l'email est correcte
         if re.match(patt, email):
             # Mettre à jour les données de l'utilisateur et de l'élève
@@ -267,7 +267,7 @@ class ParentForm(forms.ModelForm):
     def clean_email_parent(self):
         # Validation personnalisée pour l'adresse e-mail
         email = self.cleaned_data.get('email_parent')
-        patt = "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
+        patt = r"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
         if not re.match(patt, email):
             # Si le format de l'email est incorrect, une erreur de validation est levée
             raise forms.ValidationError("L'adresse e-mail n'est pas valide.")
