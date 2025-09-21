@@ -70,31 +70,19 @@
                         {% if statut == 'En attente' %}
                         <div class="col-12 text-center  p-4  ">
                             <h6>
-                                Les accords de règlement en attente sont confirmés, mais le transfert au professeur n’a pas encore été effectué par l’administrateur.
+                                Professeurs ayant reçu au moins un paiement mais n’ayant pas encore créé leur compte Stripe pour encaisser leurs règlements.
                             </h6>
                         </div>
                         {% elif statut == 'En cours' %}
                         <div class="col-12 text-center  p-4  ">
                             <h6>
-                                Les accords de règlement en cours sont enregistrés après confirmation des paiements et en attente de validation bancaire pour le transfert, effectué par l'administrateur, au professeur.
+                                Professeurs ayant reçu au moins un paiement mais n'ayant pas encore achevé leur compte Stripe pour encaisser leurs règlements.
                             </h6>
                         </div>
                         {% elif statut == 'Réalisé' %}
                         <div class="col-12 text-center  p-4  ">
                             <h6>
-                                Les accords de règlement réalisés sont enregistrés après confirmation des paiements et validés une fois le transfert au professeur approuvé par la banque.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Invalide' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement invalides concernent des paiements d’élèves confirmés, mais dont le transfert au professeur est refusé par la banque pour un vice de transfert. Une explication est alors envoyée au professeur.
-                            </h6>
-                        </div>
-                        {% elif statut == 'Annulé' %}
-                        <div class="col-12 text-center  p-4  ">
-                            <h6>
-                                Les accords de règlement annulés concernent des paiements d’élèves confirmés et enregistrés par l’administrateur, qui annule ensuite l’accord sans effectuer de transfert bancaire. Une explication est alors envoyée au professeur.
+                                Professeurs ayant reçu au moins un paiement et disposant d'un compte Stripe actif pour encaisser leurs règlements.
                             </h6>
                         </div>
                         {% endif %}
@@ -105,12 +93,12 @@
                 <div class="container-xxl py-5">
                     <div class="container">
                         <div class="container bg-light mb-3">
-                            {% if not accord_reglement_approveds %}
+                            {% if not paiements_professeurs %}
                             <div class="col-md-12 text-center">
                                 <h4>Il n'y a pas de règlements pour cette période</h4>
                             </div>
                             {% endif %}
-                            {% for accord_reglement , approved in accord_reglement_approveds %}
+                            {% for accord_reglement, id_encript  in paiements_professeurs %}
                             <div class="row  g-2 p-3 " style="margin-bottom: 10px;">
                                 <div class="col-md-6 col-sm-12 position-relative">
                                     <div class="row  g-2 ">
@@ -120,11 +108,11 @@
                                         </div>
                                         <div class="col-md-3 col-sm-12 position-relative ">
                                             <label for="due_date_id_{{ forloop.counter }}" class="form-label">Premier paiement</label>
-                                            <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_reglement.due_date|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_reglement.id}}" >
+                                            <input type="text" class="form-control form-control-intitule" id="due_date_id_{{ forloop.counter }}"  value="{{accord_reglement.date_modification|date:'d/m/Y'}}" readonly name="due_date_accord_id{{accord_reglement.id}}" >
                                         </div>
                                         <div class="col-md-3 col-sm-12 position-relative">
                                             <label for="reponse_id_{{ forloop.counter }}" class="form-label">Montant</label>
-                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_reglement.total_amount|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_reglement.id}}" >
+                                            <input type="text" class="form-control form-control-intitule" id="reponse_id_{{ forloop.counter }}"  value="{{accord_reglement.montant|default:'0.00'|floatformat:2}} €" readonly name="amount_accord_id{{accord_reglement.id}}" >
                                         </div>
                                     </div>
                                 </div>
@@ -134,16 +122,15 @@
                                         <label for="prof_id_{{ forloop.counter }}" class="form-label">Professeur</label>
                                         <div class="col-md-6 col-sm-12 position-relative">
                                             
-                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{accord_reglement.professeur.user.first_name}} {{accord_reglement.professeur.user.last_name}}" readonly name="prof_accord_id{{accord_reglement.id}}" >
+                                            <input type="text" class="form-control form-control-intitule" id="prof_id_{{ forloop.counter }}"  value="{{accord_reglement.user.first_name}} {{accord_reglement.user.last_name}}" readonly name="prof_accord_id{{accord_reglement.id}}" >
                                         </div>
-                                        <div class="col-md-1 col-sm-12 text-center  ">
-                                            <input class="form-check-input p-3 checkbox_tous " type="checkbox" name="checkbox_reglement_id{{ accord_reglement.id }}" checked >
-                                        </div>
-
                                         <div class="col-md-5 col-sm-12   ">
-                                            <button type="submit" class="btn  btn-primary  w-100 " name="btn_detaille_reglement_id{{ accord_reglement.id }}" >
+                                            <button type="submit" class="btn  btn-primary  w-100 " name="btn_detail_id{{ id_encript}}" disabled >
                                                 Détail
                                             </button>
+                                        </div>
+                                        <div class="col-md-1 col-sm-12 text-center  ">
+                                            <input class="form-check-input p-3 checkbox_tous " type="checkbox" name="checkbox_demande_paiement_id{{ id_encript }}"  {% if accord_reglement.status == "Compte Stripe achevé" %} style="display:none;" disable {% else %} checked {%  endif%} >
                                         </div>
                                     </div>
                                 </div>

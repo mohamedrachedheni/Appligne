@@ -11,4 +11,6 @@ urlpatterns = [
     path('cancel/', views.payment_cancel, name='cancel'),
     path('webhooks/stripe/', views.stripe_webhook, name='webhook'),
     path('invoice/<int:invoice_id>/download/', views.download_invoice, name='download_invoice'),
+    path('compte_stripe/', views.compte_stripe, name='compte_stripe'),
+    path('compte_stripe_annuler/', views.compte_stripe_annuler, name='compte_stripe_annuler'),
 ]

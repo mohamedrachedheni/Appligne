@@ -14,7 +14,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import date
-from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement
+from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur
 from eleves.models import Eleve
 from django.contrib import messages
 from django.db.models import Sum
@@ -696,3 +696,214 @@ def envoie_email(user_id_envoi, user_id_receveur, sujet_email, texte_email, repo
         logger.error(f"❌ Échec de l'enregistrement dans Email_telecharge : {e}")
 
     return email_envoye, email_enregistre
+
+import stripe
+import logging
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from accounts.models import Professeur
+
+
+logger = logging.getLogger(__name__)
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def compte_stripe(request):
+    # Par défaut, on considère que le compte Stripe n'est pas encore créé
+    account_status = "not_created"
+
+    try:
+        # Récupération du professeur lié à l'utilisateur connecté
+        professeur = Professeur.objects.get(user=request.user)
+
+        # Cas 1 : compte créé ET onboarding terminé
+        if professeur.stripe_account_id and professeur.stripe_onboarding_complete: 
+            account_status = "completed_active"
+
+        # Cas 2 : compte créé MAIS onboarding incomplet
+        if professeur.stripe_account_id and not professeur.stripe_onboarding_complete: 
+            account_status = "created_incomplete"
+
+    except Professeur.DoesNotExist:
+        # Si l'utilisateur n'est pas un professeur, accès refusé
+        messages.error(request, "Vous devez être un professeur pour accéder à cette page.")
+        return redirect("index")
+
+    # Fonction utilitaire interne pour générer un lien Stripe (onboarding ou update)
+    def _create_account_link(request, account_id, request_type):
+        try:
+            # URL de redirection si l'utilisateur interrompt le processus
+            # on a ajouté "?account_status=created_incomplete" pour l'utiliser comme 
+            # paramètre de test à partir de la reponse de Stripe
+            refresh_url = request.build_absolute_uri(
+                reverse("payment:compte_stripe") + "?account_status=created_incomplete"
+            )
+            # URL de redirection si l'utilisateur termine le processus avec succès
+            return_url = request.build_absolute_uri(
+                reverse("payment:compte_stripe") + f"?account_status=completed_active&{request_type}=success"
+            )
+
+            # Création d'un lien Stripe AccountLink pour l'onboarding ou l'update
+            account_link = stripe.AccountLink.create(
+                account=account_id,
+                refresh_url=refresh_url,
+                return_url=return_url,
+                type=request_type,
+            )
+
+            logger.info(f"Lien Stripe créé avec succès: {account_link.url}")
+            return account_link.url  # Retourne uniquement l'URL à rediriger
+
+        except stripe.error.StripeError as e:
+            # Gestion des erreurs Stripe (ex: problème API ou paramètres invalides)
+            logger.error(f"Erreur création AccountLink: {str(e)}")
+            logger.error(f"Détails - account_id: {account_id}, type: {request_type}")
+            if hasattr(e, "json_body"):
+                logger.error(f"Réponse Stripe: {e.json_body}")
+            
+            messages.error(request, f"Erreur lors de la création du lien Stripe: {str(e)}")
+            return None
+            
+        except Exception as e:
+            # Gestion de toute autre erreur imprévue
+            logger.error(f"Erreur inattendue dans _create_account_link: {str(e)}")
+            messages.error(request, "Une erreur inattendue s'est produite.")
+            return None
+
+    # -------------------------
+    # Gestion des requêtes POST
+    # -------------------------
+    if request.method == "POST":
+
+        # ✅ Création initiale d’un compte Stripe Express
+        if "creation_compte" in request.POST:
+            try:
+                # Création du compte Stripe Express
+                account = stripe.Account.create(
+                    type="express",
+                    country="FR",  # Pays du professeur
+                    email=request.user.email,  # Email associé
+                    capabilities={  # Permissions demandées
+                        "card_payments": {"requested": True},
+                        "transfers": {"requested": True},
+                    },
+                    business_type="individual",  # Compte individuel (pas société)
+                    individual={
+                        "first_name": request.user.first_name or "",
+                        "last_name": request.user.last_name or "",
+                        "email": request.user.email,
+                    },
+                )
+
+                # Sauvegarde des informations du compte Stripe dans la base
+                professeur.stripe_account_id = account.id
+                professeur.stripe_onboarding_complete = False
+                professeur.save()
+
+                # Rafraîchir l'objet professeur depuis la base (sécurité)
+                professeur.refresh_from_db()
+
+                # Génération du lien d’onboarding Stripe
+                account_link_url = _create_account_link(request, account.id, "account_onboarding")
+                if account_link_url:
+                    return redirect(account_link_url)
+                else:
+                    messages.error(request, "Erreur lors de la création du lien Stripe")
+                    return redirect('payment:compte_stripe')
+
+            except stripe.error.StripeError as e:
+                # Gestion des erreurs Stripe à la création de compte
+                logger.error(f"Erreur création compte Stripe: {str(e)}")
+                messages.error(request, f"Erreur lors de la création du compte: {str(e)}")
+                return redirect('payment:compte_stripe')
+        
+        # ✅ Finalisation du compte (si déjà créé mais incomplet)
+        elif "finalize_compte" in request.POST and professeur.stripe_account_id:
+            account_link_url = _create_account_link(request, professeur.stripe_account_id, "account_onboarding")
+            if account_link_url:
+                return redirect(account_link_url)
+            messages.error(request, "Impossible de générer le lien Stripe.")
+            return redirect('payment:compte_stripe')
+        
+        # ✅ Mise à jour du compte (modification d’infos ou ajout documents)
+        elif "update_compte" in request.POST and professeur.stripe_account_id:
+            try:
+                # Récupération de l’état du compte Stripe actuel
+                account = stripe.Account.retrieve(professeur.stripe_account_id)
+                
+                # Cas production : si le compte est actif et validé
+                if account.details_submitted and account.charges_enabled:
+                    # On utiliserait normalement "account_update"
+                    # account_link_url = _create_account_link(request, professeur.stripe_account_id, "account_update")
+                    
+                    # Ici on garde "account_onboarding" car c’est un compte de test
+                    account_link_url = _create_account_link(request, professeur.stripe_account_id, "account_onboarding")
+                else:
+                    # Si l’onboarding n’est pas terminé → rediriger vers onboarding
+                    account_link_url = _create_account_link(request, professeur.stripe_account_id, "account_onboarding")
+                
+                if account_link_url:
+                    return redirect(account_link_url)
+                else:
+                    messages.error(request, "Impossible de générer le lien Stripe.")
+                    return redirect('payment:compte_stripe')
+                    
+            except stripe.error.StripeError as e:
+                # En cas d’erreur lors de la récupération du compte
+                logger.error(f"Erreur vérification compte Stripe: {str(e)}")
+                # Fallback : on renvoie vers onboarding
+                account_link_url = _create_account_link(request, professeur.stripe_account_id, "account_onboarding")
+                if account_link_url:
+                    return redirect(account_link_url)
+                messages.error(request, "Erreur lors de la mise à jour du compte.")
+                return redirect('payment:compte_stripe')
+
+        # ✅ Désactivation du compte (supprimer le compte Stripe associé)
+        elif "desactiver_compte" in request.POST and professeur.stripe_account_id:
+            try:
+                # Suppression du compte Stripe côté API
+                stripe.Account.delete(professeur.stripe_account_id)
+
+                # Réinitialisation des infos côté base
+                professeur.stripe_account_id = None
+                professeur.stripe_onboarding_complete = False
+                professeur.save()
+                
+                # Rafraîchir les données
+                professeur.refresh_from_db()
+                
+                messages.success(request, "Votre compte Stripe a été désactivé avec succès.")
+                return redirect("payment:compte_stripe")
+
+            except stripe.error.StripeError as e:
+                logger.error(f"[Stripe] Erreur désactivation compte {professeur.stripe_account_id}: {str(e)}")
+                messages.error(request, "Erreur lors de la désactivation du compte.")
+                return redirect('payment:compte_stripe')
+
+    # -------------------------
+    # Gestion des paramètres GET (retour de Stripe après redirection)
+    # -------------------------
+    if 'account_status' in request.GET:
+        account_status = request.GET.get('account_status')
+        if account_status == "completed_active":
+            # Mise à jour du statut en base (onboarding terminé avec succès)
+            professeur.stripe_onboarding_complete = True
+            professeur.save()
+
+    # -------------------------
+    # Contexte envoyé au template
+    # -------------------------
+    context = {
+        "account_status": account_status,
+    }
+
+    return render(request, "payment/compte_stripe.html", context)
+
+
+
+@login_required
+def compte_stripe_annuler(request): 
+    return render(request, 'payment/compte_stripe_annuler.html')

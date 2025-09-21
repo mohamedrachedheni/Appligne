@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte Stripe Annulé{% endblock %}
+
+{% block content %}
+
+<!-- Main Content -->
+<div class="row justify-content-center g-4">
+    <!-- Sidebar -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp px-5" data-wow-delay="0.1s">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <div class="mb-4">
+                        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h2 class="text-danger fw-bold mb-3">Création du compte Stripe interrompue</h2>
+                    <p class="text-muted mb-4">
+                        La configuration de votre compte Stripe n’a pas pu être finalisée.<br>
+                        Cela peut être dû à une annulation de votre part ou à une erreur technique.
+                    </p>
+                    {% include 'partials/_alerts.html' %}
+                </div>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'stripe_onboarding' %}" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-arrow-repeat me-2"></i> Reprendre l’inscription
+                    </a>
+                    <a href="{% url 'dashboard_professeur' %}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="bi bi-house-door me-2"></i> Retour au tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top position-fixed bottom-0 end-0 mb-4 me-4 shadow">
+    <i class="bi bi-arrow-up"></i>
+</a>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // Animation douce pour remonter en haut
+    document.querySelectorAll('.back-to-top').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+    });
+</script>
+{% endblock %}

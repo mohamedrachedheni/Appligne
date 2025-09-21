@@ -18,7 +18,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.template.loader import render_to_string
 from django.core.validators import validate_email, EmailValidator
 from django.core.exceptions import ValidationError
-from django.db.models import OuterRef, Subquery, DecimalField, Q, F, Min, Max
+from django.db.models import OuterRef, Subquery, DecimalField, Q, F, Min, Max, Case, When, Value, CharField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -27,7 +27,7 @@ from django.utils.crypto import get_random_string
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from collections import defaultdict
-from .utils import decrypt_id, encrypt_id, handle_recaptcha_validation, get_client_ip
+from .utils import decrypt_id, encrypt_id, handle_recaptcha_validation, get_client_ip, envoyer_emails_multiples
 from .forms import PieceJointeReclamationForm # c'est un fichier que j'ai créé à l'aide de GPT pour éxécuter les validation du model PieceJointeReclamation
 import logging
 import jwt
@@ -3314,7 +3314,6 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Min, Max
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.contrib import messages
@@ -5669,36 +5668,81 @@ def admin_demande_paiement(request):
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def compte_reglement_prof(request):
     """
-    affiche les règlements effectués par l'administrateur 
-    pour une période donnée, permet de passer à la mise à 
-    jour des enregistrements sélectionnés et
-    de visualiser les détails des accord de règlements
+    Affiche les professeurs ayant reçu au moins un paiement sur
+      une période donnée et dont le compte Stripe est inexistant 
+      ou inactif. Les professeurs avec un compte actif apparaissent 
+      à titre informatif, mais leurs enregistrements sont désactivés.
+      Le formulaire permet d’inviter les professeurs par email à activer 
+      leur compte Stripe, et d’afficher leurs détails ainsi que l’état de leurs paiements.
     """
     
     teste = True # pour controler les validations
     date_format = "%d/%m/%Y" # Format date
 
-    # Récupération des dates minimales et maximales depuis la base de données
-    dates = AccordReglement.objects.filter(
-        ~Q(status='Réalisé'),  # Exclure les enregistrements avec status='Réalisé'
-        transfere_id__isnull=True,
-        date_trensfere__isnull=True
-    ).aggregate(
-        min_date=Min('due_date'),
-        max_date=Max('due_date')
+    # Étape 1 : récupérer la date minimum par professeur
+    subquery = (
+        Demande_paiement.objects
+        .filter(
+            user__professeur=OuterRef('user__professeur'),
+            payment_id__isnull=False,
+            statut_demande='Réaliser'
+        )
+        .values('user__professeur')  # group by prof
+        .annotate(min_date=Min('date_modification'))
+        .values('min_date')
     )
 
-    # Définition des valeurs par défaut
-    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
-    date_max = dates['max_date'] or timezone.now().date()
+    demandes = (
+        Demande_paiement.objects
+        .filter(
+            payment_id__isnull=False,
+            statut_demande='Réaliser',
+            date_modification=Subquery(subquery)
+        )
+        .select_related('user', 'user__professeur')
+    )
+
+    # Annoter chaque demande avec un champ status selon les conditions sur le compte Stripe du professeur
+    demandes = demandes.annotate(
+        status=Case(
+            # Stripe non créé et onboarding non terminé -> "En attente"
+            When(
+                Q(user__professeur__stripe_account_id__isnull=True) &
+                Q(user__professeur__stripe_onboarding_complete=False),
+                then=Value("Pas encore de compte Stripe")
+            ),
+            # Stripe créé mais onboarding non terminé -> "En cours"
+            When(
+                Q(user__professeur__stripe_account_id__isnull=False) &
+                Q(user__professeur__stripe_onboarding_complete=False),
+                then=Value("Compte Stripe non achevé")
+            ),
+            # Stripe créé et onboarding terminé -> "Réalisé"
+            When(
+                Q(user__professeur__stripe_account_id__isnull=False) &
+                Q(user__professeur__stripe_onboarding_complete=True),
+                then=Value("Compte Stripe achevé")
+            ),
+            default=Value("Inconnu"),
+            output_field=CharField()
+        )
+    )
+
+    # Récupérer les dates min et max
+    result = demandes.aggregate(
+        min_date=Min('date_modification'),
+        max_date=Max('date_modification')
+    )
+
+    # Attribuer aux variables
+    date_min = result['min_date'] or (timezone.now().date() - timedelta(days=15))
+    date_max = result['max_date'] or timezone.now().date()
+
 
     # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
     date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
     date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
 
-    # # début et fin de période de tri [date_debut_str , date_fin_str]
-    # date_fin_str = request.POST.get('date_fin', timezone.now().date().strftime(date_format))
-    # date_debut_str = request.POST.get('date_debut', (timezone.now().date() - timedelta(days=15)).strftime(date_format))
     statut=""
     date_now = timezone.now().date()
     # Validation du format des dates
@@ -5723,72 +5767,155 @@ def compte_reglement_prof(request):
             teste = False
 
     # Fonction interne pour récupérer les paiements en attente de règlement
-    def get_reglements(date_debut, date_fin, filter_criteria=None):
+    def get_paiements(date_debut, date_fin, filter_criteria=None):
         if filter_criteria is None:
             filter_criteria = {}
 
-        return AccordReglement.objects.filter(
-            due_date__range=(date_debut , date_fin + timedelta(days=1)),
+        return demandes.filter(
+            date_modification__range=(date_debut , date_fin + timedelta(days=1)),
             **filter_criteria
-        ).order_by('due_date') # [date_debut , date_fin]
+        ).order_by('date_modification') 
 
     # Récupérer tous les accords de reglements
-    accord_reglements = get_reglements(date_debut, date_fin)
+    paiements_professeurs = get_paiements(date_debut, date_fin)
 
     # Vérification du type de requête et application des filtres en fonction du bouton cliqué
     if 'btn_tous' in request.POST:
         # Filtrer pour tous les emails
-        accord_reglements = get_reglements(date_debut, date_fin)
+        paiements_professeurs = get_paiements(date_debut, date_fin)
     elif 'btn_en_ettente' in request.POST:
         # Filtrer pour les paiements en attente
-        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En attente'})
+        paiements_professeurs = get_paiements(date_debut, date_fin, {'status': 'Pas encore de compte Stripe'})
         statut = "En attente"
     elif 'btn_en_cours' in request.POST:
         # Filtrer pour les paiements approuvés
-        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'En cours'})
+        paiements_professeurs = get_paiements(date_debut, date_fin, {'status': 'Compte Stripe non achevé'})
         statut = "En cours"
-    elif 'btn_invalide' in request.POST:
-        # Filtrer pour les paiements invalides
-        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Invalide'})
-        statut = "Invalide"
-    elif 'btn_annule' in request.POST:
-        # Filtrer pour les paiements annulés
-        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Annulé'})
-        statut = "Annulé"
     elif 'btn_realiser' in request.POST:
         # Filtrer pour les paiements réclamés par les élèves
-        accord_reglements = get_reglements(date_debut, date_fin, {'status': 'Réalisé'})
+        paiements_professeurs = get_paiements(date_debut, date_fin, {'status': 'Compte Stripe achevé'})
         statut = "Réalisé"
 
-    accord_reglement_approveds = []
-    for accord_reglement in accord_reglements:
-        payments = Payment.objects.filter(id__in=DetailAccordReglement.objects.filter(accord=accord_reglement).values_list('payment_id', flat=True))
-        # si un des paiement est non approuvé par l'élève alors approved = False
-        approved =True
-        for payment in payments:
-            if payment.reclamation: 
-                approved = False
-                break
-        accord_reglement_approveds.append((accord_reglement , approved))
+    paiements_professeursiid_encript=[]
+    for paiements_professeur in paiements_professeurs:
+        id_encript = encrypt_id(paiements_professeur.id)
+        paiements_professeursiid_encript.append((paiements_professeur, id_encript ))
     
-    # Extraction de l'ID du règlement choisi dans le formulaire
-    accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
-    if accord_ids:
+    # Extraction de l'ID de la demande_paiement choisi dans le formulaire par le bouton Détail
+    detail_ids = [key.split('btn_detail_id')[1] for key in request.POST.keys() if key.startswith('btn_detail_id')]
+    if detail_ids:
         # Vérification du nombre d'IDs extraits
-        if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
-            request.session['accord_id'] = int(accord_ids[0])
-            return redirect('admin_reglement_detaille')
+        if len(detail_ids) == 1:  # Un seul ID trouvé, on le stocke en session
+            id = decrypt_id(detail_ids[0])
+            request.session['detail_ids'] = int(id)
+            return redirect('compte_reglement_prof')
 
-        elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
+        elif len(detail_ids) != 1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_administrateur')
+        
+    # Extraction des IDs de la demande_paiement choisi dans le formulaire par form-check-input coché
+    # pour les envois et les enregistrement des email
+    check_ids = [key.split('checkbox_demande_paiement_id')[1] for key in request.POST.keys() if key.startswith('checkbox_demande_paiement_id')]
+    if check_ids:
+        # procédure d'envoie d'email multiple aux professeurs
+        emails = ['prosib25@gmail.com']
+        users = []
+        for check_id in check_ids:
+            demande_paiement_id_decript = decrypt_id(check_id)
+            user = Demande_paiement.objects.filter(id=demande_paiement_id_decript).first().user
+            users.append(user)
+            emails.append(user.email)
+        sujet = "Céer ou finaliser votre compte Stripe"
+        message_html = '''
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      color: #ffffff;
+      background-color: #007bff;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 13px;
+      color: #777777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Bonjour,</h2>
+    <p>
+      Nous vous invitons à <strong>créer votre compte Stripe</strong> ou à le <strong>finaliser</strong> si ce n’est pas déjà fait.
+    </p>
+    <p>
+      Vous disposez actuellement d’un montant payé par un ou plusieurs de vos élèves.  
+      Or, nous sommes dans l’impossibilité de vous transférer vos règlements tant que votre compte Stripe n’est pas actif.
+    </p>
+    <p>
+      Pour créer votre compte Stripe, veuillez cliquer sur le bouton <em>« Créer compte Stripe »</em> dans la barre latérale de votre espace professeur.
+    </p>''' + f'''
+    <a href="{settings.DOMAIN}/compte_reglement_prof" class="btn">Créer mon compte Stripe</a>''' + '''
+    <p class="footer">
+      Merci de votre confiance,<br>
+      <strong>L’équipe Appligne</strong>
+    </p>
+  </div>
+</body>
+</html>
+'''
+        result = envoyer_emails_multiples(request, emails, sujet, message_html)
+        # messages.success(request, f"Emails envoyés = {result['envoyes']}; Emails invalides = {result['invalides']}")
+        # enregistrement des emails
 
+        text_email = '''
+Bonjour,
+
+Nous vous invitons à créer votre compte Stripe ou à le finaliser si ce n'est pas déjà fait.
+
+Vous disposez actuellement d'un montant payé par un ou plusieurs de vos élèves. 
+Nous ne pouvons pas vous transférer vos règlements tant que votre compte Stripe n'est pas actif.
+
+Pour créer votre compte Stripe, connectez-vous à votre espace professeur et cliquez sur le bouton « Créer compte Stripe » dans la barre latérale.
+
+Merci de votre confiance,  
+L'équipe Appligne
+'''
+        for user_destinataire in users:
+            email_telecharge = Email_telecharge(user=request.user, email_telecharge=user_destinataire.email, text_email=text_email, user_destinataire=user_destinataire.id, sujet=sujet)
+            email_telecharge.save()
+        messages.success(request, "Email enregistrer")
+        return redirect('compte_administrateur')
 
 
 
     
     context = {
-        'accord_reglement_approveds': accord_reglement_approveds,
+        'paiements_professeurs': paiements_professeursiid_encript,
         'date_fin':date_fin,
         'date_debut':date_debut,
         'statut': statut,

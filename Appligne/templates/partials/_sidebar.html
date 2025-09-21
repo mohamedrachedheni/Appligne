@@ -205,6 +205,12 @@
                 <ul class="collapse list-unstyled sidebar-submenu" id="paymentsMenu">
                     <li class="sidebar-subheader">Transactions</li>
                     <li class="sidebar-item">
+                        <a href="{% url 'payment:compte_stripe' %}" class="sidebar-link">
+                            <i class="fas fa-search-dollar mr-2"></i>
+                            Compte Stripe
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
                         <a href="{% url 'reglement_nouveau_cours' 'false' %}" class="sidebar-link">
                             <i class="fas fa-file-invoice mr-2"></i>
                             Demander un règlement

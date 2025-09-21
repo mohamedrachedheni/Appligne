@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Compte Stripe{% endblock %}
+
+{% block content %}
+
+<!-- Main Content -->
+<div class="row justify-content-center g-4">
+    <!-- Sidebar -->
+    <div class="col-sm-12 col-md-4 col-lg-2">
+        {% include 'partials/_sidebar.html' %}
+    </div>
+    <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp px-5" data-wow-delay="0.1s">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h2 class="section-title text-center text-primary mb-3">Votre compte Stripe</h2>
+                    {% include 'partials/_alerts.html' %}
+                </div>
+                
+                <!-- État du compte -->
+                <div class="alert alert-info" id="account-status-alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="status-message">Vérification de l'état de votre compte...</span>
+                </div>
+                
+                <!-- Contenu principal -->
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <h4 class="text-primary mb-3">À propos de votre compte Stripe Express</h4>
+                        <p class="mb-4">
+                            Votre compte Stripe Express vous permet de recevoir directement les règlements pour vos cours.
+                            Stripe agit en tant que processeur de paiement sécurisé entre l'établissement et vous.
+                        </p>
+                        
+                        <div class="card bg-light border-0 mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">
+                                    <i class="bi bi-shield-check me-2"></i>Sécurité Stripe
+                                </h5>
+                                <p class="card-text">
+                                    Stripe est certifié PCI DSS de niveau 1, le niveau de certification le plus strict de l'industrie.
+                                    Toutes les données sensibles sont chiffrées et Stripe garantit la protection contre les fraudes.
+                                </p>
+                                <ul class="list-group list-group-flush bg-transparent">
+                                    <li class="list-group-item bg-transparent border-0 px-0 py-1">
+                                        <i class="bi bi-check-circle text-success me-2"></i>Chiffrement de bout en bout
+                                    </li>
+                                    <li class="list-group-item bg-transparent border-0 px-0 py-1">
+                                        <i class="bi bi-check-circle text-success me-2"></i>Surveillance 24/7 des transactions
+                                    </li>
+                                    <li class="list-group-item bg-transparent border-0 px-0 py-1">
+                                        <i class="bi bi-check-circle text-success me-2"></i>Conformité aux normes internationales
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5 class="text-primary">Finalisation du compte</h5>
+                            <p>
+                                Votre compte doit être finalisé pour être actif. Cette procédure nécessite de fournir
+                                quelques informations supplémentaires pour vérifier votre identité et configurer
+                                vos préférences de paiement.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5 class="text-primary">Mises à jour et préférences</h5>
+                            <p>
+                                Une fois votre compte activé, vous pouvez le mettre à jour à tout moment et modifier
+                                vos préférences de règlement, y compris le délai de versement des fonds.
+                            </p>
+                        </div>
+                    </div>
+                    
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Actions du compte</h5>
+                                </div>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-success mb-2" name="creation_compte" id="create-account-btn">
+                                                <i class="bi bi-plus-circle me-2"></i>Créer compte Stripe
+                                            </button>
+
+                                            <button type="submit" class="btn btn-warning mb-2" name="finalize_compte" disabled id="finalize-account-btn" >
+                                                <i class="bi bi-check-circle me-2"></i>Finaliser
+                                            </button>
+
+                                            <button type="submit" class="btn btn-info mb-2" name="update_compte" disabled id="update-account-btn">
+                                                <i class="bi bi-arrow-repeat me-2"></i>Mettre à jour
+                                            </button>
+
+                                            <button type="submit" class="btn btn-secondary" name="desactiver_compte" id="close-account-btn">
+                                                <i class="bi bi-x-circle me-2"></i>Désactiver compte Stripe
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div class="card mt-4 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary">Support Faqs</h6>
+                                    <p class="small mb-2">Besoin d'aide, recherche sur Stripe?</p>
+                                    <a href="{% url 'admin_faq' %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-question-circle me-1"></i>FAQs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top position-fixed bottom-0 end-0 mb-4 me-4">
+    <i class="bi bi-arrow-up"></i>
+</a>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Utiliser la valeur envoyée par Django
+        const accountStatus = "{{ account_status }}";
+
+        // Éléments du DOM
+        const statusAlert = document.getElementById('account-status-alert');
+        const statusMessage = document.getElementById('status-message');
+        const createBtn = document.getElementById('create-account-btn');
+        const finalizeBtn = document.getElementById('finalize-account-btn');
+        const updateBtn = document.getElementById('update-account-btn');
+        const closeBtn = document.getElementById('close-account-btn');
+
+        // Mettre à jour l’interface selon l’état réel
+        function updateUI(status) {
+            switch(status) {
+                case 'not_created':
+                    statusAlert.className = 'alert alert-warning';
+                    statusMessage.innerHTML = '<strong>Compte non créé :</strong> Vous n\'avez pas encore créé de compte Stripe.';
+                    createBtn.disabled = false;
+                    finalizeBtn.disabled = true;
+                    updateBtn.disabled = true;
+                    closeBtn.disabled = true;
+                    break;
+
+                case 'created_incomplete':
+                    statusAlert.className = 'alert alert-warning';
+                    statusMessage.innerHTML = '<strong>Compte créé mais non finalisé :</strong> Veuillez finaliser votre compte pour recevoir des paiements.';
+                    createBtn.disabled = true;
+                    finalizeBtn.disabled = false;
+                    updateBtn.disabled = true;
+                    closeBtn.disabled = false;
+                    break;
+
+                case 'completed_active':
+                    statusAlert.className = 'alert alert-success';
+                    statusMessage.innerHTML = '<strong>Compte actif :</strong> Votre compte Stripe est opérationnel.';
+                    createBtn.disabled = true;
+                    finalizeBtn.disabled = true;
+                    updateBtn.disabled = false;
+                    closeBtn.disabled = false;
+                    break;
+
+                case 'restricted': //réservé pour la production
+                    statusAlert.className = 'alert alert-danger';
+                    statusMessage.innerHTML = '<strong>Compte restreint :</strong> Certaines informations sont manquantes ou incorrectes.';
+                    createBtn.disabled = true;
+                    finalizeBtn.disabled = false;
+                    updateBtn.disabled = false;
+                    closeBtn.disabled = false;
+                    break;
+
+                default:
+                    statusAlert.className = 'alert alert-info';
+                    statusMessage.textContent = 'État du compte inconnu.';
+            }
+        }
+
+        // Initialiser l’UI avec la valeur envoyée par Django
+        updateUI(accountStatus);
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        position: relative;
+        padding-bottom: 15px;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: var(--primary);
+    }
+    
+    .list-group-item {
+        padding-left: 0;
+    }
+</style>
+{% endblock %}

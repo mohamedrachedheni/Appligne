@@ -4,6 +4,22 @@ from django.conf import settings  # Importation des paramètres de configuration
 import logging
 import requests
 
+# envoie email
+import re
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.html import strip_tags
+from django.contrib import messages
+
+# decript / encript
+
+from cryptography.fernet import Fernet
+from django.conf import settings
+
+# check_captcha_verification
+from django.http import JsonResponse
+from django.shortcuts import render
+
 # Configuration du logger avec le nom du module actuel
 logger = logging.getLogger(__name__)
 
@@ -31,8 +47,6 @@ def generate_jwt_token(user_id):
     return token
 
 
-from cryptography.fernet import Fernet
-from django.conf import settings
 
 # Clé Fernet
 fernet = Fernet(settings.SECRET_ENCRYPTION_KEY.encode())
@@ -181,11 +195,6 @@ def get_client_ip(request):
     return remote_addr
 
 
-import logging
-from django.conf import settings
-from django.contrib import messages
-from django.http import JsonResponse
-from django.shortcuts import render
 
 
 logger = logging.getLogger(__name__)
@@ -241,3 +250,62 @@ def handle_recaptcha_validation(captcha_response, user_ip, user_agent, request=N
         is_ajax=is_ajax
     )
     return result  # soit None, soit JsonResponse ou render()
+
+
+
+
+# Regex simple pour valider une adresse email
+EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w+$")
+
+def envoyer_emails_multiples(request, emails, sujet, message_html, from_email=None):
+    """
+    Envoie des emails multiples.
+    
+    Args:
+        request: objet HttpRequest (optionnel, pour messages)
+        emails: liste des emails à envoyer
+        sujet: sujet de l'email
+        message_html: contenu HTML de l'email
+        from_email: expéditeur (par défaut settings.DEFAULT_FROM_EMAIL)
+    
+    Retourne:
+        dict avec nombre d'emails envoyés et liste des emails invalides
+    """
+    if from_email is None:
+        from_email = settings.DEFAULT_FROM_EMAIL
+    
+    emails_envoyes = 0
+    emails_invalides = []
+
+    for email in emails:
+        email = email.strip()
+        if not EMAIL_REGEX.match(email):
+            emails_invalides.append(email)
+            continue  # passer à l'email suivant
+
+        try:
+            send_mail(
+                sujet,
+                strip_tags(message_html),  # version texte
+                from_email,
+                [email],
+                html_message=message_html,
+                fail_silently=False
+            )
+            emails_envoyes += 1
+        except Exception as e:
+            # Ne bloque pas la fonction, on peut loguer l'erreur
+            emails_invalides.append(f"{email} (erreur: {e})")
+            continue
+
+    # Optionnel : ajouter un message Django
+    if request:
+        if emails_envoyes > 0:
+            messages.success(request, f"{emails_envoyes} emails envoyés avec succès.")
+        if emails_invalides:
+            messages.warning(request, f"Certains emails n'ont pas été envoyés : {', '.join(emails_invalides)}")
+
+    return {
+        "envoyes": emails_envoyes,
+        "invalides": emails_invalides
+    }

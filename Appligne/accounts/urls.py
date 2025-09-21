@@ -56,4 +56,5 @@ urlpatterns = [
     path('get_prix_cours/', views.get_prix_cours, name='get_prix_cours'),
     path('ajout_cours_email', views.ajout_cours_email, name='ajout_cours_email'),
     path('get_prix_cours_email/', views.get_prix_cours_email, name='get_prix_cours_email'),
+
 ]

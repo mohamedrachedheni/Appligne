@@ -33,6 +33,7 @@ SECRET_KEY = 'django-insecure-yjb=-9#-u7!9%++z)*)au0z*j_nsognm2mt#=jem%y=5cfx0%l
 DEBUG = True
 
 ALLOWED_HOSTS = [config('ALLOWED_HOST1', "localhost")]
+DOMAIN = config('DOMAIN_KEY')# nom du domain ("http://localhost:8000")
 
 
 # Application definition
@@ -41,17 +42,16 @@ INSTALLED_APPS = [
     'pages.apps.PagesConfig',
     'accounts',
     'eleves',
-    'backups',  # <--- AJOUTE CETTE LIGNE
+    'backups',
+    'cart',
+    'payment',
+    'mathfilters',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'mathfilters',
-    'cart',
-    'payment',
-    
 ]
 
 # Configurer Stripe dans settings.py
