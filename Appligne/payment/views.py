@@ -268,17 +268,15 @@ def payment_success(request):
                     f"Cordialement,\nL’équipe Appligne"
                 )
 
-                email_envoye, email_enregistre = envoie_email(
+                result = envoie_email_multiple(
                     user_id_envoi=request.user.id,
-                    user_id_receveur=prof.id,
+                    liste_user_id_receveurs=[prof.id],
                     sujet_email=sujet,
                     texte_email=texte
                 )
-
-                if not email_envoye:
-                    logger.warning("❗L'e-mail de confirmation de paiement n'a pas été envoyé au professeur.")
-                if not email_enregistre:
-                    logger.warning("❗L'e-mail de confirmation de paiement n'a pas été enregistré.")
+                # ✅ Vérification des erreurs correctement
+                if result.get("erreurs") and len(result["erreurs"]) > 0:
+                    logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
 
                 # Envoi d'email d'information à l'admin si le paiement de l'élève est réalisé
                 admin = User.objects.filter(is_superuser=True).first()
@@ -298,17 +296,15 @@ def payment_success(request):
                         f"Cordialement,\nL’équipe Appligne"
                     )
 
-                    email_envoye_admin, email_enregistre_admin = envoie_email(
+                    result = envoie_email_multiple(
                         user_id_envoi=request.user.id,
-                        user_id_receveur=admin.id,
+                        liste_user_id_receveurs=[admin.id],
                         sujet_email=sujet,
                         texte_email=texte
                     )
-
-                    if not email_envoye_admin:
-                        logger.warning("❗L'e-mail de confirmation n'a pas été envoyé à l'admin.")
-                    if not email_enregistre_admin:
-                        logger.warning("❗L'e-mail de confirmation n'a pas été enregistré pour l'admin.")
+                    # ✅ Vérification des erreurs correctement
+                    if result.get("erreurs") and len(result["erreurs"]) > 0:
+                        logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
                 else:
                     logger.warning("❌ Aucun utilisateur admin (is_superuser=True) trouvé pour notification.")
 
@@ -634,69 +630,111 @@ def update_historique_prof(prof, demande_paiement, user):
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
-def envoie_email(user_id_envoi, user_id_receveur, sujet_email, texte_email, reponse_email_id=None):
-    """
-    Envoie un e-mail entre deux utilisateurs et enregistre l'opération dans Email_telecharge.
+from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.conf import settings
+from datetime import date
+import logging
 
-    Retourne :
-        - email_envoye (bool) : True si l'envoi du mail a réussi
-        - email_enregistre (bool) : True si l'enregistrement a réussi
-    """
-    email_envoye = False
-    email_enregistre = False
+logger = logging.getLogger(__name__)
 
-    # Vérification des utilisateurs
+def envoie_email_multiple(user_id_envoi, liste_user_id_receveurs, sujet_email, texte_email, reponse_email_id=None):
+    """
+    📧 Envoie un e-mail à plusieurs destinataires et enregistre chaque envoi dans Email_telecharge.
+
+    Args:
+        user_id_envoi (int): ID de l'expéditeur.
+        liste_user_id_receveurs (list[int]): Liste des IDs des destinataires.
+        sujet_email (str): Sujet de l'e-mail.
+        texte_email (str): Contenu du message.
+        reponse_email_id (int | None): ID d'un e-mail auquel celui-ci répond (facultatif).
+
+    Returns:
+        dict: Résultat global avec le nombre d'e-mails envoyés et enregistrés.
+    """
+    resultat = {
+        "emails_envoyes": 0,
+        "emails_enregistres": 0,
+        "erreurs": []
+    }
+
+    # ✅ Vérifier l'expéditeur
     try:
         user_envoi = User.objects.get(id=user_id_envoi)
-        user_receveur = User.objects.get(id=user_id_receveur)
-    except User.DoesNotExist as e:
-        logger.error(f"❌ Utilisateur introuvable : {e}")
-        return email_envoye, email_enregistre
+    except User.DoesNotExist:
+        logger.error("❌ Utilisateur expéditeur introuvable.")
+        return resultat
 
     email_expediteur = user_envoi.email
-    email_destinataire = user_receveur.email
 
-    # Validation des e-mails
+    # ✅ Valider l'email expéditeur
     try:
         validate_email(email_expediteur)
-        validate_email(email_destinataire)
-    except ValidationError as e:
-        logger.error(f"❌ E-mail invalide : {e}")
-        return email_envoye, email_enregistre
+    except ValidationError:
+        logger.error(f"❌ Adresse e-mail expéditeur invalide : {email_expediteur}")
+        return resultat
 
-    # Envoi de l'e-mail
-    try:
-        send_mail(
-            subject=sujet_email,
-            message=texte_email,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email_destinataire],
-            fail_silently=False,
-        )
-        logger.info(f"✅ E-mail envoyé de {email_expediteur} à {email_destinataire}")
-        email_envoye = True
-    except Exception as e:
-        logger.error(f"❌ Échec de l'envoi de l'e-mail : {e}")
-        return email_envoye, email_enregistre
+    # ✅ Boucle sur chaque destinataire
+    for user_id in liste_user_id_receveurs:
+        try:
+            user_receveur = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            erreur = f"❌ Utilisateur destinataire ID {user_id} introuvable."
+            logger.error(erreur)
+            resultat["erreurs"].append(erreur)
+            continue
 
-    # Enregistrement dans Email_telecharge
-    try:
-        Email_telecharge.objects.create(
-            user=user_envoi,
-            email_telecharge=email_expediteur,
-            sujet=sujet_email,
-            text_email=texte_email,
-            user_destinataire=user_receveur.id,
-            suivi='Mis à côté',
-            date_suivi=date.today(),
-            reponse_email_id=reponse_email_id if reponse_email_id else None
-        )
-        logger.info("📩 Enregistrement effectué dans Email_telecharge.")
-        email_enregistre = True
-    except Exception as e:
-        logger.error(f"❌ Échec de l'enregistrement dans Email_telecharge : {e}")
+        email_destinataire = user_receveur.email
 
-    return email_envoye, email_enregistre
+        # ✅ Valider email destinataire
+        try:
+            validate_email(email_destinataire)
+        except ValidationError:
+            erreur = f"❌ E-mail destinataire invalide : {email_destinataire}"
+            logger.error(erreur)
+            resultat["erreurs"].append(erreur)
+            continue
+
+        # ✅ Envoi de l'e-mail
+        try:
+            send_mail(
+                subject=sujet_email,
+                message=texte_email,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email_destinataire],
+                fail_silently=False,
+            )
+            logger.info(f"✅ E-mail envoyé à {email_destinataire}")
+            resultat["emails_envoyes"] += 1
+        except Exception as e:
+            erreur = f"❌ Échec d'envoi vers {email_destinataire} : {e}"
+            logger.error(erreur)
+            resultat["erreurs"].append(erreur)
+            continue
+
+        # ✅ Enregistrement en base
+        try:
+            Email_telecharge.objects.create(
+                user=user_envoi,
+                email_telecharge=email_expediteur,
+                sujet=sujet_email,
+                text_email=texte_email,
+                user_destinataire=user_receveur.id,
+                suivi='Mis à côté',
+                date_suivi=date.today(),
+                reponse_email_id=reponse_email_id if reponse_email_id else None
+            )
+            logger.info(f"📩 E-mail enregistré pour {email_destinataire}")
+            resultat["emails_enregistres"] += 1
+        except Exception as e:
+            erreur = f"❌ Échec d'enregistrement pour {email_destinataire} : {e}"
+            logger.error(erreur)
+            resultat["erreurs"].append(erreur)
+            continue
+
+    return resultat
+
 
 import stripe
 import logging
@@ -986,7 +1024,12 @@ def create_transfert_session(request):
             if balance_tx:
                 montant_net_reel = balance_tx['net'] / 100  # Montant net réel (euros)
                 frais_stripe = balance_tx['fee'] / 100      # Frais Stripe (euros)
-                date_mise_en_valeur = datetime.fromtimestamp(balance_tx['available_on'], tz=dt_timezone.utc)
+                # date_mise_en_valeur = datetime.fromtimestamp(balance_tx['available_on'], tz=dt_timezone.utc)
+                timestamp = balance_tx['available_on']
+                if timestamp is not None:
+                    date_mise_en_valeur = datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
+                else:
+                    date_mise_en_valeur = None
                 # date_creation_tx = datetime.fromtimestamp(balance_tx['created'], tz=dt_timezone.utc)
 
                 # print("📊 Détails transfert Stripe :")
@@ -1003,7 +1046,7 @@ def create_transfert_session(request):
         # Dans create_transfert_session, corriger la ligne de redirection :
         except stripe.error.InvalidRequestError as e:
             if "insufficient available funds" in str(e):
-                # Marquer la facture comme en attente, voire les autres modifications à apporter
+                # Marquer la facture comme en attente, voire les autres modifications à apporter (à revoire si en enregistre Invoice ou pas)
                 invoice_transfert.status = 'pending'
                 invoice_transfert.save()
                 
@@ -1019,8 +1062,9 @@ def create_transfert_session(request):
         # 7. Mettre à jour la facture avec les infos Stripe (si transfert réussi)
         invoice_transfert.balance_transaction = transfert.balance_transaction
         invoice_transfert.stripe_transfer_id = transfert.id
-        invoice_transfert.status = 'pending' # la confirmation réelle est dans stripe_transfert_webhook
+        invoice_transfert.status = 'paid' # la confirmation réelle est dans stripe_transfert_webhook ( à changer en production )
         invoice_transfert.paid_at = timezone.now()
+        invoice_transfert.total = transfert.amount / 100
         invoice_transfert.frais_stripe = frais_stripe
         invoice_transfert.montant_net_final = montant_net_reel # ou transfert.amount à introduire
         invoice_transfert.date_mise_en_valeur = date_mise_en_valeur
@@ -1034,7 +1078,7 @@ def create_transfert_session(request):
         stripe_transfer_id=transfert.id,
         amount=transfert.amount,
         currency = transfert.currency,
-        status=Transfer.APPROVED,
+        status=Transfer.APPROVED, # en attante de la confirmation du Webhook (à changer en production par status=Transfer.PENDING)
         )
 
         # 10. Générer le PDF (il faut que l'accé au PDF soit après la confirmation de stripe_transfert_webhook)
@@ -1150,7 +1194,7 @@ def transfert_success(request):
 
     return render(request, 'payment/transfert_success.html', context)
 
-
+# on n'a pas besoin
 @login_required
 def transfert_cancel(request):# on n'a pas besoin
     """
@@ -1293,8 +1337,12 @@ def handle_transfer_created(data_transfer):
     logger.info(f"🔗 Transfert Stripe reçu : {transfer_id} lié à la facture ID={invoice_id}")
 
     montant_net_reel = data_transfer.get("amount", 0) / 100
-    frais_stripe = 0.0
-    date_mise_en_valeur = timezone.now()
+    frais_stripe = data_transfer.get("net", 0) / 100
+    timestamp = data_transfer.get("available_on")
+    if timestamp is not None:
+        date_mise_en_valeur = datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
+    else:
+        date_mise_en_valeur = None
 
     # --- 2️⃣ Récupérer les détails de la transaction Stripe ---
     try:
@@ -1316,12 +1364,12 @@ def handle_transfer_created(data_transfer):
     # --- 3️⃣ Mettre à jour la facture ---
     try:
         invoice = InvoiceTransfert.objects.get(id=invoice_id)
-        invoice.status = "paid"
-        invoice.paid_at = timezone.now()
+        invoice.status = "paid" # à modifier en production le status='paid' n'est confirmé que si handle_payout_paid est confirmé
+        invoice.paid_at = timezone.now() # à modifier en production n'est confirmé que si handle_payout_paid est confirmé
         invoice.stripe_transfer_id = transfer_id
         invoice.balance_transaction = balance_tx_id
         invoice.frais_stripe = frais_stripe
-        invoice.montant_net_final = montant_net_reel
+        invoice.montant_net_final = montant_net_reel # à rectifier si non 'amout' de trensfer
         invoice.date_mise_en_valeur = date_mise_en_valeur
         invoice.save()
 
@@ -1337,8 +1385,8 @@ def handle_transfer_created(data_transfer):
     # --- 4️⃣ Mettre à jour le paiement lié ---
     try:
         if invoice.payment:
-            invoice.payment.status = Payment.APPROVED
-            invoice.payment.payment_date = timezone.now()
+            invoice.payment.status = Payment.APPROVED # à modifier en production le status='paid' n'est confirmé que si handle_payout_paid est confirmé
+            invoice.payment.payment_date = invoice.paid_at
             invoice.payment.save()
             logger.info(f"💳 Paiement ID={invoice.payment.id} mis à jour comme APPROVED.")
         else:
@@ -1354,7 +1402,7 @@ def handle_transfer_created(data_transfer):
                 "payment": invoice.payment,
                 "amount": montant_net_reel,
                 "currency": data_transfer.get("currency", "eur"),
-                "status": Transfer.APPROVED,
+                "status": Transfer.APPROVED, 
                 "balance_transaction_id": balance_tx_id,
                 "processed_at": timezone.now(),
             },
@@ -1400,14 +1448,56 @@ def handle_transfer_created(data_transfer):
     except Exception as e:
         logger.exception("💥 Erreur lors de la mise à jour de l'accord de règlement.")
 
+    # --- 7️⃣ Envoyer un email au professeur et à l'admine ---
+    texte_email = f"""
+    Cher Professeur {invoice.user_professeur.get_full_name()},
+
+    Nous avons le plaisir de vous informer qu’un transfert d’un montant de {invoice.total} € a été créé en votre faveur le {invoice.created_at.strftime('%d/%m/%Y') if hasattr(invoice, 'created_at') else '—'}.
+    La mise à disposition effective des fonds est prévue pour le {invoice.date_mise_en_valeur.strftime('%d/%m/%Y') if invoice.date_mise_en_valeur else '—'}.
+
+    Une facture détaillée relative à cette opération sera disponible prochainement dans votre espace ProfConnect.
+
+    Nous vous remercions pour votre collaboration et vous souhaitons une excellente continuation.
+
+    Bien cordialement,
+    L’équipe ProfConnect
+    """
+
+    # ✅ Appel de la fonction d’envoi multiple (IDs uniquement !)
+    result = envoie_email_multiple(
+        user_id_envoi=invoice.user_admin.id,
+        liste_user_id_receveurs=[invoice.user_professeur.id, invoice.user_admin.id],
+        sujet_email=f"Un transfert de {invoice.total} € a été créé",
+        texte_email=texte_email,
+        reponse_email_id=None
+    )
+    # ✅ Vérification des erreurs correctement
+    if result.get("erreurs") and len(result["erreurs"]) > 0:
+        logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
+
+
+    
+
+
+    
+
+
 
 
 def handle_transfer_failed(transfer):
     """
-    ❌ Géré lorsque le transfert échoue (par exemple : solde insuffisant).
-    
-    - Met à jour l'objet `InvoiceTransfert` avec le statut 'failed' et ajoute un message d'erreur.
-    - Met à jour le `Payment` lié s'il existe.
+    ❌ Géré lorsque le transfert échoue (par exemple :
+        solde insuffisant,
+        Compte connecté incomplet / non vérifié,
+        Compte bancaire invalide / fermé,
+        Banque destinataire a rejeté le paiement(fraude, conformité, Rejet automatique du virement, Compte bloqué par l’établissement bancaire)
+        Compte destination désactivé ou supprimé par stripe,
+        Fonds retournés après acceptation initiale retourné par la banque (par ex. compte inactif, ou rejet tardif)
+      )
+    - Met à jour l'objet `InvoiceTransfert` avec le statut 'failed' et ajoute un message d'erreur.(supprime le PDF s'il existe)
+    - Met à jour le `Payment` lié s'il existe.(revoire la structure avant)
+    - Met à jour AccordReglement et DetailAccordReglement
+    - envoyer email au professeur et à l'admin
     """
     try:
         metadata = transfer.get("metadata", {})

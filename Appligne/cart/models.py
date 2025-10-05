@@ -242,14 +242,14 @@ class InvoiceTransfert(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     balance_transaction = models.CharField(max_length=255, blank=True) # représente l’entrée dans le grand livre Stripe — contient le net, les frais, et la date de disponibilité des fonds.
     stripe_transfer_id = models.CharField(max_length=255, blank=True) # identifiant unique du transfer 
-    total = models.IntegerField(default=0)  # En centimes
-    frais_plateforme = models.IntegerField(default=0)  # En centimes
-    montant_net = models.IntegerField(default=0)  # En centimes
+    total = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
+    frais_plateforme = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
+    montant_net = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)  # En centimes
     pdf = models.FileField(upload_to='invoices_transfert/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
-    frais_stripe = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    montant_net_final = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    frais_stripe = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)
+    montant_net_final = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)
     date_mise_en_valeur = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
