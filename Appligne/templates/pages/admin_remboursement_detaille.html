@@ -52,8 +52,8 @@
                                         <input type="text" class="form-control form-control-intitule" id="due_date_id"  value="{{accord_remboursement.due_date|date:'d/m/Y'}}" readonly >
                                     </div>
                                     <div class="col-md-2 col-sm-12 position-relative ">
-                                        <label for="transfere_id" class="form-label">Transfère</label>
-                                        <input type="text" class="form-control form-control-intitule" id="transfere_id" {% if accord_remboursement.date_trensfere %} value="{{accord_remboursement.date_trensfere|date:'d/m/Y'}} / id= {{accord_remboursement.transfere_id}}" {% else %} value="Pas de transfère" {% endif %} readonly >
+                                        <label for="transfere_id" class="form-label">Transfert</label>
+                                        <input type="text" class="form-control form-control-intitule" id="transfere_id" {% if accord_remboursement.date_trensfere %} value="{{accord_remboursement.date_trensfere|date:'d/m/Y'}} / id= {{accord_remboursement.transfere_id}}" {% else %} value="Pas de transfert" {% endif %} readonly >
                                     </div>
                                 </div>
                                 <br>

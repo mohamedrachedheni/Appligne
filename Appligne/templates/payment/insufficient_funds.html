@@ -1,0 +1,63 @@
+<!-- templates/payment/insufficient_funds.html -->
+<div class="container">
+    <h2>💸 Fonds insuffisants pour le transfert</h2>
+    
+    {% if invoice %}
+    <div class="alert alert-info">
+        <p><strong>Facture :</strong> {{ invoice.invoice_number }}</p>
+        <p><strong>Montant requis :</strong> {{ amount_needed }} €</p>
+    </div>
+    {% endif %}
+    
+    <div class="balance-info">
+        <p><strong>Solde disponible :</strong> {{ available_balance }} €</p>
+        <p><strong>Manquant :</strong> {{ missing_amount }} €</p>
+    </div>
+    
+    <div class="actions">
+        <!-- Bouton pour ajouter des fonds -->
+        <button onclick="addFunds({{ missing_amount|floatformat:0 }})" class="btn btn-primary">
+            ➕ Ajouter {{ missing_amount|floatformat:0 }}€
+        </button>
+        
+        <!-- Bouton pour réessayer (recharge la page précédente) -->
+        <button onclick="retryTransfer()" class="btn btn-success">
+            🔄 Réessayer le transfert
+        </button>
+        
+        <!-- Bouton pour retourner au tableau de bord -->
+        <a href="/admin/" class="btn btn-secondary">
+            📊 Tableau de bord
+        </a>
+    </div>
+    
+    <div id="result"></div>
+</div>
+
+<script>
+function addFunds(amount) {
+    fetch(`/payment/stripe/add-funds/?amount=${amount}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.url) {
+            window.location.href = data.url;
+        }
+      });
+}
+
+
+function retryTransfer() {
+    // Retour à la page précédente ou recharge
+    if (document.referrer) {
+        window.location.href = document.referrer;
+    } else {
+        window.location.href = '/payment/transfert/create/';
+    }
+}
+</script>
+
+<style>
+.alert-success { background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; }
+.alert-danger { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; }
+.btn { margin: 5px; padding: 10px 15px; text-decoration: none; display: inline-block; }
+</style>

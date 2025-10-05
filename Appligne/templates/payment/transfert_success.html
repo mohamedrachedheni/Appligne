@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} | Transfert effectué avec succès{% endblock %}
+
+{% block content %}
+
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-4 col-lg-2">
+            <!-- début sidebar -->
+            {% include 'partials/_sidebar_admin.html' %}
+            <!-- fin sidebar -->
+        </div>
+        <div class="col-sm-12 col-md-8 col-lg-10 wow fadeInUp" data-wow-delay="0.1s">
+            <!-- Début page -->
+            <div class="container-xxl py-1">
+                <div class="container">
+                    <div class="text-center wow fadeInUp py-4" data-wow-delay="0.1s"
+                        style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
+                        <h6 class="section-title bg-white text-center text-primary px-3">Confirmation de transfert</h6>
+                        <h1 class="mb-4">Transfert effectué avec succès</h1>
+                    </div>
+                    <div class="col-md-12">
+                        {% include 'partials/_alerts.html' %}
+                    </div>
+                    
+                    <!-- Carte de confirmation -->
+                    <div class="card border-0 shadow-lg mb-5 wow fadeInUp" data-wow-delay="0.2s">
+                        <div class="card-header bg-success text-white py-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle fa-2x me-3"></i>
+                                <div>
+                                    <h4 class="mb-0">Transfert effectué avec succès</h4>
+                                    <p class="mb-0">Référence: {{ invoice.invoice_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="text-primary mb-3">Informations de facturation</h5>
+                                    <div class="mb-2">
+                                        <strong>Professeur :</strong>
+                                        <p class="mb-0">{{ invoice.user_professeur.get_full_name }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Date du transfert :</strong>
+                                        <p class="mb-0">{{ invoice.paid_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Référence Stripe :</strong>
+                                        <p class="mb-0">{{ invoice.stripe_transfer_id }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="text-primary mb-3">Résumé du transfert</h5>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total brut :</span>
+                                        <strong>{{ invoice.total|floatformat:2 }} €</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Frais Stripe :</span>
+                                        <strong class="text-danger">- {{ invoice.frais_stripe|floatformat:2 }} €</strong>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between mb-0">
+                                        <span class="h5">Montant net transféré :</span>
+                                        <strong class="h4 text-success">{{ invoice.montant_net_final|floatformat:2 }} €</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5 class="text-primary mb-3">Détails des articles</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th class="text-end">Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in items %}
+                                            <tr>
+                                                <td>{{ item.description }}</td>
+                                                <td class="text-end">{{ item.subtotal_euros|floatformat:2 }} €</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex flex-column flex-md-row justify-content-between mt-4 pt-3 border-top">
+                                <a href="{{ invoice.pdf.url }}" class="btn btn-primary btn-lg mb-2 mb-md-0" download>
+                                    <i class="fas fa-file-pdf me-2"></i>Télécharger la facture PDF
+                                </a>
+                                <a href="{% url 'compte_administrateur' %}" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    // Animation pour les éléments de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation pour les éléments de la carte
+        const cardElements = document.querySelectorAll('.card-body > *');
+        cardElements.forEach((element, index) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, 300 + (index * 100));
+        });
+        
+        // Effet de confirmation visuelle
+        const successHeader = document.querySelector('.card-header');
+        if (successHeader) {
+            setTimeout(() => {
+                successHeader.classList.add('pulse-animation');
+                setTimeout(() => {
+                    successHeader.classList.remove('pulse-animation');
+                }, 1000);
+            }, 500);
+        }
+    });
+</script>
+
+<style>
+    /* Styles personnalisés pour la page de confirmation */
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-radius: 0 !important;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+    }
+    
+    .pulse-animation {
+        animation: pulse 1s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+    
+    .btn {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .text-success {
+        color: #198754 !important;
+    }
+    
+    .text-primary {
+        color: #0d6efd !important;
+    }
+    
+    .border-top {
+        border-top: 1px solid #e9ecef !important;
+    }
+</style>
+{% endblock %}

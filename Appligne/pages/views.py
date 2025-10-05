@@ -2337,14 +2337,17 @@ def admin_reglement(request):
             if payment.reclamation: 
                 approved = False
                 break
-        accord_reglement_approveds.append((accord_reglement , approved))
+        accord_reglement_id_encript = encrypt_id(accord_reglement.id)
+
+        accord_reglement_approveds.append((accord_reglement , approved, accord_reglement_id_encript))
     
     # Extraction de l'ID du règlement choisi dans le formulaire
     accord_ids = [key.split('btn_detaille_reglement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_reglement_id')]
     if accord_ids:
         # Vérification du nombre d'IDs extraits
         if len(accord_ids) == 1:  # Un seul ID trouvé, on le stocke en session
-            request.session['accord_id'] = int(accord_ids[0])
+            accord_iddecript = decrypt_id(accord_ids[0]) # à rendre le code optimisé avec try
+            request.session['accord_id'] = accord_iddecript
             return redirect('admin_reglement_detaille')
 
         elif len(accord_ids) != 1:  # Plusieurs IDs trouvés, erreur système
@@ -2431,7 +2434,7 @@ def admin_reglement_email(request):
         sujet = f"Votre accord de règlement pour le: {accord_reglement.due_date.strftime('%d/%m/%Y')} d'un montant de: {accord_reglement.total_amount:.2f}€ est "
         if nouv_status_accord=="En cours": 
             sujet +="en cours"
-            text_email = f"Un transfère bancaire le {date_operation_reglement.strftime('%d/%m/%Y')} d'un montant de {accord_reglement.total_amount:.2f}€ , conformément à votre accord de règlement pour l'échéance du {accord_reglement.due_date.strftime('%d/%m/%Y')} , dans l'attente de la confirmation de la banque. Nous restons à votre disposition pour toute information complémentaire et vous remercions de votre confiance."
+            text_email = f"Un transfert bancaire le {date_operation_reglement.strftime('%d/%m/%Y')} d'un montant de {accord_reglement.total_amount:.2f}€ , conformément à votre accord de règlement pour l'échéance du {accord_reglement.due_date.strftime('%d/%m/%Y')} , dans l'attente de la confirmation de la banque. Nous restons à votre disposition pour toute information complémentaire et vous remercions de votre confiance."
         elif nouv_status_accord=="Réalisé": 
             sujet +="réalisé"
             text_email = f"Une transaction d'un montant de {accord_reglement.total_amount:.2f}€ a été créditée sur votre compte, conformément à votre accord de règlement pour l'échéance du {accord_reglement.due_date.strftime('%d/%m/%Y')}. Nous restons à votre disposition pour toute information complémentaire et vous remercions de votre confiance."
@@ -2514,13 +2517,39 @@ def admin_reglement_email(request):
                     )
                     email_telecharge.save()
                     messages.success(request, "Email enregistré")
-                    if nouv_status_accord!="Réalisé":
+
+                    if nouv_status_accord!="Réaliser": # différent de Réalisé: (Annulé, Invalide, En attante, En cours)
                         # Mise à jour de l'accord de règlement
                         accord_reglement.email_id=email_telecharge.id
                         accord_reglement.status=nouv_status_accord
                         accord_reglement.save()
-                        messages.success(request, "Mise à jour de l'accord de règlement")
-            
+                        # il faut traiter le cas de Annuler à part
+                        k=0
+                        # à réviser le cas Annulé (23/09/2025)
+                        if nouv_status_accord!="Annuler":
+                            k +=1
+                            # Mise à jour Demande_paiement ( un accord de règlement peut contenir plusieur demande de paiement)
+                            demande_paiements = Demande_paiement.objects.filter(accord_reglement_id=i)
+                            if demande_paiements:
+                                for demande_paiement in demande_paiements:
+                                    demande_paiement.reglement_realise = False # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
+                                    demande_paiement.accord_reglement_id = None # dons les demandes de paiement liées peuvent être liées à un autre accore
+                                    demande_paiement.save()
+                                messages.success(request, f"Pour les accords de règlements annulés : les demandes de paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {k}")
+
+                            # Mise à jour Payment dont l'accord de règlement est annulé
+                            paiements = Payment.objects.filter(accord_reglement_id=i)
+                            n=0
+                            if paiements:
+                                for paiement in paiements:
+                                    n +=1
+                                    paiement.reglement_realise = False # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
+                                    paiement.accord_reglement_id = None # dons les demandes de paiement liées peuvent être liées à un autre accore
+                                    paiement.save()
+                                messages.success(request, f"Pour les accords de règlements annulés : les  paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {n}")
+                                
+                        messages.success(request, f"Mise à jour de {l} accord(s) de règlement(s)")
+
                     else:
                         # récupérer date de l'opération et ID de l'opération
                         date_operation_str = request.POST.get(f'date_operation_{i}', "")
@@ -2543,15 +2572,24 @@ def admin_reglement_email(request):
                         messages.success(request, "Mise à jour Demande_paiement")
 
                         # Mise à jour Payment (à réviser)
-                        # Récupérer tous les détails des accords de règlement liés à l'accord donné
-                        detail_accord_reglements = DetailAccordReglement.objects.select_related('payment').filter(accord=accord_reglement)
+                        paiements = Payment.objects.filter(accord_reglement_id=accord_reglement.id)
+                        m=0
+                        for paiement in paiements:
+                            m +=1
+                            paiement.reglement_realise = True # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
+                            paiement.accord_reglement_id = i # dons les demandes de paiement liées peuvent être liées à un autre accore
+                            paiement.save()
+                        messages.success(request, f"Pour les accords de règlements annulés : les  paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {m}")
 
-                        # Récupérer tous les IDs des paiements associés
-                        payment_ids = detail_accord_reglements.values_list('payment_id', flat=True)
+                        # # Récupérer tous les détails des accords de règlement liés à l'accord donné
+                        # detail_accord_reglements = DetailAccordReglement.objects.select_related('payment').filter(accord=accord_reglement)
 
-                        # Mettre à jour en une seule requête les paiements concernés
-                        Payment.objects.filter(id__in=payment_ids).update(accord_reglement_id=accord_reglement.id, reglement_realise=1)
-                        messages.success(request, "Mise à jour payment")
+                        # # Récupérer tous les IDs des paiements associés
+                        # payment_ids = detail_accord_reglements.values_list('payment_id', flat=True)
+
+                        # # Mettre à jour en une seule requête les paiements concernés
+                        # Payment.objects.filter(id__in=payment_ids).update(accord_reglement_id=accord_reglement.id, reglement_realise=1)
+                        # messages.success(request, "Mise à jour payment")
                         # Supprimer reglement_requests de la session après l'enregistrement
                         request.session['reglement_requests']=None # à réviser
                         request.session.modified = True  # Force la mise à jour de la session, à réviser avec Salma
@@ -2608,11 +2646,6 @@ def admin_reglement_detaille(request):
             reclamation_id
         ))
 
-
-    if 'btn_detaille_reglement' in request.POST:
-        # Stockage l'ID de l'accord de règlement dans la session avant redirection
-        request.session['accord_id'] = accord_id
-        return redirect('admin_reglement_modifier')
     
     # Extraction de l'ID du paiement choisi dans le formulaire
     paiement_ids = [key.split('btn_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_paiement_id')]
@@ -2620,7 +2653,7 @@ def admin_reglement_detaille(request):
     if paiement_ids:
         if len(paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
             paiement_id_decrypt = decrypt_id(paiement_ids[0])
-            professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
+            professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur (à vérifier)
             if professeur:
                 paiement = Payment.objects.filter(id=paiement_id_decrypt).first() # il faut que le paiement est pour le professeur
                 if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
@@ -2632,15 +2665,87 @@ def admin_reglement_detaille(request):
         elif len(paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
             messages.error(request, "Erreur système, veuillez contacter le support technique.")
             return redirect('compte_administrateur')
+    
+    if 'btn_modification' in request.POST:
+        # Stockage l'ID de l'accord de règlement dans la session avant redirection
+        request.session['accord_id'] = accord_id
+        return redirect('admin_reglement_modifier')
+    
+    # Paiement règlement professeur
+    if 'btn_detaille_reglement' in request.POST: # passer à la création au paiement de l'accord de règlement
+        # Récupère de nouveau l'objet demande de paiement pour empécher un double enregistrement
+            # c'est une trés bonne idée à généraliser pour les enregistrements importants
+            accord_reglement = get_object_or_404(AccordReglement, id=accord_id)
+            if accord_reglement.payment_id:
+                messages.error(request, "La demande de règlement est déjà payée")
+                return redirect('compte_professeur')
 
+            # Voire si le professeur a un compte stripe
+            # 3. Récupérer le professeur
+            professeur = accord_reglement.professeur
+            if not professeur.stripe_account_id:
+                messages.error(request,'Le professeur n\'a pas de compte Stripe configuré')
+                return redirect('compte_professeur')
+            if not professeur.stripe_onboarding_complete:
+                messages.error(request,'Le professeur a un compte Stripe non actif')
+                return redirect('compte_professeur')
 
+            #1. vider la table Cart du user
+            from cart.models import CartTransfert, CartTransfertItem
+            from payment.views import create_transfert_session
+            CartTransfert.objects.filter(user_admin=request.user).delete()
+            #2. créer un nouveau Cart lié au user
+            cart_transfert = CartTransfert.objects.create(
+                user_admin=request.user,
+                user_professeur=accord_reglement.professeur.user,
+
+                ) # ajouter les autres champs
+            for enr in detaille:
+                payment_id, description, professor_share, reclamation_id = enr
+                CartTransfertItem.objects.create(
+                    cart_transfert=cart_transfert,
+                    description=description,
+                    quantity=1,
+                    price=professor_share*100
+                )
+            logger.info("Panier Stripe préparé pour le professeur %s", accord_reglement.professeur.user)
+            # Seule le paiement est créé (En attente), les autres tables liées au paiement non
+            # leur tour commence aprés confirmation du paiement
+            #4. Création ou mise à jour de l'enregistrement Payment
+            payment, created = Payment.objects.update_or_create(
+                 model="accord_reglement",
+                 model_id=accord_reglement.id,
+                 defaults={
+                     'status': 'En attente',  # À changer par "Approuvé" après validation
+                     'amount': accord_reglement.total_amount,
+                     'currency': "eur",
+                     'language': "Français", # à enlever pas important
+                 }
+             )
+            if created:
+                logger.info(f"✅ Nouveau paiement créé : ID={payment.id}, Montant={payment.amount}")
+            else:
+                logger.info(f"♻️ Paiement existant mis à jour : ID={payment.id}, Montant={payment.amount}")
+
+            #5. lier cart_transfert au payment pour lier invoice au payment dans la view create_checkout_transfert_session
+            cart_transfert.payment = payment # à revoire la logique
+            cart_transfert.save()
+            
+            #6. mise à jour AccordReglement mais l'ID du paiement dans la table AccordReglement n'est pas encore défini car il n'est pas encore effectué
+            accord_reglement.status = "En cours" #  à changer par Approuvé
+            accord_reglement.save()
+            request.session['payment_id'] = payment.id
+            request.session['prof_id'] = professeur.id
+            request.session['accord_reglement_id_decript'] = accord_reglement.id
+            #7. passer à la view de paiement de Stripe (create_transfert_session)
+            return create_transfert_session(request)
+        
     # Passage des données au template
     context = {
         'accord_reglement': accord_reglement,
         'texte_email': texte_email,
         'detaille': detail_list,
     }
-    
     return render(request, 'pages/admin_reglement_detaille.html', context)
 
 
@@ -2800,7 +2905,7 @@ def admin_reglement_modifier(request):
         'texte_email': texte_email,
         'detailles': detailles,
         'paiements_sans_accord': paiements_sans_accord,
-        'date_now':timezone.now().date(), # valeur par défaut pour date transfère
+        'date_now':timezone.now().date(), # valeur par défaut pour date transfert
     }
 
     # Vérification si le formulaire a été soumis pour accorder un règlement
@@ -2885,10 +2990,10 @@ def admin_reglement_modifier(request):
         # Stockage le statut de l'accord de règlement dans la session avant redirection
         request.session['ancien_payment_accords'] = ancien_payment_accords
 
-        # Stockage la date de transfère dans la session avant redirection 
+        # Stockage la date de transfert dans la session avant redirection 
         request.session['date_trensfere'] = request.POST.get('date_trensfere', '')
 
-        # Stockage l'ID de transfère dans la session avant redirection 
+        # Stockage l'ID de transfert dans la session avant redirection 
         request.session['transfere_id'] = request.POST.get('transfere_id', '')
 
         return redirect('admin_accord_reglement_modifier')
@@ -2901,7 +3006,7 @@ def admin_accord_reglement_modifier(request):
     """
     Modifier les accords de règlement pour le professeur 
     (même si le statut est réalisé pour que l'intervention de 
-    l'administrateur soit sans limite),
+    l'administrateur soit sans limite #####[à réviser cette potion le 23/09/2025]#####),
     envoie un email pour le professeur et l'enregistrer
     en fin la mise à jour des paiements selon le statut initial et final
     """
@@ -2943,9 +3048,9 @@ def admin_accord_reglement_modifier(request):
         messages.info(request, "Il n'y a pas de règlement à enregistrer")
         return redirect('admin_payment_accord_reglement')
     
+    # il faux mettre ajour les encien enregistrementd de Accord_reglement puis les nouvaux enregistrement
     payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
-
-    for payment_id in payment_requests: # étier les données de la session
+    for payment_id in payment_requests: # étier les données de la session des nouvaux entegistrements
         payment = Payment.objects.filter(id=payment_id).first()
         # c'est une requette qui lie la table Demande_paiement avec Eleve avec User
         demande_paiement = Demande_paiement.objects.select_related('eleve__user').filter(id=payment.model_id).first()
@@ -3027,8 +3132,8 @@ def admin_accord_reglement_modifier(request):
         accord_reglement.due_date=date_reglement
         if status == "Réalisé":
             accord_reglement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
-            accord_reglement.transfere_id=transfere_id
-        accord_reglement.save()
+            accord_reglement.transfere_id=transfere_id # passer à Stripe
+        accord_reglement.save() 
         msg += str(f"Mise à jour de accord de règlement du {date_reglement}.\n")
         
         # Avant la suppression des anciens détails des accords de règlements 
@@ -3052,6 +3157,7 @@ def admin_accord_reglement_modifier(request):
 
         # Mise à jour des détails des accords de règlements
         # Suppression des anciens détails des accords de règlements
+        # avant de les supprimer il faux mettre ajour Demande de paiement Paiment 
         DetailAccordReglement.objects.filter(accord=accord_id).delete()
         msg += str(f"Suppression des anciens détails des accords de règlements.\n")
 
@@ -4731,10 +4837,10 @@ def admin_remboursement_modifier(request):
         # Stockage le statut de l'accord de règlement dans la session avant redirection (pour mettre à jour les paiements)
         request.session['ancien_payment_accords'] = ancien_payment_accords
 
-        # Stockage la date de transfère dans la session avant redirection 
+        # Stockage la date de transfert dans la session avant redirection 
         request.session['date_trensfere'] = request.POST.get('date_trensfere', '')
 
-        # Stockage l'ID de transfère dans la session avant redirection 
+        # Stockage l'ID de transfert dans la session avant redirection 
         request.session['transfere_id'] = request.POST.get('transfere_id', '')
 
         return redirect('admin_accord_remboursement_modifier')
@@ -4745,7 +4851,7 @@ def admin_remboursement_modifier(request):
         'texte_email': texte_email,
         'detailles': detailles,
         'paiements_sans_accord': paiements_sans_accord,
-        'date_now':timezone.now().date(), # valeur par défaut pour date transfère
+        'date_now':timezone.now().date(), # valeur par défaut pour date transfert
     }
 
 
@@ -4753,9 +4859,9 @@ def admin_remboursement_modifier(request):
 
 
 
-
+##### non achevé ######
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def admin_accord_remboursement_modifier(request):
+def admin_accord_remboursement_modifier(request): ##### non achevé ######
     """
     Modifier les accords de règlement pour le professeur 
     (même si le statut est réalisé pour que l'intervention de 
@@ -4854,7 +4960,7 @@ def admin_accord_remboursement_modifier(request):
         f"Statut accord de règlement : <strong>{status_label}</strong>"
     )
 
-    if status_label=="Réalisé": texte_totaux += f"  --  Nouvelle date de transfère: {date_trensfere}  -- Nouveau ID de transfère: {transfere_id}"
+    if status_label=="Réalisé": texte_totaux += f"  --  Nouvelle date de transfert: {date_trensfere}  -- Nouveau ID de transfert: {transfere_id}"
     texte_fin= texte + texte_totaux
     sujet = f"Accord de remboursement de: {totaux_versement:.2f}€, pour le: {date_remboursement}"
 
@@ -5922,3 +6028,6 @@ L'équipe Appligne
         'date_now':date_now
     }
     return render(request, 'pages/compte_reglement_prof.html', context)
+
+
+    

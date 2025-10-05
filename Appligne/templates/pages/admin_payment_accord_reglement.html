@@ -67,7 +67,7 @@
                                                         <input type="text" class="form-control form-control-date "   placeholder="Sélectionnez une date" name="date_echeance_{{payment.id}}" id="date_ech_{{payment.id}}" value="{{ payment.date_plus_15|date:'d/m/Y' }}" >
                                                     </div>
                                                     <div class="col-md-2 position-relative  " >
-                                                        <input class="form-check-input p-3 ms-1 checkbox_tous " type="checkbox" name="accord_{{payment.id}}" checked >
+                                                        <input class="form-check-input p-3 ms-1 checkbox_tous " type="checkbox" name="accord_{{payment.id}}"  >
                                                     </div>
                                                         <div class="col-md-4 col-sm-12 d-flex justify-content-center mb-3">
                                                             <button type="submit" class="btn {% if not payment.reclamation %} btn-primary {% else %} btn-danger {% endif %}  w-100" name="btn_paiement_id{{ payment.id }}" >

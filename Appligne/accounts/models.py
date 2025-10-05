@@ -11,8 +11,9 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 from eleves.models import Eleve
 from datetime import date, datetime
+from django.utils import timezone  
 from pages.models import Reclamation
-# from datetime import timedelta
+
 
 class Pays(models.Model):
     nom_pays = models.CharField(max_length=100, unique=True)
@@ -466,10 +467,10 @@ class Historique_prof(models.Model):
 
 class Payment(models.Model):
     # Statuts de paiement
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    CANCELED = 'canceled'
-    INVALID = 'invalid'
+    PENDING = 'En attente'
+    APPROVED = 'Approuvé'
+    CANCELED = 'Annulé'
+    INVALID = 'Invalide'
 
     STATUS_CHOICES = [
         (PENDING, 'En attente'), # ('created', 'Créé'),
@@ -481,7 +482,7 @@ class Payment(models.Model):
     model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement)
     model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
     slug = models.CharField(max_length=255)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)
-    reference = models.CharField(max_length=255)  # ’ID du PaymentIntent que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
+    reference = models.CharField(max_length=255)  # ID 'PaymentIntent' que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
     amount = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
@@ -543,18 +544,18 @@ class Detail_demande_paiement(models.Model):  # Demande de paiement
     horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
 
 class AccordReglement(models.Model):
-    # Statuts de l'accord
+    # Statuts de l'accord à changer dans le cas de plusieur payment liés
     PENDING = 'pending'
-    IN_PROGRESS = 'in_progress'
-    COMPLETED = 'completed'
-    INVALID = 'invalid'
+    IN_PROGRESS = 'in_progress' # si au moins un des transferts est réalisé
+    COMPLETED = 'completed' # si tous les transferts liés aux paiements  du DetailAccordReglement sont réussis
+    INVALID = 'invalid' # si tous les transfert liés aux paiements  du DetailAccordReglement sont  invalides
     CANCELED = 'canceled'
 
     STATUS_CHOICES = [
         (PENDING, 'En attente'), # Le règlement est planifié mais non encore effectué avec l'intermédière financier
         (IN_PROGRESS, 'En cours'), # Le règlent est effectué avec l'intermédière financier mais non encore confirmé
-        (COMPLETED, 'Réalisé'), # Le transfère du règlement est achevé
-        (INVALID, 'Invalide'), # L'intermédière financier n'a pas validé le transfère
+        (COMPLETED, 'Réalisé'), # Le transfert du règlement est achevé
+        (INVALID, 'Invalide'), # L'intermédière financier n'a pas validé le transfert
         (CANCELED, 'Annulé'), # Le règlement a été annulé par l'administrateur
     ]
 
@@ -569,8 +570,9 @@ class AccordReglement(models.Model):
     )  # Montant total
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque
-    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfère de l'argent
+    payment_id = models.IntegerField(null=True)  # erreur de structure BD à supprimer
+    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
@@ -580,7 +582,7 @@ class AccordReglement(models.Model):
 
 class DetailAccordReglement(models.Model):
     accord = models.ForeignKey(AccordReglement, on_delete=models.CASCADE)  # Accord lié
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)  # Paiement lié
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)  # Paiement lié à changer un à un (models.OneToOneField)
     professor_share = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
@@ -588,6 +590,7 @@ class DetailAccordReglement(models.Model):
         null=True, 
         blank=True
     )  # Part du professeur
+    stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer
     description = models.TextField()  # Libellé
 
     def __str__(self):
@@ -621,7 +624,7 @@ class AccordRemboursement(models.Model):
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
     transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque
-    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfère de l'argent
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
@@ -658,3 +661,50 @@ class Coordonnees_bancaires(models.Model):
         return f"Coordonnées bancaires de {self.user.username}"
 
 
+class Transfer(models.Model):
+    """
+    📤 Transfert de la part du professeur depuis la plateforme vers son compte connecté.
+    """
+    # Statuts de transfer
+    PENDING = 'pending'
+    APPROVED = 'succeeded'
+    FAILED = 'failed'
+    REVERSED = 'reversed'
+
+    STATUS_CHOICES = [
+        (PENDING, "En attente"),
+        (APPROVED, "Réussi"),
+        (FAILED, "Échoué"),
+        (REVERSED, "Annulé / Remboursé"),
+    ]
+
+    # Relation vers Payment
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name="transfer",
+        help_text="Paiement associé à ce transfert",
+    )
+
+    # Informations Stripe
+    stripe_transfer_id = models.CharField(
+        max_length=255, unique=True, help_text="ID du transfert Stripe"
+    )
+
+    # Montants
+    amount = models.DecimalField(
+        max_digits=10, decimal_places=2, help_text="Montant transféré au professeur"
+    )
+    currency = models.CharField(max_length=10, default="eur")
+
+    # Statut
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="pending", help_text="État du transfert"
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"

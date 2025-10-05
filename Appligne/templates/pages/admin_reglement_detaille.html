@@ -184,12 +184,20 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    {% if request.user.is_authenticated and request.user.is_active and request.user.is_staff or request.user.eleve and request.user.is_active %}
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="submit" class="btn btn-warning" name="btn_detaille_reglement" {% if accord_reglement.status == 'Réalisé' %}disabled{% endif %}>
-                            <i class="fas fa-edit me-1"></i>Modifier l'accord
-                        </button>
+                    {% if request.user.is_authenticated and request.user.is_active and request.user.is_staff  and request.user.is_active %}
+                    <div class="row ">
+                        <div class="col-md-6 col-sm-12 d-grid gap-2 d-flex justify-content-center ">
+                            <button type="submit" class="btn btn-warning" name="btn_modification" {% if accord_reglement.status == 'Réalisé' or accord_reglement.status == 'Annulé' %}disabled{% endif %} >
+                                <i class="fas fa-edit me-1"></i>Passer à la modification de l'accord
+                            </button>
+                        </div>
+                        <div class=" col-md-6 col-sm-12 d-grid gap-2 d-flex justify-content-center ">
+                            <button type="submit" class="btn btn-warning" name="btn_detaille_reglement" {% if not accord_reglement.status == 'En attente' %}disabled{% endif %} >
+                                <i class="fas fa-edit me-1"></i>Passer au règlement
+                            </button>
+                        </div>
                     </div>
+                    
                     {% endif %}
                     {% endif %}
                 </form>

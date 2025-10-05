@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        /* Reset et base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 40px; 
+            color: #333;
+            line-height: 1.6;
+            background-color: #ffffff;
+        }
+        
+        /* En-tête */
+        .header { 
+            text-align: start; 
+            margin-bottom: 0px; 
+            padding-bottom: 0px; 
+            
+            position: relative;
+        }
+        
+        .logo-container {
+            margin-bottom: 0px;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            letter-spacing: 1px;
+        }
+        
+        .invoice-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .invoice-number {
+            font-size: 12px;
+            color: #666;
+            background-color: #f8f9fa;
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        /* Informations */
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .info-card {
+            flex: 1;
+            min-width: 300px;
+            margin: 0 15px 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2c5aa0;
+        }
+        
+        .info-card:last-child {
+            margin-right: 0;
+        }
+        
+        .info-card h3 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+        
+        .info-card p {
+            margin-bottom: 8px;
+        }
+        
+        .highlight {
+            font-weight: 600;
+            color: #2c5aa0;
+        }
+        
+        /* Tableau */
+        .table-section {
+            margin: 30px 0;
+        }
+        
+        .table-section h3 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: #2c5aa0;
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 14px;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr:hover {
+            background-color: #f0f4ff;
+        }
+        
+        /* Totaux */
+        .total-section {
+            margin-top: 30px;
+            text-align: right;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #2c5aa0;
+        }
+        
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            max-width: 400px;
+            margin-left: auto;
+        }
+        
+        .total-label {
+            font-weight: 500;
+        }
+        
+        .total-amount {
+            font-weight: 600;
+            min-width: 120px;
+            text-align: right;
+        }
+        
+        .net-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c5aa0;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        /* Informations de transfert */
+        .transfer-info {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .transfer-info h4 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .transfer-details {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .transfer-item {
+            margin-bottom: 10px;
+            min-width: 250px;
+        }
+        
+        /* Pied de page */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .watermark {
+            opacity: 0.1;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            color: #2c5aa0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Utilitaires */
+        .text-right {
+            text-align: right;
+        }
+        
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+        
+        .mt-20 {
+            margin-top: 20px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Filigrane -->
+    <!-- <div class="watermark">PROFCONNECT</div> -->
+    
+    <!-- En-tête -->
+    <div class="header">
+        <div class="logo-container">
+            <div class="logo">PROFCONNECT</div>
+        </div>
+        <h1 class="invoice-title">Facture de Transfert</h1>
+        <div class="invoice-number">N° {{ invoice.invoice_number }}</div>
+        <p class="mb-10">Date d'émission : {{ invoice.created_at|date:"d/m/Y" }}</p>
+    </div>
+
+    <!-- Informations -->
+    <div class="info-section">
+        <div class="info-card">
+            <h3>Prestataire de service</h3>
+            <p><span class="highlight">{{ professeur.user.get_full_name }}</span></p>
+            <p>Email: {{ professeur.user.email }}</p>
+            <p>Compte Connect Stripe: {{ professeur.stripe_account_id }}</p>
+        </div>
+        <div class="info-card">
+            <h3>Plateforme</h3>
+            <p><span class="highlight">ProfConnect</span></p>
+            <p>Service de mise en relation</p>
+            <p>profconnect@example.com</p>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Détails des prestations -->
+    <div class="table-section">
+        <h3>Détail des prestations</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-right">Sous-total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="text-right">{{ item.subtotal_euros|floatformat:2 }} €</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totaux -->
+    <div class="total-section">
+        <div class="total-line">
+            <span class="total-label">Total brut :</span>
+            <span class="total-amount">{{ invoice.total|floatformat:2 }} €</span>
+        </div>
+        <div class="total-line">
+            <span class="total-label">Frais Stripe :</span>
+            <span class="total-amount">- {{ invoice.frais_stripe|floatformat:2 }} €</span>
+        </div>
+        <div class="total-line net-amount">
+            <span class="total-label">Montant net transféré :</span>
+            <span class="total-amount">{{ invoice.montant_net_final|floatformat:2 }} €</span>
+        </div>
+    </div>
+
+    <!-- Informations de transfert -->
+    <div class="transfer-info">
+        <h4>Informations de transfert</h4>
+        <div class="transfer-details">
+            <div class="transfer-item">
+                <strong>Référence Stripe :</strong> {{ invoice.stripe_transfer_id }}
+            </div>
+            <div class="transfer-item">
+                <strong>Date de transfert :</strong> {{ invoice.paid_at|date:"d/m/Y H:i" }}
+            </div>
+            <div class="transfer-item">
+                <strong>Date de mise en valeur :</strong> {{ invoice.date_mise_en_valeur|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+        <p>ProfConnect - Service de mise en relation entre professeurs et élèves</p>
+        <p>Facture générée automatiquement le {{ invoice.created_at|date:"d/m/Y à H:i" }}</p>
+    </div>
+</body>
+</html>

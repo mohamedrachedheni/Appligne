@@ -13,8 +13,8 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from datetime import date
-from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur
+from datetime import date, datetime
+from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement
 from eleves.models import Eleve
 from django.contrib import messages
 from django.db.models import Sum
@@ -24,6 +24,7 @@ import stripe
 from django.conf import settings
 
 import logging
+import json 
 logger = logging.getLogger(__name__)  # Définit un logger pour ce fichier
 
 import pprint # pour afficher dans cmd  un message formaté (checkout_session)
@@ -907,3 +908,592 @@ def compte_stripe(request):
 @login_required
 def compte_stripe_annuler(request): 
     return render(request, 'payment/compte_stripe_annuler.html')
+
+
+
+import stripe
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from decimal import Decimal
+import json
+
+from cart.models import CartTransfert, CartTransfertItem, InvoiceTransfert
+from cart.models import Cart, CartItem
+from accounts.models import Professeur, Payment
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+from datetime import datetime, timezone as dt_timezone
+
+@login_required
+@user_passes_test(is_admin)
+def create_transfert_session(request):
+    """
+    Crée un transfert direct Stripe avec génération de facture détaillée
+    """
+    try:
+        # 1. Vérifications admin
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+
+        # 2. Récupérer le panier de transfert
+        try:
+            cart = CartTransfert.objects.get(user_admin=request.user)
+        except CartTransfert.DoesNotExist:
+            return JsonResponse({'error': 'Panier de transfert non trouvé'}, status=404)
+
+        if not cart.items.exists():
+            return JsonResponse({'error': 'Le panier de transfert est vide'}, status=400)
+
+        # 3. Récupérer le professeur le teste sur le professeur est déjà fait dans la view admin_reglement_detaille
+        user_professeur = cart.user_professeur
+        professeur = get_object_or_404(Professeur, user=user_professeur)
+
+        # 4. Créer la facture
+        invoice_transfert = InvoiceTransfert.objects.create(
+            user_admin=request.user,
+            user_professeur=professeur.user,
+            status='draft',
+            total=cart.total/100,
+            payment=cart.payment,
+        )
+        
+        # 5. Effectuer le transfert Stripe
+        try:
+            transfert = stripe.Transfer.create(
+                amount=cart.total,  # Montant brut à transférer
+                currency="eur",
+                destination=professeur.stripe_account_id,
+                description=f"Transfert pour {professeur.user.get_full_name()} - Facture {invoice_transfert.invoice_number}",
+                metadata={
+                    'invoice_transfert_id': invoice_transfert.id,
+                    'professeur_id': professeur.id,
+                    'cart_transfert_id': cart.id, # c'est vérifié
+                    'type': 'transfert_direct_professeur'
+                }
+            )
+            
+
+            # ✅ 6bis. Récupérer les détails complets du balance_transaction lié
+            balance_tx = stripe.BalanceTransaction.retrieve(transfert.balance_transaction)
+            if balance_tx:
+                montant_net_reel = balance_tx['net'] / 100  # Montant net réel (euros)
+                frais_stripe = balance_tx['fee'] / 100      # Frais Stripe (euros)
+                date_mise_en_valeur = datetime.fromtimestamp(balance_tx['available_on'], tz=dt_timezone.utc)
+                # date_creation_tx = datetime.fromtimestamp(balance_tx['created'], tz=dt_timezone.utc)
+
+                # print("📊 Détails transfert Stripe :")
+                # print("### ### balance_tx :", balance_tx)
+                # print("Montant net transféré :", montant_net_reel, "€")
+                # print("Frais Stripe :", frais_stripe, "€")
+                # print("Date de mise en valeur :", date_mise_en_valeur)
+                # print("Date de création transaction :", date_creation_tx)
+            else:
+                print("détail non disponible #####")
+
+        # Gestion des paramètres GET (retour de Stripe après redirection)
+        # 6. GESTION SPÉCIFIQUE DE L'ERREUR "FONDS INSUFFISANTS"
+        # Dans create_transfert_session, corriger la ligne de redirection :
+        except stripe.error.InvalidRequestError as e:
+            if "insufficient available funds" in str(e):
+                # Marquer la facture comme en attente, voire les autres modifications à apporter
+                invoice_transfert.status = 'pending'
+                invoice_transfert.save()
+                
+                # ✅ CORRECTION : Utiliser le bon nom avec le namespace ('payment:insufficient_funds')
+                # à vérifier le montant: amount={cart.montant_net/100} ou amount={cart.montant_net}
+                return redirect(reverse('payment:insufficient_funds') + f'?invoice_id={invoice_transfert.id}&amount={cart.montant_net/100}')
+            else:
+                # Relancer les autres types d'erreurs
+                raise e
+        
+        # transfert réussi 
+
+        # 7. Mettre à jour la facture avec les infos Stripe (si transfert réussi)
+        invoice_transfert.balance_transaction = transfert.balance_transaction
+        invoice_transfert.stripe_transfer_id = transfert.id
+        invoice_transfert.status = 'pending' # la confirmation réelle est dans stripe_transfert_webhook
+        invoice_transfert.paid_at = timezone.now()
+        invoice_transfert.frais_stripe = frais_stripe
+        invoice_transfert.montant_net_final = montant_net_reel # ou transfert.amount à introduire
+        invoice_transfert.date_mise_en_valeur = date_mise_en_valeur
+        invoice_transfert.save()
+
+        # créer Transfert
+
+        # Ajouter ou mettre à jour Transfer
+        transfer, created = Transfer.objects.get_or_create(
+        payment=invoice_transfert.payment,
+        stripe_transfer_id=transfert.id,
+        amount=transfert.amount,
+        currency = transfert.currency,
+        status=Transfer.APPROVED,
+        )
+
+        # 10. Générer le PDF (il faut que l'accé au PDF soit après la confirmation de stripe_transfert_webhook)
+        # if not invoice_transfert.pdf:
+        #     try:
+        #         invoice_transfert.generate_pdf()
+        #         invoice_transfert.save()
+        #     except Exception as e:
+        #         print(f"Erreur génération PDF: {e}")
+
+        # TODO: Intégrer ici la logique pour mettre à jour 'accord_reglement' si nécessaire
+
+        # 11. Préparer les données pour le template de succès
+        request.session['invoice_transfert_id']=invoice_transfert.id 
+        request.session['cart_id']=cart.id 
+        return redirect('payment:transfert_success')
+
+    # 12. GESTION GÉNÉRIQUE DES ERREURS STRIPE
+    except stripe.error.StripeError as e:
+        print(f"Erreur Stripe: {e}")
+        if 'invoice_transfert' in locals(): # locals() Retourne toutes les variables locales existantes sous forme de dictionnaire.
+            invoice_transfert.status = 'failed'# on peut traiter invoice_transfert puis qu'elle existe
+        return JsonResponse({'error': f"Erreur Stripe: {str(e)}"}, status=500)
+        
+    # 13. GESTION DES AUTRES ERREURS (traiter les autres cas selon le dictionnaire Stripe avec GPT)
+    except Exception as e:
+        print(f"Erreur lors du transfert: {e}")
+        import traceback
+        print(traceback.format_exc())
+
+        # 🧠 Création d'un journal d'erreur détaillé avec les infos Stripe si disponibles
+        error_context = {}
+
+        # 1️⃣ - Ajouter les infos de l'invoice si elle existe
+        if 'invoice_transfert' in locals():
+            error_context['invoice_id'] = invoice_transfert.id
+            error_context['invoice_status'] = invoice_transfert.status
+
+        # 2️⃣ - Ajouter les infos du panier si dispo
+        if 'cart' in locals():
+            error_context['cart_id'] = cart.id
+            error_context['cart_total'] = cart.total / 100
+
+        # 3️⃣ - Ajouter les infos du professeur si dispo
+        if 'professeur' in locals():
+            error_context['professeur_id'] = professeur.id
+            error_context['professeur_stripe'] = professeur.stripe_account_id
+
+        # 4️⃣ - Ajouter les infos du transfert Stripe s’il a été partiellement créé
+        if 'transfert' in locals() and transfert is not None:
+            error_context.update({
+                "stripe_transfer_id": transfert.get('id'),
+                "stripe_destination": transfert.get('destination'),
+                "stripe_description": transfert.get('description'),
+                "stripe_amount": transfert.get('amount'),
+                "stripe_currency": transfert.get('currency'),
+                "stripe_metadata": transfert.get('metadata'),
+                "stripe_balance_tx": transfert.get('balance_transaction'),
+                "stripe_reversed": transfert.get('reversed'),
+            })
+
+        # 5️⃣ - Marquer la facture comme échouée si elle existe
+        if 'invoice_transfert' in locals():
+            invoice_transfert.status = 'failed'
+            # invoice_transfert.error_message = str(e)[:255]  # tu peux ajouter ce champ dans ton modèle
+            invoice_transfert.save()
+
+        # 6️⃣ - Logger proprement pour le debug
+        print("📛 CONTEXTE ERREUR TRANSFERT :", json.dumps(error_context, indent=2, default=str))
+
+        # 7️⃣ - Retourner l’erreur JSON détaillée pour l’API admin
+        return JsonResponse({
+            'error': 'Erreur critique lors du transfert Stripe.',
+            'details': error_context,
+            'exception': str(e)
+        }, status=500)
+
+    
+
+
+
+
+@login_required
+@user_passes_test(is_admin)
+def transfert_success(request):
+    """
+    Page de succès après transfert
+    """
+    # ✅ 1. Récupérer les IDs depuis la session avec sécurité
+    invoice_transfert_id = request.session.get('invoice_transfert_id')
+    cart_id = request.session.get('cart_id')
+
+    if not invoice_transfert_id or not cart_id:
+        messages.error(request, "Impossible d'afficher la page de succès : informations manquantes.")
+        return redirect('compte_administrateur')  # 🔁 redirige vers une page par défaut
+
+    # ✅ 2. Récupérer les objets depuis la base
+    invoice_transfert = InvoiceTransfert.objects.filter(id=invoice_transfert_id).first()
+    cart_transfert = CartTransfert.objects.filter(id=cart_id).first()
+
+    if not invoice_transfert or not cart_transfert:
+        messages.error(request, "Données du transfert introuvables.")
+        return redirect('compte_administrateur')
+
+    # ✅ 3. Récupérer les items associés
+    cart_items = CartTransfertItem.objects.filter(cart_transfert=cart_transfert)
+
+    # ✅ 4. Préparer le contexte pour le template
+    context = {
+        'invoice': invoice_transfert,
+        'items': cart_items,
+    }
+
+    return render(request, 'payment/transfert_success.html', context)
+
+
+@login_required
+def transfert_cancel(request):# on n'a pas besoin
+    """
+    Page d'annulation du transfert
+    """
+    return render(request, 'payment/transfert_cancel.html')
+
+
+
+# payment/views.py
+
+import json
+import stripe
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from django.conf import settings
+
+import json
+import logging
+import stripe
+from django.conf import settings
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+# 📜 Configuration du logger (on recommande de le définir en haut du fichier)
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def stripe_transfert_webhook(request):
+    """
+    ✅ Webhook Stripe - Gère les événements liés aux transferts et aux payouts.
+    
+    - `transfer.created`   : Un transfert vers un compte connecté vient d'être créé
+    - `transfer.failed`    : Un transfert a échoué
+    - `transfer.reversed`  : Un transfert a été annulé / remboursé
+    - `payout.created`     : Un payout (virement vers compte bancaire) est initié
+    - `payout.paid`        : Un payout a été versé avec succès
+    - `payout.failed`      : Un payout a échoué
+    
+    ⚠️ Ce webhook ne traite que les événements Stripe liés aux transferts et aux payouts.
+    """
+
+    # 1️⃣ - Récupération des données brutes envoyées par Stripe
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TRANSFERT
+
+    logger.info("📩 Webhook Stripe reçu sur /stripe_transfert_webhook")
+
+    # 2️⃣ - Vérifier la signature pour s'assurer que la requête vient bien de Stripe
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+        logger.info("✅ Signature Stripe vérifiée avec succès")
+    except ValueError:
+        # Payload invalide (mauvais JSON ou structure inattendue)
+        logger.error("❌ Échec du parsing du payload Stripe", exc_info=True)
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError:
+        # Signature non valide → webhook potentiellement falsifié
+        logger.critical("🚨 Signature Stripe invalide : webhook refusé")
+        return JsonResponse({'error': 'Invalid signature'}, status=400)
+
+    # 3️⃣ - Extraire les données principales de l'événement
+    event_type = event.get('type')
+    data_object = event['data']['object']
+    logger.info(f"📬 Événement Stripe reçu : {event_type}")
+
+    # 4️⃣ - Dispatcher selon le type d’événement
+    try:
+        if event_type == 'transfer.created':
+            logger.info("🔁 Traitement de l'événement transfer.created")
+            handle_transfer_created(data_object)
+
+        elif event_type == 'transfer.failed':
+            logger.warning("⚠️ Traitement de l'événement transfer.failed")
+            handle_transfer_failed(data_object)
+
+        elif event_type == 'transfer.reversed':
+            logger.info("↩️ Traitement de l'événement transfer.reversed")
+            handle_transfer_reversed(data_object)
+
+        elif event_type == 'payout.created':
+            logger.info("💸 Traitement de l'événement payout.created")
+            handle_payout_created(data_object)
+
+        elif event_type == 'payout.paid':
+            logger.info("✅ Traitement de l'événement payout.paid")
+            handle_payout_paid(data_object)
+
+        elif event_type == 'payout.failed':
+            logger.error("❌ Traitement de l'événement payout.failed")
+            handle_payout_failed(data_object)
+
+        else:
+            logger.info(f"ℹ️ Événement non géré reçu : {event_type}")
+
+    except Exception as e:
+        # Gérer toute exception survenue dans les handlers
+        logger.exception(f"💥 Erreur lors du traitement de l'événement {event_type}: {e}")
+        return JsonResponse({'error': 'Webhook processing failed'}, status=500)
+
+    # 5️⃣ - Répondre à Stripe avec un 200 OK pour indiquer que le webhook est traité
+    logger.info("✅ Webhook Stripe traité avec succès")
+    return HttpResponse(status=200)
+
+# ===================================================================
+# 📦 HANDLERS D'ÉVÉNEMENTS
+# ===================================================================
+import logging
+from django.utils import timezone
+
+
+# 📜 Configuration du logger
+logger = logging.getLogger(__name__)
+
+def handle_transfer_created(data_transfer):
+    """
+    ✅ Gère l'événement Stripe `transfer.created` :
+    
+    - Récupère les détails du transfert et du `balance_transaction`.
+    - Met à jour la facture (`InvoiceTransfert`) liée et le paiement (`Payment`).
+    - Crée ou met à jour un `Transfer`.
+    - Met à jour l'accord de règlement si applicable.
+    - Gère les erreurs de façon robuste et loggée.
+    """
+
+    logger.info("📦 [WEBHOOK] Traitement d’un transfert Stripe créé...")
+
+    # --- 1️⃣ Extraire les données principales ---
+    transfer_id = data_transfer.get("id")
+    balance_tx_id = data_transfer.get("balance_transaction")
+    metadata = data_transfer.get("metadata", {})
+    invoice_id = metadata.get("invoice_transfert_id")
+
+    if not invoice_id:
+        logger.error("❌ Aucun `invoice_transfert_id` trouvé dans les metadata du transfert.")
+        return
+
+    logger.info(f"🔗 Transfert Stripe reçu : {transfer_id} lié à la facture ID={invoice_id}")
+
+    montant_net_reel = data_transfer.get("amount", 0) / 100
+    frais_stripe = 0.0
+    date_mise_en_valeur = timezone.now()
+
+    # --- 2️⃣ Récupérer les détails de la transaction Stripe ---
+    try:
+        if balance_tx_id:
+            balance_tx = stripe.BalanceTransaction.retrieve(balance_tx_id)
+            montant_net_reel = balance_tx.get("net", 0) / 100
+            frais_stripe = balance_tx.get("fee", 0) / 100
+            date_mise_en_valeur = datetime.fromtimestamp(
+                balance_tx["available_on"], tz=dt_timezone.utc
+            )
+            logger.info(f"💶 Détails balance_tx récupérés : net={montant_net_reel}€, frais={frais_stripe}€")
+        else:
+            logger.warning("⚠️ Aucun `balance_transaction` fourni dans le webhook.")
+    except stripe.error.StripeError as e:
+        logger.exception(f"💥 Erreur Stripe lors de la récupération du balance_transaction : {e}")
+    except Exception as e:
+        logger.exception(f"💥 Erreur inattendue lors de la récupération du balance_transaction : {e}")
+
+    # --- 3️⃣ Mettre à jour la facture ---
+    try:
+        invoice = InvoiceTransfert.objects.get(id=invoice_id)
+        invoice.status = "paid"
+        invoice.paid_at = timezone.now()
+        invoice.stripe_transfer_id = transfer_id
+        invoice.balance_transaction = balance_tx_id
+        invoice.frais_stripe = frais_stripe
+        invoice.montant_net_final = montant_net_reel
+        invoice.date_mise_en_valeur = date_mise_en_valeur
+        invoice.save()
+
+        logger.info(f"✅ Facture ID={invoice.id} marquée comme payée.")
+
+    except InvoiceTransfert.DoesNotExist:
+        logger.error(f"❌ Aucune facture trouvée avec ID={invoice_id} pour le transfert {transfer_id}.")
+        return
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors de la mise à jour de la facture ID={invoice_id} : {e}")
+        return
+
+    # --- 4️⃣ Mettre à jour le paiement lié ---
+    try:
+        if invoice.payment:
+            invoice.payment.status = Payment.APPROVED
+            invoice.payment.payment_date = timezone.now()
+            invoice.payment.save()
+            logger.info(f"💳 Paiement ID={invoice.payment.id} mis à jour comme APPROVED.")
+        else:
+            logger.warning(f"⚠️ Aucun paiement lié trouvé pour la facture ID={invoice.id}.")
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors de la mise à jour du paiement lié : {e}")
+
+    # --- 5️⃣ Créer ou mettre à jour l’objet Transfer ---
+    try:
+        transfer, created = Transfer.objects.update_or_create(
+            stripe_transfer_id=transfer_id,
+            defaults={
+                "payment": invoice.payment,
+                "amount": montant_net_reel,
+                "currency": data_transfer.get("currency", "eur"),
+                "status": Transfer.APPROVED,
+                "balance_transaction_id": balance_tx_id,
+                "processed_at": timezone.now(),
+            },
+        )
+        logger.info(
+            f"{'🆕 Nouveau' if created else '🔄 Transfer mis à jour'} Transfer ID={transfer.stripe_transfer_id}"
+        )
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors de la création ou mise à jour du Transfer : {e}")
+
+    # --- 6️⃣ Générer le PDF de la facture ---
+    try:
+        if not invoice.pdf:
+            invoice.generate_pdf()
+            invoice.save()
+            logger.info(f"📄 PDF généré pour la facture ID={invoice.id}.")
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors de la génération du PDF pour la facture ID={invoice.id} : {e}")
+
+    # --- 7️⃣ Mettre à jour l’Accord de règlement si présent ---
+    try:
+        detail_accord_reglement = DetailAccordReglement.objects.filter(payment=invoice.payment).first()
+        if detail_accord_reglement:
+            detail_accord_reglement.stripe_transfer_id = transfer.stripe_transfer_id
+            detail_accord_reglement.save()
+
+            accord_reglement = detail_accord_reglement.accord
+            all_transfers_done = not DetailAccordReglement.objects.filter(
+                accord=accord_reglement, stripe_transfer_id__isnull=True
+            ).exists()
+
+            accord_reglement.status = (
+                AccordReglement.COMPLETED if all_transfers_done else AccordReglement.IN_PROGRESS
+            )
+            accord_reglement.save()
+
+            logger.info(
+                f"📑 AccordReglement ID={accord_reglement.id} mis à jour : "
+                f"status={accord_reglement.status}"
+            )
+        else:
+            logger.warning(f"⚠️ Aucun DetailAccordReglement trouvé pour le paiement ID={invoice.payment.id}")
+    except Exception as e:
+        logger.exception("💥 Erreur lors de la mise à jour de l'accord de règlement.")
+
+
+
+def handle_transfer_failed(transfer):
+    """
+    ❌ Géré lorsque le transfert échoue (par exemple : solde insuffisant).
+    
+    - Met à jour l'objet `InvoiceTransfert` avec le statut 'failed' et ajoute un message d'erreur.
+    - Met à jour le `Payment` lié s'il existe.
+    """
+    try:
+        metadata = transfer.get("metadata", {})
+        invoice_id = metadata.get("invoice_transfert_id")
+
+        if not invoice_id:
+            logger.warning("⚠️ Aucun 'invoice_transfert_id' trouvé dans les metadata du transfert échoué.")
+            return
+
+        invoice = InvoiceTransfert.objects.get(id=invoice_id)
+
+        # 🚨 Mise à jour de la facture en échec
+        invoice.status = 'failed'
+        invoice.error_message = "Transfert échoué - solde insuffisant ou erreur Stripe."
+        invoice.save()
+        logger.error(f"❌ Transfert échoué pour la facture {invoice.id} (transfer ID: {transfer['id']})")
+
+        # 🔄 Mise à jour du paiement si existant
+        if invoice.payment:
+            invoice.payment.status = Payment.FAILED
+            invoice.payment.save()
+            logger.warning(f"💳 Paiement lié (ID: {invoice.payment.id}) marqué comme FAILED.")
+
+    except InvoiceTransfert.DoesNotExist:
+        logger.error(f"❌ Facture {invoice_id} introuvable pour transfert échoué {transfer['id']}", exc_info=True)
+    except Exception as e:
+        logger.exception(f"💥 Erreur inattendue lors du traitement d'un transfert échoué : {e}")
+
+
+def handle_transfer_reversed(transfer):
+    """
+    ↩️ Géré lorsque Stripe annule ou reverse un transfert déjà effectué.
+    
+    - Met à jour `InvoiceTransfert` avec le statut 'reversed'.
+    - Met à jour le `Payment` lié s'il existe.
+    """
+    try:
+        metadata = transfer.get("metadata", {})
+        invoice_id = metadata.get("invoice_transfert_id")
+
+        if not invoice_id:
+            logger.warning("⚠️ Aucun 'invoice_transfert_id' trouvé dans les metadata du transfert reversé.")
+            return
+
+        invoice = InvoiceTransfert.objects.get(id=invoice_id)
+
+        # 🔄 Mise à jour de la facture comme "reversed"
+        invoice.status = 'reversed'
+        invoice.save()
+        logger.info(f"↩️ Transfert reversé pour la facture {invoice.id} (transfer ID: {transfer['id']})")
+
+        # 🔄 Mettre à jour le paiement si existant
+        if invoice.payment:
+            invoice.payment.status = Payment.CANCELED
+            invoice.payment.save()
+            logger.info(f"💳 Paiement lié (ID: {invoice.payment.id}) marqué comme CANCELED.")
+
+    except InvoiceTransfert.DoesNotExist:
+        logger.error(f"❌ Facture {invoice_id} introuvable pour transfert reversé {transfer['id']}", exc_info=True)
+    except Exception as e:
+        logger.exception(f"💥 Erreur inattendue lors du traitement d'un transfert reversé : {e}")
+
+
+def handle_payout_created(payout):
+    """
+    💸 Géré lorsque Stripe prépare un virement vers le compte bancaire.
+    """
+    amount = payout.get('amount', 0) / 100
+    currency = payout.get('currency', 'unknown')
+    payout_id = payout.get('id')
+    logger.info(f"📤 Payout créé : {payout_id} - Montant : {amount} {currency}")
+
+
+def handle_payout_paid(payout):
+    """
+    ✅ Géré lorsque Stripe confirme que le virement vers le compte bancaire est effectué.
+    """
+    payout_id = payout.get('id')
+    logger.info(f"🏦 Virement vers le compte bancaire réussi : {payout_id}")
+
+
+def handle_payout_failed(payout):
+    """
+    🚫 Géré lorsque le virement bancaire échoue.
+    """
+    payout_id = payout.get('id')
+    failure_reason = payout.get('failure_message', 'Raison non spécifiée')
+    logger.error(f"🚫 Virement bancaire échoué : {payout_id} - Raison : {failure_reason}")
+
