@@ -1038,12 +1038,12 @@ def create_transfert_session(request):
         )
 
         # 10. Générer le PDF (il faut que l'accé au PDF soit après la confirmation de stripe_transfert_webhook)
-        # if not invoice_transfert.pdf:
-        #     try:
-        #         invoice_transfert.generate_pdf()
-        #         invoice_transfert.save()
-        #     except Exception as e:
-        #         print(f"Erreur génération PDF: {e}")
+        if not invoice_transfert.pdf:
+            try:
+                invoice_transfert.generate_pdf()
+                invoice_transfert.save()
+            except Exception as e:
+                print(f"Erreur génération PDF: {e}")
 
         # TODO: Intégrer ici la logique pour mettre à jour 'accord_reglement' si nécessaire
 
