@@ -710,6 +710,8 @@ class Transfer(models.Model):
         (FAILED, "Échoué"),
         (REVERSED, "Annulé / Remboursé"),
     ]
+    # destinataire du transfert
+    user_transfer_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # à réviser les view liées
 
     # Relation vers Payment
     payment = models.OneToOneField(
@@ -732,7 +734,7 @@ class Transfer(models.Model):
 
     # Statut
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending", help_text="État du transfert"
+        max_length=20, choices=STATUS_CHOICES, default=PENDING, help_text="État du transfert"
     )
 
     # Timestamps
@@ -742,3 +744,40 @@ class Transfer(models.Model):
     def __str__(self):
         return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"
     
+
+class RefundPayment(models.Model):
+    """
+    🔄 Remboursement (total ou partiel) d'un paiement vers l'élève.
+    Peut être déclenché automatiquement (litige) ou manuellement.
+    """
+    # Statuts de RefundPayment
+    PENDING = 'pending'
+    APPROVED = 'succeeded'
+    FAILED = 'failed'
+
+    STATUS_CHOICES = [
+        (PENDING, 'En attente'),
+        (APPROVED, 'Réussi'),
+        (FAILED, 'Échoué'),
+    ]
+
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='refunds')
+    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.CharField(max_length=255, null=True, blank=True)
+    stripe_refund_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Refund #{self.id} - Payment {self.payment.id} ({self.status})"
+
+class WebhookEvent(models.Model):
+    event_id = models.CharField(max_length=255, unique=True)
+    type = models.CharField(max_length=100)
+    payload = models.JSONField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.type

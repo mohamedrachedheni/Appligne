@@ -32,6 +32,9 @@ from .models import DetailAccordReglement
 from .models import Coordonnees_bancaires
 from .models import AccordRemboursement
 from .models import DetailAccordRemboursement
+from .models import Transfer
+from .models import RefundPayment
+from .models import WebhookEvent
 
 
 
@@ -80,4 +83,7 @@ admin.site.register(DetailAccordReglement)
 admin.site.register(Coordonnees_bancaires)
 admin.site.register(AccordRemboursement)
 admin.site.register(DetailAccordRemboursement)
+admin.site.register(Transfer)
+admin.site.register(RefundPayment)
+admin.site.register(WebhookEvent)
 

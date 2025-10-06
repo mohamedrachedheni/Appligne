@@ -14,7 +14,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import date, datetime
-from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement
+from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement, WebhookEvent
 from eleves.models import Eleve
 from django.contrib import messages
 from django.db.models import Sum
@@ -419,67 +419,99 @@ Sinon, Django rejetterait la requête avec une erreur 403.
 Cette vue est exempte de protection CSRF car Stripe n’envoie pas de token CSRF.
 C’est obligatoire pour les webhooks externes.
 """
+import json
+import logging
+import stripe
+from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def stripe_webhook(request):
     """
-    La fonction stripe_webhook permet de recevoir des notifications automatiques de Stripe concernant des événements comme :
-        un paiement terminé,
-        une facture créée,
-        un abonnement mis à jour, etc.
-        👉 Dans ce cas précis, elle met à jour la facture (Invoice) quand un paiement est réussi.
+    📡 Réception des webhooks Stripe :
+    - Vérifie la signature pour authentifier la source
+    - Enregistre l'événement reçu dans WebhookEvent
+    - Traite les événements importants (ex: checkout.session.completed)
     """
-    # Récupération du contenu brut
-    payload = request.body # payload : contient le corps brut de la requête (les données JSON envoyées par Stripe).
-    sig_header = request.META['HTTP_STRIPE_SIGNATURE'] # sig_header : contient l'en-tête spécial envoyé par Stripe, (Stripe-Signature) utilisé pour vérifier que la requête est bien authentique.
+
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
     event = None
 
-    try: # Vérification de la signature
-        """
-        Stripe signe les webhooks pour authentifier la source.
-            construct_event(...) :
-            vérifie la signature avec ta clé secrète Stripe pour webhooks : STRIPE_WEBHOOK_SECRET
-            parse et retourne l'objet event.
-        """
+    # --- 1️⃣ Vérification de la signature ---
+    try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-    # Gestion des erreurs possibles :
-    except ValueError as e: # Si les données sont invalides (parsing JSON échoue) → 400
+        logger.info(f"✅ Webhook Stripe reçu : {event['type']}")
+
+    except ValueError:
+        logger.error("❌ Erreur parsing JSON du payload Stripe.")
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e: # Si la signature est mauvaise (fausse requête) → 400
+    except stripe.error.SignatureVerificationError:
+        logger.error("❌ Signature Stripe invalide - webhook refusé.")
+        return HttpResponse(status=400)
+    except Exception as e:
+        logger.exception(f"💥 Erreur inattendue lors de la vérification du webhook : {e}")
         return HttpResponse(status=400)
 
-    if event['type'] == 'checkout.session.completed': # Si l’événement est un paiement terminé
-        # "Le client a terminé la session de paiement (checkout) avec succès."
-        session = event['data']['object'] # Récupération de la session Stripe
-        """
-        session contient tous les détails du paiement 
-        (total, statut, id utilisateur, metadata, etc.).
-        C’est ce qu’on avait initialisé au moment de Session.create(...).
-        """
-        try: # Récupération de la facture liée
-            invoice = Invoice.objects.get(id=session.metadata.invoice_id)
-            if session.payment_status == 'paid': # Si le paiement est bien effectué
-                """
-                Si Stripe confirme que le paiement est terminé ('paid'), on :
-                    met à jour le statut de la facture dans la base de données,
-                    enregistre la date du paiement (paid_at).
-                """
-                invoice.status = 'paid'
+    # --- 2️⃣ Enregistrer l’événement dans WebhookEvent ---
+    try:
+        event_id = event.get("id")
+        event_type = event.get("type")
+        payload_json = json.loads(payload.decode("utf-8"))
+
+        webhook_event, created = WebhookEvent.objects.get_or_create(
+            event_id=event_id,
+            defaults={
+                "type": event_type,
+                "payload": payload_json,
+            },
+        )
+
+        if created:
+            logger.info(f"📬 Nouvel événement Stripe enregistré : {event_id} ({event_type})")
+        else:
+            logger.warning(f"⚠️ Événement Stripe déjà reçu : {event_id}")
+
+    except Exception as e:
+        logger.exception(f"💥 Impossible d’enregistrer l’événement Stripe dans WebhookEvent : {e}")
+
+    # --- 3️⃣ Traiter les événements importants ---
+    try:
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            logger.info("💳 Paiement complété : traitement de la facture...")
+
+            invoice_id = session.get("metadata", {}).get("invoice_id")
+            if not invoice_id:
+                logger.warning("⚠️ Aucun `invoice_id` trouvé dans metadata de la session.")
+                return HttpResponse(status=200)
+
+            try:
+                invoice = Invoice.objects.get(id=invoice_id)
+            except Invoice.DoesNotExist:
+                logger.error(f"❌ Facture ID={invoice_id} introuvable.")
+                return HttpResponse(status=200)
+
+            if session.get("payment_status") == "paid":
+                invoice.status = "paid"
                 invoice.paid_at = timezone.now()
                 invoice.save()
-                
-        except Invoice.DoesNotExist: # Si la facture n’est pas trouvée
-            """
-            Si une erreur survient (facture supprimée, mauvaise donnée, etc.), on ignore l’erreur.
-            En production, tu pourrais logger ce cas pour audit/debug.
-            """
-            pass
-    """
-    On envoie un code 200 OK à Stripe pour confirmer qu’on a bien traité le webhook.
-    Si tu renvoies autre chose (erreur 500 par exemple), Stripe réessaiera plus tard.
-    """
+                logger.info(f"✅ Facture ID={invoice.id} mise à jour comme payée.")
+            else:
+                logger.warning(f"⚠️ Paiement session {session['id']} non marqué comme 'paid'.")
+
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors du traitement de l’événement {event['type']} : {e}")
+
+    # --- ✅ Réponse finale ---
     return HttpResponse(status=200)
+
 """
 🔒 Résumé des bonnes pratiques mises en place :
 Sécurité / Robustesse	✅ Mise en œuvre
@@ -913,13 +945,6 @@ def compte_stripe(request):
     return render(request, "payment/compte_stripe.html", context)
 
 
-
-@login_required
-def compte_stripe_annuler(request): 
-    return render(request, 'payment/compte_stripe_annuler.html')
-
-
-
 import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -1047,6 +1072,7 @@ def create_transfert_session(request):
         transfer, created = Transfer.objects.get_or_create(
         payment=invoice_transfert.payment,
         stripe_transfer_id=transfert.id,
+        user_transfer_to=user_professeur,
         amount=transfert.amount,
         currency = transfert.currency,
         status=Transfer.APPROVED, # en attante de la confirmation du Webhook (à changer en production par status=Transfer.PENDING)
@@ -1197,79 +1223,88 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def stripe_transfert_webhook(request):
     """
-    ✅ Webhook Stripe - Gère les événements liés aux transferts et aux payouts.
+    📡 Webhook Stripe - Gère les événements liés aux transferts et payouts.
     
     - `transfer.created`   : Un transfert vers un compte connecté vient d'être créé
     - `transfer.failed`    : Un transfert a échoué
     - `transfer.reversed`  : Un transfert a été annulé / remboursé
-    - `payout.created`     : Un payout (virement vers compte bancaire) est initié
-    - `payout.paid`        : Un payout a été versé avec succès
-    - `payout.failed`      : Un payout a échoué
-    
-    ⚠️ Ce webhook ne traite que les événements Stripe liés aux transferts et aux payouts.
+    - `payout.created`     : Un virement bancaire est initié
+    - `payout.paid`        : Le virement a été effectué avec succès
+    - `payout.failed`      : Le virement a échoué
     """
 
-    # 1️⃣ - Récupération des données brutes envoyées par Stripe
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TRANSFERT
 
     logger.info("📩 Webhook Stripe reçu sur /stripe_transfert_webhook")
 
-    # 2️⃣ - Vérifier la signature pour s'assurer que la requête vient bien de Stripe
+    # 1️⃣ Vérification de la signature Stripe
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-        logger.info("✅ Signature Stripe vérifiée avec succès")
+        logger.info(f"✅ Signature Stripe vérifiée pour l’événement : {event['id']}")
     except ValueError:
-        # Payload invalide (mauvais JSON ou structure inattendue)
-        logger.error("❌ Échec du parsing du payload Stripe", exc_info=True)
+        logger.error("❌ Erreur : Payload JSON invalide")
         return JsonResponse({'error': 'Invalid payload'}, status=400)
     except stripe.error.SignatureVerificationError:
-        # Signature non valide → webhook potentiellement falsifié
-        logger.critical("🚨 Signature Stripe invalide : webhook refusé")
+        logger.critical("🚨 Signature Stripe invalide - Requête rejetée")
         return JsonResponse({'error': 'Invalid signature'}, status=400)
+    except Exception as e:
+        logger.exception(f"💥 Erreur inattendue lors de la vérification de signature : {e}")
+        return JsonResponse({'error': 'Webhook verification failed'}, status=400)
 
-    # 3️⃣ - Extraire les données principales de l'événement
+    event_id = event.get('id')
     event_type = event.get('type')
     data_object = event['data']['object']
-    logger.info(f"📬 Événement Stripe reçu : {event_type}")
 
-    # 4️⃣ - Dispatcher selon le type d’événement
+    # 2️⃣ Enregistrer l’événement dans WebhookEvent (évite les doublons)
     try:
-        if event_type == 'transfer.created':
-            logger.info("🔁 Traitement de l'événement transfer.created")
-            handle_transfer_created(data_object)
+        payload_json = json.loads(payload.decode('utf-8'))
 
-        elif event_type == 'transfer.failed':
-            logger.warning("⚠️ Traitement de l'événement transfer.failed")
-            handle_transfer_failed(data_object)
+        webhook_event, created = WebhookEvent.objects.get_or_create(
+            event_id=event_id,
+            defaults={
+                'type': event_type,
+                'payload': payload_json,
+            }
+        )
 
-        elif event_type == 'transfer.reversed':
-            logger.info("↩️ Traitement de l'événement transfer.reversed")
-            handle_transfer_reversed(data_object)
-
-        elif event_type == 'payout.created':
-            logger.info("💸 Traitement de l'événement payout.created")
-            handle_payout_created(data_object)
-
-        elif event_type == 'payout.paid':
-            logger.info("✅ Traitement de l'événement payout.paid")
-            handle_payout_paid(data_object)
-
-        elif event_type == 'payout.failed':
-            logger.error("❌ Traitement de l'événement payout.failed")
-            handle_payout_failed(data_object)
-
+        if created:
+            logger.info(f"📬 Nouvel événement Stripe enregistré : {event_id} ({event_type})")
         else:
-            logger.info(f"ℹ️ Événement non géré reçu : {event_type}")
+            logger.warning(f"⚠️ Événement Stripe déjà reçu : {event_id} ({event_type}) — ignoré pour éviter un traitement en double")
+            return HttpResponse(status=200)
 
     except Exception as e:
-        # Gérer toute exception survenue dans les handlers
-        logger.exception(f"💥 Erreur lors du traitement de l'événement {event_type}: {e}")
+        logger.exception(f"💥 Impossible d’enregistrer l’événement Stripe dans WebhookEvent : {e}")
+        return JsonResponse({'error': 'Database error'}, status=500)
+
+    # 3️⃣ Dispatcher vers le bon handler
+    try:
+        logger.info(f"📊 Traitement de l’événement : {event_type}")
+
+        handlers_map = {
+            'transfer.created': handle_transfer_created,
+            'transfer.failed': handle_transfer_failed,
+            'transfer.reversed': handle_transfer_reversed,
+            'payout.created': handle_payout_created,
+            'payout.paid': handle_payout_paid,
+            'payout.failed': handle_payout_failed,
+        }
+
+        handler = handlers_map.get(event_type) # c'est une variable
+        if handler:
+            handler(data_object) # c'est une fonction
+            logger.info(f"✅ Événement {event_type} traité avec succès")
+        else:
+            logger.info(f"ℹ️ Événement non géré : {event_type}")
+
+    except Exception as e:
+        logger.exception(f"💥 Erreur lors du traitement de l’événement {event_type} : {e}")
         return JsonResponse({'error': 'Webhook processing failed'}, status=500)
 
-    # 5️⃣ - Répondre à Stripe avec un 200 OK pour indiquer que le webhook est traité
-    logger.info("✅ Webhook Stripe traité avec succès")
+    # 4️⃣ Réponse finale à Stripe
+    logger.info("✅ Webhook Stripe traité avec succès ✅")
     return HttpResponse(status=200)
 
 # ===================================================================
@@ -1369,6 +1404,7 @@ def handle_transfer_created(data_transfer):
     try:
         transfer, created = Transfer.objects.update_or_create(
             stripe_transfer_id=transfer_id,
+            user_transfer_to=invoice.payment.professeur.user, # car la conseption du model Transfer peut être pour différent User
             defaults={
                 "payment": invoice.payment,
                 "amount": montant_net_reel,
