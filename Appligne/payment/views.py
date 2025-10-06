@@ -254,6 +254,7 @@ def payment_success(request):
                 handle_reglement(request, demande_paiement, prof, request.user, payment_id)
                 
                 # Envoi d'email d'information au professeur si le paiement est réalisé
+                admin = User.objects.filter(is_superuser=True).first()
                 sujet = (
                     f"Paiement confirmé : {request.user.first_name} {request.user.last_name} "
                     f"a réglé la demande du {demande_paiement.date_creation.strftime('%d/%m/%Y')} "
@@ -270,43 +271,13 @@ def payment_success(request):
 
                 result = envoie_email_multiple(
                     user_id_envoi=request.user.id,
-                    liste_user_id_receveurs=[prof.id],
+                    liste_user_id_receveurs=[prof.id, admin.id],
                     sujet_email=sujet,
                     texte_email=texte
                 )
                 # ✅ Vérification des erreurs correctement
                 if result.get("erreurs") and len(result["erreurs"]) > 0:
                     logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
-
-                # Envoi d'email d'information à l'admin si le paiement de l'élève est réalisé
-                admin = User.objects.filter(is_superuser=True).first()
-                if admin:
-                    sujet = (
-                        f"[ADMIN] Paiement confirmé : {request.user.first_name} {request.user.last_name} "
-                        f"a réglé la demande du {demande_paiement.date_creation.strftime('%d/%m/%Y')} "
-                        f"d'un montant de {demande_paiement.montant:.2f} €"
-                    )
-                    texte = (
-                        f"Bonjour Administrateur,\n\n"
-                        f"L'élève {request.user.first_name} {request.user.last_name} a effectué le paiement de la demande "
-                        f"datée du {demande_paiement.date_creation.strftime('%d/%m/%Y')} pour un montant de "
-                        f"{demande_paiement.montant:.2f} €.\n\n"
-                        f"Professeur concerné : {prof.first_name} {prof.last_name} (ID: {prof.id})\n"
-                        f"Élève : {request.user.first_name} {request.user.last_name} (ID: {request.user.id})\n\n"
-                        f"Cordialement,\nL’équipe Appligne"
-                    )
-
-                    result = envoie_email_multiple(
-                        user_id_envoi=request.user.id,
-                        liste_user_id_receveurs=[admin.id],
-                        sujet_email=sujet,
-                        texte_email=texte
-                    )
-                    # ✅ Vérification des erreurs correctement
-                    if result.get("erreurs") and len(result["erreurs"]) > 0:
-                        logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
-                else:
-                    logger.warning("❌ Aucun utilisateur admin (is_superuser=True) trouvé pour notification.")
 
                 # vider la session
                 request.session.pop('payment_id', None)

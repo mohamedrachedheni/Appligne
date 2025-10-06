@@ -467,44 +467,77 @@ class Historique_prof(models.Model):
 
 class Payment(models.Model):
     # Statuts de paiement
-    PENDING = 'En attente'
-    APPROVED = 'Approuvé'
-    CANCELED = 'Annulé'
-    INVALID = 'Invalide'
+    PENDING = 'En attente' # "pending"
+    APPROVED = 'Approuvé' # "succeeded"
+    CANCELED = 'Annulé' # à supprimer
+    INVALID = 'Invalide' # "failed"
+    REFUNDED = 'Remboursé' # "refunded"
 
     STATUS_CHOICES = [
         (PENDING, 'En attente'), # ('created', 'Créé'),
         (APPROVED, 'Approuvé'), # ('succeeded', 'Réussi'),
-        (CANCELED, 'Annulé'), # ('canceled', 'Annulé'),
-        (INVALID, 'Invalide'), # ('failed', 'Échoué'),
+        (CANCELED, 'Annulé'), # ('canceled', 'Annulé'), à SUPPRIMER
+        (INVALID, 'Invalide'), # (FAILED, 'Échoué'),
+        (REFUNDED, "Remboursé"),
     ]
 
-    model = models.CharField(max_length=255)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement)
-    model_id = models.IntegerField()  # ID de l'objet dans le modèle lié
-    slug = models.CharField(max_length=255)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)
-    reference = models.CharField(max_length=255)  # ID 'PaymentIntent' que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
+    # 🔗 Relations
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
+    professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
+
+    model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement)
+    model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié
+    slug = models.CharField(max_length=255, blank=True, null=True)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)
+    
+    # 📎 Informations Stripe
+    reference = models.CharField(max_length=255, blank=True, null=True)  # stripe_payment_intent_id: ID 'PaymentIntent' que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
+    stripe_charge_id = models.CharField(max_length=255, blank=True, null=True)
+    payment_body = models.JSONField(null=True, blank=True) # contient le corps brut de la requête (les données JSON envoyées par Stripe)
+
     amount = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
         validators=[MinValueValidator(Decimal('0.01'))], 
+        help_text="Montant total payé par l'élève (€)",
         null=True, 
         blank=True
     )  # Montant du paiement (round(session.amount_total/100,2))
     currency = models.CharField(max_length=10)  # Devise (session.currency)
     language = models.CharField(max_length=10)  # Langue utilisée (à supprimer non utilisé)
+
+    # 🕐 Suivi et statut
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement 
-    payment_body = models.JSONField(null=True, blank=True) # contient le corps brut de la requête (les données JSON envoyées par Stripe)
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour 
+    
+    # propre à la logique d'enregistrement
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     accord_remboursement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
     remboursement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
-    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
-    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+    
+    def mark_succeeded(self):
+        """✅ Marque ce paiement comme réussi."""
+        self.status = "succeeded"
+        self.payment_date = timezone.now()
+        self.save()
+
+    def mark_failed(self, reason=None):
+        """❌ Marque ce paiement comme échoué."""
+        self.status = "failed"
+        self.description = reason or self.description
+        self.save()
+
+    def mark_refunded(self):
+        """↩️ Marque ce paiement comme remboursé."""
+        self.status = "refunded"
+        self.save()
 
     def __str__(self):
-        return f"Payment {self.reference} - {self.status}"
+        return f"Paiement {self.id} - {self.eleve} -> {self.professeur} ({self.status})"
+    
 
 class Demande_paiement(models.Model):  # Demande de paiement par le prof
     # Définition des différents statuts de la demande de paiement
@@ -708,3 +741,4 @@ class Transfer(models.Model):
 
     def __str__(self):
         return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"
+    
