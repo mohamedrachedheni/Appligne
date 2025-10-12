@@ -502,8 +502,8 @@ class Payment(models.Model):
         null=True, 
         blank=True
     )  # Montant du paiement (round(session.amount_total/100,2))
-    currency = models.CharField(max_length=10)  # Devise (session.currency)
-    language = models.CharField(max_length=10)  # Langue utilisée (à supprimer non utilisé)
+    currency = models.CharField(max_length=10, null=True, blank=True)  # Devise (session.currency)
+    language = models.CharField(max_length=10, null=True, blank=True)  # Langue utilisée (à supprimer non utilisé)
 
     # 🕐 Suivi et statut
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
@@ -513,9 +513,9 @@ class Payment(models.Model):
     
     # propre à la logique d'enregistrement
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
-    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
+    accord_reglement_id = models.IntegerField(null=True, blank=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
-    accord_remboursement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement
+    accord_remboursement_id = models.IntegerField(null=True, blank=True)  # ID de l'objet dans le modèle AccordReglement
     remboursement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     
     def mark_succeeded(self):
@@ -561,7 +561,7 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
     email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
     statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
-    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
+    payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement
     reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement
@@ -603,7 +603,7 @@ class AccordReglement(models.Model):
     )  # Montant total
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_id = models.IntegerField(null=True)  # erreur de structure BD à supprimer
+    payment_id = models.IntegerField(null=True, blank=True)  # erreur de structure BD à supprimer
     transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
     date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
@@ -624,7 +624,7 @@ class DetailAccordReglement(models.Model):
         blank=True
     )  # Part du professeur
     stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer
-    description = models.TextField()  # Libellé
+    description = models.TextField(null=True, blank=True)  # Libellé
 
     def __str__(self):
         return f"Détail Accord Règlement - Accord ID: {self.accord.id}"
@@ -675,7 +675,7 @@ class DetailAccordRemboursement(models.Model):
         null=True, 
         blank=True
     )  # Montant remboursé
-    description = models.TextField()  # Libellé
+    description = models.TextField(null=True, blank=True)  # Libellé
 
     def __str__(self):
         return f"Détail Accord Remboursement - Accord ID: {self.accord.id}"
