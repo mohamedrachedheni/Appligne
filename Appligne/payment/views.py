@@ -14,7 +14,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import date, datetime
-from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement, WebhookEvent
+from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement, WebhookEvent, DetailAccordRemboursement, AccordRemboursement
 from eleves.models import Eleve
 from django.contrib import messages
 from django.db.models import Sum
@@ -22,6 +22,7 @@ from django.core.validators import validate_email, EmailValidator
 from django.contrib.auth.decorators import login_required
 import stripe
 from django.conf import settings
+from pages.utils import decrypt_id, encrypt_id
 
 import logging
 import json 
@@ -1594,3 +1595,182 @@ def handle_payout_failed(payout):
     failure_reason = payout.get('failure_message', 'Raison non spécifiée')
     logger.error(f"🚫 Virement bancaire échoué : {payout_id} - Raison : {failure_reason}")
 
+
+
+from functools import wraps
+from django.contrib import messages
+import logging
+
+logger = logging.getLogger(__name__)
+
+def secure_stripe_action(action_name):
+    """
+    Décorateur intelligent pour sécuriser les actions critiques (comme un remboursement).
+    - Log automatique
+    - Empêche double soumission
+    - Capture StripeError + exceptions générales
+    """
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            # Empêche double soumission (refresh brut)
+            if request.session.get(f"lock_{action_name}", False):
+                messages.warning(request, "Action déjà en cours, merci de patienter.")
+                return redirect('admin_remboursement_detaille')
+            
+            # Poser le verrou
+            request.session[f"lock_{action_name}"] = True
+
+            try:
+                logger.info(f"[{action_name}] Lancement par {request.user}...")
+                response = view_func(request, *args, **kwargs)
+                logger.info(f"[{action_name}] Terminé avec succès.")
+                return response
+
+            except stripe.error.StripeError as e:
+                logger.error(f"[{action_name}] ERREUR STRIPE : {str(e)}")
+                messages.error(request, f"Erreur Stripe : {str(e)}")
+                return redirect('admin_remboursement_detaille')
+
+            except Exception as e:
+                logger.exception(f"[{action_name}] ERREUR CRITIQUE")
+                messages.error(request, "Une erreur interne est survenue.")
+                return redirect('admin_remboursement_detaille')
+
+            finally:
+                # Libération du verrou en toute fin
+                request.session[f"lock_{action_name}"] = False
+
+        return wrapper
+
+    return decorator
+
+
+
+
+import stripe
+import uuid
+from django.views.decorators.http import require_POST
+from accounts.models import RefundPayment
+from pages.utils import to_cents
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+# @secure_stripe_action("refund_payment")  # <<< sécurité globale
+@require_POST
+def refund_payment(request):
+    accord_id = request.session.get('accord_id')
+    accord = AccordRemboursement.objects.filter(id=accord_id).first()
+
+    if not accord:
+        messages.error(request, "Aucun accord de remboursement trouvé.")
+        return redirect('admin_remboursement_detaille')
+
+    details = DetailAccordRemboursement.objects.filter(accord=accord)
+    payments = Payment.objects.filter(id__in=details.values_list('payment', flat=True))
+
+    if not payments.exists():
+        messages.error(request, "Il n'y a pas de paiement à rembourser.")
+        return redirect('admin_remboursement_detaille')
+
+    for payment in payments:
+        if payment.status != Payment.APPROVED:
+            messages.error(request, "Paiement non remboursable (statut incorrect).")
+            return redirect('admin_remboursement_detaille')
+
+    payment_amount_refunds = []
+
+    for detail in details:
+        amount_eur = detail.refunded_amount or Decimal('0.00')
+        amount_cents = to_cents(amount_eur)
+        payment = detail.payment
+
+        if amount_cents <= 0:
+            messages.error(request, "Montant invalide.")
+            return redirect('admin_remboursement_detaille')
+
+        try:
+            charge = None
+
+            # ✅ Si PaymentIntent (référence)
+            if payment.reference:
+                pi = stripe.PaymentIntent.retrieve(
+                    payment.reference,
+                    expand=["charges"]
+                )
+
+                # Tentative 1: via expand
+                if hasattr(pi, "charges") and hasattr(pi.charges, "data") and pi.charges.data:
+                    charge = pi.charges.data[0]
+                else:
+                    # Tentative 2: fallback manuel
+                    charge_list = stripe.Charge.list(payment_intent=payment.reference, limit=1)
+                    if charge_list.data:
+                        charge = charge_list.data[0]
+
+            # ✅ Si Charge directe
+            elif payment.stripe_charge_id:
+                charge = stripe.Charge.retrieve(payment.stripe_charge_id)
+
+            # ❌ Aucun identifiant Stripe
+            else:
+                messages.error(request, "Pas d'identifiant Stripe trouvé.")
+                return redirect('admin_remboursement_detaille')
+
+            if not charge:
+                messages.error(request, "Aucune charge trouvée pour ce paiement.")
+                return redirect('admin_remboursement_detaille')
+
+            refundable = charge['amount'] - charge.get('amount_refunded', 0)
+            if amount_cents > refundable:
+                messages.error(request, "Montant supérieur au montant remboursable.")
+                return redirect('admin_remboursement_detaille')
+
+            payment_amount_refunds.append({
+                "payment": payment,
+                "amount_eur": amount_eur,
+                "charge_id": charge['id'],
+                "amount_cents": amount_cents,
+                "accord": detail.accord
+            })
+
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Erreur Stripe: {str(e)}")
+            return redirect('admin_remboursement_detaille')
+
+    # 🎯 Lancement des remboursements
+    for enr in payment_amount_refunds:
+        refund_record = RefundPayment.objects.create(
+            payment=enr["payment"],
+            montant=enr["amount_eur"],
+            status=RefundPayment.PENDING,
+        )
+
+        idempotency_key = f"refund_payment_{enr['payment'].id}_{enr['amount_cents']}"
+
+        try:
+            # ✅ CORRECTION : Utilisation correcte de l'idempotency key
+            stripe_refund = stripe.Refund.create(
+                charge=enr["charge_id"],
+                amount=enr["amount_cents"],
+                reason='requested_by_customer',
+                metadata={'local_refund_id': refund_record.id},
+                idempotency_key=idempotency_key  # ✅ Paramètre direct, pas dans request_options
+            )
+
+            refund_record.stripe_refund_id = stripe_refund.id
+            refund_record.status = stripe_refund.status
+            refund_record.save()
+            messages.success(request, f"✅ Remboursement de {enr['amount_eur']}€ initié — Stripe Refund ID : {stripe_refund.id}")
+            # mettre à jour accord_rembourcement
+            accord=enr["accord"]
+            accord.status=AccordReglement.IN_PROGRESS
+            accord.save()
+
+
+        except stripe.error.StripeError as e:
+            refund_record.status = RefundPayment.FAILED
+            refund_record.save()
+            messages.error(request, f"❌ Refund échoué : {str(e)}")
+
+    return redirect('admin_remboursement_detaille')

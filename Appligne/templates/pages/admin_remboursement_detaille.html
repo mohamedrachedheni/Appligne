@@ -70,11 +70,13 @@
                                                         <div class="col-md-6 col-sm-12 position-relative">
                                                             <input type="text" class="form-control form-control-intitule" id="refunded_amount{{ id }}"  value="{{refunded_amount|default:'0.00'|floatformat:2}} €" readonly >
                                                         </div>
+                                                        
                                                         <div class="col-md-6 col-sm-12 position-relative">
                                                             <button type="submit" class="btn {% if not reclamation %} btn-primary {% else %} btn-danger {% endif %} w-100" name="btn_paiement_id{{id}}" >
                                                                 {% if not reclamation %}Détail{% else %}Contesté{% endif %}
                                                             </button>
                                                         </div>
+                                                        
                                                     </div>
                                                 </div>
                                             </div>
@@ -87,10 +89,17 @@
                                 {% if  request.user.is_authenticated  and request.user.is_staff and request.user.is_active %}
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
-                                        <button type="submit" class="btn btn-warning col-12" name="btn_detaille_remboursement">
+                                        <button type="submit" class="btn btn-primary col-12" name="btn_detaille_remboursement">
                                             Passez à la modification de l'accord de remboursement
                                         </button>
                                     </div>
+                                    {% if accord_remboursement.status == 'pending' %}
+                                    <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
+                                        <button type="submit" class="btn btn-warning col-12" name="btn_paiement_remboursement">
+                                            Passez au paiement de l'accord de remboursement
+                                        </button>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                             </div>

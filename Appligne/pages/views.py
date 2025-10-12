@@ -2658,7 +2658,7 @@ def admin_reglement_detaille(request):
                 paiement = Payment.objects.filter(id=paiement_id_decrypt).first() # il faut que le paiement est pour le professeur
                 if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
                     messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paiement_id_decrypt}")
-                    return redirect('compte_prof')
+                    return redirect('compte_administrateur')
                 
             request.session['payment_id'] = paiement_id_decrypt
             return redirect('admin_payment_demande_paiement')
@@ -2673,24 +2673,24 @@ def admin_reglement_detaille(request):
     
     # Paiement règlement professeur
     if 'btn_detaille_reglement' in request.POST: # passer à la création au paiement de l'accord de règlement
-        # Récupère de nouveau l'objet demande de paiement pour empécher un double enregistrement
+        # Récupère de nouveau l'objet de l'accord de règlement pour empécher un double enregistrement
             # c'est une trés bonne idée à généraliser pour les enregistrements importants
             accord_reglement = get_object_or_404(AccordReglement, id=accord_id)
-            if accord_reglement.payment_id:
+            if accord_reglement.payment_id: # c'est l'ancienne logique à modifier par accord_reglement.transfert_id
                 messages.error(request, "La demande de règlement est déjà payée")
-                return redirect('compte_professeur')
+                return redirect('compte_administrateur')
 
             # Voire si le professeur a un compte stripe
             # 3. Récupérer le professeur
             professeur = accord_reglement.professeur
-            if not professeur.stripe_account_id:
+            if not professeur.stripe_account_id:# vérification dans la base de données
                 messages.error(request,'Le professeur n\'a pas de compte Stripe configuré')
-                return redirect('compte_professeur')
+                return redirect('compte_administrateur')
             if not professeur.stripe_onboarding_complete:
                 messages.error(request,'Le professeur a un compte Stripe non actif')
-                return redirect('compte_professeur')
+                return redirect('compte_administrateur')
 
-            #1. vider la table Cart du user
+            #1. vider la table CartTransfert du user
             from cart.models import CartTransfert, CartTransfertItem
             from payment.views import create_transfert_session
             CartTransfert.objects.filter(user_admin=request.user).delete()
@@ -2712,6 +2712,7 @@ def admin_reglement_detaille(request):
             # Seule le paiement est créé (En attente), les autres tables liées au paiement non
             # leur tour commence aprés confirmation du paiement
             #4. Création ou mise à jour de l'enregistrement Payment
+            # Ancienne logique à modifier (les enregistrement doivent être dans Transfer)
             payment, created = Payment.objects.update_or_create(
                  model="accord_reglement",
                  model_id=accord_reglement.id,
@@ -2728,13 +2729,13 @@ def admin_reglement_detaille(request):
                 logger.info(f"♻️ Paiement existant mis à jour : ID={payment.id}, Montant={payment.amount}")
 
             #5. lier cart_transfert au payment pour lier invoice au payment dans la view create_checkout_transfert_session
-            cart_transfert.payment = payment # à revoire la logique
+            cart_transfert.payment = payment # à revoire la logique (ancienne logique à modifier par )
             cart_transfert.save()
             
             #6. mise à jour AccordReglement mais l'ID du paiement dans la table AccordReglement n'est pas encore défini car il n'est pas encore effectué
             accord_reglement.status = "En cours" #  à changer par Approuvé
             accord_reglement.save()
-            request.session['payment_id'] = payment.id
+            request.session['payment_id'] = payment.id # ancienne logique à modifier par CartTransfert_id
             request.session['prof_id'] = professeur.id
             request.session['accord_reglement_id_decript'] = accord_reglement.id
             #7. passer à la view de paiement de Stripe (create_transfert_session)
@@ -4400,6 +4401,14 @@ def admin_remboursement_detaille(request):
         # Stockage l'ID de l'accord de règlement dans la session avant redirection
         request.session['accord_id'] = accord_id_decrypted
         return redirect('admin_remboursement_modifier')
+        
+
+    if 'btn_paiement_remboursement' in request.POST: # passer au paiement de l'accord de rembourcement
+        # Stockage l'ID de l'accord de règlement dans la session avant redirection
+        request.session['accord_id'] = accord_id_decrypted
+        from payment.views import refund_payment
+        return refund_payment(request)
+        
     
     if request.method == "POST":  # achevé
         # Extraire l'ID du paiement
@@ -4745,7 +4754,7 @@ def admin_remboursement_modifier(request):
     
 
     # Vérification si le formulaire a été soumis pour accorder un remboursement
-    if 'btn_enr' in request.POST and not request.user.eleve: # la modification de l'accord de remboursement est activée
+    if 'btn_enr' in request.POST : # la modification de l'accord de remboursement est activée
 
         # Récupération des paiements cochés dans le formulaire (anciens ou / et nouvaux)
         encrypted_payment_keys = [key.split('accord_')[1] for key in request.POST.keys() if key.startswith('accord_')]
@@ -4863,11 +4872,9 @@ def admin_remboursement_modifier(request):
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def admin_accord_remboursement_modifier(request): ##### non achevé ######
     """
-    Modifier les accords de règlement pour le professeur 
-    (même si le statut est réalisé pour que l'intervention de 
-    l'administrateur soit sans limite),
-    envoie un email pour le professeur et l'enregistrer
-    en fin la mise à jour des paiements selon le statut initial et final
+    Modifier les accords de rembourcement pour l'élève 
+    envoie un email pour l'émail et l'enregistrer
+    en fin la mise à jour des paiements 
     """
     
     date_format = "%d/%m/%Y" # format de la date
@@ -4894,7 +4901,7 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
 
     # Condition nécessaire de l'activation du template
     if not accord_id:
-        messages.error(request, "Il n'y a pas de règlement à enregistrer")
+        messages.error(request, "Il n'y a pas d'accord de remboursement à enregistrer")
         return redirect('compte_administrateur')
 
     # Récupérer l'élève ou renvoyer une erreur 404 s'il n'existe pas
@@ -4903,28 +4910,24 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
     # Récupérer l'ancien l'accord de règlement ou renvoyer une erreur 404 s'il n'existe pas
     accord_remboursement = get_object_or_404(AccordRemboursement, id=accord_id)
     
-    # Récupérer la date de règlement
+    # Récupérer la date de remboursement
     try:
         date_remboursement = datetime.strptime(date_remboursement_str, date_format).date()
     except ValueError:
             messages.error(request, f"Le format date de règlement: {date_remboursement_str} n'est pas valide le format doit être jj/mm/aaaa")
             
-            # Stockage l'ID de l'accord de règlement dans la session avant redirection
+            # Stockage l'ID de l'accord de remboursement dans la session avant redirection
             request.session['accord_id'] = accord_id
-            return redirect('admin_reglement_modifier')
+            return redirect('admin_remboursement_modifier')
     
     if not payment_requests:
-        messages.error(request, "Il n'y a pas de règlement à enregistrer")
-        return redirect('admin_payment_accord_reglement')
+        messages.error(request, "Il n'y a pas de paiement à rembourser")
+        return redirect('admin_remboursement_modifier')
     
     payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
 
     for payment_id, refunded_amount_str in payment_requests: # étier les données de la session
         payment = Payment.objects.filter(id=payment_id).first()
-        # # c'est une requette qui lie la table Demande_paiement avec Eleve avec User
-        # demande_paiement = Demande_paiement.objects.select_related('eleve__user').filter(id=payment.model_id).first()
-        # if not demande_paiement: continue  # Ignorer les paiements sans demande associée (non nécessaire mais par prudence car à chaque paiement correspond un demande préalable)
-        # user_eleve = demande_paiement.eleve.user # pour le template
         user_eleve = eleve.user # l'élève existe déjà dans le request
         payments.append(( payment, user_eleve, refunded_amount_str))  # pour le template et le calcul des totaux
 
@@ -4934,7 +4937,7 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
         totaux_payement += payment.amount
         totaux_versement += Decimal(refunded_amount_str)
     
-
+    
     # préparer l'envoie de l'email
     user = request.user # admin
     email_user = user.email # email admin
@@ -5001,7 +5004,7 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
         msg += str(f"L'email a été enregistré avec succès relatif à l'accord de règlement du {date_remboursement}.\n")
 
 
-        # Mise à jour de accord de règlement
+        # Mise à jour de accord de règlement 
         accord_remboursement.admin_user=request.user
         accord_remboursement.total_amount=totaux_versement
         accord_remboursement.email_id=email_telecharge.id
@@ -5050,8 +5053,8 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
             msg += str(f"Mise à jour de l'enregistrement payment id={payment.id}.\n")
 
         messages.success(request, msg.replace("\n", "<br>") )
-
-        # Vider les paramètres de la session
+        
+        # Vider les paramètres de la session 
         keys_to_delete = [
             'payment_modifier', 'date_remboursement_str', 'accord_id', 'prof_id', 
             'status', 'date_trensfere', 'transfere_id', 'ancien_payment_accords'
@@ -5061,7 +5064,9 @@ def admin_accord_remboursement_modifier(request): ##### non achevé ######
             if key in request.session:
                 del request.session[key]
 
-        return redirect('compte_administrateur')
+        # return redirect('compte_administrateur')
+        # Passer à Stripe
+        
 
     # Contexte à passer au template
     context = {

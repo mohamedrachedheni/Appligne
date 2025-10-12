@@ -309,3 +309,11 @@ def envoyer_emails_multiples(request, emails, sujet, message_html, from_email=No
         "envoyes": emails_envoyes,
         "invalides": emails_invalides
     }
+
+
+# utils.py
+from decimal import Decimal, ROUND_HALF_UP
+
+def to_cents(amount_decimal: Decimal) -> int:
+    # amount_decimal en euros, ex: Decimal('12.34') -> 1234 (cents)
+    return int((amount_decimal * Decimal('100')).quantize(Decimal('1'), rounding=ROUND_HALF_UP))

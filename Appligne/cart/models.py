@@ -365,3 +365,4 @@ class InvoiceTransfert(models.Model):
                     InvoiceTransfert.objects.filter(id=self.id).update(pdf=self.pdf)
             except Exception as e:
                 print(f"Erreur génération PDF: {e}")
+

@@ -19,4 +19,7 @@ urlpatterns = [
     path('transfert/cancel/', views.transfert_cancel, name='transfert_cancel'),
     path('webhooks/stripe/transfert/', views.stripe_transfert_webhook, name='stripe_transfert_webhook'),
 
+    # Nouvelles URLs pour les refund_payment
+    path('refund_payment/', views.refund_payment, name='refund_payment'),
+
 ]

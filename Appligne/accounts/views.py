@@ -4661,3 +4661,4 @@ def get_prix_cours_email(request):
         logger.error(f"[get_prix_cours_email] Erreur : {str(e)}", exc_info=True)
         return JsonResponse({'error': 'Erreur technique'}, status=500)
 
+
