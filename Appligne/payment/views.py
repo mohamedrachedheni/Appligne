@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)  # Définit un logger pour ce fichier
 import pprint # pour afficher dans cmd  un message formaté (checkout_session)
 pp = pprint.PrettyPrinter(indent=2)
 
-
+# ----------------------------------------------------------
+# Début traitement de paiement par carte bancaire des élèves
+# ----------------------------------------------------------
 
 # Parce que stripe.checkout.Session.create(...) (et toute autre requête Stripe) nécessite que la clé API soit configurée avant utilisation.
 stripe.api_key = settings.STRIPE_SECRET_KEY # obligatoire si non Stripe ne communique pas
@@ -427,8 +429,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
-logger = logging.getLogger(__name__)
+# Logger spécifique pour les webhooks Stripe
+logger = logging.getLogger('payment.views')
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -436,9 +438,8 @@ def stripe_webhook(request):
     📡 Réception des webhooks Stripe :
     - Vérifie la signature pour authentifier la source
     - Enregistre l'événement reçu dans WebhookEvent
-    - Traite les événements importants (ex: checkout.session.completed)
+    - Traite tous les événements importants du flux de paiement
     """
-
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
     event = None
@@ -448,7 +449,7 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-        logger.info(f"✅ Webhook Stripe reçu : {event['type']}")
+        logger.info(f"✅ Webhook Stripe reçu : {event['type']} (id: {event.get('id')})")
 
     except ValueError:
         logger.error("❌ Erreur parsing JSON du payload Stripe.")
@@ -460,7 +461,7 @@ def stripe_webhook(request):
         logger.exception(f"💥 Erreur inattendue lors de la vérification du webhook : {e}")
         return HttpResponse(status=400)
 
-    # --- 2️⃣ Enregistrer l’événement dans WebhookEvent ---
+    # --- 2️⃣ Enregistrer l'événement dans WebhookEvent ---
     try:
         event_id = event.get("id")
         event_type = event.get("type")
@@ -480,38 +481,280 @@ def stripe_webhook(request):
             logger.warning(f"⚠️ Événement Stripe déjà reçu : {event_id}")
 
     except Exception as e:
-        logger.exception(f"💥 Impossible d’enregistrer l’événement Stripe dans WebhookEvent : {e}")
+        logger.exception(f"💥 Impossible d'enregistrer l'événement Stripe dans WebhookEvent : {e}")
 
     # --- 3️⃣ Traiter les événements importants ---
     try:
-        if event["type"] == "checkout.session.completed":
-            session = event["data"]["object"]
-            logger.info("💳 Paiement complété : traitement de la facture...")
+        event_type = event["type"]
+        logger.info(f"🔍 Traitement de l'événement : {event_type}")
 
-            invoice_id = session.get("metadata", {}).get("invoice_id")
-            if not invoice_id:
-                logger.warning("⚠️ Aucun `invoice_id` trouvé dans metadata de la session.")
-                return HttpResponse(status=200)
+        # 🔄 FLUX DE PAIEMENT SUCCÈS
+        if event_type == "checkout.session.completed":
+            handle_checkout_session_completed(event)
+        
+        elif event_type == "payment_intent.succeeded":
+            handle_payment_intent_succeeded(event)
+        
+        elif event_type == "charge.succeeded":
+            handle_charge_succeeded(event)
 
-            try:
-                invoice = Invoice.objects.get(id=invoice_id)
-            except Invoice.DoesNotExist:
-                logger.error(f"❌ Facture ID={invoice_id} introuvable.")
-                return HttpResponse(status=200)
+        # 🔄 FLUX D'ÉCHEC
+        elif event_type == "payment_intent.payment_failed":
+            handle_payment_intent_failed(event)
+        
+        elif event_type == "charge.failed":
+            handle_charge_failed(event)
 
-            if session.get("payment_status") == "paid":
-                invoice.status = "paid"
-                invoice.paid_at = timezone.now()
-                invoice.save()
-                logger.info(f"✅ Facture ID={invoice.id} mise à jour comme payée.")
-            else:
-                logger.warning(f"⚠️ Paiement session {session['id']} non marqué comme 'paid'.")
+        # 🔄 REMBOURSEMENTS
+        elif event_type == "charge.refunded":
+            handle_charge_refunded(event)
+        
+        elif event_type == "charge.refund.updated":
+            handle_charge_refund_updated(event)
+
+        # 🔄 DISPUTES/RÉCLAMATIONS
+        elif event_type == "charge.dispute.created":
+            handle_charge_dispute_created(event)
+        
+        elif event_type == "charge.dispute.closed":
+            handle_charge_dispute_closed(event)
+
+        # 🔄 ANNULATIONS
+        elif event_type == "checkout.session.expired":
+            handle_checkout_session_expired(event)
+        
+        elif event_type == "payment_intent.canceled":
+            handle_payment_intent_canceled(event)
+
+        # # 🔄 SOUSCRIPTIONS (si vous avez des paiements récurrents)
+        # elif event_type == "customer.subscription.created":
+        #     handle_customer_subscription_created(event)
+        
+        # elif event_type == "customer.subscription.updated":
+        #     handle_customer_subscription_updated(event)
+        
+        # elif event_type == "customer.subscription.deleted":
+        #     handle_customer_subscription_deleted(event)
+
+        # # 🔄 AUTRES ÉVÉNEMENTS IMPORTANTS
+        # elif event_type == "invoice.payment_succeeded":
+        #     handle_invoice_payment_succeeded(event)
+        
+        # elif event_type == "invoice.payment_failed":
+        #     handle_invoice_payment_failed(event)
+
+        else:
+            logger.info(f"📝 Événement non traité : {event_type}")
 
     except Exception as e:
-        logger.exception(f"💥 Erreur lors du traitement de l’événement {event['type']} : {e}")
+        logger.exception(f"💥 Erreur lors du traitement de l'événement {event_type} : {e}")
 
     # --- ✅ Réponse finale ---
     return HttpResponse(status=200)
+
+
+# =============================================================================
+# HANDLERS POUR CHAQUE TYPE D'ÉVÉNEMENT
+# =============================================================================
+
+def handle_checkout_session_completed(event):
+    """Traitement quand une session de checkout est complétée"""
+    session = event["data"]["object"]
+    logger.info("💳 Session checkout complétée : traitement de la facture...")
+
+    invoice_id = session.get("metadata", {}).get("invoice_id")
+    if not invoice_id:
+        logger.warning("⚠️ Aucun `invoice_id` trouvé dans metadata de la session.")
+        return
+
+    try:
+        invoice = Invoice.objects.get(id=invoice_id)
+    except Invoice.DoesNotExist:
+        logger.error(f"❌ Facture ID={invoice_id} introuvable.")
+        return
+
+    payment_status = session.get("payment_status")
+    
+    if payment_status == "paid":
+        invoice.status = "paid"
+        invoice.paid_at = timezone.now()
+        invoice.stripe_payment_intent_id = session.get("payment_intent")
+        invoice.save()
+        logger.info(f"✅ Facture ID={invoice.id} mise à jour comme payée.")
+        
+        # 🔔 Notifier l'utilisateur du succès du paiement
+        send_payment_success_notification(invoice)
+        
+    elif payment_status == "unpaid":
+        invoice.status = "failed"
+        invoice.save()
+        logger.warning(f"⚠️ Paiement échoué pour la facture ID={invoice.id}")
+        
+    else:
+        logger.warning(f"📊 Statut de paiement inattendu : {payment_status} pour la facture ID={invoice.id}")
+
+
+def handle_payment_intent_succeeded(event):
+    """Traitement quand un payment intent réussit"""
+    payment_intent = event["data"]["object"]
+    logger.info(f"💰 Payment Intent réussi : {payment_intent['id']}")
+    
+    # Mettre à jour la facture si elle existe
+    invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent['id']).first()
+    if invoice:
+        invoice.status = "paid"
+        invoice.paid_at = timezone.now()
+        invoice.save()
+        logger.info(f"✅ Facture ID={invoice.id} mise à jour via Payment Intent.")
+
+
+def handle_charge_succeeded(event):
+    """Traitement quand une charge réussit"""
+    charge = event["data"]["object"]
+    logger.info(f"💳 Charge réussie : {charge['id']} - Montant : {charge['amount']/100:.2f} {charge['currency']}")
+
+
+def handle_payment_intent_failed(event):
+    """Traitement quand un payment intent échoue"""
+    payment_intent = event["data"]["object"]
+    logger.warning(f"❌ Payment Intent échoué : {payment_intent['id']}")
+    
+    last_error = payment_intent.get('last_payment_error', {})
+    logger.error(f"📉 Erreur de paiement : {last_error.get('message', 'Raison inconnue')}")
+    
+    # Mettre à jour la facture si elle existe
+    invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent['id']).first()
+    if invoice:
+        invoice.status = "failed"
+        invoice.failure_reason = last_error.get('message', 'Erreur inconnue')
+        invoice.save()
+        logger.info(f"📉 Facture ID={invoice.id} marquée comme échouée.")
+
+
+def handle_charge_failed(event):
+    """Traitement quand une charge échoue"""
+    charge = event["data"]["object"]
+    logger.error(f"💥 Charge échouée : {charge['id']} - Raison : {charge.get('failure_message', 'Inconnue')}")
+
+
+def handle_charge_refunded(event):
+    """Traitement quand un remboursement est effectué"""
+    charge = event["data"]["object"]
+    logger.info(f"🔄 Remboursement effectué : {charge['id']}")
+    
+    # Trouver la facture associée
+    invoice = Invoice.objects.filter(stripe_payment_intent_id=charge.get('payment_intent')).first()
+    if invoice:
+        invoice.status = "refunded"
+        invoice.refunded_at = timezone.now()
+        invoice.save()
+        logger.info(f"🔄 Facture ID={invoice.id} marquée comme remboursée.")
+
+
+def handle_charge_refund_updated(event):
+    """Traitement quand un remboursement est mis à jour"""
+    refund = event["data"]["object"]
+    logger.info(f"📝 Remboursement mis à jour : {refund['id']} - Statut : {refund['status']}")
+
+
+def handle_charge_dispute_created(event):
+    """Traitement quand une réclamation (dispute) est créée"""
+    dispute = event["data"]["object"]
+    logger.warning(f"⚖️ Réclamation créée : {dispute['id']} - Raison : {dispute.get('reason', 'Inconnue')}")
+    
+    # Mettre à jour la facture
+    invoice = Invoice.objects.filter(stripe_payment_intent_id=dispute.get('payment_intent')).first()
+    if invoice:
+        invoice.status = "disputed"
+        invoice.dispute_created_at = timezone.now()
+        invoice.save()
+        logger.info(f"⚖️ Facture ID={invoice.id} marquée comme contestée.")
+
+
+def handle_charge_dispute_closed(event):
+    """Traitement quand une réclamation est fermée"""
+    dispute = event["data"]["object"]
+    logger.info(f"🔒 Réclamation fermée : {dispute['id']} - Statut : {dispute['status']}")
+
+
+def handle_checkout_session_expired(event):
+    """Traitement quand une session de checkout expire"""
+    session = event["data"]["object"]
+    logger.info(f"⏰ Session checkout expirée : {session['id']}")
+    
+    invoice_id = session.get("metadata", {}).get("invoice_id")
+    if invoice_id:
+        try:
+            invoice = Invoice.objects.get(id=invoice_id)
+            invoice.status = "expired"
+            invoice.save()
+            logger.info(f"⏰ Facture ID={invoice.id} marquée comme expirée.")
+        except Invoice.DoesNotExist:
+            logger.warning(f"⚠️ Facture ID={invoice_id} introuvable pour session expirée.")
+
+
+def handle_payment_intent_canceled(event):
+    """Traitement quand un payment intent est annulé"""
+    payment_intent = event["data"]["object"]
+    logger.info(f"🚫 Payment Intent annulé : {payment_intent['id']}")
+
+
+# def handle_customer_subscription_created(event):
+#     """Traitement quand un abonnement est créé"""
+#     subscription = event["data"]["object"]
+#     logger.info(f"📅 Abonnement créé : {subscription['id']} pour le client {subscription['customer']}")
+
+
+# def handle_customer_subscription_updated(event):
+#     """Traitement quand un abonnement est modifié"""
+#     subscription = event["data"]["object"]
+#     logger.info(f"✏️ Abonnement modifié : {subscription['id']} - Statut : {subscription['status']}")
+
+
+# def handle_customer_subscription_deleted(event):
+#     """Traitement quand un abonnement est supprimé"""
+#     subscription = event["data"]["object"]
+#     logger.info(f"🗑️ Abonnement supprimé : {subscription['id']}")
+
+
+# def handle_invoice_payment_succeeded(event):
+#     """Traitement quand le paiement d'une facture Stripe réussit"""
+#     invoice = event["data"]["object"]
+#     logger.info(f"🧾 Facture Stripe payée : {invoice['id']} - Montant : {invoice['amount_paid']/100:.2f} {invoice['currency']}")
+
+
+# def handle_invoice_payment_failed(event):
+#     """Traitement quand le paiement d'une facture Stripe échoue"""
+#     invoice = event["data"]["object"]
+#     logger.error(f"💥 Facture Stripe échouée : {invoice['id']}")
+    
+#     # Tentative de nouvelle facturation échouée pour un abonnement
+#     if invoice.get('billing_reason') == 'subscription_cycle':
+#         logger.warning(f"🔄 Échec de facturation récurrente pour l'abonnement : {invoice.get('subscription')}")
+
+
+def send_payment_success_notification(invoice):
+    """Envoyer une notification de succès de paiement"""
+    try:
+        # 🔔 Ici vous pouvez :
+        # - Envoyer un email de confirmation
+        # - Notifier un webhook interne
+        # - Mettre à jour d'autres systèmes
+        # - Créer une notification dans votre app
+        
+        logger.info(f"📧 Notification de paiement à envoyer pour la facture ID={invoice.id}")
+        
+        # Exemple d'envoi d'email :
+        # send_mail(
+        #     'Paiement confirmé',
+        #     f'Votre paiement pour la facture {invoice.id} a été confirmé.',
+        #     'noreply@votre-site.com',
+        #     [invoice.customer_email],
+        #     fail_silently=False,
+        # )
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de l'envoi de la notification : {e}")
 
 """
 🔒 Résumé des bonnes pratiques mises en place :
@@ -739,6 +982,10 @@ def envoie_email_multiple(user_id_envoi, liste_user_id_receveurs, sujet_email, t
 
     return resultat
 
+
+# ------------------------------------------------------
+# Début traitement de compte Stripe pour les professeurs
+# ------------------------------------------------------
 
 import stripe
 import logging
@@ -1291,7 +1538,11 @@ def stripe_transfert_webhook(request):
             'payout.created': handle_payout_created,
             'payout.paid': handle_payout_paid,
             'payout.failed': handle_payout_failed,
+            'refund.created': handle_refund_created,          # ✅ ajouté
+            'refund.updated': handle_refund_updated,          # ✅ ajouté
+            'charge.refunded': handle_charge_refunded,        # ✅ ajouté (pour remboursement manuel total/partiel)
         }
+
 
         handler = handlers_map.get(event_type) # c'est une variable
         if handler:
@@ -1309,7 +1560,7 @@ def stripe_transfert_webhook(request):
     return HttpResponse(status=200)
 
 # ===================================================================
-# 📦 HANDLERS D'ÉVÉNEMENTS
+# 📦 HANDLERS D'ÉVÉNEMENTS DEBUT
 # ===================================================================
 import logging
 from django.utils import timezone
@@ -1484,14 +1735,6 @@ def handle_transfer_created(data_transfer):
         logger.warning(f"❗ Il y a {len(result['erreurs'])} erreur(s)d'e-mail de confirmation du transfert.")
 
 
-    
-
-
-    
-
-
-
-
 def handle_transfer_failed(transfer):
     """
     ❌ Géré lorsque le transfert échoue (par exemple :
@@ -1596,6 +1839,103 @@ def handle_payout_failed(payout):
     logger.error(f"🚫 Virement bancaire échoué : {payout_id} - Raison : {failure_reason}")
 
 
+def check_and_close_accord_if_complete(accord: AccordRemboursement):
+    """
+    🎯 Vérifie si tous les remboursements liés à un accord sont réussis -> auto-close accord
+    """
+    related_payments = accord.details.values_list('payment', flat=True)
+    refunds = RefundPayment.objects.filter(payment_id__in=related_payments)
+
+    if refunds.exists() and all(r.status == RefundPayment.APPROVED for r in refunds):
+        accord.status = AccordRemboursement.COMPLETED
+        accord.save()
+        logger.info(f"🎉 Tous les refunds sont complétés → Accord {accord.id} marqué COMPLÉTÉ")
+    else:
+        logger.info(f"⏳ Accord {accord.id} pas encore complet - en attente d'autres remboursements")
+
+
+def handle_refund_created(data):
+    """
+    🎯 Stripe -> refund.created
+    """
+    stripe_refund_id = data.get("id")
+    status = data.get("status")
+    metadata = data.get("metadata", {})
+    local_refund_id = metadata.get("local_refund_id")
+
+    logger.info(f"🔔 Refund créé Stripe ID={stripe_refund_id}, local_refund_id={local_refund_id}")
+
+    if not local_refund_id:
+        logger.warning(f"⚠ Refund {stripe_refund_id} sans local_refund_id → Ignoré")
+        return
+
+    try:
+        refund = RefundPayment.objects.get(id=local_refund_id)
+        refund.status = status
+        refund.stripe_refund_id = stripe_refund_id
+        refund.save()
+
+        logger.info(f"✅ Refund local #{refund.id} mis à jour → {status}")
+
+        # 🎯 Auto-check accord
+        detail = DetailAccordRemboursement.objects.filter(payment=refund.payment).first()
+        if detail:
+            check_and_close_accord_if_complete(detail.accord)
+
+    except RefundPayment.DoesNotExist:
+        logger.error(f"❌ Refund local ID={local_refund_id} introuvable")
+
+
+def handle_refund_updated(data):
+    """
+    🔁 Stripe -> refund.updated (modification de statut après création)
+    """
+    stripe_refund_id = data.get("id")
+    status = data.get("status")
+
+    logger.info(f"🔄 Refund update Stripe ID={stripe_refund_id} -> {status}")
+
+    try:
+        refund = RefundPayment.objects.get(stripe_refund_id=stripe_refund_id)
+        refund.status = status
+        refund.save()
+
+        logger.info(f"✅ Refund #{refund.id} mis à jour → {status}")
+
+        detail = DetailAccordRemboursement.objects.filter(payment=refund.payment).first()
+        if detail:
+            check_and_close_accord_if_complete(detail.accord)
+
+    except RefundPayment.DoesNotExist:
+        logger.warning(f"⚠ Refund Stripe ID={stripe_refund_id} reçu mais pas trouvé en base")
+
+
+def handle_charge_refunded(data):
+    """
+    🎭 Stripe -> charge.refunded (remboursement manuel détecté, ex: dashboard Stripe)
+    """
+    charge_id = data.get("id")
+    amount_refunded = data.get("amount_refunded")
+
+    logger.info(f"⚡ Charge {charge_id} remboursée manuellement (amount_refunded={amount_refunded})")
+
+    # Trouver les remboursements sans ID Stripe attaché mais concernés par cette charge
+    refunds = RefundPayment.objects.filter(stripe_refund_id__isnull=True, payment__stripe_charge_id=charge_id)
+
+    for refund in refunds:
+        refund.status = RefundPayment.APPROVED
+        refund.save()
+
+        logger.info(f"🎯 Refund local #{refund.id} mis en SUCCEEDED suite à charge.refunded")
+
+        detail = DetailAccordRemboursement.objects.filter(payment=refund.payment).first()
+        if detail:
+            check_and_close_accord_if_complete(detail.accord)
+
+
+# ===================================================================
+# 📦 HANDLERS D'ÉVÉNEMENTS FIN
+# ===================================================================
 
 from functools import wraps
 from django.contrib import messages
@@ -1656,8 +1996,9 @@ from accounts.models import RefundPayment
 from pages.utils import to_cents
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-# @secure_stripe_action("refund_payment")  # <<< sécurité globale
+
 @require_POST
+@secure_stripe_action("refund_payment")  # <<< sécurité globale
 def refund_payment(request):
     accord_id = request.session.get('accord_id')
     accord = AccordRemboursement.objects.filter(id=accord_id).first()

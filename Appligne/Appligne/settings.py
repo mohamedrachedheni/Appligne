@@ -143,7 +143,7 @@ RECAPTCHA_MIN_SCORE = 0.5
 # 🔒 Clé de chiffrement (cryptography)
 SECRET_ENCRYPTION_KEY = config('PASSWORD_CRYPTO')
 
-# ✅ 12. Logging (inchangé, juste structuré)
+# ✅ 12. Logging
 today = datetime.now()
 
 stripe_log_dir = BASE_DIR / 'logs' / 'stripe' / today.strftime("%Y") / today.strftime("%m")
@@ -175,15 +175,56 @@ LOGGING = {
             'formatter': 'standard',
             'encoding': 'utf-8',
         },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
     },
     'loggers': {
-        '': {'handlers': ['app_file'], 'level': 'INFO', 'propagate': True},
-        'myapp': {'handlers': ['app_file'], 'level': 'DEBUG', 'propagate': False},
-        'payment.stripe': {'handlers': ['stripe_file'], 'level': 'DEBUG', 'propagate': False},
-        'django': {'handlers': ['app_file'], 'level': 'WARNING', 'propagate': False},
-        'django.server': {'handlers': ['app_file'], 'level': 'ERROR', 'propagate': False},
-        'django.request': {'handlers': ['app_file'], 'level': 'ERROR', 'propagate': False},
-        'django.db.backends': {'handlers': ['app_file'], 'level': 'ERROR', 'propagate': False},
+        # Logger racine minimal
+        '': {
+            'handlers': ['console'],  # Seulement console pour debug
+            'level': 'WARNING',
+            'propagate': False
+        },
+        # Logger Stripe spécifique
+        'payment.stripe': {
+            'handlers': ['stripe_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        # Logger pour payment.views - AJOUT IMPORTANT
+        'payment.views': {
+            'handlers': ['stripe_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        # Vos autres loggers
+        'myapp': {
+            'handlers': ['app_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'django': {
+            'handlers': ['app_file'],
+            'level': 'WARNING',
+            'propagate': False
+        },
+        'django.server': {
+            'handlers': ['app_file'],
+            'level': 'ERROR', 
+            'propagate': False
+        },
+        'django.request': {
+            'handlers': ['app_file'],
+            'level': 'ERROR',
+            'propagate': False
+        },
+        'django.db.backends': {
+            'handlers': ['app_file'],
+            'level': 'ERROR',
+            'propagate': False
+        },
     }
 }
-

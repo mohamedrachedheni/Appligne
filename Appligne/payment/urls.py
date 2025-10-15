@@ -9,7 +9,7 @@ urlpatterns = [
     path('checkout/', views.create_checkout_session, name='checkout'),
     path('success/', views.payment_success, name='success'),
     path('cancel/', views.payment_cancel, name='cancel'),
-    path('webhooks/stripe/', views.stripe_webhook, name='webhook'),
+    path('stripe_webhook/', views.stripe_webhook, name='stripe_webhook'),
     path('invoice/<int:invoice_id>/download/', views.download_invoice, name='download_invoice'),
     path('compte_stripe/', views.compte_stripe, name='compte_stripe'),
 
