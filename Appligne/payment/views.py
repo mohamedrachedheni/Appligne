@@ -1,35 +1,48 @@
 # payment>views.py
 
-# Create your views here.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse
-from cart.models import Cart, CartItem, Invoice
-from django.utils import timezone
-import math
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.urls import reverse
-import stripe
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from datetime import date, datetime
-from accounts.models import Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, Email_telecharge , Demande_paiement, Professeur, Transfer, DetailAccordReglement, AccordReglement, WebhookEvent, DetailAccordRemboursement, AccordRemboursement
-from eleves.models import Eleve
 from django.contrib import messages
-from django.db.models import Sum
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, EmailValidator
-from django.contrib.auth.decorators import login_required
-import stripe
+from django.db.models import Sum
+from django.utils import timezone
 from django.conf import settings
-from pages.utils import decrypt_id, encrypt_id
+from django.views.decorators.http import require_http_methods, require_POST
+from django.http import Http404
 
+from functools import wraps
+import json
 import logging
-import json 
-logger = logging.getLogger('payment.views')  # Définit un logger pour ce fichier
+import math
+import os
+import pprint
+from datetime import date, datetime
+from decimal import Decimal
 
-import pprint # pour afficher dans cmd  un message formaté (checkout_session)
+import stripe
+
+from cart.models import Cart, CartItem, Invoice, CartTransfert, CartTransfertItem, InvoiceTransfert
+from accounts.models import (
+    Payment, Horaire, Historique_prof, Mes_eleves, Detail_demande_paiement, 
+    Email_telecharge, Demande_paiement, Professeur, Transfer, DetailAccordReglement, 
+    AccordReglement, WebhookEvent, DetailAccordRemboursement, AccordRemboursement, RefundPayment
+)
+from eleves.models import Eleve
+from pages.utils import decrypt_id, encrypt_id, to_cents
+
+# Configuration du logger
+logger = logging.getLogger('payment.views')
 pp = pprint.PrettyPrinter(indent=2)
+
+# Create your views here.
+# ... le reste de votre code ...
 
 # ----------------------------------------------------------
 # Début traitement de paiement par carte bancaire des élèves
@@ -424,331 +437,11 @@ Sinon, Django rejetterait la requête avec une erreur 403.
 Cette vue est exempte de protection CSRF car Stripe n’envoie pas de token CSRF.
 C’est obligatoire pour les webhooks externes.
 """
-import json
-import logging
-import stripe
-from django.conf import settings
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-
-# Logger spécifique pour les webhooks Stripe
-logger = logging.getLogger('payment.views')
-
-# @csrf_exempt
-# def stripe_webhook(request):
-#     """
-#     📡 Réception des webhooks Stripe :
-#     - Vérifie la signature pour authentifier la source
-#     - Enregistre l'événement reçu dans WebhookEvent
-#     - Traite tous les événements importants du flux de paiement
-#     """
-#     payload = request.body
-#     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
-#     event = None
-
-#     # --- 1️⃣ Vérification de la signature ---
-#     try:
-#         event = stripe.Webhook.construct_event(
-#             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-#         )
-#         logger.info(f"✅ Webhook Stripe reçu : {event['type']} (id: {event.get('id')})")
-
-#     except ValueError:
-#         logger.error("❌ Erreur parsing JSON du payload Stripe.")
-#         return HttpResponse(status=400)
-#     except stripe.error.SignatureVerificationError:
-#         logger.error("❌ Signature Stripe invalide - webhook refusé.")
-#         return HttpResponse(status=400)
-#     except Exception as e:
-#         logger.exception(f"💥 Erreur inattendue lors de la vérification du webhook : {e}")
-#         return HttpResponse(status=400)
-
-#     # --- 2️⃣ Enregistrer l'événement dans WebhookEvent ---
-#     try:
-#         event_id = event.get("id")
-#         event_type = event.get("type")
-#         payload_json = json.loads(payload.decode("utf-8"))
-
-#         webhook_event, created = WebhookEvent.objects.get_or_create(
-#             event_id=event_id,
-#             defaults={
-#                 "type": event_type,
-#                 "payload": payload_json,
-#             },
-#         )
-
-#         if created:
-#             logger.info(f"📬 Nouvel événement Stripe enregistré : {event_id} ({event_type})")
-#         else:
-#             logger.warning(f"⚠️ Événement Stripe déjà reçu : {event_id}")
-
-#     except Exception as e:
-#         logger.exception(f"💥 Impossible d'enregistrer l'événement Stripe dans WebhookEvent : {e}")
-
-#     # --- 3️⃣ Traiter les événements importants ---
-#     try:
-#         event_type = event["type"]
-#         logger.info(f"🔍 Traitement de l'événement : {event_type}")
-
-#         # 🔄 FLUX DE PAIEMENT SUCCÈS
-#         if event_type == "checkout.session.completed":
-#             handle_checkout_session_completed(event)
-        
-#         elif event_type == "payment_intent.succeeded":
-#             handle_payment_intent_succeeded(event)
-        
-#         elif event_type == "charge.succeeded":
-#             handle_charge_succeeded(event)
-
-#         # 🔄 FLUX D'ÉCHEC
-#         elif event_type == "payment_intent.payment_failed":
-#             handle_payment_intent_failed(event)
-        
-#         elif event_type == "charge.failed":
-#             handle_charge_failed(event)
-
-#         # 🔄 REMBOURSEMENTS
-#         elif event_type == "charge.refunded":
-#             handle_charge_refunded(event)
-        
-#         elif event_type == "charge.refund.updated":
-#             handle_charge_refund_updated(event)
-
-#         # 🔄 DISPUTES/RÉCLAMATIONS
-#         elif event_type == "charge.dispute.created":
-#             handle_charge_dispute_created(event)
-        
-#         elif event_type == "charge.dispute.closed":
-#             handle_charge_dispute_closed(event)
-
-#         # 🔄 ANNULATIONS
-#         elif event_type == "checkout.session.expired":
-#             handle_checkout_session_expired(event)
-        
-#         elif event_type == "payment_intent.canceled":
-#             handle_payment_intent_canceled(event)
-
-#         else:
-#             logger.info(f"📝 Événement non traité : {event_type}")
-
-#     except Exception as e:
-#         logger.exception(f"💥 Erreur lors du traitement de l'événement {event_type} : {e}")
-
-#     # --- ✅ Réponse finale ---
-#     return HttpResponse(status=200)
-
-
-
-# # =============================================================================
-# # HANDLERS POUR CHAQUE TYPE D'ÉVÉNEMENT DE STRIPE WEBHOOK DEBUT
-# # =============================================================================
-
-# def handle_checkout_session_completed(event):
-#     """Traitement quand une session de checkout est complétée"""
-#     session = event["data"]["object"]
-#     logger.info("💳 Session checkout complétée : traitement de la facture...")
-
-#     invoice_id = session.get("metadata", {}).get("invoice_id")
-#     if not invoice_id:
-#         logger.warning("⚠️ Aucun `invoice_id` trouvé dans metadata de la session.")
-#         return
-
-#     try:
-#         invoice = Invoice.objects.get(id=invoice_id)
-#     except Invoice.DoesNotExist:
-#         logger.error(f"❌ Facture ID={invoice_id} introuvable.")
-#         return
-
-#     payment_status = session.get("payment_status")
-    
-#     if payment_status == "paid":
-#         invoice.status = "paid"
-#         invoice.paid_at = timezone.now()
-#         invoice.stripe_payment_intent_id = session.get("payment_intent")
-#         invoice.save()
-#         logger.info(f"✅ Facture ID={invoice.id} mise à jour comme payée.")
-        
-#         # 🔔 Notifier l'utilisateur du succès du paiement
-#         send_payment_success_notification(invoice)
-        
-#     elif payment_status == "unpaid":
-#         invoice.status = "failed"
-#         invoice.save()
-#         logger.warning(f"⚠️ Paiement échoué pour la facture ID={invoice.id}")
-        
-#     else:
-#         logger.warning(f"📊 Statut de paiement inattendu : {payment_status} pour la facture ID={invoice.id}")
-
-
-
-# def handle_payment_intent_failed(event):
-#     """Traitement quand un payment intent échoue"""
-#     payment_intent = event["data"]["object"]
-#     logger.warning(f"❌ Payment Intent échoué : {payment_intent['id']}")
-    
-#     last_error = payment_intent.get('last_payment_error', {})
-#     logger.error(f"📉 Erreur de paiement : {last_error.get('message', 'Raison inconnue')}")
-    
-#     # Mettre à jour la facture si elle existe
-#     invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent['id']).first()
-#     if invoice:
-#         invoice.status = "failed"
-#         invoice.failure_reason = last_error.get('message', 'Erreur inconnue')
-#         invoice.save()
-#         logger.info(f"📉 Facture ID={invoice.id} marquée comme échouée.")
-
-
-# def handle_charge_failed(event):
-#     """Traitement quand une charge échoue"""
-#     charge = event["data"]["object"]
-#     logger.error(f"💥 Charge échouée : {charge['id']} - Raison : {charge.get('failure_message', 'Inconnue')}")
-
-
-
-
-# def handle_charge_dispute_created(event):
-#     """Traitement quand une réclamation (dispute) est créée"""
-#     dispute = event["data"]["object"]
-#     logger.warning(f"⚖️ Réclamation créée : {dispute['id']} - Raison : {dispute.get('reason', 'Inconnue')}")
-    
-#     # Mettre à jour la facture
-#     invoice = Invoice.objects.filter(stripe_payment_intent_id=dispute.get('payment_intent')).first()
-#     if invoice:
-#         invoice.status = "disputed"
-#         invoice.dispute_created_at = timezone.now()
-#         invoice.save()
-#         logger.info(f"⚖️ Facture ID={invoice.id} marquée comme contestée.")
-
-
-# def handle_charge_dispute_closed(event):
-#     """Traitement quand une réclamation est fermée"""
-#     dispute = event["data"]["object"]
-#     logger.info(f"🔒 Réclamation fermée : {dispute['id']} - Statut : {dispute['status']}")
-
-
-# def handle_checkout_session_expired(event):
-#     """Traitement quand une session de checkout expire"""
-#     session = event["data"]["object"]
-#     logger.info(f"⏰ Session checkout expirée : {session['id']}")
-    
-#     invoice_id = session.get("metadata", {}).get("invoice_id")
-#     if invoice_id:
-#         try:
-#             invoice = Invoice.objects.get(id=invoice_id)
-#             invoice.status = "expired"
-#             invoice.save()
-#             logger.info(f"⏰ Facture ID={invoice.id} marquée comme expirée.")
-#         except Invoice.DoesNotExist:
-#             logger.warning(f"⚠️ Facture ID={invoice_id} introuvable pour session expirée.")
-
-
-# def handle_payment_intent_canceled(event):
-#     """Traitement quand un payment intent est annulé"""
-#     payment_intent = event["data"]["object"]
-#     logger.info(f"🚫 Payment Intent annulé : {payment_intent['id']}")
-
-# #***
-# def handle_charge_refund_updated(event):
-#     """
-#     🔄 Traitement quand un remboursement de charge est mis à jour
-#     """
-#     charge = event["data"]["object"]
-    
-#     logger.info(
-#         f"🔄 Mise à jour remboursement charge : {charge['id']} | "
-#         f"Montant remboursé : {charge.get('amount_refunded', 0)/100:.2f} {charge['currency']} | "
-#         f"Remboursé : {charge.get('refunded', False)}"
-#     )
-    
-#     # Vérifier les changements de statut de remboursement
-#     old_refunded = event.get('data', {}).get('previous_attributes', {}).get('refunded')
-#     if old_refunded is not None and old_refunded != charge.get('refunded'):
-#         logger.info(f"🔄 Statut remboursement changé : {old_refunded} → {charge.get('refunded')}")
-
-# # *
-# def handle_charge_refunded(event):
-#     """Traitement quand un remboursement est effectué"""
-#     charge = event["data"]["object"]
-#     logger.info(f"🔄 Remboursement effectué : {charge['id']}")
-    
-#     # Trouver la facture associée
-#     invoice = Invoice.objects.filter(stripe_payment_intent_id=charge.get('payment_intent')).first()
-#     if invoice:
-#         invoice.status = "refunded"
-#         invoice.refunded_at = timezone.now()
-#         invoice.save()
-#         logger.info(f"🔄 Facture ID={invoice.id} marquée comme remboursée.")
-
-# # *
-# def handle_charge_succeeded(event):
-#     """Traitement quand une charge réussit"""
-#     charge = event["data"]["object"]
-#     logger.info(f"💳 Charge réussie : {charge['id']} - Montant : {charge['amount']/100:.2f} {charge['currency']}")
-
-# #**
-# def handle_payment_intent_succeeded(event):
-#     """Traitement quand un payment intent réussit"""
-#     payment_intent = event["data"]["object"]
-#     logger.info(f"💰 Payment Intent réussi : {payment_intent['id']}")
-    
-#     # Mettre à jour la facture si elle existe
-#     invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent['id']).first()
-#     if invoice:
-#         invoice.status = "paid"
-#         invoice.paid_at = timezone.now()
-#         invoice.save()
-#         logger.info(f"✅ Facture ID={invoice.id} mise à jour via Payment Intent.")
-
-
-
-# def send_payment_success_notification(invoice):
-#     """Envoyer une notification de succès de paiement"""
-#     try:
-#         # 🔔 Ici vous pouvez :
-#         # - Envoyer un email de confirmation
-#         # - Notifier un webhook interne
-#         # - Mettre à jour d'autres systèmes
-#         # - Créer une notification dans votre app
-        
-#         logger.info(f"📧 Notification de paiement à envoyer pour la facture ID={invoice.id}")
-        
-#         # Exemple d'envoi d'email :
-#         # send_mail(
-#         #     'Paiement confirmé',
-#         #     f'Votre paiement pour la facture {invoice.id} a été confirmé.',
-#         #     'noreply@votre-site.com',
-#         #     [invoice.customer_email],
-#         #     fail_silently=False,
-#         # )
-        
-#     except Exception as e:
-#         logger.error(f"❌ Erreur lors de l'envoi de la notification : {e}")
-
-# """
-# 🔒 Résumé des bonnes pratiques mises en place :
-# Sécurité / Robustesse	✅ Mise en œuvre
-# Vérification de la signature	construct_event(...)
-# Ignorer les webhooks non pertinents	if event['type'] == ...
-# Recherche sécurisée d’objets	try/except Invoice.DoesNotExist
-# Protection CSRF désactivée (justifiée) @csrf_exempt
-# 💡 Suggestions d'amélioration :
-# Logger les erreurs :
-# Ajouter d'autres types de webhooks si besoin : elif event['type'] == 'invoice.payment_failed':
-# Créer une vue de log webhook pour tester les notifications Stripe dans Django admin.(Simuler un webhook Stripe en local pour tester )
-# Envoyer un e-mail de confirmation à l’utilisateur après paiement.
-# """
-# # =============================================================================
-# # HANDLERS POUR CHAQUE TYPE D'ÉVÉNEMENT DE STRIPE WEBHOOK FIN
-# # =============================================================================
-
-
 
 
 
 # payment>views.py
-from django.http import FileResponse
-from django.http import Http404
-import os
+
 
 @login_required
 def download_invoice(request, invoice_id):
@@ -849,17 +542,9 @@ def update_historique_prof(prof, demande_paiement, user):
     historique_prof.save()
 
 
-logger = logging.getLogger('payment.views')
 User = get_user_model()
 
-from django.core.mail import send_mail
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.conf import settings
-from datetime import date
-import logging
 
-logger = logging.getLogger('payment.views')
 
 def envoie_email_multiple(user_id_envoi, liste_user_id_receveurs, sujet_email, texte_email, reponse_email_id=None):
     """
@@ -966,17 +651,6 @@ def envoie_email_multiple(user_id_envoi, liste_user_id_receveurs, sujet_email, t
 # Début traitement de compte Stripe pour les professeurs
 # ------------------------------------------------------
 
-import stripe
-import logging
-from django.conf import settings
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from accounts.models import Professeur
-
-
-logger = logging.getLogger('payment.views')
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @login_required
@@ -1181,26 +855,10 @@ def compte_stripe(request):
 # STRIPE WEBHOOK TRANSFERT
 ##############################################
 
-import stripe
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from decimal import Decimal
-import json
-
-from cart.models import CartTransfert, CartTransfertItem, InvoiceTransfert
-from cart.models import Cart, CartItem
-from accounts.models import Professeur, Payment
-
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
-
-from datetime import datetime, timezone as dt_timezone
 
 @login_required
 @user_passes_test(is_admin)
@@ -1256,13 +914,12 @@ def create_transfert_session(request):
             if balance_tx:
                 montant_net_reel = balance_tx['net'] / 100  # Montant net réel (euros)
                 frais_stripe = balance_tx['fee'] / 100      # Frais Stripe (euros)
-                # date_mise_en_valeur = datetime.fromtimestamp(balance_tx['available_on'], tz=dt_timezone.utc)
                 timestamp = balance_tx['available_on']
                 if timestamp is not None:
+                    from datetime import timezone as dt_timezone
                     date_mise_en_valeur = datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
                 else:
                     date_mise_en_valeur = None
-                # date_creation_tx = datetime.fromtimestamp(balance_tx['created'], tz=dt_timezone.utc)
 
                 # print("📊 Détails transfert Stripe :")
                 # print("### ### balance_tx :", balance_tx)
@@ -1439,138 +1096,6 @@ def transfert_cancel(request):# on n'a pas besoin
 
 # payment/views.py
 
-import json
-import stripe
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
-from django.conf import settings
-
-import json
-import logging
-import stripe
-from django.conf import settings
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-
-# 📜 Configuration du logger (on recommande de le définir en haut du fichier)
-logger = logging.getLogger('payment.views')
-
-# @csrf_exempt
-# def stripe_transfert_webhook(request):
-#     """
-#     📡 Webhook Stripe - Gère les événements liés aux transferts et payouts.
-    
-#     - `transfer.created`   : Un transfert vers un compte connecté vient d'être créé
-#     - `transfer.failed`    : Un transfert a échoué
-#     - `transfer.reversed`  : Un transfert a été annulé / remboursé
-#     - `payout.created`     : Un virement bancaire est initié
-#     - `payout.paid`        : Le virement a été effectué avec succès
-#     - `payout.failed`      : Le virement a échoué
-#     """
-
-#     payload = request.body
-#     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-#     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TRANSFERT
-
-#     logger.info("📩 Webhook Stripe reçu sur /stripe_transfert_webhook")
-
-#     # 1️⃣ Vérification de la signature Stripe
-#     try:
-#         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-#         logger.info(f"✅ Signature Stripe vérifiée pour l’événement : {event['id']}")
-#     except ValueError:
-#         logger.error("❌ Erreur : Payload JSON invalide")
-#         return JsonResponse({'error': 'Invalid payload'}, status=400)
-#     except stripe.error.SignatureVerificationError:
-#         logger.critical("🚨 Signature Stripe invalide - Requête rejetée")
-#         return JsonResponse({'error': 'Invalid signature'}, status=400)
-#     except Exception as e:
-#         logger.exception(f"💥 Erreur inattendue lors de la vérification de signature : {e}")
-#         return JsonResponse({'error': 'Webhook verification failed'}, status=400)
-
-#     event_id = event.get('id')
-#     event_type = event.get('type')
-#     data_object = event['data']['object']
-
-#     # 2️⃣ Enregistrer l’événement dans WebhookEvent (évite les doublons)
-#     try:
-#         payload_json = json.loads(payload.decode('utf-8'))
-
-#         webhook_event, created = WebhookEvent.objects.get_or_create(
-#             event_id=event_id,
-#             defaults={
-#                 'type': event_type,
-#                 'payload': payload_json,
-#             }
-#         )
-
-#         if created:
-#             logger.info(f"📬 Nouvel événement Stripe enregistré : {event_id} ({event_type})")
-#         else:
-#             logger.warning(f"⚠️ Événement Stripe déjà reçu : {event_id} ({event_type}) — ignoré pour éviter un traitement en double")
-#             return HttpResponse(status=200)
-
-#     except Exception as e:
-#         logger.exception(f"💥 Impossible d’enregistrer l’événement Stripe dans WebhookEvent : {e}")
-#         return JsonResponse({'error': 'Database error'}, status=500)
-
-#     # 3️⃣ Dispatcher vers le bon handler
-#     try:
-#         logger.info(f"📊 Traitement de l’événement : {event_type}")
-
-#         handlers_map = {
-#             # TRANSFERTS/PAYOUTS
-#             'transfer.created': handle_transfer_created,
-#             'transfer.reversed': handle_transfer_reversed,
-#             'transfer.update': handle_transfer_updated,
-#             'payout.created': handle_payout_created,
-#             'payout.paid': handle_payout_paid,
-#             'payout.failed': handle_payout_failed,
-            
-#             # REMBOURSEMENTS
-#             'refund.created': handle_refund_created,
-#             'refund.updated': handle_refund_updated,
-#             'refund.failed': handle_refund_failed,
-            
-            
-#             # ✅ NOUVEAUX HANDLERS AJOUTÉS
-#             'payment_intent.created': handle_payment_intent_created,
-#             'charge.updated': handle_charge_updated,
-#             'balance.available': handle_balance_available,
-            
-            
-#             # HANDLERS EXISTANTS (si vous les avez adaptés (à tester))
-#             'charge.succeeded': handle_charge_succeeded_transfert,  # Version adaptée
-#             'payment_intent.succeeded': handle_payment_intent_succeeded_transfert,  # Version adaptée
-#             'charge.refund.updated': handle_charge_refund_updated_transfert,
-#             'charge.refunded': handle_charge_refunded_transfert, # REMBOURSEMENTS
-#         }
-
-
-#         handler = handlers_map.get(event_type) # c'est une variable
-#         if handler:
-#             handler(data_object) # c'est une fonction
-#             logger.info(f"✅ Événement {event_type} traité avec succès")
-#         else:
-#             logger.info(f"ℹ️ Événement non géré : {event_type}")
-
-#     except Exception as e:
-#         logger.exception(f"💥 Erreur lors du traitement de l’événement {event_type} : {e}")
-#         return JsonResponse({'error': 'Webhook processing failed'}, status=500)
-
-#     # 4️⃣ Réponse finale à Stripe
-#     logger.info("✅ Webhook Stripe traité avec succès ✅")
-#     return HttpResponse(status=200)
-
-
-
-from functools import wraps
-from django.contrib import messages
-import logging
-
-logger = logging.getLogger('payment.views')
-
 def secure_stripe_action(action_name):
     """
     Décorateur intelligent pour sécuriser les actions critiques (comme un remboursement).
@@ -1615,11 +1140,6 @@ def secure_stripe_action(action_name):
     return decorator
 
 
-import stripe
-import uuid
-from django.views.decorators.http import require_POST
-from accounts.models import RefundPayment
-from pages.utils import to_cents
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -2373,12 +1893,9 @@ def handle_balance_available(balance_transaction):
 
 
 
-import logging
-from django.utils import timezone
-
 
 # 📜 Configuration du logger
-logger = logging.getLogger('payment.views')
+
 
 def handle_transfer_created(data_transfer):
     """
@@ -2390,7 +1907,7 @@ def handle_transfer_created(data_transfer):
     - Met à jour l'accord de règlement si applicable.
     - Gère les erreurs de façon robuste et loggée.
     """
-
+    from datetime import timezone as dt_timezone
     logger.info("📦 [WEBHOOK] Traitement d’un transfert Stripe créé...")
 
     # --- 1️⃣ Extraire les données principales ---
