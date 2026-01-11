@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from .models import Professeur, Diplome, Experience, Format_cour, Matiere  , Niveau, Prof_mat_niv, Departement, Region, Commune, Prof_zone, Pro_fichier, Prof_doc_telecharge, Diplome_cathegorie, Pays, Experience_cathegorie, Matiere_cathegorie
 from .models import Email_telecharge, Email_detaille, Prix_heure, Mes_eleves, Cours, Eleve, Horaire, Demande_paiement, Detail_demande_paiement, Historique_prof, Payment, AccordReglement , DetailAccordReglement
 from datetime import date, datetime, timedelta
-# from datetime import timedelta
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.core.validators import validate_email, EmailValidator
@@ -2258,14 +2257,14 @@ def ajouter_cours(request):
 from django.utils.dateparse import parse_date
 from datetime import datetime
 
-def ajouter_horaire(request): # Ajouter des séance de cours près défini
+def ajouter_horaire(request):  # Ajouter des séance de cours près défini
     cours_id = request.session.get('cours_id', None)
     if not cours_id:
         messages.error(request, "L'ID du cours n'est pas dans le session")
         return redirect('compte_prof')
     if not request.user.is_authenticated:
         messages.error(request, "Pas d'utilisateur connecté.")
-        return redirect('signin')   
+        return redirect('signin')
     user = request.user
     # Vérifier si l'utilisateur a un profil de professeur associé
     if not hasattr(user, 'professeur'):
@@ -2305,7 +2304,7 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
     detaille_cours = Cours.objects.filter(id=cours_id).annotate(
         eleve_cours=Concat(
             Value(f'[Màj le: {maj_cours_format}], '),
-            Value('Format du cours: '), F('format_cours'), 
+            Value('Format du cours: '), F('format_cours'),
             Value(', Matière: '), F('matiere'),
             Value(', Niveau: '), F('niveau'),
             Value(", Prix de l'heure: "), F('prix_heure'), Value(" €"),
@@ -2327,7 +2326,7 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
         valide_format = True
 
         # Parcourir les 4 horaires possibles pour validation et ajout
-        horaires_recup=[]
+        horaires_recup = []
         for i in range(1, 5):
             date = request.POST.get(f'date{i}', '')
             debut = request.POST.get(f'debut{i}', '')
@@ -2343,27 +2342,28 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
 
                 try:
                     # si la convertion est réussie
-                    date_01 = datetime.strptime(date, '%d/%m/%Y') # date_01 juste pour le try seulement
+                    date_01 = datetime.strptime(date, '%d/%m/%Y')  # date_01 juste pour le try seulement
                     debut_01 = datetime.strptime(debut, '%H:%M')
                     fin_01 = datetime.strptime(fin, '%H:%M')
                 except ValueError:
                     valide_format = False
                 if valide_format:
-                    if datetime.strptime(debut, '%H:%M') >= datetime.strptime(fin, '%H:%M')  : valide_heure = False
+                    if datetime.strptime(debut, '%H:%M') >= datetime.strptime(fin, '%H:%M'):
+                        valide_heure = False
 
-        horaires = horaires_recup # pour remaitre au template les anciens données si l'enregistrement n'est pas réuci
+        horaires = horaires_recup  # pour remaitre au template les anciens données si l'enregistrement n'est pas réuci
         # Si aucun horaire n'est valide, afficher un message d'erreur
         if valid_entries == 0:
             messages.error(request, "Veuillez remplir au moins les champs date, début, fin, et statut pour une ligne.")
-        if not valide_heure :
+        if not valide_heure:
             messages.error(request, "L'heure de début doit être inférieur à l'heure de fin.")
-        if not valide_format :
+        if not valide_format:
             messages.error(request, "Le format de l'heure ou de la date est non valide,<br> format date doit être: JJ/MM/AA et l'heure HH:MM.")
-         
+
         if valid_entries != 0 and valide_heure and valide_format:
             # Enregistrer les horaires valides
             for horaire in horaires:
-                if horaire['date'] and horaire['debut'] and horaire['fin']: #éviter les lignes vide
+                if horaire['date'] and horaire['debut'] and horaire['fin']:  # éviter les lignes vide
                     seance = Horaire(
                         cours=mon_cours,
                         contenu=horaire['contenu'],
@@ -2376,21 +2376,33 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
                     seance.save()
 
             messages.success(request, "Enregistrement réussi.")
-            # Réinitialiser les horaires par défaut pour efacer les ancien données puisque l'enregistrement est réuci
+            # Réinitialiser les horaires par défaut pour effacer les anciens données puisque l'enregistrement est réuci
             horaires = [{'date': '', 'debut': '', 'fin': '', 'contenu': '', 'statut': 'En attente'} for _ in range(4)]
 
     # Gestion de la suppression d'un horaire
     sup_enr_keys = next((key for key in request.POST if key.startswith('btn_sup_')), None)
     if sup_enr_keys:
-        horaire_id_encrypt = sup_enr_keys.removeprefix('btn_sup_') # Python 9.3 +
+        horaire_id_encrypt = sup_enr_keys.removeprefix('btn_sup_')  # Python 3.9+
         try:
-            horaire_id = decrypt_id(horaire_id_encrypt)
+            # ✅ Amélioration decrypt_id : gestion robuste et centralisée
+            try:
+                horaire_id = int(decrypt_id(horaire_id_encrypt))
+            except Exception as e:
+                messages.error(request, f"Erreur lors du décryptage de l'ID ({horaire_id_encrypt}): {e}")
+                return redirect('ajouter_horaire')
+
             request.session['horaire_id'] = horaire_id
             horaire_to_delete = Horaire.objects.get(id=horaire_id)
+
+            if horaire_to_delete.demande_paiement_id or horaire_to_delete.payment_id:
+                messages.error(request, "Horaire ne peut être supprimé car il est lié à une demande de paiement ou à un paiement.")
+                return redirect('ajouter_horaire')
+
             horaire_to_delete.delete()
-            messages.success(request, f"Horaire supprimé avec succès.")
+            messages.success(request, "Horaire supprimé avec succès.")
+
         except Horaire.DoesNotExist:
-            messages.error(request, f"Horaire non trouvé.")
+            messages.error(request, "Horaire non trouvé.")
 
     # Récupérer les horaires enregistrés pour ce cours avec la logique de 'statut_reglement'
     enr_horaires = [
@@ -2403,15 +2415,14 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
             'payment_id': enr.payment_id,
             'demande_paiement_id': enr.demande_paiement_id,
             'statut_reglement': (
-                                    'Réglé' if enr.payment_id else
-                                    'Règlement en cours' if enr.demande_paiement_id else
-                                    'Non réglé'
-                                ),
+                'Réglé' if enr.payment_id else
+                'Règlement en cours' if enr.demande_paiement_id else
+                'Non réglé'
+            ),
             'id': encrypt_id(enr.id)
         }
         for enr in Horaire.objects.filter(cours=mon_cours)
     ]
-
 
     # Contexte pour le rendu du template
     context = {
@@ -2421,6 +2432,7 @@ def ajouter_horaire(request): # Ajouter des séance de cours près défini
         'enr_horaires': enr_horaires,
     }
     return render(request, 'accounts/ajouter_horaire.html', context)
+
 
 def modifier_cours(request, cours_id):
     if not request.user.is_authenticated:
@@ -2653,12 +2665,6 @@ def cours_mon_eleve(request, eleve_id):
     # Rend le template 'cours_mon_eleve' avec le contexte préparé
     return render(request, 'accounts/cours_mon_eleve.html', context)
 
-from django.core.paginator import Paginator
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from .models import Horaire, Cours, Mes_eleves, Detail_demande_paiement
-from decimal import Decimal
-from datetime import datetime
 
 def horaire_cours_mon_eleve(request):
     """
@@ -2666,8 +2672,23 @@ def horaire_cours_mon_eleve(request):
     avec pagination des horaires.
     """
     cours_id = request.session.get('cours_id', None)
-    mon_cours = get_object_or_404(Cours, id=cours_id)
-    mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
+
+    # ✅ Ajout de logs autour du get_object_or_404
+    try:
+        mon_cours = get_object_or_404(Cours.objects.select_related('mon_eleve'), id=cours_id)
+        logger.debug(f"[horaire_cours_mon_eleve] Cours trouvé (id={cours_id}) pour user={request.user.id}")
+    except Exception as e:
+        logger.error(f"[horaire_cours_mon_eleve] Erreur get_object_or_404 cours_id={cours_id} - {e}")
+        messages.error(request, "Erreur lors de la récupération du cours.")
+        return redirect('mes_eleves')
+
+    try:
+        mon_eleve = get_object_or_404(Mes_eleves, id=mon_cours.mon_eleve_id, is_active=True)
+        logger.debug(f"[horaire_cours_mon_eleve] Élève actif trouvé (id={mon_eleve.id}) pour cours_id={cours_id}")
+    except Exception as e:
+        logger.error(f"[horaire_cours_mon_eleve] Erreur get_object_or_404 mon_eleve_id={mon_cours.mon_eleve_id} - {e}")
+        messages.error(request, "Erreur lors de la récupération de l'élève associé.")
+        return redirect('mes_eleves')
     
     # Gestion des requêtes POST
     if request.method == 'POST':
@@ -2676,90 +2697,139 @@ def horaire_cours_mon_eleve(request):
             request.session['cours_id'] = cours_id
             return redirect('ajouter_horaire')
         
-        # Gestion de la modification du prix de l'heure
-        if 'btn_prix' in request.POST:
-            prix_heure = request.POST.get('prix_heure', None)
-            prix_str = prix_heure[:-4] if prix_heure else None
-            if prix_str and prix_str != '0':
-                prix_heure_dec = Decimal(prix_str).quantize(Decimal('0.00'))
-            else:
-                prix_heure_dec = mon_cours.prix_heure
-            mon_cours.prix_heure = prix_heure_dec
-            mon_cours.save()
-            messages.success(request, "Le prix de l'heure est modifié avec succès.")
+        # # Gestion de la modification du prix de l'heure (logique d'enregistrement supprimée)
+        # if 'btn_prix' in request.POST:
+        #     prix_heure = request.POST.get('prix_heure', None)
+        #     prix_str = prix_heure[:-4] if prix_heure else None
+        #     if prix_str and prix_str != '0':
+        #         prix_heure_dec = Decimal(prix_str).quantize(Decimal('0.00'))
+        #     else:
+        #         prix_heure_dec = mon_cours.prix_heure
+        #     mon_cours.prix_heure = prix_heure_dec
+        #     mon_cours.save()
+        #     messages.success(request, "Le prix de l'heure est modifié avec succès.")
 
-            return redirect('horaire_cours_mon_eleve')
+        #     return redirect('horaire_cours_mon_eleve')
 
-        # Gestion de l'activation/désactivation du cours
-        if 'btn_activer' in request.POST:
-            if mon_cours.is_active:  
-                details_demande_paiement = Detail_demande_paiement.objects.filter(cours=mon_cours)
-                Statut_demandes = [
-                    detail.demande_paiement.statut_demande 
-                    for detail in details_demande_paiement
-                ]
-                teste = True
-                for statut in Statut_demandes:
-                    if statut not in ['Annuler', 'Réaliser']:
-                        messages.error(request, "Au moins une demande de paiement liée à ce cours est en attente ou en cours, ce qui empêche sa désactivation.")
-                        teste = False
-                        break
+        # # Gestion de l'activation/désactivation du cours (logique d'enregistrement supprimée)
+        # if 'btn_activer' in request.POST:
+        #     if mon_cours.is_active:  
+        #         details_demande_paiement = Detail_demande_paiement.objects.filter(cours=mon_cours)
+        #         Statut_demandes = [
+        #             detail.demande_paiement.statut_demande 
+        #             for detail in details_demande_paiement
+        #         ]
+        #         teste = True
+        #         for statut in Statut_demandes:
+        #             if statut not in ['Annuler', 'Réaliser']:
+        #                 messages.error(request, "Au moins une demande de paiement liée à ce cours est en attente ou en cours, ce qui empêche sa désactivation.")
+        #                 teste = False
+        #                 break
 
-                if teste:
-                    mon_cours.is_active = False
-                    mon_cours.save()
-            else: 
-                mon_cours.is_active = True
-                mon_cours.save()
+        #         if teste:
+        #             mon_cours.is_active = False
+        #             mon_cours.save()
+        #     else: 
+        #         mon_cours.is_active = True
+        #         mon_cours.save()
             
-            messages.info(request, f"Le cours est {'désactivé' if not mon_cours.is_active else 'activé'}.")
-            return redirect('horaire_cours_mon_eleve')
+        #     messages.info(request, f"Le cours est {'désactivé' if not mon_cours.is_active else 'activé'}.")
+        #     return redirect('horaire_cours_mon_eleve')
         
         # Gestion de la suppression d'un horaire
         sup_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_sup_')]
         if sup_enr_keys:
             btn_key = sup_enr_keys[0]
-            horaire_id = int(btn_key.split('btn_sup_')[1])
+
+            # ✅ decrypt_id avec logs
+            try:
+                horaire_id = int(decrypt_id(btn_key.split('btn_sup_')[1]))
+                logger.debug(f"[horaire_cours_mon_eleve] Tentative de suppression horaire_id={horaire_id} par user={request.user.id}")
+            except Exception as e:
+                logger.error(f"[horaire_cours_mon_eleve] Erreur decrypt_id suppression: {e}")
+                messages.error(request, "Identifiant d’horaire invalide.")
+                return redirect('horaire_cours_mon_eleve')
+
             try:
                 horaire_to_delete = Horaire.objects.get(id=horaire_id)
-                horaire_to_delete.delete()
-                messages.success(request, "Horaire supprimé avec succès.")
             except Horaire.DoesNotExist:
+                logger.warning(f"[horaire_cours_mon_eleve] Horaire non trouvé pour suppression id={horaire_id}")
                 messages.error(request, "Horaire non trouvé.")
+                return redirect('horaire_cours_mon_eleve')
+
+            # par protection il faut s'assurer que l'horaire n'est pas lié à une demande de règlement ni à un paiement
+            if horaire_to_delete.demande_paiement_id:
+                logger.info(f"[horaire_cours_mon_eleve] Suppression refusée - lié à une demande de paiement id={horaire_id}")
+                messages.error(request, "Horaire est lié à une demande de paiement, il ne peut pas être supprimer.")
+                return redirect('horaire_cours_mon_eleve')
+            
+            elif horaire_to_delete.payment_id:
+                logger.info(f"[horaire_cours_mon_eleve] Suppression refusée - lié à un paiement id={horaire_id}")
+                messages.error(request, "Horaire est lié à un paiement, il ne peut pas être supprimer.")
+                return redirect('horaire_cours_mon_eleve')
+            
+            horaire_to_delete.delete()
+            logger.info(f"[horaire_cours_mon_eleve] Horaire supprimé avec succès id={horaire_id}")
+            messages.success(request, "Horaire supprimé avec succès.")
             return redirect('horaire_cours_mon_eleve')
         
         # Gestion de la modification d'un horaire
         modif_enr_keys = [key for key in request.POST.keys() if key.startswith('btn_modif_')]
         if modif_enr_keys:
             btn_key = modif_enr_keys[0]
-            horaire_id = int(btn_key.split('btn_modif_')[1])
+            horaire_id_crypted = btn_key.split('btn_modif_')[1]
+
+            # ✅ decrypt_id avec logs
             try:
-                horaire_enr = Horaire.objects.get(id=horaire_id)
-                date_cours = request.POST.get(f'date_{horaire_id}', horaire_enr.date_cours.strftime('%d/%m/%Y'))
-                heure_debut = request.POST.get(f'debut_{horaire_id}', horaire_enr.heure_debut)
-                heure_fin = request.POST.get(f'fin_{horaire_id}', horaire_enr.heure_fin)
-                contenu = request.POST.get(f'contenu_{horaire_id}', horaire_enr.contenu)
-                statut_cours = request.POST.get(f'statut_{horaire_id}', horaire_enr.statut_cours)
-                
-                # Validation des heures
-                if date_cours and heure_debut and heure_fin:
-                    heure_debut_conv = datetime.strptime(heure_debut, '%H:%M')
-                    heure_fin_conv = datetime.strptime(heure_fin, '%H:%M')
-                    if heure_debut_conv >= heure_fin_conv:
-                        messages.error(request, f"Début de la séance {heure_debut} doit être inférieur à fin de la séance {heure_fin}.")
-                    else:
-                        # Mise à jour de l'horaire
-                        horaire_enr.set_date_obtenu_from_str(date_cours)
-                        horaire_enr.set_heure_debut_from_str(heure_debut)
-                        horaire_enr.set_heure_fin_from_str(heure_fin)
-                        horaire_enr.contenu = contenu
-                        horaire_enr.statut_cours = statut_cours
-                        horaire_enr.calculer_duree()
-                        horaire_enr.save()
-                        messages.success(request, "Horaire modifié avec succès.")
-                
+                horaire_id_decrypted = int(decrypt_id(horaire_id_crypted))
+                logger.debug(f"[horaire_cours_mon_eleve] Tentative de modification horaire_id={horaire_id_decrypted} par user={request.user.id}")
+            except Exception as e:
+                logger.error(f"[horaire_cours_mon_eleve] Erreur decrypt_id modification: {e}")
+                messages.error(request, "Identifiant d’horaire invalide.")
+                return redirect('horaire_cours_mon_eleve')
+            
+            try:
+                horaire_enr = Horaire.objects.get(id=horaire_id_decrypted)
             except Horaire.DoesNotExist:
+                logger.warning(f"[horaire_cours_mon_eleve] Horaire non trouvé pour modification id={horaire_id_decrypted}")
                 messages.error(request, "Horaire non trouvé.")
+                return redirect('horaire_cours_mon_eleve')
+
+            # par protection il faut s'assurer que l'horaire n'est pas lié à une demande de règlement ni à un paiement
+            if horaire_enr.demande_paiement_id:
+                logger.info(f"[horaire_cours_mon_eleve] Modification refusée - lié à une demande de paiement id={horaire_id_decrypted}")
+                messages.error(request, "Horaire est lié à une demande de paiement, il ne peut pas être modifier.")
+                return redirect('horaire_cours_mon_eleve')
+            
+            elif horaire_enr.payment_id:
+                logger.info(f"[horaire_cours_mon_eleve] Modification refusée - lié à un paiement id={horaire_id_decrypted}")
+                messages.error(request, "Horaire est lié à un paiement, il ne peut pas être modifier.")
+                return redirect('horaire_cours_mon_eleve')
+        
+            date_cours = request.POST.get(f'date_{horaire_id_crypted}', horaire_enr.date_cours.strftime('%d/%m/%Y'))
+            heure_debut = request.POST.get(f'debut_{horaire_id_crypted}', horaire_enr.heure_debut)
+            heure_fin = request.POST.get(f'fin_{horaire_id_crypted}', horaire_enr.heure_fin)
+            contenu = request.POST.get(f'contenu_{horaire_id_crypted}', horaire_enr.contenu)
+            statut_cours = request.POST.get(f'statut_{horaire_id_crypted}', horaire_enr.statut_cours)
+            
+            # Validation des heures
+            if date_cours and heure_debut and heure_fin:
+                heure_debut_conv = datetime.strptime(heure_debut, '%H:%M')
+                heure_fin_conv = datetime.strptime(heure_fin, '%H:%M')
+                if heure_debut_conv >= heure_fin_conv:
+                    messages.error(request, f"Début de la séance {heure_debut} doit être inférieur à fin de la séance {heure_fin}.")
+                else:
+                    # Mise à jour de l'horaire
+                    horaire_enr.set_date_obtenu_from_str(date_cours)
+                    horaire_enr.set_heure_debut_from_str(heure_debut)
+                    horaire_enr.set_heure_fin_from_str(heure_fin)
+                    horaire_enr.contenu = contenu
+                    horaire_enr.statut_cours = statut_cours
+                    horaire_enr.calculer_duree()
+                    horaire_enr.save()
+                    logger.info(f"[horaire_cours_mon_eleve] Horaire modifié avec succès id={horaire_id_decrypted}")
+                    messages.success(request, "Horaire modifié avec succès.")
+            
             return redirect('horaire_cours_mon_eleve')
 
     # Récupération des horaires avec pagination
@@ -2778,7 +2848,7 @@ def horaire_cours_mon_eleve(request):
             'fin': enr.heure_fin,
             'contenu': enr.contenu,
             'statut': enr.statut_cours,
-            'id': enr.id,
+            'id': encrypt_id(enr.id),
             'statut_reglement': statut_reglement,
         })
 
@@ -2790,6 +2860,7 @@ def horaire_cours_mon_eleve(request):
     }
     
     return render(request, 'accounts/horaire_cours_mon_eleve.html', context)
+
 
 # from django.core.paginator import Paginator
 # from django.shortcuts import render, redirect
@@ -3024,6 +3095,7 @@ def declaration_cours(request):
     #     'professeur': professeur,
     # }
     if request.method == 'POST' and 'btn_declaration' in request.POST:
+
         # Validation des données
         if not montant_total or montant_total <= 0:
             messages.error(request, "Une erreur s'est produite lors du calcul du montant total à régler. Veuillez contacter le programmeur.")
@@ -3078,7 +3150,11 @@ def declaration_cours(request):
 
         # Enregistrement de la demande de paiement
         demande_paiement = Demande_paiement(
-            user=user, mon_eleve=mon_eleve, eleve=eleve, montant=montant_total, email=email_telecharge.id if email_telecharge else None
+            user=user, 
+            mon_eleve=mon_eleve, 
+            eleve = eleve,
+            montant=montant_total, 
+            email=email_telecharge.id if email_telecharge else None
         )
         demande_paiement.save()
 
@@ -3092,8 +3168,10 @@ def declaration_cours(request):
             # messages.info(request, f"horaire_id = {horaire_id} ")
             horaire = Horaire.objects.get(id=horaire_id)
             detail_demande_paiement = Detail_demande_paiement(
-                demande_paiement=demande_paiement, cours=horaire.cours, 
-                prix_heure=horaire.cours.prix_heure, horaire=horaire
+                demande_paiement=demande_paiement, 
+                cours=horaire.cours, 
+                prix_heure=horaire.cours.prix_heure, 
+                horaire=horaire
             )
             detail_demande_paiement.save()
 
@@ -3145,10 +3223,10 @@ def liste_declaration_cours(request):
     page = request.GET.get('page', 1)  # Récupère le numéro de page depuis l'URL
     
     # Gestion des filtres
-    if 'btn_en_cours' in request.GET: statut_demande = 'En cours'
-    if 'btn_attente' in request.GET: statut_demande = 'En attente'
-    if 'btn_annuler' in request.GET: statut_demande = 'Annuler'
-    if 'btn_regler' in request.GET: statut_demande = 'Réaliser'
+    if 'btn_en_cours' in request.GET: statut_demande = Demande_paiement.EN_COURS
+    if 'btn_attente' in request.GET: statut_demande = Demande_paiement.EN_ATTENTE
+    if 'btn_annuler' in request.GET: statut_demande = Demande_paiement.ANNULER
+    if 'btn_regler' in request.GET: statut_demande = Demande_paiement.REALISER
     
     # Base queryset
     demande_paiements = Demande_paiement.objects.filter(user=user)
@@ -3498,8 +3576,7 @@ def liste_payment(request):
         return redirect('compte_prof')
 
     paiement = Payment.objects.filter(
-        model='demande_paiement',
-        model_id__in=demande_paiement.values_list('id', flat=True)
+        professeur=user.professeur
     )
 
     dates = paiement.aggregate(
@@ -3536,10 +3613,7 @@ def liste_payment(request):
 
     paiements = []
     for payment in payments:
-        demande_paiement = Demande_paiement.objects.filter(id=payment.model_id).first()
-        if not demande_paiement:
-            continue
-        eleve = demande_paiement.eleve.user
+        eleve = payment.eleve
         accord_reglement = AccordReglement.objects.filter(id=payment.accord_reglement_id).first() if payment.accord_reglement_id else None
         paiements.append((eleve, payment, encrypt_id(payment.id), accord_reglement, encrypt_id(accord_reglement.id) if payment.accord_reglement_id else None))
 
@@ -3559,7 +3633,7 @@ def liste_payment(request):
             professeur = Professeur.objects.filter(user=request.user).first() # Si le user est un professeur
             if professeur:
                 paiement = Payment.objects.filter(id=paypent_id_decryp).first() # il faut que le paiement est pour le professeur
-                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, user=professeur.user).exists(): # Si non il y a eu une manipulation des données du template
+                if paiement.professeur!=professeur: # Si non il y a eu une manipulation des données du template
                     messages.error(request, f"le paiement sélectionné n'est pas attrubuté au professeur, paiement_id= {paypent_id_decryp}")
                     return redirect('compte_prof')
             request.session['payment_id'] = paypent_id_decryp
@@ -3748,6 +3822,7 @@ def liste_reglement(request):
 
 @login_required
 def reglement_nouveau_cours(request, enregistrement_direct='true'):
+    
     if enregistrement_direct not in ['true', 'false']:
         return HttpResponseBadRequest("Paramètre invalide")
     enregistrement_direct = enregistrement_direct == 'true'
@@ -3768,6 +3843,12 @@ def reglement_nouveau_cours(request, enregistrement_direct='true'):
         return redirect('signin')
 
     logger.debug("Utilisateur professeur connecté : %s", user)
+
+    # ajouter la condition de l'existance du compte stripe
+    professeur = Professeur.objects.filter(user=user,stripe_account_id__isnull=False, stripe_onboarding_complete=True).first()
+    if not professeur:
+        messages.error(request, "Merci de bien vouloir créer votre compte Stripe au préalable.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
 
     # Chargement des données de base pour l'affichage du formulaire
     formats = Format_cour.objects.filter(user=user).first()
@@ -3791,8 +3872,12 @@ def reglement_nouveau_cours(request, enregistrement_direct='true'):
             output_field=CharField(),
         )
     ).values_list('eleve__id', 'eleve_nom')
+    # mes_eleves_incrypt=[] voire une solution avec (get_last_cours_eleve)
+    # for enr in mes_eleves:
+    #     mes_eleves_incrypt.append((encrypt_id(enr[0]), enr[1]))
 
-    logger.debug("Liste des élèves actifs du professeur : %s", list(mes_eleves))
+
+    # logger.debug("Liste des élèves actifs du professeur : %s", list(mes_eleves))
 
     # Contexte pour le template HTML
     context = {
@@ -3820,11 +3905,17 @@ def reglement_nouveau_cours(request, enregistrement_direct='true'):
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
         try:
-            eleve = Eleve.objects.get(id=eleve_ids[0])
+            # décripter eleve_ids[0] si le problème de (get_last_cours_eleve) est résolut
+            eleve_id = eleve_ids[0]
+            if not eleve_id:
+                messages.error(request, "Erreur de decriptage de l'ID élève")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+            eleve = Eleve.objects.get(id=eleve_id)
+            mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True) # protection dans le cas si ID eleve froduleusement changé
             logger.debug("Élève récupéré : %s", eleve)
         except Eleve.DoesNotExist:
             messages.error(request, "Élève introuvable.")
-            logger.error("Élève introuvable avec l'ID : %s", eleve_ids[0])
+            logger.error("Élève introuvable avec l'ID : %s", eleve_id)
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
         # --- Redirection vers la planification des cours ---
@@ -3935,7 +4026,7 @@ def reglement_nouveau_cours(request, enregistrement_direct='true'):
                 return redirect('resume_declaration')
             # passer directement à l'enregistrement des horaires
             else:
-                # Création ou récupération du cours existant
+                # Création (ou récupération du cours existant)
                 mon_eleve = Mes_eleves.objects.get(user=user, eleve=eleve, is_active=True)
                 cours = Cours.objects.create(
                     user=user,
@@ -4040,7 +4131,7 @@ def resume_declaration(request):
                 logger.debug("Relation (créée=%s) trouvée avec l'élève : %s", created, mon_eleve)
                 prix_heure_arrondi = round(float(detail_demande['prix_heure']), 2)
 
-                # Création ou récupération du cours existant
+                # 1) Création ou récupération du cours existant
                 cours = Cours.objects.create(
                     user=user,
                     mon_eleve=mon_eleve,
@@ -4088,6 +4179,7 @@ def resume_declaration(request):
                         logger.error("Erreur lors de l'envoi d'email : %s", str(e))
                         messages.error(request, f"Erreur lors de l'envoi de l'email : {str(e)}")
 
+                    # 2) création de l'email
                     email_telecharge = Email_telecharge.objects.create(
                         user=user,
                         email_telecharge=email_prof,
@@ -4097,18 +4189,18 @@ def resume_declaration(request):
                     )
                     logger.debug("Email télécharge enregistré avec ID : %s", email_telecharge.id)
 
-                # Création de la demande de paiement
+                # 3) Création de la demande de paiement
                 demande_paiement = Demande_paiement.objects.create(
                     user=user,
                     mon_eleve=mon_eleve,
-                    eleve=eleve,
+                    eleve= eleve,
                     montant=round(float(detail_demande['total_montant']), 2),
                     email=email_telecharge.id if email_telecharge else None,
                     statut_demande='En attente'
                 )
                 logger.info("Demande de paiement créée avec ID : %s", demande_paiement.id)
 
-                # Création des horaires
+                # 4) Création des horaires liés au cours
                 horaires_to_create = []
                 for detail in detail_horaires:
                     debut_obj = datetime.strptime(detail['debut'], "%H:%M")
@@ -4121,13 +4213,13 @@ def resume_declaration(request):
                         duree=round((fin_obj - debut_obj).total_seconds() / 3600, 2),
                         contenu=detail['contenu'],
                         statut_cours=detail['statut'],
-                        demande_paiement_id=demande_paiement.id
+                        demande_paiement_id=demande_paiement.id 
                     )
                     horaires_to_create.append(horaire)
                 Horaire.objects.bulk_create(horaires_to_create)
                 logger.debug("Création en masse des horaires terminée.")
 
-                # Création des détails de la demande de paiement
+                # 5) Création des détails de la demande de paiement sur la base de tous les horaires liés au cours
                 horaires = Horaire.objects.filter(cours=cours, demande_paiement_id=demande_paiement.id)
                 details_to_create = [
                     Detail_demande_paiement(
@@ -4604,7 +4696,6 @@ def ajout_cours_email(request):
 # import json
 # import logging
 
-logger = logging.getLogger(__name__)
 
 # exacterment le même code que require_http mais onles a séparere pour une éventuelle modification !!
 @require_http_methods(["POST"])

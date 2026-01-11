@@ -18,7 +18,7 @@
                         
                             <h5 class="text-center ">Les champs actifs peuvent être modifiés.</h5>
                             <h5 class="text-center ">Cochez ou décochez les paiements à inclure ou exclure.</h5>
-                            <h5 class="text-center ">Un accord de rembourcement doit inclure au moins un paiement sélectionné.</h5>
+                            <h5 class="text-center ">Un accord de remboursement doit inclure au moins un paiement sélectionné.</h5>
                     </div>
                     <div class="col-md-12">
                         {% include 'partials/_alerts.html' %}
@@ -93,26 +93,6 @@
                                             </div>
                                 {% endfor %}
                                 <hr>
-                                <!-- Pour afficher les paiement non encore liés à un remboursement -->
-                                {% for id, description, refunded_amount, _  in paiements_sans_accord %}
-                                            <div class="row  g-2 ">
-                                                <div class="col-md-9 col-sm-12 position-relative">
-                                                    <label for="description_{{ id }}" class="form-label">Nouvelle description</label>
-                                                    <input type="text" class="form-control form-control-intitule" id="description_{{ id }}"  value="{{description}}" readonly >
-                                                </div>
-                                                <div class="col-md-3 col-sm-12 position-relative">
-                                                    <label for="refunded_amount{{ id }}" class="form-label">Nouveau montant à règler</label>
-                                                    <div class="row  g-2 ">
-                                                        <div class="col-md-10 col-sm-12 position-relative">
-                                                            <input type="text" class="form-control form-control-intitule prix-heure  " id="refunded_amount{{ id }}"  value="{{refunded_amount|stringformat:'0.2f'}} "  name="refunded_amount_{{ id }}">
-                                                        </div>
-                                                        <div class="col-md-2 col-sm-12 position-relative  ">
-                                                            <input class="form-check-input p-3 ms-1 " type="checkbox" name="accord_{{ id }}"  id="checkbox_{{id}}" >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                {% endfor %}
                                 <div class="col-lg-12">
                                     <label for="text_email" class="form-label"><strong>Ancien message lié à l'accord de règlement</strong></label>
                                     <textarea class="form-control profil" id="text_email"  readonly>{{texte_email}}</textarea>
@@ -120,7 +100,7 @@
                                 <div class="row  " style="margin-bottom: 10px;">
                                     <div class="col-md-6 col-sm-12 d-flex justify-content-center  py-3">
                                         <button type="submit" class="btn btn-warning col-12" name="btn_enr" >
-                                            Modifier l'accord de règlement
+                                            Modifier l'accord de remboursement
                                         </button>
                                     </div>
                                 </div>

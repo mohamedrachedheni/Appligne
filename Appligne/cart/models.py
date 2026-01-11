@@ -9,7 +9,7 @@ import uuid
 import os
 from decimal import Decimal
 from xhtml2pdf import pisa
-from accounts.models import Cours, Payment, Professeur
+from accounts.models import Cours, Payment, Professeur, Demande_paiement, AccordReglement
 import stripe
 
 
@@ -18,7 +18,8 @@ import stripe
 # ========================
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True)
+    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True) # à supprimer
+    demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -35,7 +36,7 @@ class Cart(models.Model):
 # ========================
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    cours = models.CharField(max_length=255, null=True, blank=True)  # Description texte du cours
+    cours = models.CharField(max_length=255, null=True, blank=True)  # Description texte du cours (à renommé confusion avec table cours)
     quantity = models.IntegerField(default=1)  # Nombre d'unités (jours)
     price = models.IntegerField()  # Prix unitaire en centimes (ex: 1250 = 12,50 €)
 
@@ -64,23 +65,50 @@ from django.db import models
 from django.utils import timezone
 
 class Invoice(models.Model):
+    DRAFT='draft'
+    PAID='paid'
+    CANCELED='canceled'
+
     STATUS_CHOICES = [
-        ('draft', 'Brouillon'),
-        ('paid', 'Payée'),
-        ('canceled', 'Annulée'),
+        (DRAFT, 'Brouillon'), # au lencement de create_checkout_session
+        (PAID, 'Payée'), # suite au payment_success
+        (CANCELED, 'Annulée'), # suite au payment_cancel
     ]
 
-    cart = models.OneToOneField('Cart', on_delete=models.SET_NULL, null=True)
-    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True)
+    cart = models.OneToOneField('Cart', on_delete=models.SET_NULL, null=True) # non utile à enlever
+    demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.SET_NULL, null=True) 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     invoice_number = models.CharField(max_length=50, unique=True)  # Généré automatiquement
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
-    stripe_id = models.CharField(max_length=255, blank=True) # créer avec view; create_checkout_session
+    
+    # ⚙️ ID de la session Checkout Stripe
+    stripe_id = models.CharField(max_length=255, null=True, blank=True, help_text="ID de la session Checkout Stripe")
+    
+    # 🆕 ID du PaymentIntent Stripe
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Identifiant Stripe du PaymentIntent associé"
+    )
+    
+    stripe_charge_id = models.CharField(max_length=255, null=True, blank=True, help_text="Identifiant Stripe de la denière Charge associée")
+    balance_txn_id = models.CharField(max_length=255, null=True, blank=True, help_text="Identifiant Stripe de la BalanceTransaction associée")
+
     total = models.IntegerField()  # Calculé automatiquement depuis le panier en centimes
     pdf = models.FileField(upload_to='invoices/', blank=True)  # Généré automatiquement
+    cancellation_reason = models.CharField(max_length=255, null=True, blank=True, help_text="Raison d'annulation")
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+
+    payment = models.OneToOneField( # à supprimer
+        'accounts.Payment',
+        on_delete=models.CASCADE,
+        related_name='invoice_linked',  # ✅ NOM INVERSE UNIQUE
+        null=True,
+        blank=True
+    ) # à enlever
 
     def __str__(self):
         return f"Facture {self.invoice_number}"
@@ -167,7 +195,7 @@ class CartTransfert(models.Model):
     """
     user_admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transferts_effectues')
     user_professeur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transferts_recus')
-    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True, blank=True)
+    accord_reglement = models.OneToOneField(AccordReglement, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -227,29 +255,38 @@ class InvoiceTransfert(models.Model):
     """
     Facture détaillée pour les transferts vers les professeurs
     """
+    DRAFT='draft'
+    INPROGRESS='in_progess'
+    PENDING='pending'
+    PAID='paid'
+    FAILED='failed'
+    CANCELED='canceled'
+
     STATUS_CHOICES = [
-        ('draft', 'Brouillon'),
-        ('pending', 'En attente'),
-        ('paid', 'Payée'),
-        ('failed', 'Échouée'),
-        ('canceled', 'Annulée'),
+        (DRAFT, 'Brouillon'), # créer par API stripe.transfer
+        (INPROGRESS, 'En cours'), # créer mais pas encaisser
+        (PENDING, 'En attente'), # momentanément bloquer
+        (PAID, 'Payée'), # encaisser
+        (FAILED, 'Échouée'), # encaissement échouer
+        (CANCELED, 'Annulée'), # annuler par l'admin
     ]
 
     user_admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='factures_transfert_emises')
     user_professeur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='factures_transfert_recues')
-    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True, blank=True)
+    accord_reglement = models.OneToOneField(AccordReglement, on_delete=models.SET_NULL, null=True, blank=True)# (à supprimer)
+    # payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, unique=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
-    balance_transaction = models.CharField(max_length=255, blank=True) # représente l’entrée dans le grand livre Stripe — contient le net, les frais, et la date de disponibilité des fonds.
-    stripe_transfer_id = models.CharField(max_length=255, blank=True) # identifiant unique du transfer 
+    stripe_transfer_id = models.CharField(max_length=255, null=True, blank=True) # identifiant unique du transfer à la création si c'est réussit et en cours grasse à API
     total = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
-    frais_plateforme = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
-    montant_net = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)  # En centimes
-    pdf = models.FileField(upload_to='invoices_transfert/', blank=True)
+    balance_transaction = models.CharField(max_length=255, null=True, blank=True) # représente l’entrée dans le grand livre Stripe — contient le net, les frais, et la date de disponibilité des fonds.
+    frais = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
+    montant_net = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
+    pdf = models.FileField(upload_to='invoices_transfert/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    paid_at = models.DateTimeField(null=True, blank=True)
-    frais_stripe = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)
-    montant_net_final = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)
+    paid_at = models.DateTimeField(null=True, blank=True) # (à supprimer)
+    frais_stripe = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)# (à supprimer)
+    montant_net_final = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00) # (à supprimer)
     date_mise_en_valeur = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
@@ -365,4 +402,108 @@ class InvoiceTransfert(models.Model):
                     InvoiceTransfert.objects.filter(id=self.id).update(pdf=self.pdf)
             except Exception as e:
                 print(f"Erreur génération PDF: {e}")
+
+
+
+
+
+
+class BalanceTransaction(models.Model):
+    # 🔑 Identifiant Stripe
+    balance_txn_id = models.CharField(max_length=100, unique=True)
+    
+    # 💰 Informations financières de base
+    amount = models.IntegerField(default=0)
+    fee = models.IntegerField(default=0)
+    net = models.IntegerField(default=0) 
+    currency = models.CharField(max_length=10, default='eur')
+    status = models.CharField(max_length=50, blank=True, null=True)
+    
+    # 📅 Gestion de la disponibilité des fonds
+    is_available = models.BooleanField(default=False)
+    available_on = models.DateTimeField(blank=True, null=True)
+    
+    # 🏷️ Type et contexte de l'événement
+    event_type = models.CharField(
+        max_length=50, blank=True, null=True,
+        help_text="Ex: payment_intent.succeeded, refund.created, transfer.created, payout.created, charge.dispute.created"
+    )
+    
+    # 💳 NOUVEAUX CHAMPS - Informations de la source de paiement
+    payment_method_brand = models.CharField(
+        max_length=20, 
+        blank=True, 
+        null=True,
+        help_text="Marque de la carte: visa, mastercard, amex, etc."
+    )
+    
+    payment_method_last4 = models.CharField(
+        max_length=4, 
+        blank=True, 
+        null=True,
+        help_text="4 derniers chiffres de la carte"
+    )
+    
+    payment_method_country = models.CharField(
+        max_length=2, 
+        blank=True, 
+        null=True,
+        help_text="Code pays ISO 2 lettres de la carte"
+    )
+    
+    payment_method_type = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="Type de moyen de paiement: card, bank_transfer, etc."
+    )
+    
+    # 📍 NOUVEAUX CHAMPS - Informations géographiques et techniques
+    ip_country = models.CharField(
+        max_length=2,
+        blank=True,
+        null=True,
+        help_text="Pays de l'IP utilisée pour le paiement"
+    )
+    
+    # 🏦 NOUVEAUX CHAMPS - Détails des frais détaillés
+    stripe_fee = models.IntegerField(
+        default=0,
+        help_text="Frais Stripe spécifiques (hors taxes)"
+    )
+    
+    tax_fee = models.IntegerField(
+        default=0,
+        help_text="Montant des taxes appliquées aux frais"
+    )
+    
+    # 📊 Métadonnées supplémentaires
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Description Stripe de la transaction"
+    )
+    
+    # ⏰ Horodatages
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.event_type} → {self.balance_txn_id} ({self.net/100:.2f} {self.currency})"
+
+
+
+class PaymentIntentTransaction(models.Model):
+    balance_txn = models.OneToOneField(BalanceTransaction, on_delete=models.CASCADE)
+    payment_intent_id = models.CharField(max_length=100, db_index=True)
+    charge_id = models.CharField(max_length=100, unique=True) # c'est la charge finale 
+    
+    def __str__(self):
+        return f"PI: {self.payment_intent_id} | Charge: {self.charge_id}"
+
+
+
+##################
+# à supprimer
+##################
 

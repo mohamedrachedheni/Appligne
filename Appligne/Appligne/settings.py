@@ -81,7 +81,8 @@ DATABASES = {
         'HOST': config('HOST_DATABASE'),
         'PORT': config('PORT_DATABASE'),
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+            'init_command': "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci';", # le 12/11/2025
         },
     }
 }

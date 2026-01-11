@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Transfert interrompu{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Transfert interrompu
+                    </h2>
+                </div>
+                
+                <div class="card-body">
+                    {# Cas 1: Échec de paiement (carte refusée, etc.) #}
+                    {% if error_type == 'invalid_request_error' %}
+                        <div class="alert alert-danger">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité </h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Raison possible :</strong> Compte destination inexistant, montant invalide, paramètres manquants
+                            </p>
+                        </div>
+                    
+                    {# Cas 2: Session expirée #}
+                    {% elif error_type == 'permission_error' %}
+                        <div class="alert alert-warning">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <p>
+                                Permissions Connect manquantes.
+                            </p>
+                        </div>
+
+                    {# Cas 2: Session expirée #}
+                    {% elif error_type == 'authentication_error' %}
+                        <div class="alert alert-warning">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <p>
+                                Mauvaise clé API.
+                            </p>
+                        </div>
+                    
+                    {# Cas 3: Annulation utilisateur #}
+                    {% elif error_type == 'api_connection_error' %}
+                        <div class="alert alert-info">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <p>
+                                Problème réseau.
+                            </p>
+                        </div>
+                    
+                    {# Cas 4: Annulation précoce #}
+                    {% elif error_type == 'rate_limit_error' %}
+                        <div class="alert alert-secondary">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <p>
+                                Trop de requêtes.
+                            </p>
+                        </div>
+                    
+                    {# Cas 5: Erreur technique #}
+                    {% elif error_type == 'stripe_error' %}
+                        <div class="alert alert-danger">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                {{msg}}
+                            </p>
+                            <p class="mb-0">
+                                Erreur générique Stripe.
+                            </p>
+                        </div>
+                    
+                    {# Cas par défaut #}
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <h3 class="h5 alert-heading">Votre transfert n'a pas pu être traité</h3>
+                            <p>
+                                problème non défini.
+                            </p>
+                            <p>
+                                {{msg}}
+                            </p>
+                        </div>
+                    {% endif %}
+                    
+                    {# Actions possibles #}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'compte_administrateur' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour à mon espace
+                        </a>
+                        
+                        {% if can_retry %}
+                            <a href="{% url 'admin_reglement_detaille' %}" class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>Réessayer le paiement
+                            </a>
+                        {% endif %}
+                    </div>
+                        <h3 class="h6">Besoin d'aide ?</h3>
+                        <p>
+                            Si vous rencontrez des difficultés persistantes, contactez notre service client :
+                        </p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-envelope me-2"></i> support@example.com</li>
+                            <li><i class="fas fa-phone me-2"></i> +33 1 23 45 67 89</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

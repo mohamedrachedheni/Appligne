@@ -49,7 +49,7 @@
                                     <hr>
                                 </div>
                                 
-                                {% for cours, prix_public in cours_prix_publics %}
+                                {% for cours in cours_prix_publics %}
                                             <div class="row  g-2 ">
                                                 <div class="col-md-3 col-sm-12 position-relative">
                                                     <label for="format_id_{{ id }}" class="form-label">Format cours</label>
@@ -67,10 +67,10 @@
                                                     <label for="prix_heure_id" class="form-label">Prix/h accordé</label>
                                                     <input type="text" class="form-control form-control-intitule" id="prix_heure_id" value="{{cours.prix_heure|default:'0.00'|floatformat:2}} €" readonly >
                                                 </div>
-                                                <div class="col-md-2 col-sm-12 position-relative d-none">
+                                                <!-- <div class="col-md-2 col-sm-12 position-relative d-none">
                                                     <label for="prix_heure_publie_id" class="form-label">Prix/h publié</label>
                                                     <input type="text" class="form-control form-control-intitule" id="prix_heure_publie_id" value="{{prix_public|default:'0.00'|floatformat:2}} €" readonly >
-                                                </div>
+                                                </div> -->
                                                 <hr>
                                                 {% for cours_paiement, horaire in horaires %}
                                                     {% if cours == cours_paiement %}
@@ -113,27 +113,34 @@
                                 </div>
                                 <div class="row justify-content-between g-2 p-3">
                                     <div class="col-lg-3 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not  demande_paiement.reclamation %} disabled {% endif %} >{% if not  demande_paiement.reclamation %}Pas de réclamation {% else %} Voire réclamation {% endif %}</button>
+                                        <button type="submit" class="btn btn-warning w-100" name="btn_reclamation" {% if not reclamation %} disabled {% endif %} >{% if not reclamation %}Pas de réclamation {% else %} Voire réclamation {% endif %}</button>
                                     </div>
                                     <div class="col-lg-3 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-secondary w-100" name="btn_nouvelle_reclamation" {% if  demande_paiement.reclamation or not request.user.eleve %} disabled {% endif %} >Ajouter une réclamation</button>
+                                        <button type="submit" class="btn btn-secondary w-100" name="btn_nouvelle_reclamation" {% if reclamation %} disabled {% endif %} {% if not payment %} disabled {% endif %}  >Ajouter une réclamation</button>
                                     </div>
                                     
                                     <div class="col-lg-3 col-md-4 col-sm-6">
                                         <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_paiement_checkout"
-                                            {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'En cours'  %}
-                                                disabled
-                                            {% elif demande_paiement.payment_id %}
+                                            {% if demande_paiement.statut_demande != 'En attente' %}
                                                 disabled
                                             {% endif %}>Passer au paiement
                                         </button>
                                     </div>
                                     <div class="col-lg-3 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-primary w-100" id="btn_passer_au_paiement_checkout" name="btn_facture"
-                                            {% if not demande_paiement.payment_id %}
+                                        <!-- <button type="submit" class="btn btn-primary w-100" id="btn_invoice_pdf" name="btn_facture"
+                                            {% if not invoice_pdf %}
                                                 disabled
                                             {% endif %}>Télécharger facture
-                                        </button>
+                                        </button> -->
+                                        {% if invoice_pdf %}
+                                            <a href="{% url 'payment:download_invoice' invoice.id %}" class="btn btn-success" target="_blank">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                                </svg>
+                                                Télécharger la facture
+                                            </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

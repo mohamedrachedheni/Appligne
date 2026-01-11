@@ -15,6 +15,7 @@ from django.utils import timezone
 from pages.models import Reclamation
 
 
+
 class Pays(models.Model):
     nom_pays = models.CharField(max_length=100, unique=True)
     drapeau = models.ImageField(upload_to='photos/%y/%m/%d/')
@@ -306,7 +307,11 @@ class Email_telecharge(models.Model):
     date_telechargement = models.DateTimeField(default=date.today)
     email_telecharge = models.CharField(max_length=255, null=True, blank=True)  # l'adresse email de l'expéditeur
     sujet = models.CharField(max_length=255, null=True, blank=True)
-    text_email = models.TextField(null=True, blank=True)
+    text_email = models.TextField(
+        null=True, 
+        blank=True,
+        db_collation="utf8mb4_unicode_ci",
+        )
     user_destinataire = models.IntegerField()  # champ obligatoire du destinataire de l'email 
     SUIVI_CHOICES = [
         ('Mis à côté', 'Mis à côté'),
@@ -376,7 +381,7 @@ class Prix_heure(models.Model):
 
 class Mes_eleves(models.Model):  # Mes élèves 
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # ID user professeur
-    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE)  # Relation un à plusieurs avec les élèves
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE)  # Relation un à plusieurs avec les élèves ( de plus à enlever)
     is_active = models.BooleanField(default=True)  # Prise en charge en cours
     remarque = models.CharField(max_length=255, null=True, blank=True)  # Remarque
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'enregistrement
@@ -423,8 +428,8 @@ class Horaire(models.Model):  # Les horaires des séances du cours planifié par
     duree = models.FloatField(null=True, default=1)  # Durée de la séance
     contenu = models.CharField(max_length=255)  # Contenu du cours
     statut_cours = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la séance
-    payment_id = models.IntegerField(null=True)  # ID du modèle Payment, si null pas de paiement
-    demande_paiement_id = models.IntegerField(null=True)  # ID du modèle Demande_paiement, si null pas de demande de paiement en cours
+    payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement réalisé
+    demande_paiement_id = models.IntegerField(null=True, blank=True)  # ID du modèle Demande_paiement, si null pas de demande de paiementnon annulée
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
@@ -465,13 +470,54 @@ class Historique_prof(models.Model):
     total_cumul_temps_reponse = models.IntegerField(default=0)  # Cumul du temps en secondes écoulé entre la demande de cours et sa réponse
     moyenne_temps_reponse = models.IntegerField(null=True, blank=True)  # Moyenne des cumuls des points d'évaluation
 
+
+    
+
+class Demande_paiement(models.Model):  # Demande de paiement par le prof
+    # Définition des différents statuts de la demande de paiement
+    EN_ATTENTE = 'En attente'
+    EN_COURS = 'En cours'
+    REALISER = 'Réaliser'
+    ANNULER = 'Annuler'
+
+    # Choix de statuts de la demande de paiement
+    STATUS_CHOICES = [
+        (EN_ATTENTE, 'En attente'), # Enregistré par le prof et en attente de la confirmation de l'élève
+        (EN_COURS, 'En cours'), # L'élève a confgirmé la demande par un paiement mais la passerelle de paiement est en cours de confirmation(c'est le temps nécessaire pour que la passerelle confirme le paiement)
+        (REALISER, 'Réaliser'), # la passerelle a confirmé le paiement
+        (ANNULER, 'Annuler'), # Le professeur a annulé la demande
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
+    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
+    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Eleve (en plus à enlever)
+    montant = models.FloatField()  # Montant à régler
+    email = models.IntegerField(null=True)  # ID de l'email lié à la demande de paiement
+    vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
+    email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement (à enlever car la réponse de l'élève est liée à l'émail du professeur dans Email_telecharge)
+    statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
+
+    payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one) (à supprimer / à réviser)
+    reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation") # (a supprimer)
+    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement(a supprimer)
+    reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement (a supprimer)
+    url_paiement = models.CharField(max_length=255, null=True, blank=True)  # lien fourni par la passerelle de paiement (a supprimer)
+    date_expiration = models.DateTimeField(null=True)  # Date d'expiration du lien de paiement (a supprimer)
+
+class Detail_demande_paiement(models.Model):  # Demande de paiement
+    demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
+    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
+    prix_heure = models.FloatField()  # Prix par heure du cours pour le prof à la date de création du cours
+    horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire (à modifier one to one)
+
 class Payment(models.Model):
     # Statuts de paiement
     PENDING = 'En attente' # "pending"
     APPROVED = 'Approuvé' # "succeeded"
-    CANCELED = 'Annulé' # à supprimer
-    INVALID = 'Invalide' # "failed"
-    REFUNDED = 'Remboursé' # "refunded"
+    CANCELED = 'Annulé' # 'canceled'
+    INVALID = 'Invalide' ####### "failed" à supprimer########
+    REFUNDED = 'Remboursé' # "refunded" 
 
     STATUS_CHOICES = [
         (PENDING, 'En attente'), # ('created', 'Créé'),
@@ -484,39 +530,48 @@ class Payment(models.Model):
     # 🔗 Relations
     eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
     professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
-
-    model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement)
-    model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié
-    slug = models.CharField(max_length=255, blank=True, null=True)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)
     
-    # 📎 Informations Stripe
-    reference = models.CharField(max_length=255, blank=True, null=True)  # stripe_payment_intent_id: ID 'PaymentIntent' que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
-    stripe_charge_id = models.CharField(max_length=255, blank=True, null=True)
-    payment_body = models.JSONField(null=True, blank=True) # contient le corps brut de la requête (les données JSON envoyées par Stripe)
+    invoice = models.OneToOneField(
+        'cart.Invoice',   # ✅ Référence par chaîne — évite l’import circulaire
+        on_delete=models.CASCADE,
+        related_name="payments",
+        null=True,
+        blank=True
+    )
 
     amount = models.DecimalField(
         max_digits=6, 
         decimal_places=2, 
-        validators=[MinValueValidator(Decimal('0.01'))], 
+        validators=[MinValueValidator(Decimal('0.01'))], # 
         help_text="Montant total payé par l'élève (€)",
         null=True, 
         blank=True
     )  # Montant du paiement (round(session.amount_total/100,2))
     currency = models.CharField(max_length=10, null=True, blank=True)  # Devise (session.currency)
-    language = models.CharField(max_length=10, null=True, blank=True)  # Langue utilisée (à supprimer non utilisé)
 
     # 🕐 Suivi et statut
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement
-    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
+    reference = models.CharField(max_length=255, blank=True, null=True)  # stripe_payment_intent_id: ID 'PaymentIntent' que Stripe crée automatiquement lorsqu’un paiement est initié via une session de Checkout (session.payment_intent)
+    date_creation = models.DateTimeField(auto_now_add=True)  # Date de disponibilité
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour 
-    
+
     # propre à la logique d'enregistrement
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
     accord_reglement_id = models.IntegerField(null=True, blank=True)  # ID de l'objet dans le modèle AccordReglement
     reglement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     accord_remboursement_id = models.IntegerField(null=True, blank=True)  # ID de l'objet dans le modèle AccordReglement
     remboursement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
+    
+    # champs à supprimer
+    demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.CASCADE, related_name="payments", null=True, blank=True) # à supprimer
+    model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement) (à supprimer)
+    model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié (à supprimer)
+    # 📎 Informations Stripe
+    slug = models.CharField(max_length=255, blank=True, null=True)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)(à supprimer)
+    payment_body = models.JSONField(null=True, blank=True) #  (les données JSON envoyées par l'API Stripe et non pas par le Webhook) ( à supprimer)
+    stripe_charge_id = models.CharField(max_length=255, blank=True, null=True) # (à supprimer ça existe déjà dans Invoice)
+    language = models.CharField(max_length=10, null=True, blank=True)  # Langue utilisée (à supprimer non utilisé)
+    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement de l'élève ( à supprimer / existe dans invoice.paid_at)
     
     def mark_succeeded(self):
         """✅ Marque ce paiement comme réussi."""
@@ -539,57 +594,91 @@ class Payment(models.Model):
         return f"Paiement {self.id} - {self.eleve} -> {self.professeur} ({self.status})"
     
 
-class Demande_paiement(models.Model):  # Demande de paiement par le prof
-    # Définition des différents statuts de la demande de paiement
-    EN_ATTENTE = 'En attente'
-    EN_COURS = 'En cours'
-    REALISER = 'Réaliser'
-    ANNULER = 'Annuler'
+class Transfer(models.Model):
+    """
+    📤 Transfert de la part du professeur depuis la plateforme vers son compte connecté.
+    """
+    # Statuts de transfer
+    PENDING = 'pending'
+    APPROVED = 'succeeded'
+    FAILED = 'failed'
+    REVERSED = 'reversed'
 
-    # Choix de statuts de la demande de paiement
     STATUS_CHOICES = [
-        (EN_ATTENTE, 'En attente'), # Enregistré par le prof et en attente de la confirmation de l'élève
-        (EN_COURS, 'En cours'), # L'élève a confgirmé la demande par un paiement mais la passerelle de paiement est en cours de confirmation(c'est le temps nécessaire pour que la passerelle confirme le paiement)
-        (REALISER, 'Réaliser'), # la passerelle a confirmé le paiement
-        (ANNULER, 'Annuler'), # Le professeur a annulé la demande
+        (PENDING, "En attente"),
+        (APPROVED, "Réussi"),
+        (FAILED, "Échoué"),
+        (REVERSED, "Annulé / Remboursé"),
     ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # ID user professeur
-    mon_eleve = models.ForeignKey(Mes_eleves, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Mes_eleve
-    eleve = models.ForeignKey(Eleve, on_delete=models.PROTECT)  # ID de l'élève inscrit dans la table Eleve
-    montant = models.FloatField()  # Montant à régler
-    email = models.IntegerField(null=True)  # ID de l'email lié à la demande de paiement
-    vue_le = models.DateTimeField(null=True, blank=True)  # Date à laquelle la demande a été vue par l'élève
-    email_eleve = models.IntegerField(null=True)  # ID de l'email en réponse à la demande de règlement
-    statut_demande = models.CharField(max_length=10, choices=STATUS_CHOICES, default=EN_ATTENTE)  # Statut de la demande de paiement
-    payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one)
-    reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation")
-    accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement
-    reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement
-    date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
-    date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
-    url_paiement = models.CharField(max_length=255, null=True, blank=True)  # lien fourni par la passerelle de paiement
-    date_expiration = models.DateTimeField(null=True)  # Date d'expiration du lien de paiement
 
-class Detail_demande_paiement(models.Model):  # Demande de paiement
-    demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
-    cours = models.ForeignKey(Cours, on_delete=models.CASCADE)  # ID du modèle Cours
-    prix_heure = models.FloatField()  # Prix par heure du cours pour le prof
-    horaire = models.ForeignKey(Horaire, on_delete=models.CASCADE)  # ID du modèle Horaire
+    # Facture
+    invoice_transfert = models.OneToOneField(
+        'cart.InvoiceTransfert',   # ✅ Référence par chaîne — évite l’import circulaire
+        on_delete=models.CASCADE,
+        related_name="transfer",
+        help_text="Invoice associé à ce transfert",
+        null=True, 
+        blank=True,
+    )
+
+    # destinataire du transfert
+    user_transfer_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # à réviser les view liées
+
+    # Informations Stripe
+    stripe_transfer_id = models.CharField(
+        max_length=255, unique=True,null=True, 
+        blank=True, help_text="ID du transfert Stripe"
+    )
+
+    # Statut
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=PENDING, help_text="État du transfert"
+    )
+
+    # Montants
+    amount = models.DecimalField(
+        max_digits=10, decimal_places=2,null=True, 
+        blank=True, help_text="Montant transféré global"
+    )
+    currency = models.CharField(max_length=10, default="eur")
+
+    # montant net
+    montant_net = models.DecimalField(
+        max_digits=10, decimal_places=2,null=True, 
+        blank=True, help_text="Montant net transféré au professeur"
+    )
+
+    # Frais Stripe
+    frais = models.DecimalField(
+        max_digits=10, decimal_places=2,null=True, 
+        blank=True, help_text="Montant transféré au professeur"
+    )
+
+    # Relation vers Payment à (à supprimer)
+    # payment = models.OneToOneField(Payment,
+    #     on_delete=models.CASCADE,
+    #     related_name="transfer",
+    #     help_text="Paiement associé à ce transfert",
+    # ) 
+
+    def __str__(self):
+        return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"
+
 
 class AccordReglement(models.Model):
     # Statuts de l'accord à changer dans le cas de plusieur payment liés
-    PENDING = 'pending'
-    IN_PROGRESS = 'in_progress' # si au moins un des transferts est réalisé
-    COMPLETED = 'completed' # si tous les transferts liés aux paiements  du DetailAccordReglement sont réussis
-    INVALID = 'invalid' # si tous les transfert liés aux paiements  du DetailAccordReglement sont  invalides
-    CANCELED = 'canceled'
+    PENDING = 'En attente'# l'admin n'a pas encore initialié le transfert
+    IN_PROGRESS = 'En cours' # si le transfert est en cours
+    COMPLETED = 'Réalisé' # si le transfert est encaisser
+    INVALID = 'Invalide' # transfert échouer
+    CANCELED = 'Annulé' # si l'admin à décider d'annuler l'accord de règlement
 
     STATUS_CHOICES = [
-        (PENDING, 'En attente'), # Le règlement est planifié mais non encore effectué avec l'intermédière financier
-        (IN_PROGRESS, 'En cours'), # Le règlent est effectué avec l'intermédière financier mais non encore confirmé
-        (COMPLETED, 'Réalisé'), # Le transfert du règlement est achevé
-        (INVALID, 'Invalide'), # L'intermédière financier n'a pas validé le transfert
-        (CANCELED, 'Annulé'), # Le règlement a été annulé par l'administrateur
+        (PENDING, 'En attente'), # état initial à la création de l'accord sans initialiser le transfert
+        (IN_PROGRESS, 'En cours'), # transfert déclancher
+        (COMPLETED, 'Réalisé'), # transfert encaisser
+        (INVALID, 'Invalide'), # transfert echouer
+        (CANCELED, 'Annulé'), # annulation par l'admin
     ]
 
     admin_user = models.ForeignKey(User, on_delete=models.CASCADE)  # Administrateur
@@ -603,12 +692,19 @@ class AccordReglement(models.Model):
     )  # Montant total
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    payment_id = models.IntegerField(null=True, blank=True)  # erreur de structure BD à supprimer
-    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
-    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
+    
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
+    # payment_id = models.IntegerField(null=True, blank=True)  # erreur de structure BD à supprimer
+    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
+    transfer = models.OneToOneField(Transfer,
+        on_delete=models.SET_NULL,
+        help_text="AccordReglement associé à ce transfert",
+        null=True, 
+        blank=True,
+    )
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
 
     def __str__(self):
         return f"Accord Règlement - Prof: {self.professeur.id}, Statut: {self.status}"
@@ -623,7 +719,7 @@ class DetailAccordReglement(models.Model):
         null=True, 
         blank=True
     )  # Part du professeur
-    stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer
+    stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer ( à supprimer)
     description = models.TextField(null=True, blank=True)  # Libellé
 
     def __str__(self):
@@ -634,14 +730,14 @@ class AccordRemboursement(models.Model):
     PENDING = 'pending'
     IN_PROGRESS = 'in_progress'
     COMPLETED = 'completed'
-    INVALID = 'invalid'
+    INVALID = 'invalid' # à supprimer
     CANCELED = 'canceled'
 
     STATUS_CHOICES = [
         (PENDING, 'En attente'),
         (IN_PROGRESS, 'En cours'),
         (COMPLETED, 'Réalisé'),
-        (INVALID, 'Invalide'),
+        (INVALID, 'Invalide'), # à supprimer
         (CANCELED, 'Annulé'),
     ]
 
@@ -656,8 +752,8 @@ class AccordRemboursement(models.Model):
     )  # Montant total remboursé
     email_id = models.IntegerField(null=True, blank=True)  # Email lié
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default=PENDING)  # Statut
-    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque
-    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent
+    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
+    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
@@ -694,55 +790,6 @@ class Coordonnees_bancaires(models.Model):
         return f"Coordonnées bancaires de {self.user.username}"
 
 
-class Transfer(models.Model):
-    """
-    📤 Transfert de la part du professeur depuis la plateforme vers son compte connecté.
-    """
-    # Statuts de transfer
-    PENDING = 'pending'
-    APPROVED = 'succeeded'
-    FAILED = 'failed'
-    REVERSED = 'reversed'
-
-    STATUS_CHOICES = [
-        (PENDING, "En attente"),
-        (APPROVED, "Réussi"),
-        (FAILED, "Échoué"),
-        (REVERSED, "Annulé / Remboursé"),
-    ]
-    # destinataire du transfert
-    user_transfer_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) # à réviser les view liées
-
-    # Relation vers Payment
-    payment = models.OneToOneField(
-        Payment,
-        on_delete=models.CASCADE,
-        related_name="transfer",
-        help_text="Paiement associé à ce transfert",
-    )
-
-    # Informations Stripe
-    stripe_transfer_id = models.CharField(
-        max_length=255, unique=True, help_text="ID du transfert Stripe"
-    )
-
-    # Montants
-    amount = models.DecimalField(
-        max_digits=10, decimal_places=2, help_text="Montant transféré au professeur"
-    )
-    currency = models.CharField(max_length=10, default="eur")
-
-    # Statut
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default=PENDING, help_text="État du transfert"
-    )
-
-    # Timestamps
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"
     
 
 class RefundPayment(models.Model):
@@ -775,9 +822,55 @@ class RefundPayment(models.Model):
 
 class WebhookEvent(models.Model):
     event_id = models.CharField(max_length=255, unique=True)
-    type = models.CharField(max_length=100)
-    payload = models.JSONField()
+    type = models.CharField(max_length=100, blank=True, null=True)
+    payload = models.JSONField(blank=True, null=True)
     received_at = models.DateTimeField(auto_now_add=True)
 
+    handle_log = models.TextField(
+        blank=True,
+        null=True,
+        db_collation="utf8mb4_unicode_ci",
+        help_text="Logs détaillés du traitement du webhook (succès, erreurs, actions réalisées)."
+    )
+
+    # 🆕 Nouveau champ : traitement achevé ou interrompu
+    is_processed = models.BooleanField(default=False, help_text="Indique si l’événement a été reçu et traité.")
+    is_fully_completed = models.BooleanField(default=False, help_text="Indique si le traitement du webhook est totalement achevé sans interruption.")
+
     def __str__(self):
-        return self.type
+        return f"{self.type} ({self.event_id})"
+
+
+
+class StripePayout(models.Model):
+    PENDING = "pending"
+    IN_TRANSIT = "in_transit"
+    PAID = "paid"
+    FAILED = "failed"
+
+    STATUS_CHOICES = [
+        (PENDING, "En attente"),
+        (IN_TRANSIT, "En transit"),
+        (PAID, "Payé"),
+        (FAILED, "Échoué"),
+    ]
+
+    stripe_id = models.CharField(max_length=100, unique=True)
+    amount = models.IntegerField()  
+    currency = models.CharField(max_length=10)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    arrival_date = models.DateTimeField(null=True, blank=True)
+    destination = models.CharField(max_length=100, null=True, blank=True)
+
+    # Facture
+    invoice_transfert = models.OneToOneField(
+        'cart.InvoiceTransfert',   # ✅ Référence par chaîne — évite l’import circulaire
+        on_delete=models.SET_NULL,
+        null=True, 
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payout {self.stripe_id} - {self.status}"

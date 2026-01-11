@@ -8,7 +8,7 @@ from .models import Eleve, Parent, Temoignage
 from accounts.models import Matiere, Niveau, Region, Departement, Email_detaille, Prix_heure, Demande_paiement, Detail_demande_paiement, Payment, Professeur, AccordReglement, AccordRemboursement, Prof_mat_niv
 from accounts.models import Demande_paiement, Detail_demande_paiement, Email_telecharge, Payment, Historique_prof, Mes_eleves, Horaire, Detail_demande_paiement, DetailAccordReglement, DetailAccordRemboursement
 from pages.models import ReclamationCategorie, PieceJointeReclamation, Reclamation, MessageReclamation
-from cart.models import Cart, CartItem
+from cart.models import Cart, CartItem, Invoice
 import re
 
 
@@ -36,6 +36,7 @@ import requests
 from pages.utils import get_client_ip
 import logging
 from django.views.decorators.clickjacking import xframe_options_exempt
+
 
 # Configuration du logger avec le nom du module actuel
 logger = logging.getLogger(__name__)
@@ -753,7 +754,7 @@ def reponse_email_eleve(request): # email_id est envoyé par le template demande
         email.suivi = 'Répondu'
         email.date_suivi = date.today()
         email.reponse_email_id = email_reponse_id
-        email.save() 
+        email.save()
         messages.success(request, "Le contenu de l'email est enregistré")
 
         # vider les paramètres de la session email
@@ -938,9 +939,9 @@ def liste_paiement_eleve(request):
 
     # Récupérer les paiements liés aux demandes de paiement
     paiement = Payment.objects.filter(
-        model='demande_paiement',
-        model_id__in=demande_paiement.values_list('id', flat=True)
+        eleve=user.eleve,
     )
+    # messages.info(request, f"paiement_compte={paiement.count()}")
 
     # Récupération des dates minimales et maximales
     dates = paiement.aggregate(
@@ -951,6 +952,7 @@ def liste_paiement_eleve(request):
     # Définition des valeurs par défaut
     date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
     date_max = dates['max_date'] or timezone.now().date()
+    # messages.info(request, f"date_min={date_min}  / date_max={date_max}")
 
     # Récupération des dates du formulaire
     date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
@@ -1002,6 +1004,7 @@ def liste_paiement_eleve(request):
 
     # Application des filtres
     payments = paiement.filter(**filters).order_by('-date_creation')
+    # messages.info(request, f"payments={payments.count()}")
 
     # Pagination
     paginator = Paginator(payments, 10)  # 10 éléments par page
@@ -1011,7 +1014,8 @@ def liste_paiement_eleve(request):
     # Préparation des données pour le template
     paiements = []
     for payment in page_obj:  # Utilisation de page_obj ici
-        demande = Demande_paiement.objects.filter(id=payment.model_id).first()
+        # á corriger 
+        demande =payment.invoice.demande_paiement 
         if not demande:
             continue
 
@@ -1028,14 +1032,14 @@ def liste_paiement_eleve(request):
     if paiement_ids:
         if len(paiement_ids) == 1:
             eleve = Eleve.objects.filter(user=request.user).first()
+            paiement = Payment.objects.filter(id=paiement_ids[0]).first()
             if eleve:
-                paiement = Payment.objects.filter(id=paiement_ids[0]).first()
-                if paiement and not Demande_paiement.objects.filter(id=paiement.model_id, eleve=eleve).exists():
+                demande_paiement_eleve = paiement.invoice.demande_paiement.eleve
+                if paiement and not demande_paiement_eleve==eleve:
                     messages.error(request, f"Le paiement sélectionné n'est pas associé à cet élève, paiement_id= {paiement_ids[0]}")
                     return redirect('compte_eleve')
             request.session['payment_id'] = paiement_ids[0]
-            payment_selct = Payment.objects.filter(id=paiement_ids[0], model="demande_paiement").first()
-            demande_paiement_id = encrypt_id(payment_selct.model_id)
+            demande_paiement_id = encrypt_id(paiement.invoice.demande_paiement.id)
             request.session['demande_paiement_id'] = demande_paiement_id
             # messages.info(request, f"demande_paiement_id = {demande_paiement_id}-- paiement_ids[0] = {paiement_ids[0]}")
             return redirect('eleve_demande_paiement') # passer au paiement au besoin
@@ -1082,8 +1086,8 @@ def liste_remboursement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = AccordRemboursement.objects.filter(
         ~Q(status='completed'),  # Exclure les enregistrements avec status='Réalisé'
-        transfere_id__isnull=True,
-        date_trensfere__isnull=True
+        # transfere_id__isnull=True,
+        # date_trensfere__isnull=True
     ).aggregate(
         min_date=Min('due_date'),
         max_date=Max('due_date')
@@ -1139,29 +1143,30 @@ def liste_remboursement(request):
         accord_remboursements = get_remboursements(date_debut, date_fin)
     elif 'btn_en_ettente' in request.POST:
         # Filtrer pour les paiements en attente
-        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'pending'})
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': AccordRemboursement.PENDING})
         statut = "En attente"
     elif 'btn_en_cours' in request.POST:
         # Filtrer pour les paiements approuvés
-        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'in_progress'})
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': AccordRemboursement.IN_PROGRESS})
         statut = "En cours"
-    elif 'btn_invalide' in request.POST:
+    elif 'btn_invalide' in request.POST: # à supprimer ou à changer par completed
         # Filtrer pour les paiements invalides
-        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'invalid'})
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': AccordRemboursement.INVALID})
         statut = "Invalide"
     elif 'btn_annule' in request.POST:
         # Filtrer pour les paiements annulés
-        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'canceled'})
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': AccordRemboursement.CANCELED})
         statut = "Annulé"
     elif 'btn_realiser' in request.POST:
         # Filtrer pour les paiements réclamés par les élèves
-        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': 'completed'})
+        accord_remboursements = get_remboursements(date_debut, date_fin, {'status': AccordRemboursement.COMPLETED})
         statut = "Réalisé"
 
     accord_remboursement_approveds = []
     for accord_remboursement in accord_remboursements:
         payments = Payment.objects.filter(id__in=DetailAccordRemboursement.objects.filter(accord=accord_remboursement).values_list('payment_id', flat=True))
         # si un des paiement est non approuvé par l'élève alors approved = False
+        # ce n'est pas nécessaire car la logique d'enrgistrement impose pas d#accord de remboursemt si le payment n'est pas réclamé
         approved =True
         for payment in payments:
             if  payment.reclamation: 
@@ -1169,7 +1174,7 @@ def liste_remboursement(request):
                 break
         accord_remboursement_approveds.append((accord_remboursement , approved))
     
-    # Extraction de l'ID du remboursement choisi dans le formulaire
+    # Extraction de l'ID du remboursement choisi dans le formulaire (à cripter ID)
     accord_ids = [key.split('btn_detaille_remboursement_id')[1] for key in request.POST.keys() if key.startswith('btn_detaille_remboursement_id')]
     if accord_ids:
         # Vérification du nombre d'IDs extraits
@@ -1391,9 +1396,7 @@ def demande_paiement_eleve(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = Demande_paiement.objects.filter(
         eleve=eleve,
-        statut_demande__in=('En attente', 'Contester'),
-        payment_id__isnull=True,  # il n'y a pas de paiement
-        accord_reglement_id__isnull=True,  # Il n'y a pas encore d'accord de règlement
+        statut_demande__in=(Demande_paiement.EN_ATTENTE, Demande_paiement.EN_COURS),
     ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
 
     # Définition des valeurs par défaut
@@ -1434,10 +1437,10 @@ def demande_paiement_eleve(request):
 
     # Correspondance des boutons de filtrage aux statuts de paiement
     status_filter = {
-        'btn_en_ettente': 'En attente',   # Demande de paiements en attente
-        'btn_en_cours': 'En cours',       # Demande de paiements en cours
-        'btn_realiser': 'Réaliser',       # Demande de paiements réalisés
-        'btn_annuler': 'Annuler',         # Demande de paiements annulés
+        'btn_en_ettente': Demande_paiement.EN_ATTENTE,   # Demande de paiements en attente
+        'btn_en_cours': Demande_paiement.EN_COURS,       # Demande de paiements en cours
+        'btn_realiser': Demande_paiement.REALISER,       # Demande de paiements réalisés
+        'btn_annuler': Demande_paiement.ANNULER,         # Demande de paiements annulés
     }
 
     # Application du filtre de statut en fonction du bouton cliqué
@@ -1449,9 +1452,21 @@ def demande_paiement_eleve(request):
 
     # Récupération des paiements en fonction des filtres
     demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
-    
+
     if 'btn_contester' in request.POST:
-        demande_paiements_data = Demande_paiement.objects.filter(**filters, reclamation__isnull=False).order_by('-date_creation')
+        # IDs des demandes de paiement liées à des paiements ayant une réclamation
+        demande_ids = Payment.objects.filter(eleve=eleve,
+            reclamation__isnull=False,
+            invoice__demande_paiement__isnull=False
+        ).values_list('invoice__demande_paiement_id', flat=True)
+
+        demande_paiements_data = Demande_paiement.objects.filter(
+            **filters,
+            id__in=demande_ids
+        ).order_by('-date_creation')
+    
+    # a suivre 19/12/2025
+
     
     # Pagination
     paginator = Paginator(demande_paiements_data, ITEMS_PER_PAGE)
@@ -1475,7 +1490,11 @@ def demande_paiement_eleve(request):
 
         # Ajout des informations collectées à la liste des paiements
         id = encrypt_id(demande_paiement.id)
-        demande_paiements.append((demande_paiement, professeur, id))
+        paiement=None
+        if demande_paiement.statut_demande != demande_paiement.EN_ATTENTE:
+            invoice=Invoice.objects.filter(demande_paiement=demande_paiement).first()
+            paiement = Payment.objects.filter(invoice=invoice).first()
+        demande_paiements.append((demande_paiement, professeur, id, paiement))
         professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
 
     # Extraction de l'ID de la demande de paiement choisi dans le formulaire
@@ -1528,7 +1547,7 @@ def eleve_demande_paiement(request):
         return redirect('signin')
     
     # Récupère l'ID de la demande de paiement depuis la session
-    demande_paiement_id = request.session.get('demande_paiement_id')
+    demande_paiement_id = request.session.get('demande_paiement_id') # elle est cripté (pas besion de criptage)
     if not demande_paiement_id:
         logger.warning("Aucune demande de paiement trouvée en session pour l'utilisateur %s", user)
         messages.info(request, "Il n'y a pas de paiement")
@@ -1546,6 +1565,17 @@ def eleve_demande_paiement(request):
     # Récupère l'objet demande de paiement
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
     prof = demande_paiement.user
+    invoice=None
+    invoice_pdf=False
+    payment=None
+    reclamation=False
+    invoice= Invoice.objects.filter(demande_paiement=demande_paiement).first()
+    if invoice:
+        if invoice.pdf:
+            invoice_pdf=True
+
+        payment=Payment.objects.filter(invoice=invoice).first()
+        if payment and payment.reclamation: reclamation=True
 
     # Enregistre que l'élève a vu la demande
     if not demande_paiement.vue_le:
@@ -1559,21 +1589,30 @@ def eleve_demande_paiement(request):
     )
 
     # Récupère les emails associés s'ils existent
-    email_ids = filter(None, [demande_paiement.email, demande_paiement.email_eleve])
-    emails = {email.id: email for email in Email_telecharge.objects.filter(id__in=email_ids)}
+    # email_ids = filter(None, [demande_paiement.email, demande_paiement.email_eleve])
+    # emails = {email.id: email for email in Email_telecharge.objects.filter(id__in=email_ids)}
 
-    def format_email(email_id):
-        email = emails.get(email_id)
-        return f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
+    # def format_email(email_id):
+    #     email = emails.get(email_id)
+    #     return f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
 
-    texte_email_prof = format_email(demande_paiement.email)
-    texte_email_eleve = format_email(demande_paiement.email_eleve)
+    # texte_email_prof = format_email(demande_paiement.email)
+    # texte_email_eleve = format_email(demande_paiement.email_eleve)
+    email_professeur = Email_telecharge.objects.filter(id=demande_paiement.email).first()
+    if email_professeur:
+        email_eleve = Email_telecharge.objects.filter(id=email_professeur.reponse_email_id).first()
+    else:
+        email_eleve = None
+
+    texte_email_prof = email_professeur.text_email if email_professeur and email_professeur.text_email else "Pas de message"
+    texte_email_eleve = email_eleve.text_email if email_eleve and email_eleve.text_email else "Pas de message"
+
 
     # Associe chaque détail (cours + horaire)
     horaires = [(detail.cours, detail.horaire) for detail in details_demande_paiement]
     cours_set = {detail.cours for detail in details_demande_paiement}
 
-    # Récupère les prix publics associés aux cours
+    # Récupère les prix publics associés aux cours ( à réviser pour s'assurer)
     cours_prix_publics = []
     for cours in cours_set:
         matiere_obj = Matiere.objects.filter(matiere=cours.matiere).first()
@@ -1583,12 +1622,13 @@ def eleve_demande_paiement(request):
             matiere=matiere_obj, 
             niveau=niveau_obj
         ).first()
-        prix_public = Prix_heure.objects.filter(
-            user=demande_paiement.user,
-            prof_mat_niv=prof_mat_niv
-        ).values_list('prix_heure', flat=True).first() if prof_mat_niv else None
+        # prix_public n es plus utilisé dans 
+        # prix_public = Prix_heure.objects.filter(
+        #     user=demande_paiement.user,
+        #     prof_mat_niv=prof_mat_niv # il faut ajouter format cours
+        # ).values_list('prix_heure', flat=True).first() if prof_mat_niv else None
 
-        cours_prix_publics.append((cours, prix_public))
+        cours_prix_publics.append((cours))
 
     # messages.info(request, f"demande_paiement.reclamation = {demande_paiement.id};  demande_paiement.statut= {demande_paiement.statut_demande}")
     # Prépare le contexte pour le template
@@ -1599,17 +1639,21 @@ def eleve_demande_paiement(request):
         'texte_email_eleve': texte_email_eleve,
         'horaires': horaires,
         'cours_prix_publics': cours_prix_publics,
+        'reclamation': reclamation,
+        'invoice_pdf':invoice_pdf,
+        'invoice': invoice,
+        'payment': payment,
     }
+    # a suivre 17/12/25
 
-    # Gère le bouton "Réclamation"
+    # Gère le bouton "Réclamation"  les réclamations sont réservées aux paiements
     if 'btn_reclamation' in request.POST:
-        if demande_paiement.reclamation and demande_paiement.reclamation.id:
-            logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
-            request.session['reclamation_id'] = demande_paiement.reclamation.id
+        if payment and payment.reclamation:
+            request.session['reclamation_id'] = payment.reclamation.id
             return redirect('reclamation')
         else:
-            logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)
-            messages.error(request, "Il n'y a pas de réclamation liée à la demande de paiement")
+            logger.warning("Aucune réclamation liée au paiement %s", payment)
+            messages.error(request, f"Il n'y a pas de réclamation liée au paiement payment_id= {payment.id} ")
 
     # Gère le POST général
     if request.method == 'POST':
@@ -1619,15 +1663,18 @@ def eleve_demande_paiement(request):
             # Récupère de nouveau l'objet demande de paiement pour empécher un double enregistrement
             # c'est une trés bonne idée à généraliser pour les enregistrements importants
             demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
-            if demande_paiement.payment_id:
+            if demande_paiement.payment_id: # bonne idée pour empêcher le double paiement
                 messages.error(request, "La demande de règlement est déjà payée")
                 return redirect('compte_eleve')
             from payment.views import create_checkout_session
             #1. vider la table Cart du user
             Cart.objects.filter(user=request.user).delete()
             #2. créer un nouveau Cart lié au user
-            cart = Cart.objects.create(user=request.user)
-            for cours, prix_public in cours_prix_publics:
+            cart = Cart.objects.create(
+                user=request.user, 
+                demande_paiement=demande_paiement
+                )
+            for cours in cours_prix_publics:
                 for cours_paiement, horaire in horaires:
                     if cours == cours_paiement:
                         description = (
@@ -1647,39 +1694,35 @@ def eleve_demande_paiement(request):
             logger.info("Panier Stripe préparé pour l'élève %s", user)
             # Seule le paiement est créé (En attente), les autres tables liées au paiement non
             # leur tour commence aprés confirmation du paiement
-            #4. Création ou mise à jour de l'enregistrement Payment
-            payment, created = Payment.objects.update_or_create(
-                model="demande_paiement",
-                model_id=demande_paiement.id,
-                defaults={
-                    'status': 'En attente',  # À changer par "Approuvé" après validation
-                    'amount': demande_paiement.montant,
-                    # 'expiration_date': timezone.now(),
-                    'currency': "eur",
-                    'language': "Français", # à enlever pas important
-                }
-            )
+            #4. Création de l'enregistrement Payment (à enlever)
+            # payment = Payment.objects.create(
+            #     status='En attente',  # À changer par "Approuvé" après validation
+            #     amount=demande_paiement.montant,
+            #     currency='eur'
+            # )
 
             #5. lier cart au payment pour lier invoice au payment dans la view create_checkout_session
-            cart.payment = payment
-            cart.save()
-            if created:
-                logger.info(f"✅ Nouveau paiement créé : ID={payment.id}, Montant={payment.amount}")
-            else:
-                logger.info(f"♻️ Paiement existant mis à jour : ID={payment.id}, Montant={payment.amount}")
+            # cart.payment = payment # non utile 
+            # cart.save() # non utile 
+            # if payment:
+            #     logger.info(f"✅ Nouveau paiement créé : ID={payment.id}, Montant={payment.amount}")
+            # else:
+            #     logger.info(f"♻️ Paiement existant mis à jour : ID={payment.id}, Montant={payment.amount}")
             
             #6. mise à jour Demande_paiement mais l'ID du paiement dans la table Demande_paiement n'est pas encore défini car il n'est pas encore effectué
-            demande_paiement.statut_demande = "En cours" # # à changer par Approuvé
-            demande_paiement.save()
-            request.session['payment_id'] = payment.id
-            request.session['prof_id'] = prof.id
-            request.session['demande_paiement_id_decript'] = demande_paiement_id_decript 
+            # demande_paiement.statut_demande = "En cours" # à réviser
+            # demande_paiement.save()
+            # request.session['payment_id'] = payment.id
+            # request.session['prof_id'] = prof.id
+            # request.session['demande_paiement_id_decript'] = demande_paiement_id_decript 
             #7. passer à la page de paiement de Stripe (create_checkout_session)
             return create_checkout_session(request)
         
-        # Passer à la création d'une nouvelle réclamation liée à la demande de paiement
+        # Passer à la création d'une nouvelle réclamation liée à la demande de paiement, pas de réclamation
         if 'btn_nouvelle_reclamation' in request.POST:
-            request.session['reclamation_demande_paiement_id'] = demande_paiement.id
+            if payment:
+                request.session['payment_id'] = payment.id
+            else: request.session['payment_id'] = None
             return redirect('nouvelle_reclamation')
 
         else:
