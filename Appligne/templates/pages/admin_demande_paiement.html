@@ -35,7 +35,7 @@
                                         <input type="text" class="form-control form-control-date "  name="echeance" placeholder="Sélectionnez une date" value="{{ date_expiration|default:today|date:'d/m/Y' }}" 
                                         {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
                                             disabled
-                                        {% elif demande_paiement.payment_id %}
+                                        {% elif demande_paiement.statut_demande == 'Réaliser' %}
                                             disabled
                                         {% elif date_expiration and demande_paiement.url_paiement and today  <=  date_expiration %}
                                             disabled
@@ -49,7 +49,7 @@
                                                 <input type="text" class="form-control" id="url_paiement_id" autocomplete="off" name="url_paiement" value="{{demande_paiement.url_paiement}}"
                                                 {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
                                                     disabled
-                                                {% elif demande_paiement.payment_id %}
+                                                {% elif demande_paiement.statut_demande == 'Réaliser' %}
                                                     disabled
                                                 {% elif date_expiration and demande_paiement.url_paiement and today  <=  date_expiration %}
                                                     disabled
@@ -61,7 +61,7 @@
                                                 <button type="button" class="btn btn-primary w-100" id="coller_btn" 
                                                 {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
                                                     disabled
-                                                {% elif demande_paiement.payment_id %}
+                                                {% elif demande_paiement.statut_demande == 'Réaliser' %}
                                                     disabled
                                                 {% elif date_expiration and demande_paiement.url_paiement and today  <=  date_expiration %}
                                                     disabled
@@ -163,7 +163,7 @@
                                         <button type="submit" class="btn btn-primary w-100" name="btn_ajout_lien_paiement" id="btn_ajout_lien_paiement"
                                             {% if demande_paiement.statut_demande != 'En attente' and demande_paiement.statut_demande != 'Contester' %}
                                                 disabled
-                                            {% elif demande_paiement.payment_id %}
+                                            {% elif demande_paiement.statut_demande == 'Réaliser' %}
                                                 disabled
                                             {% elif date_expiration and demande_paiement.url_paiement and today  <=  date_expiration %}
                                                 disabled

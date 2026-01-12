@@ -3341,7 +3341,7 @@ def detaille_demande_reglement(request):
     # Gestion de l'annulation de la demande de paiement
     if request.method == 'POST' and 'btn_annuler' in request.POST:
         # la demande de paiement et déjà supposée ne pas existée dans la table de paiement
-        if demande_paiement.statut_demande in ['En attente', 'Contester'] and not demande_paiement.payment_id:
+        if demande_paiement.statut_demande == Demande_paiement.EN_ATTENTE :
             demande_paiement.statut_demande = 'Annuler'
             demande_paiement.save()
             messages.success(request, 'La demande de paiement a été annulée.')

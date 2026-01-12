@@ -1662,10 +1662,10 @@ def eleve_demande_paiement(request):
         if 'btn_paiement_checkout' in request.POST:
             # Récupère de nouveau l'objet demande de paiement pour empécher un double enregistrement
             # c'est une trés bonne idée à généraliser pour les enregistrements importants
-            demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
-            if demande_paiement.payment_id: # bonne idée pour empêcher le double paiement
-                messages.error(request, "La demande de règlement est déjà payée")
-                return redirect('compte_eleve')
+            if invoice:
+                if invoice.status in  [Invoice.PAID, Invoice.DRAFT]: # bonne idée pour empêcher le double paiement
+                    messages.error(request, f"La demande de paiement est déjà payée, ou en cours de règlement demande_paiement_id = {demande_paiement.id} / invoice_id = {invoice.id}")
+                    return redirect('eleve_demande_paiement')
             from payment.views import create_checkout_session
             #1. vider la table Cart du user
             Cart.objects.filter(user=request.user).delete()

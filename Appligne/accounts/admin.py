@@ -29,7 +29,7 @@ from .models import Detail_demande_paiement
 from .models import Historique_prof
 from .models import AccordReglement
 from .models import DetailAccordReglement
-from .models import Coordonnees_bancaires
+
 from .models import AccordRemboursement
 from .models import DetailAccordRemboursement
 from .models import Transfer
@@ -80,7 +80,6 @@ admin.site.register(Detail_demande_paiement)
 admin.site.register(Historique_prof)
 admin.site.register(AccordReglement)
 admin.site.register(DetailAccordReglement)
-admin.site.register(Coordonnees_bancaires)
 admin.site.register(AccordRemboursement)
 admin.site.register(DetailAccordRemboursement)
 admin.site.register(Transfer)

@@ -498,7 +498,8 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
-    payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one) (à supprimer / à réviser)
+    # champs ásupprimer
+    # payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one) (à supprimer / à réviser)
     reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation") # (a supprimer)
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement(a supprimer)
     reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement (a supprimer)
@@ -776,21 +777,6 @@ class DetailAccordRemboursement(models.Model):
     def __str__(self):
         return f"Détail Accord Remboursement - Accord ID: {self.accord.id}"
 
-
-class Coordonnees_bancaires(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nom_banque = models.CharField(max_length=255)
-    iban = models.CharField(max_length=34, unique=True)
-    bic = models.CharField(max_length=11, unique=True)
-    numero_compte = models.CharField(max_length=50, unique=True)
-    titulaire_compte = models.CharField(max_length=255)
-    date_ajout = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Coordonnées bancaires de {self.user.username}"
-
-
-    
 
 class RefundPayment(models.Model):
     """

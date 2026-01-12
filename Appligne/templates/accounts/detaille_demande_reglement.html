@@ -103,7 +103,7 @@
                                     <div class="payment-detail">
                                         <div class="detail-label">Statut du paiement</div>
                                         <div class="detail-value">
-                                            {% if demande_paiement.payment_id %}
+                                            {% if demande_paiement.statut_demande == 'Réaliser' %}
                                                 <span class="text-success"><i class="fas fa-check-circle me-1"></i> Effectué</span>
                                             {% else %}
                                                 <span class="text-warning"><i class="fas fa-clock me-1"></i> En attente</span>

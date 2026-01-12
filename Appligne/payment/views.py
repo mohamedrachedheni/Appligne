@@ -267,10 +267,10 @@ def create_checkout_session(request):
         invoice = Invoice.objects.filter(
             user=request.user,
             demande_paiement=cart.demande_paiement,
-            status=Invoice.PAID
+            status__in = [Invoice.PAID, Invoice.DRAFT],
         ).first()
         if invoice:
-            messages.error(request, "La demande de paiement est déjà règlée")
+            messages.error(request, "La demande de paiement est déjà règlée, ou en cours")
             return redirect("eleve_demande_paiement")
         invoice = Invoice.objects.filter(
             user=request.user,
@@ -4556,7 +4556,6 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
     # ---------------------------------------------------------------------
     demande_paiement = invoice.demande_paiement
     demande_paiement.statut_demande = Demande_paiement.EN_COURS
-    demande_paiement.payment_id = payment.id
     demande_paiement.save()
 
     append_webhook_log(
