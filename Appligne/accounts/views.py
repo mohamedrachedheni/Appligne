@@ -37,6 +37,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
 from pages.utils import decrypt_id, encrypt_id
+from cart.models import Invoice
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -3300,6 +3301,14 @@ def detaille_demande_reglement(request):
     
     # Récupérer la demande de paiement et les objets associés
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
+    reclamation = None
+    if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
+        invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
+        if invoice and invoice.status == Invoice.PAID:
+            payment = Payment.objects.filter(invoice=invoice).first()
+            if payment and payment.reclamation:
+                reclamation = payment.reclamation
+
     eleve = demande_paiement.eleve
     parent = getattr(eleve.user, 'parent', None)
 
@@ -3320,6 +3329,7 @@ def detaille_demande_reglement(request):
         'detaille_declares': [{'enr': enr} for enr in detail_demande_paiements],
         'email': email,
         'email_eleve': email_eleve,
+        'reclamatiom': reclamation,
     }
 
     # Gestion de l'envoi d'un email de rappel
@@ -3351,9 +3361,9 @@ def detaille_demande_reglement(request):
             return render(request, 'accounts/detaille_demande_reglement.html', context)
     # Gère le bouton "Réclamation"
     if 'btn_reclamation' in request.POST:
-        if demande_paiement.reclamation and demande_paiement.reclamation.id:
+        if reclamation :
             logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
-            request.session['reclamation_id'] = demande_paiement.reclamation.id
+            request.session['reclamation_id'] = reclamation.id
             return redirect('reclamation')
         else:
             logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)

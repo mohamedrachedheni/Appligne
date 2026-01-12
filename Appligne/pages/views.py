@@ -5648,6 +5648,13 @@ def admin_demande_paiement(request):
 
     # Récupère la demande de paiement associée ou retourne une 404 si elle n'existe pas
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
+    reclamation = None
+    if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
+        invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
+        if invoice and invoice.status == Invoice.PAID:
+            payment = Payment.objects.filter(invoice=invoice).first()
+            if payment and payment.reclamation:
+                reclamation = payment.reclamation
 
     # Récupère tous les détails liés à cette demande de paiement (cours et horaires inclus)
     details_demande_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(
@@ -5700,10 +5707,10 @@ def admin_demande_paiement(request):
 
     # Si le bouton "Voir la réclamation" a été soumis
     if 'btn_reclamation' in request.POST:
-        if demande_paiement.reclamation and demande_paiement.reclamation.id:
+        if reclamation :
             # Enregistre l'identifiant de la réclamation en session pour consultation
             logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
-            request.session['reclamation_id'] = demande_paiement.reclamation.id
+            request.session['reclamation_id'] = reclamation.id
             return redirect('reclamation')
         else:
             # Aucun lien de réclamation trouvé
@@ -5764,6 +5771,7 @@ def admin_demande_paiement(request):
         'texte_email_eleve': texte_email_eleve,  # Email de l'élève formaté
         'horaires': horaires,  # Liste des cours avec horaires
         'cours_prix_publics': cours_prix_publics,  # Liste des prix publics pour les cours
+        'reclamatiom': reclamation,
     }
 
     # Rendu de la page HTML avec le contexte préparé

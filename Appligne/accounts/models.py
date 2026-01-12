@@ -499,8 +499,7 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
     # champs ásupprimer
-    # payment_id = models.IntegerField(null=True, blank=True)  # ID du modèle Payment, si null pas de paiement (il devrai être one to one) (à supprimer / à réviser)
-    reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation") # (a supprimer)
+    # reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation") # (a supprimer)
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement(a supprimer)
     reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement (a supprimer)
     url_paiement = models.CharField(max_length=255, null=True, blank=True)  # lien fourni par la passerelle de paiement (a supprimer)

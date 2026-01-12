@@ -1630,7 +1630,6 @@ def eleve_demande_paiement(request):
 
         cours_prix_publics.append((cours))
 
-    # messages.info(request, f"demande_paiement.reclamation = {demande_paiement.id};  demande_paiement.statut= {demande_paiement.statut_demande}")
     # Prépare le contexte pour le template
     context = {
         'today': timezone.now().date(),
