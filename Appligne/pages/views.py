@@ -2542,14 +2542,14 @@ def admin_reglement_email(request):
                         k=0
                         # à réviser le cas Annulé (23/09/2025)
                         if nouv_status_accord!="Annuler":
-                            k +=1
-                            # Mise à jour Demande_paiement ( un accord de règlement peut contenir plusieur demande de paiement)
-                            demande_paiements = Demande_paiement.objects.filter(accord_reglement_id=i)
-                            if demande_paiements:
-                                for demande_paiement in demande_paiements:
-                                    demande_paiement.reglement_realise = False # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
-                                    demande_paiement.save()
-                                messages.success(request, f"Pour les accords de règlements annulés : les demandes de paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {k}")
+                            # k +=1
+                            # # Mise à jour Demande_paiement ( un accord de règlement peut contenir plusieur demande de paiement)
+                            # demande_paiements = Demande_paiement.objects.filter(accord_reglement_id=i)
+                            # if demande_paiements:
+                            #     for demande_paiement in demande_paiements:
+                            #         demande_paiement.reglement_realise = False # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
+                            #         demande_paiement.save()
+                            #     messages.success(request, f"Pour les accords de règlements annulés : les demandes de paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {k}")
 
                             # Mise à jour Payment dont l'accord de règlement est annulé
                             paiements = Payment.objects.filter(accord_reglement_id=i)
@@ -2579,11 +2579,11 @@ def admin_reglement_email(request):
                         messages.success(request, "Mise à jour de l'accord de règlement avec un statut: réalisé")
 
                         # Mise à jour Demande_paiement ( un accord de règlement peut contenir plusieur demande de paiement)
-                        demande_paiements = Demande_paiement.objects.filter(accord_reglement_id=accord_reglement.id)
-                        for demande_paiement in demande_paiements:
-                            demande_paiement.reglement_realise = True
-                            demande_paiement.save()
-                        messages.success(request, "Mise à jour Demande_paiement")
+                        # demande_paiements = Demande_paiement.objects.filter(accord_reglement_id=accord_reglement.id)
+                        # for demande_paiement in demande_paiements:
+                        #     demande_paiement.reglement_realise = True
+                        #     demande_paiement.save()
+                        # messages.success(request, "Mise à jour Demande_paiement")
 
                         # Mise à jour Payment (à réviser)
                         paiements = Payment.objects.filter(accord_reglement_id=accord_reglement.id)
@@ -2916,15 +2916,15 @@ def admin_reglement_modifier(request):
 
     # Récupération des demandes de paiement non réglées pour le professeur sélectionné
     demande_paiements = Demande_paiement.objects.filter(
-        user=prof, reglement_realise=False, payment_id__isnull=False # il faut que le paiement est realisé mais le règlement non
-    )
+        user=prof, statut_demande = Demande_paiement.REALISER) # il faut que le paiement est realisé mais le règlement non
+    
     for demande_paiement in demande_paiements:
+        invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
         # Récupération des paiements non encore accordés et non réalisés
         payment = Payment.objects.filter(
             accord_reglement_id=None,  # Aucun accord de règlement associé
             reglement_realise=False,  # Paiements non encore réglés
-            model='demande_paiement',
-            model_id=demande_paiement.id  # Filtrer uniquement les paiements du professeur sélectionné
+            invoice=invoice,
         ).first()
         if not payment: continue
         description="Elève: " + demande_paiement.eleve.user.first_name + " " + demande_paiement.eleve.user.last_name + ", Date paiement: " + payment.date_creation.strftime('%d/%m/%Y') + ", Montant payé: " + str(payment.amount) + "€" if payment else ""
@@ -3084,8 +3084,12 @@ def admin_accord_reglement_modifier(request):
     payments=[] # pour la liste des paiements des élèves: date_versement, payment, user_eleve
     for payment_id in payment_requests: # étier les données de la session des nouvaux entegistrements
         payment = Payment.objects.filter(id=payment_id).first()
+        if not payment.invoice:
+            continue
+        invoice = Invoice.objects.filter(id=payment.invoice.id).first()
+        if not invoice: continue
         # c'est une requette qui lie la table Demande_paiement avec Eleve avec User
-        demande_paiement = Demande_paiement.objects.select_related('eleve__user').filter(id=payment.model_id).first()
+        demande_paiement = invoice.demande_paiement 
         if not demande_paiement: continue  # Ignorer les paiements sans demande associée (non nécessaire mais par prudence car à chaque paiement correspond un demande préalable)
         user_eleve = demande_paiement.eleve.user # pour le template
         payments.append(( payment, user_eleve))  # pour le template et le calcul des totaux
@@ -3162,7 +3166,7 @@ def admin_accord_reglement_modifier(request):
         accord_reglement.email_id=email_telecharge.id
         accord_reglement.status=status
         accord_reglement.due_date=date_reglement
-        if status == "Réalisé":
+        if status == "Réalisé": # á modifier revoire la logique de l'enregistrment
             accord_reglement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
             accord_reglement.transfere_id=transfere_id # passer à Stripe
         accord_reglement.save() 
@@ -3178,13 +3182,6 @@ def admin_accord_reglement_modifier(request):
                 payment_ancien.reglement_realise=False
                 payment_ancien.save()
                 msg += str(f"Mettre à jour les anciens enregisrements de Payment.\n")
-            # De même pour Demande_paiement
-            demande_paiement_ancien = Demande_paiement.objects.filter(payment_id=payment_id).first()
-            if demande_paiement_ancien:
-                demande_paiement_ancien.reglement_realise=False
-                demande_paiement_ancien.save()
-                msg += str(f"Mettre à jour les anciens enregisrements de Demande_paiement.\n")
-
 
         # Mise à jour des détails des accords de règlements
         # Suppression des anciens détails des accords de règlements
@@ -3210,14 +3207,8 @@ def admin_accord_reglement_modifier(request):
             if status == "Réalisé": payment.reglement_realise=True
             payment.save()
             msg += str(f"Mise à jour de l'enregistrement payment id={payment.id}.\n")
-
-            # Mise à jour Demande_paiement (pour chaque payment il y à une seule demande de paiement)
-            demande_paiement = Demande_paiement.objects.filter(payment_id=payment.id).first()
-            if status == "Réalisé": demande_paiement.reglement_realise=True
-            demande_paiement.save()
-            msg += f" Mise à jour Demande_paiement (accord_reglement_id = {demande_paiement.id})\n"
-
-            msg += str(f"L'accord de règlement a été enregistré avec succès du {demande_paiement}.\n")
+            msg += f" Mise à jour Demande_paiement (accord_reglement_id = {accord_reglement.id})\n"
+            msg += str(f"L'accord de règlement a été enregistré avec succès.\n")
         messages.success(request, msg.replace("\n", "<br>") )
 
         # Vider les paramètres de la session
@@ -5498,283 +5489,6 @@ def password_reset_request(request):
 
 # Vérification des permissions : seul un administrateur actif peut accéder à cette vue
 @user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
-def demande_paiement_admin(request):
-    """
-    Vue permettant d'afficher les demandes de paiements.
-
-    Fonctionnalités :
-    - Filtrer les demandes de paiements selon une période donnée (dates de début et de fin).
-    - Appliquer des filtres selon le statut des demandes de paiement (en attente, approuvé, annulé, etc.).
-    - Affiche les détails des demandes de paiements
-    - fait passer vers l'affectation de lien de paiement avec échéance pour chaque demande de paiement
-    """
-
-    # Format utilisé pour l'affichage et la conversion des dates
-    date_format = "%d/%m/%Y"
-    status_str=""
-
-    # Récupération des dates minimales et maximales depuis la base de données
-    dates = Demande_paiement.objects.filter(
-        statut_demande='En attente',
-        payment_id__isnull=True, # il n"'ya pas de paiement
-        accord_reglement_id__isnull=True # Il n'y a pas encore d'accord de règlement
-    ).aggregate(min_date=Min('date_creation'), max_date=Max('date_creation'))
-
-    # Définition des valeurs par défaut
-    date_min = dates['min_date'] or (timezone.now().date() - timedelta(days=15))
-    date_max = dates['max_date'] or timezone.now().date()
-
-    # Récupération des valeurs envoyées par le formulaire POST avec fallback aux valeurs par défaut
-    date_debut_str = request.POST.get('date_debut', date_min.strftime(date_format))
-    date_fin_str = request.POST.get('date_fin', date_max.strftime(date_format))
-
-    # Initialisation des variables date_debut et date_fin
-    date_debut, date_fin = None, None
-
-    try:
-        # Conversion des dates en objets de type date
-        date_debut = datetime.strptime(date_debut_str, date_format).date()
-        date_fin = datetime.strptime(date_fin_str, date_format).date()
-
-        # Vérification de la cohérence des dates
-        if date_debut > date_fin:
-            raise ValueError("La date de début doit être inférieure ou égale à la date de fin.")
-    
-    except ValueError as e:
-        # Gestion des erreurs en cas de format de date invalide
-        messages.error(request, f"Erreur de date : {e}")
-        return render(request, 'pages/demande_paiement_admin.html', {
-            'demande_paiements': [], 
-            'professeurs': [], 
-            'date_debut': date_debut, 
-            'date_fin': date_fin
-        })
-
-    # Définition des critères de filtrage des paiements
-    filters = {
-        'date_creation__range': (date_debut, date_fin + timedelta(days=1))  # Filtre sur la période sélectionnée
-    }
-
-    # Correspondance des boutons de filtrage aux statuts de paiement
-    status_filter = {
-        'btn_en_ettente': 'En attente',   # Demande de paiements en attente
-        'btn_en_cours': 'En cours',   # Demande de paiements en cours
-        'btn_realiser': 'Réaliser',   # Demande de paiements en réaliser
-        'btn_contester': 'Contester',   # Demande de paiements contester
-        'btn_annuler': 'Annuler',      # Demande de paiements annuler
-    }
-
-    # Application du filtre de statut en fonction du bouton cliqué
-    for btn, status in status_filter.items():
-        if btn in request.POST:
-            filters['statut_demande'] = status
-            status_str=status
-            break
-
-    # Récupération des paiements en fonction des filtres
-    demande_paiements_data = Demande_paiement.objects.filter(**filters).order_by('-date_creation')
-
-    # Initialisation des listes pour stocker les résultats
-    demande_paiements, professeurs = [], set()
-
-    # Parcours des paiements récupérés pour associer les informations nécessaires
-    for demande_paiement in demande_paiements_data:
-        professeur = demande_paiement.user  # Récupération du professeur lié au paiement
-
-        # Ajout des informations collectées à la liste des paiements
-        id = encrypt_id(demande_paiement.id)
-        demande_paiements.append((demande_paiement, professeur, id))
-        professeurs.add(professeur)  # Utilisation d'un set() pour éviter les doublons
-
-    # Extraction de l'ID de la demande de paiement choisi dans le formulaire
-    demande_paiement_ids = [key.split('btn_demande_paiement_id')[1] for key in request.POST.keys() if key.startswith('btn_demande_paiement_id')]
-
-    # Vérification du nombre d'IDs extraits
-    if demande_paiement_ids:
-        if len(demande_paiement_ids) == 1:  # Un seul ID trouvé, on le stocke en session
-            request.session['demande_paiement_id'] = demande_paiement_ids[0]
-            return redirect('admin_demande_paiement')
-        elif len(demande_paiement_ids) !=1:  # Plusieurs IDs trouvés, erreur système
-            messages.error(request, "Erreur système, veuillez contacter le support technique.")
-            return redirect('compte_administrateur')
-
-    # Préparation du contexte pour l'affichage dans le template
-    context = {
-        'today': timezone.now().date(),  # Date actuelle pour affichage
-        'demande_paiements': demande_paiements,
-        'professeurs': list(professeurs),
-        'date_debut': date_debut,
-        'date_fin': date_fin,
-        'status_str': status_str,
-    }
-
-    # Affichage de la page avec les paiements en attente de règlement
-    return render(request, 'pages/demande_paiement_admin.html', context)
-
-
-# Décorateur pour restreindre l'accès à cette vue aux administrateurs actifs uniquement.
-# Si la vérification échoue, l'utilisateur est redirigé vers la page de login.
-@user_passes_test(is_admin_active, login_url='/login/')
-def admin_demande_paiement(request):
-    """
-    Vue d'administration permettant d'afficher les détails du paiement d'un élève,
-    liés à une demande de paiement faite par un professeur.
-    """
-    
-    # Format de date utilisé pour l'analyse des champs date (ex. "31/12/2025")
-    date_format = "%d/%m/%Y"
-    
-    # Récupération de l'identifiant chiffré de la demande de paiement depuis la session
-    demande_paiement_id = request.session.get('demande_paiement_id')
-    if not demande_paiement_id:
-        # Si aucun identifiant n'est présent en session, log l'information et redirige
-        logger.warning("Aucune demande de paiement trouvée en session pour l'utilisateur admin %s", request.user)
-        messages.info(request, "Il n'y a pas de paiement")
-        return redirect('compte_administrateur')
-
-    # Tentative de déchiffrement de l'identifiant
-    try:
-        demande_paiement_id_decript = decrypt_id(demande_paiement_id)
-        logger.info("Demande de paiement décryptée avec succès: %s", demande_paiement_id_decript)
-    except Exception as e:
-        # En cas d'erreur de déchiffrement, log l'erreur et redirige
-        logger.error("Erreur lors du déchiffrement de l'ID de demande de paiement : %s", str(e))
-        messages.error(request, "Erreur interne lors du traitement de la demande.")
-        return redirect('compte_administrateur')
-
-    # Récupère la demande de paiement associée ou retourne une 404 si elle n'existe pas
-    demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id_decript)
-    reclamation = None
-    if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
-        invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
-        if invoice and invoice.status == Invoice.PAID:
-            payment = Payment.objects.filter(invoice=invoice).first()
-            if payment and payment.reclamation:
-                reclamation = payment.reclamation
-
-    # Récupère tous les détails liés à cette demande de paiement (cours et horaires inclus)
-    details_demande_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(
-        demande_paiement=demande_paiement
-    )
-    
-    # Prépare la liste des identifiants d'emails liés à la demande
-    email_ids = filter(None, [demande_paiement.email, demande_paiement.email_eleve])
-    
-    # Récupère tous les emails correspondants (s'ils existent) dans un dictionnaire pour un accès rapide
-    emails = {email.id: email for email in Email_telecharge.objects.filter(id__in=email_ids)}
-
-    # Fonction interne pour formater un email : affiche sujet et texte ou "Pas de message"
-    def format_email(email_id):
-        email = emails.get(email_id)
-        return f"Sujet: {email.sujet}\nContenu: {email.text_email}" if email else "Pas de message"
-    
-    # Formatage du texte des emails pour affichage
-    texte_email_prof = format_email(demande_paiement.email)
-    texte_email_eleve = format_email(demande_paiement.email_eleve)
-
-    # Préparation des paires (cours, horaire) à afficher
-    horaires = [(detail.cours, detail.horaire) for detail in details_demande_paiement]
-
-    # Ensemble unique de cours liés à la demande
-    cours_set = {detail.cours for detail in details_demande_paiement}
-
-    # Liste finale contenant chaque cours et son prix public (s'il existe)
-    cours_prix_publics = []
-    for cours in cours_set:
-        # Recherche des objets `Matiere` et `Niveau` correspondant au cours
-        matiere_obj = Matiere.objects.filter(matiere=cours.matiere).first()
-        niveau_obj = Niveau.objects.filter(niveau=cours.niveau).first()
-
-        # Recherche du lien entre le professeur, la matière et le niveau
-        prof_mat_niv = Prof_mat_niv.objects.filter(
-            user=demande_paiement.user, 
-            matiere=matiere_obj, 
-            niveau=niveau_obj
-        ).first()
-
-        # Récupère le prix public si une configuration existe pour ce triplet
-        prix_public = Prix_heure.objects.filter(
-            user=demande_paiement.user,
-            prof_mat_niv=prof_mat_niv
-        ).values_list('prix_heure', flat=True).first() if prof_mat_niv else None
-
-        # Ajoute la paire (cours, prix_public) à la liste
-        cours_prix_publics.append((cours, prix_public))
-
-    # Si le bouton "Voir la réclamation" a été soumis
-    if 'btn_reclamation' in request.POST:
-        if reclamation :
-            # Enregistre l'identifiant de la réclamation en session pour consultation
-            logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
-            request.session['reclamation_id'] = reclamation.id
-            return redirect('reclamation')
-        else:
-            # Aucun lien de réclamation trouvé
-            logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)
-            messages.error(request, "Il n'y a pas de réclamation liée à la demande de paiement")
-
-    # Si le bouton "Ajouter un lien de paiement" a été soumis
-    if 'btn_ajout_lien_paiement' in request.POST:
-        echeance = request.POST.get("echeance")
-        url_paiement = request.POST.get("url_paiement")
-
-        if url_paiement and echeance:
-            try:
-                # Vérifie que l’URL a un bon format
-                parsed_url = urlparse(url_paiement)
-                if parsed_url.scheme not in ['http', 'https'] or not parsed_url.netloc:
-                    messages.error(request, "Le lien de paiement est invalide. Il doit commencer par http:// ou https://")
-                    return redirect(request.path)
-
-                # Vérifie si l’URL est accessible
-                try:
-                    response = requests.head(url_paiement, timeout=5)
-                    if not response.ok:
-                        messages.error(request, f"Le lien n'est pas accessible (HTTP {response.status_code}).")
-                        return redirect(request.path)
-                except requests.RequestException as err:
-                    messages.error(request, "Impossible d'accéder au lien de paiement. Vérifiez le lien ou réessayez plus tard.")
-                    return redirect(request.path)
-
-                # Conversion de la date
-                echeance_date = datetime.strptime(echeance, date_format).date()
-                if echeance_date >= timezone.now().date():
-                    # envoyer et enregistrer un email d'information
-                    demande_paiement.date_expiration = echeance_date
-                    demande_paiement.url_paiement = url_paiement
-                    demande_paiement.save()
-                    logger.info("Lien de paiement ajouté pour la demande %s par l'admin %s", demande_paiement.id, request.user)
-                    messages.success(request, "Le lien de paiement a été enregistré avec succès.")
-                    return redirect('demande_paiement_admin')
-                else:
-                    messages.error(request, f"L’échéance doit être postérieure ou égale à aujourd’hui ({timezone.now().date()}).")
-                    return redirect(request.path)
-            except ValueError as e:
-                logger.error("Erreur de format de date pour l'échéance : %s", str(e))
-                messages.error(request, f"Erreur de date : {e}")
-                return redirect(request.path)
-        else:
-            logger.warning("Champs lien de paiement ou échéance manquants pour la demande %s", demande_paiement.id)
-            messages.error(request, "Veuillez remplir à la fois le lien de paiement et l’échéance.")
-            return redirect(request.path)
-
-    # Contexte à envoyer au template HTML
-    context = {
-        'today': timezone.now().date(),  # Date actuelle pour affichage
-        'date_expiration': demande_paiement.date_expiration.date() if demande_paiement.date_expiration else timezone.now().date(), # pour pouvoire la comparer avec today au même format dans le template
-        'demande_paiement': demande_paiement,  # Objet principal
-        'texte_email_prof': texte_email_prof,  # Email du professeur formaté
-        'texte_email_eleve': texte_email_eleve,  # Email de l'élève formaté
-        'horaires': horaires,  # Liste des cours avec horaires
-        'cours_prix_publics': cours_prix_publics,  # Liste des prix publics pour les cours
-        'reclamatiom': reclamation,
-    }
-
-    # Rendu de la page HTML avec le contexte préparé
-    return render(request, 'pages/admin_demande_paiement.html', context)
-
-# Vérification des permissions : seul un administrateur actif peut accéder à cette vue
-@user_passes_test(lambda u: u.is_staff and u.is_active, login_url='/login/')
 def compte_reglement_prof(request):
     """
     Affiche les professeurs ayant reçu au moins un paiement sur
@@ -5793,7 +5507,6 @@ def compte_reglement_prof(request):
         Demande_paiement.objects
         .filter(
             user__professeur=OuterRef('user__professeur'),
-            payment_id__isnull=False,
             statut_demande='Réaliser'
         )
         .values('user__professeur')  # group by prof
@@ -5804,7 +5517,6 @@ def compte_reglement_prof(request):
     demandes = (
         Demande_paiement.objects
         .filter(
-            payment_id__isnull=False,
             statut_demande='Réaliser',
             date_modification=Subquery(subquery)
         )
