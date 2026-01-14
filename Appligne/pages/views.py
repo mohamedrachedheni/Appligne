@@ -2226,9 +2226,7 @@ def admin_accord_reglement(request):
                             payment.accord_reglement_id=accord_reglement.id # mise à jour de l'enregistrement payment
                             payment.save()
                             msg += f"Mise à jour du Paiement ID={payment.id}\n"
-                            # Mise à jour Demande_paiement (accord_reglement_id)
                             demande_paiement = payment.invoice.demande_paiement
-                            demande_paiement.accord_reglement_id=accord_reglement.id
                             demande_paiement.save()
                             msg += f"Mise à jour Demande_paiement ID={demande_paiement.id}\n"
                             msg += str(f"L'accord de règlement a été enregistré avec succès du {date_versement}.\n\n")
@@ -2550,7 +2548,6 @@ def admin_reglement_email(request):
                             if demande_paiements:
                                 for demande_paiement in demande_paiements:
                                     demande_paiement.reglement_realise = False # Car un accore de règlement annulé n'est plus modifiable selon la logique du programmeur
-                                    demande_paiement.accord_reglement_id = None # dons les demandes de paiement liées peuvent être liées à un autre accore
                                     demande_paiement.save()
                                 messages.success(request, f"Pour les accords de règlements annulés : les demandes de paiements associées peuvent désormais être reliées à un autre accord de règlement. nombre des annulés = {k}")
 
@@ -3184,7 +3181,6 @@ def admin_accord_reglement_modifier(request):
             # De même pour Demande_paiement
             demande_paiement_ancien = Demande_paiement.objects.filter(payment_id=payment_id).first()
             if demande_paiement_ancien:
-                demande_paiement_ancien.accord_reglement_id=None
                 demande_paiement_ancien.reglement_realise=False
                 demande_paiement_ancien.save()
                 msg += str(f"Mettre à jour les anciens enregisrements de Demande_paiement.\n")
@@ -3217,7 +3213,6 @@ def admin_accord_reglement_modifier(request):
 
             # Mise à jour Demande_paiement (pour chaque payment il y à une seule demande de paiement)
             demande_paiement = Demande_paiement.objects.filter(payment_id=payment.id).first()
-            demande_paiement.accord_reglement_id=accord_reglement.id
             if status == "Réalisé": demande_paiement.reglement_realise=True
             demande_paiement.save()
             msg += f" Mise à jour Demande_paiement (accord_reglement_id = {demande_paiement.id})\n"
