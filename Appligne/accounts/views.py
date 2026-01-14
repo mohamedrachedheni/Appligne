@@ -3236,8 +3236,16 @@ def liste_declaration_cours(request):
     if 'btn_tous' not in request.GET:
         demande_paiements = demande_paiements.filter(statut_demande=statut_demande)
     
-    if 'btn_contester' in request.GET: 
-        demande_paiements = demande_paiements.filter(reclamation__isnull=False)
+    if 'btn_contester' in request.GET:
+        list_demande_paiement_reclamation_id = []
+        for demande_paiement in demande_paiements:
+            if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
+                invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
+                if invoice and invoice.status == Invoice.PAID:
+                    payment = Payment.objects.filter(invoice = invoice).first()
+                    if payment and payment.reclamation:
+                        list_demande_paiement_reclamation_id.append(demande_paiement.id)
+        demande_paiements = demande_paiements.filter(id__in = list_demande_paiement_reclamation_id) # non encore adapter á la nouvelle structure
     
     # Tri par date de modification (du plus récent au plus ancien)
     demande_paiements = demande_paiements.order_by('-date_modification')
@@ -3261,13 +3269,22 @@ def liste_declaration_cours(request):
             'statut_demande': enr.statut_demande,
             'vue_le': enr.vue_le,
             'email_eleve': enr.email_eleve,
-            'reclamation': bool(enr.reclamation),
+            'reclamation': False, #à supprimer ancien logique
         }
         for enr in demande_paiements_page
     ]
     cours_declares_liste = []
     for enr in cours_declares:
-        cours_declares_liste.append((enr, encrypt_id(enr['id'])))
+        reclamation_id = None
+        list_demande_paiement_reclamation_id = []
+        for demande_paiement in demande_paiements:
+            if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
+                invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
+                if invoice and invoice.status == Invoice.PAID:
+                    payment = Payment.objects.filter(invoice = invoice).first()
+                    if payment and payment.reclamation:
+                        reclamation_id = payment.reclamation.id
+        cours_declares_liste.append((enr, encrypt_id(enr['id']), reclamation_id))
 
 
     # Gestion des boutons de détail
@@ -3301,13 +3318,13 @@ def detaille_demande_reglement(request):
     
     # Récupérer la demande de paiement et les objets associés
     demande_paiement = get_object_or_404(Demande_paiement, id=demande_paiement_id)
-    reclamation = None
+    reclamation_id = None
     if demande_paiement.statut_demande != Demande_paiement.EN_ATTENTE:
         invoice = Invoice.objects.filter(demande_paiement=demande_paiement).first()
         if invoice and invoice.status == Invoice.PAID:
             payment = Payment.objects.filter(invoice=invoice).first()
             if payment and payment.reclamation:
-                reclamation = payment.reclamation
+                reclamation_id = payment.reclamation.id
 
     eleve = demande_paiement.eleve
     parent = getattr(eleve.user, 'parent', None)
@@ -3329,8 +3346,9 @@ def detaille_demande_reglement(request):
         'detaille_declares': [{'enr': enr} for enr in detail_demande_paiements],
         'email': email,
         'email_eleve': email_eleve,
-        'reclamatiom': reclamation,
+        'reclamation_id': reclamation_id,
     }
+    messages.info(request, f"reclamation_id = {reclamation_id}")
 
     # Gestion de l'envoi d'un email de rappel
     if request.method == 'POST' and 'btn_rappelle' in request.POST:
@@ -3361,9 +3379,9 @@ def detaille_demande_reglement(request):
             return render(request, 'accounts/detaille_demande_reglement.html', context)
     # Gère le bouton "Réclamation"
     if 'btn_reclamation' in request.POST:
-        if reclamation :
+        if reclamation_id :
             logger.info("Accès à la réclamation pour la demande %s", demande_paiement.id)
-            request.session['reclamation_id'] = reclamation.id
+            request.session['reclamation_id'] = reclamation_id
             return redirect('reclamation')
         else:
             logger.warning("Aucune réclamation liée à la demande %s", demande_paiement.id)

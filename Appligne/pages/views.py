@@ -2801,12 +2801,16 @@ def admin_payment_demande_paiement(request):
     # Condition nécessaire de l'activation du template
     if not payment_id:
         messages.info(request, "Il n'y a pas de paiement")
-        return redirect('compte_administrateur')
+        return redirect(request.META.get('HTTP_REFERER')) # revenir à la page précédente
     elif payment_id:
         # Récupération du paiement lié à une demande de paiement
         payment = get_object_or_404(Payment, id=payment_id)
+        if not payment.invoice:
+            messages.error(request, f"le paiement n'a pas de facture erreur système")
+            return redirect(request.META.get('HTTP_REFERER')) # revenir à la page précédente
         # Récupération de la demande de paiement associée
         demande_paiement = payment.invoice.demande_paiement
+    
 
     # Récupération des détails de la demande de paiement avec les cours et horaires associés
     details_paiement = Detail_demande_paiement.objects.select_related('cours', 'horaire').filter(demande_paiement=demande_paiement)
@@ -3710,9 +3714,6 @@ def admin_payment_eleve_remboursement(request):
     # Parcours des paiements récupérés pour associer les informations nécessaires
     for payment in payments:
         # Récupération de la demande de paiement associée (à chaque paiement correspond une seule demande de paiement)
-        # demande_paiement = payment.invoice.demande_paiement
-        # if not demande_paiement: continue  # Ignorer les paiements sans demande associée
-
         professeur = payment.professeur.user  # Récupération du professeur lié au paiement
         eleve = payment.eleve.user # récupérer le user de l'élève
         accord_reglement = None

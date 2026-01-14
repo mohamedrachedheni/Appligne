@@ -1014,7 +1014,9 @@ def liste_paiement_eleve(request):
     # Préparation des données pour le template
     paiements = []
     for payment in page_obj:  # Utilisation de page_obj ici
-        # á corriger 
+        if not payment.invoice:
+            messages.error(request, f"le paiement n'a pas de facture erreur système")
+            return redirect(request.META.get('HTTP_REFERER')) # revenir à la page précédente
         demande =payment.invoice.demande_paiement 
         if not demande:
             continue

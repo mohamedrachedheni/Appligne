@@ -498,7 +498,7 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
-    # champs ásupprimer
+    # champs á supprimer
     # reclamation = models.ForeignKey(Reclamation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Réclamation") # (a supprimer)
     accord_reglement_id = models.IntegerField(null=True)  # ID de l'objet dans le modèle AccordReglement (sans tenir compte du statut) pas obligatoire car pour chaque demande de paiement correspond un seul paiement(a supprimer)
     reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement (a supprimer)
