@@ -498,10 +498,6 @@ class Demande_paiement(models.Model):  # Demande de paiement par le prof
     date_creation = models.DateTimeField(auto_now_add=True)  # Date de création de l'horaire de la séance
     date_modification = models.DateTimeField(auto_now=True)  # Date de mise à jour
 
-    # champs á supprimer
-    # reglement_realise = models.BooleanField(default=False)  # AccordReglement statut Réalisé ou non pas obligatoire car pour chaque demande de paiement correspond un seul paiement (a supprimer)
-    # url_paiement = models.CharField(max_length=255, null=True, blank=True)  # lien fourni par la passerelle de paiement (a supprimer)
-    # date_expiration = models.DateTimeField(null=True)  # Date d'expiration du lien de paiement (a supprimer)
 
 class Detail_demande_paiement(models.Model):  # Demande de paiement
     demande_paiement = models.ForeignKey(Demande_paiement, on_delete=models.CASCADE)  # ID du modèle Demande_paiement
@@ -561,7 +557,7 @@ class Payment(models.Model):
     remboursement_realise = models.BooleanField(default=False)  # pour différencier les paiements dont l'accord de règlement est réalisé ou non 
     
     # champs à supprimer
-    demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.CASCADE, related_name="payments", null=True, blank=True) # à supprimer
+    # demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.CASCADE, related_name="payments", null=True, blank=True) # à supprimer
     model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement) (à supprimer)
     model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié (à supprimer)
     # 📎 Informations Stripe
