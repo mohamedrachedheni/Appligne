@@ -3729,8 +3729,6 @@ def liste_reglement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = AccordReglement.objects.filter(
         ~Q(status='Réalisé'),  # Exclure les enregistrements avec status='Réalisé'
-        transfere_id__isnull=True,
-        date_trensfere__isnull=True
     ).aggregate(
         min_date=Min('due_date'),
         max_date=Max('due_date')

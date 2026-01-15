@@ -1084,8 +1084,6 @@ def liste_remboursement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = AccordRemboursement.objects.filter(
         ~Q(status='completed'),  # Exclure les enregistrements avec status='Réalisé'
-        # transfere_id__isnull=True,
-        # date_trensfere__isnull=True
     ).aggregate(
         min_date=Min('due_date'),
         max_date=Max('due_date')

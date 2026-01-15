@@ -643,13 +643,6 @@ class Transfer(models.Model):
         blank=True, help_text="Montant transféré au professeur"
     )
 
-    # Relation vers Payment à (à supprimer)
-    # payment = models.OneToOneField(Payment,
-    #     on_delete=models.CASCADE,
-    #     related_name="transfer",
-    #     help_text="Paiement associé à ce transfert",
-    # ) 
-
     def __str__(self):
         return f"📤 Transfer #{self.id} - {self.amount} {self.currency} - {self.status}"
 
@@ -685,15 +678,16 @@ class AccordReglement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Date de création
     updated_at = models.DateTimeField(auto_now=True)  # Dernière modification
     due_date = models.DateTimeField(null=True, blank=True)  # Date d'échéanse pour passer au règlement effectif
-    # payment_id = models.IntegerField(null=True, blank=True)  # erreur de structure BD à supprimer
-    transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
     transfer = models.OneToOneField(Transfer,
         on_delete=models.SET_NULL,
         help_text="AccordReglement associé à ce transfert",
         null=True, 
         blank=True,
     )
-    date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
+    # à supprimer
+    # payment_id = models.IntegerField(null=True, blank=True)  # erreur de structure BD à supprimer
+    # transfere_id = models.CharField(max_length=255, null=True, blank=True) # ID de l'opération fourni par la banque (à supprimer)
+    # date_trensfere = models.DateTimeField(null=True, blank=True)  # Date du transfert de l'argent (à supprimer)
 
     def __str__(self):
         return f"Accord Règlement - Prof: {self.professeur.id}, Statut: {self.status}"

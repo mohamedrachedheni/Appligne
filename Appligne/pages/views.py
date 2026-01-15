@@ -2263,8 +2263,6 @@ def admin_reglement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = AccordReglement.objects.filter(
         ~Q(status='Réalisé'),  # Exclure les enregistrements avec status='Réalisé'
-        transfere_id__isnull=True,
-        date_trensfere__isnull=True
     ).aggregate(
         min_date=Min('due_date'),
         max_date=Max('due_date')
@@ -2572,8 +2570,6 @@ def admin_reglement_email(request):
                         # Mise à jour de l'accord de règlement
                         accord_reglement.email_id=email_telecharge.id
                         accord_reglement.status=nouv_status_accord
-                        accord_reglement.transfere_id = operation_id
-                        accord_reglement.date_trensfere = date_operation # Il faut que la date soit > à 7 jour de la date max des paiements liés à laccord
                         accord_reglement.save()
                         messages.success(request, "Mise à jour de l'accord de règlement avec un statut: réalisé")
 
@@ -4191,8 +4187,7 @@ def admin_remboursement(request):
     # Récupération des dates minimales et maximales depuis la base de données
     dates = AccordRemboursement.objects.filter(
         ~Q(status='completed'),  # Exclure les enregistrements avec status='Réalisé'
-        # transfere_id__isnull=True,
-        # date_trensfere__isnull=True
+
     ).aggregate(
         min_date=Min('due_date'),
         max_date=Max('due_date')
