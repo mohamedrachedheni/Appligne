@@ -2012,8 +2012,7 @@ def admin_payment_accord_reglement(request):
         Payment.objects
         .filter(
             professeur=professeur,
-            invoice__demande_paiement__reglement_realise=False,  # Demandes non réglées
-            accord_reglement_id=None,  # Aucun accord encodé
+            accord_reglement_id__isnull=True,  # Aucun accord encodé
             reglement_realise=False,  # Paiement non réalisé
         )
         .annotate(
@@ -3166,9 +3165,9 @@ def admin_accord_reglement_modifier(request):
         accord_reglement.email_id=email_telecharge.id
         accord_reglement.status=status
         accord_reglement.due_date=date_reglement
-        if status == "Réalisé": # á modifier revoire la logique de l'enregistrment
-            accord_reglement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
-            accord_reglement.transfere_id=transfere_id # passer à Stripe
+        # if status == "Réalisé": # á modifier revoire la logique de l'enregistrment
+        #     accord_reglement.date_trensfere=datetime.strptime(date_trensfere, date_format).date()
+        #     accord_reglement.transfere_id=transfere_id # passer à Stripe
         accord_reglement.save() 
         msg += str(f"Mise à jour de accord de règlement du {date_reglement}.\n")
         
