@@ -823,26 +823,22 @@ def temoignage_eleve(request):
     if not hasattr(user, 'eleve'):
         messages.error(request, "Vous n'etes pas connecté en tant qu'élève")
         return redirect('signin')
-
-    slug_pattern = f'Elv{user.id}' # à améliorer la méthode exemple: slug_pattern = f'Elv{user.id};' 
+    eleve = Eleve.objects.filter(user=user).first()
     
-    # Filtrer les paiements approuvés de l'élève contenant son identifiant dans le slug
-    payments = Payment.objects.filter(status='Approuvé', slug__icontains=slug_pattern)
+    # Filtrer les paiements approuvés de l'élève contenant son identifiant 
+    payments = Payment.objects.filter(eleve=eleve)
     
     # Si aucun paiement approuvé, informer l'utilisateur et le rediriger
     if not payments.exists():
         messages.info(request, "Vous ne pouvez donner votre témoignage que si vous avez réglé au moins un cours.")
         return redirect('compte_eleve')
     
-    # Récupérer les IDs des professeurs basés sur les paiements à modifier car le champ slug sera supprimer
+    # Récupérer les IDs des professeurs basés sur les paiements 
     list_prof_ids = []
     for payment in payments:
-        slug = payment.slug
-        match = re.search(r'Prof(\d+)Elv', slug)
-        if match:
-            user_prof_id = int(match.group(1))
-            if user_prof_id not in list_prof_ids:
-                list_prof_ids.append(user_prof_id)
+        user_prof_id = payment.professeur.user.id
+        if user_prof_id not in list_prof_ids:
+            list_prof_ids.append(payment.professeur.user.id)
     
     # Obtenir la liste des professeurs concernés
     list_prof = User.objects.filter(id__in=list_prof_ids)

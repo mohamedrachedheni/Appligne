@@ -1159,14 +1159,10 @@ def refund_payment(request):
                     if charge_list.data:
                         charge = charge_list.data[0]
 
-            # ===========================
-            # CAS 2 : Paiement via Charge directe
-            # ===========================
-            elif payment.stripe_charge_id:
-                charge = stripe.Charge.retrieve(payment.stripe_charge_id)
+            
 
             # ===========================
-            # CAS 3 : Aucun identifiant Stripe connu
+            # CAS 2 : Aucun identifiant Stripe connu
             # ===========================
             else:
                 messages.error(request, "Pas d'identifiant Stripe trouvé.")
@@ -3312,7 +3308,6 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                     # on crée l'enregistremernt Payment s'il n'existe pas
                     payment, created = Payment.objects.get_or_create(invoice=invoice) 
                     status = Payment.PENDING
-                    payment_body = data_object # pour mettre à jour si elle est modifier par Stripe
 
                     # si le payment est nouvellement créé
                     if created:
@@ -3339,7 +3334,6 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                         payment.amount=amount
                         payment.currency=currency
                         payment.status=status
-                        payment.payment_body=payment_body
                         payment.save()
                         # Email d'allerte
                         texte= f"💥 Attention, à vérifier. Création d'un enregistrement dans Payment payment_id:{payment.id} suite à un évènement Webhook webhoohevent.event_id:{webhook_event.event_id} qui n'a pas de paiement pret défini.\n"
@@ -4518,14 +4512,13 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
         },
     )
 
-    # Ajouter payment_body correctement
+
     if created_payment :
         payment.eleve=invoice.demande_paiement.eleve
         payment.professeur=invoice.demande_paiement.user.professeur
         payment.invoice=invoice
         payment.amount=amount_eur / 100
         payment.currency="eur"
-        payment.payment_body = charge or {}
         payment.save()
     else:
         # tester la cohérence du montant

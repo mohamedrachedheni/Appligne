@@ -4433,10 +4433,10 @@ def admin_remboursement_detaille(request):
             # traiter les différents cas: admin, prof, eleve, visiteur
             # Vérification des droits d'accès
             if hasattr(request.user, 'eleve') and request.user.is_active:
-                demande_ok = Demande_paiement.objects.filter(id=paiement.model_id, eleve=request.user.eleve).exists()
+                demande_ok = Demande_paiement.objects.filter(id=paiement.invoice.demande_paiement.id, eleve=request.user.eleve).exists()
                 redirection = 'compte_eleve'
             elif hasattr(request.user, 'professeur') and request.user.is_active:
-                demande_ok = Demande_paiement.objects.filter(id=paiement.model_id, user=request.user).exists()
+                demande_ok = Demande_paiement.objects.filter(id=paiement.invoice.demande_paiement.id, user=request.user).exists()
                 redirection = 'compte_prof'
             elif request.user.is_staff and request.user.is_active:
                 demande_ok = True

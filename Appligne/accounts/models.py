@@ -558,20 +558,15 @@ class Payment(models.Model):
     
     # champs à supprimer
     # demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.CASCADE, related_name="payments", null=True, blank=True) # à supprimer
-    model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement) (à supprimer)
-    model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié (à supprimer)
+    # model = models.CharField(max_length=255, blank=True, null=True)  # Model liée au paiement (ex: Demande_paiement/Règlement / Rembourcement) (à supprimer)
+    # model_id = models.IntegerField( blank=True, null=True)  # ID de l'objet dans le modèle lié (à supprimer)
     # 📎 Informations Stripe
-    slug = models.CharField(max_length=255, blank=True, null=True)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)(à supprimer)
-    payment_body = models.JSONField(null=True, blank=True) #  (les données JSON envoyées par l'API Stripe et non pas par le Webhook) ( à supprimer)
-    stripe_charge_id = models.CharField(max_length=255, blank=True, null=True) # (à supprimer ça existe déjà dans Invoice)
-    language = models.CharField(max_length=10, null=True, blank=True)  # Langue utilisée (à supprimer non utilisé)
-    payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement de l'élève ( à supprimer / existe dans invoice.paid_at)
+    # slug = models.CharField(max_length=255, blank=True, null=True)  # à garder pour simplifier certain recherche à améliorer(Pro114;Ele325;)(à supprimer)
+    # payment_body = models.JSONField(null=True, blank=True) #  (les données JSON envoyées par l'API Stripe et non pas par le Webhook) ( à supprimer)
+    # stripe_charge_id = models.CharField(max_length=255, blank=True, null=True) # (à supprimer ça existe déjà dans Invoice)
+    # language = models.CharField(max_length=10, null=True, blank=True)  # Langue utilisée (à supprimer non utilisé)
+    # payment_date = models.DateTimeField(null=True, blank=True)  # Date de paiement de l'élève ( à supprimer / existe dans invoice.paid_at)
     
-    def mark_succeeded(self):
-        """✅ Marque ce paiement comme réussi."""
-        self.status = "succeeded"
-        self.payment_date = timezone.now()
-        self.save()
 
     def mark_failed(self, reason=None):
         """❌ Marque ce paiement comme échoué."""
