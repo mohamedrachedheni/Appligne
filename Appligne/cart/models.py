@@ -18,7 +18,7 @@ import stripe
 # ========================
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True) # à supprimer
+    # payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True) # à supprimer
     demande_paiement = models.OneToOneField(Demande_paiement, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -102,13 +102,13 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
 
-    payment = models.OneToOneField( # à supprimer
-        'accounts.Payment',
-        on_delete=models.CASCADE,
-        related_name='invoice_linked',  # ✅ NOM INVERSE UNIQUE
-        null=True,
-        blank=True
-    ) # à enlever
+    # payment = models.OneToOneField( # à supprimer
+    #     'accounts.Payment',
+    #     on_delete=models.CASCADE,
+    #     related_name='invoice_linked',  # ✅ NOM INVERSE UNIQUE
+    #     null=True,
+    #     blank=True
+    # ) # à enlever
 
     def __str__(self):
         return f"Facture {self.invoice_number}"

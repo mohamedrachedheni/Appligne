@@ -1589,18 +1589,18 @@ def stripe_webhook(request):
             'transfer.failed': handle_transfer_failed, # apparament il n'existe pas
             # ==========================================================
 
-            'charge.dispute.created': handle_charge_dispute_created,
-            'charge.failed': handle_charge_failed,
-            'charge.updated': handle_charge_updated,
-            'charge.dispute.closed': handle_charge_dispute_closed,
+            'charge.dispute.created': handle_charge_dispute_created, # Pas encore traiter
+            'charge.failed': handle_charge_failed, # Pas encore traiter
+            'charge.updated': handle_charge_updated, # Pas encore traiter
+            'charge.dispute.closed': handle_charge_dispute_closed, # Pas encore traiter
              
 
             # ==================== REMBOURSEMENTS =========================
-            'charge.refunded': handle_charge_refunded_unified,
-            'charge.refund.updated': handle_charge_refund_updated_unified,
-            'refund.created': handle_refund_created,
-            'refund.updated': handle_refund_updated,
-            'refund.failed': handle_refund_failed,
+            'charge.refunded': handle_charge_refunded_unified, # Pas encore traiter
+            'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter
+            'refund.created': handle_refund_created, # Pas encore traiter
+            'refund.updated': handle_refund_updated, # Pas encore traiter
+            'refund.failed': handle_refund_failed, # Pas encore traiter
 
             
             # ==================== PAYOUTS COMPTE CONNECT ====================
@@ -3887,10 +3887,11 @@ def handle_transfer_reversed(transfer):
         logger.info(f"↩️ Transfert reversé pour la facture {invoice.id} (transfer ID: {transfer['id']})")
 
         # 🔄 Mettre à jour le paiement si existant
-        if invoice.payment:
-            invoice.payment.status = Payment.CANCELED
-            invoice.payment.save()
-            logger.info(f"💳 Paiement lié (ID: {invoice.payment.id}) marqué comme CANCELED.")
+        payment = Payment.objects.filter(invoice=invoice).first()
+        if payment:
+            payment.status = Payment.CANCELED
+            payment.save()
+            logger.info(f"💳 Paiement lié (ID: {payment.id}) marqué comme CANCELED.")
 
     except InvoiceTransfert.DoesNotExist:
         logger.error(f"❌ Facture {invoice_id} introuvable pour transfert reversé {transfer['id']}", exc_info=True)
