@@ -3,26 +3,6 @@
 {% block title %} |Réclamation{% endblock %}
 
 {% block content %}
-
-    <!-- Header Start -->
-    <div class="container-fluid bg-primary py-5 mb-5 page-header">
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <!-- header Start -->
-                    <div class="container ">
-                        <div class="text-center wow fadeInUp" data-wow-delay="0.1s" style="visibility: visible; animation-delay: 0.1s; animation-name: fadeInUp;">
-                            <h2 class="text-center text-white">Réclamation</h2>
-                        </div>
-                    </div>
-                    <!-- header end -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
-
-
     <div class="row justify-content-center">
         <div class="col-sm-12 col-md-4 col-lg-2  ">
             <!-- début sidebar -->
@@ -48,6 +28,10 @@
             </div>
             <form method="POST" enctype="multipart/form-data" autocomplete="off" >
                 {% csrf_token %}
+                <div class="text-center  py-5" >
+                    <h3 class="section-title bg-white text-center text-primary px-3">Réclamation</h3>
+                    <h1 class="mb-4">Suivi de la réclamation</h1>
+                </div>
                 {% if  request.user.is_authenticated and request.user.is_active %}
                 <div class="container-xxl py-5 " id="identite">
                     <div class="container ">

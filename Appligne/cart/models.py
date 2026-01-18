@@ -102,14 +102,6 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
 
-    # payment = models.OneToOneField( # à supprimer
-    #     'accounts.Payment',
-    #     on_delete=models.CASCADE,
-    #     related_name='invoice_linked',  # ✅ NOM INVERSE UNIQUE
-    #     null=True,
-    #     blank=True
-    # ) # à enlever
-
     def __str__(self):
         return f"Facture {self.invoice_number}"
 
@@ -273,7 +265,7 @@ class InvoiceTransfert(models.Model):
 
     user_admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='factures_transfert_emises')
     user_professeur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='factures_transfert_recues')
-    accord_reglement = models.OneToOneField(AccordReglement, on_delete=models.SET_NULL, null=True, blank=True)# (à supprimer)
+    accord_reglement = models.OneToOneField(AccordReglement, on_delete=models.SET_NULL, null=True, blank=True)
     # payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, unique=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
@@ -284,10 +276,12 @@ class InvoiceTransfert(models.Model):
     montant_net = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
     pdf = models.FileField(upload_to='invoices_transfert/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    paid_at = models.DateTimeField(null=True, blank=True) # (à supprimer)
-    frais_stripe = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)# (à supprimer)
-    montant_net_final = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00) # (à supprimer)
-    date_mise_en_valeur = models.DateTimeField(null=True, blank=True)
+
+    # champs à supprimer
+    # paid_at = models.DateTimeField(null=True, blank=True) # (à supprimer)
+    # frais_stripe = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00)# (à supprimer)
+    # montant_net_final = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0.00) # (à supprimer)
+    # date_mise_en_valeur = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Facture Transfert {self.invoice_number}"

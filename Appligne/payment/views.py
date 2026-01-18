@@ -1151,13 +1151,7 @@ def refund_payment(request):
                     charge = pi.charges.data[0]
 
                 # 🔄 Tentative 2 : Fallback via la liste des charges
-                else:
-                    charge_list = stripe.Charge.list(
-                        payment_intent=payment.reference,
-                        limit=1
-                    )
-                    if charge_list.data:
-                        charge = charge_list.data[0]
+                else: charge=None
 
             
 
@@ -1348,11 +1342,11 @@ def create_transfert_session(request):
         
         # --- MAJ (EN ATTENTE WEBHOOK) sans PDF---
         invoice.stripe_transfer_id = transfert_id
-        invoice.frais_plateforme = 0
+        invoice.frais = 0
         invoice.montant_net=cart.total / 100
         invoice.status = InvoiceTransfert.INPROGRESS
         invoice.save()
-        append_webhook_log(stripe_event, f"🔔 InvoiceTransfert.PENDING invoice_id:{invoice.id} ")
+        append_webhook_log(stripe_event, f"🔔 .PENDING invoice_id:{invoice.id} ")
 
         #6. mise à jour AccordReglement 
         accord_reglement = cart.accord_reglement
@@ -3597,7 +3591,6 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
         invoice_transfert.balance_transaction = balance_tx_id
         invoice_transfert.frais = frais_stripe
         invoice_transfert.montant_net = montant_net_reel
-        invoice_transfert.date_mise_en_valeur = date_mise_en_valeur
         invoice_transfert.save()
         invoice_transfert.generate_pdf()
         invoice_transfert.save()
