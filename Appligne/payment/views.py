@@ -337,19 +337,34 @@ def create_checkout_session(request):
     # ----------------------------------------------------------------------
     try:
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode="payment",
-            success_url=request.build_absolute_uri(
-                reverse("payment:success")
-            ) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("payment:cancel")),
-            metadata={
-                "invoice_id": invoice.id,
-                "user_id": request.user.id,
-            },
-            expires_at = int((timezone.now() + timezone.timedelta(hours=23, minutes=55)).timestamp())
-        )
+        payment_method_types=["card"],
+        line_items=line_items,
+        mode="payment",
+        success_url=request.build_absolute_uri(
+            reverse("payment:success")
+        ) + "?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url=request.build_absolute_uri(
+            reverse("payment:cancel")
+        ),
+
+        # Metadata sur la Checkout Session
+        metadata={
+            "invoice_id": str(invoice.id),
+            "user_id": str(request.user.id),
+        },
+
+        # ⭐ Metadata sur le PaymentIntent (ESSENTIEL)
+        payment_intent_data={
+            "metadata": {
+                "invoice_id": str(invoice.id),
+                "user_id": str(request.user.id),
+            }
+        },
+
+        expires_at=int(
+            (timezone.now() + timezone.timedelta(hours=23, minutes=55)).timestamp()
+        ),)
+
 
         logger.info(f"[{request.user}] ➤ Session Stripe créée ({checkout_session.id})")
 
@@ -3360,7 +3375,7 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                                        message=f"❌ Erreur globale dans handle_payment_intent_created : {e}")
 
 
-        
+# à corriger user_admin, data_object, webhook_event    
 def handle_charge_updated(charge):
     """
     📝 Traitement quand une charge est mise à jour
