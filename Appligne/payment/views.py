@@ -1495,7 +1495,7 @@ def stripe_webhook(request):
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
     logger.info("📩 Webhook Stripe UNIFIÉ reçu")
-
+    timestamp = timezone.now().strftime("%Y-%m-%d %H:%M:%S") # 🕒 Ajoute un log horodaté
     # 1️⃣ Vérification de la signature Stripe
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
@@ -1529,7 +1529,7 @@ def stripe_webhook(request):
                 # 🔧 Met à jour le payload au cas où Stripe a renvoyé une version corrigée
                 webhook_event.payload = payload_json
                 # ✅ Ajoute une ligne au log sans écraser l’ancien contenu
-                timestamp = timezone.now().strftime("%Y-%m-%d %H:%M:%S") # 🕒 Ajoute un log horodaté
+                
                 previous_log = webhook_event.handle_log or ""
                 webhook_event.handle_log = (
                     previous_log
@@ -1604,7 +1604,7 @@ def stripe_webhook(request):
 
         if handler:
             webhook_event.handle_log += f"\n[{timestamp}] ⚙️ Appel du handler: {handler.__name__}"
-            handler(data_object)
+            handler(user_admin, data_object, webhook_event)
             webhook_event.is_processed = True
             webhook_event.save(update_fields=['is_processed', 'handle_log'])
             append_webhook_log(webhook_event, f"✅ Traitement avec succès de l'èvènement: {event_type}  avec succès." )
@@ -1624,7 +1624,7 @@ def stripe_webhook(request):
 
 
 
-def handle_radar_fraud_warning(webhook_event, data_object, user_admin):
+def handle_radar_fraud_warning(user_admin, data_object, webhook_event):
     """
     🚨 Early Fraud Warning (EFW)
     -----------------------------------------
@@ -1788,7 +1788,7 @@ def handle_radar_fraud_warning(webhook_event, data_object, user_admin):
 
 #=================== ancien handlers =======================
 
-def handle_checkout_session_completed(webhook_event, data_object):
+def handle_checkout_session_completed(user_admin, data_object, webhook_event):
     """
     💳 Gère l'événement Stripe 'checkout.session.completed'
     --------------------------------------------------------
@@ -1877,7 +1877,7 @@ def handle_checkout_session_completed(webhook_event, data_object):
 
 
  
-def handle_checkout_session_expired( webhook_event, data_object ):
+def handle_checkout_session_expired( user_admin, data_object, webhook_event):
     """
     🕒 Gestion de l'expiration d'une session de paiement Stripe
     
@@ -2061,7 +2061,7 @@ def _cleanup_cart_payment(invoice, payment_intent_id, payment_intent, event_id):
     )
 
 
-def handle_payment_intent_failed(webhook_event, data_object, user_admin):
+def handle_payment_intent_failed(user_admin, data_object, webhook_event):
     """
     ❌ Gestion de l'échec d'un PaymentIntent Stripe (payment_intent.payment_failed)
 
@@ -2262,7 +2262,7 @@ def _update_demande_paiement_failed(invoice, payment_intent_id, payment_intent, 
     )
 
 
-def handle_payment_intent_canceled( webhook_event, data_object, user_admin ):
+def handle_payment_intent_canceled( user_admin, data_object, webhook_event ):
     """
     🚫 Gestion de l'annulation d'un PaymentIntent Stripe
     
@@ -2416,7 +2416,7 @@ def send_payment_success_notification(invoice):
 # ==================== HANDLERS UNIFIÉS ====================
 
 
-def handle_payment_intent_succeeded(webhook_event, data_object, user_admin, charge=None, bal=None):
+def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, charge=None, bal=None):
     """
     💰 Traitement quand un payment intent réussit
     mais avant qu'il soit disponible dans le compte Stripe
@@ -2697,7 +2697,7 @@ def handle_payment_intent_succeeded(webhook_event, data_object, user_admin, char
     
 
 
-def handle_charge_succeeded(webhook_event, data_object, user_admin, bal=None):
+def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
     """
     💳 Traitement de l’événement Stripe `charge.succeeded`
 
@@ -3856,8 +3856,8 @@ def handle_payout_created(user_admin, data_object, webhook_event, bal=None):
             "details": errors
         }, status=400)
 
-
-def handle_transfer_reversed(transfer):
+# non encore développer
+def handle_transfer_reversed(user_admin, data_object, webhook_event):
     """
     ↩️ Géré lorsque Stripe annule ou reverse un transfert déjà effectué.
     
@@ -4163,7 +4163,7 @@ def update_refund_status_in_database(refund_id, status, failure_reason=None):
 
 
 
-def handle_balance_available(webhook_event, data_object, user_admin, data_type= []):
+def handle_balance_available(user_admin, data_object, webhook_event, data_type= []):
     """
     💰 Gestion de l'événement Stripe `balance.available`
 
