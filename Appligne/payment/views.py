@@ -2838,7 +2838,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         Invoice.objects.filter(id=invoice_id).update(
             status = Invoice.DRAFT, 
             paid_at = timezone.now(),
-            stripe_charge_id = invoice.stripe_charge_id,
+            stripe_charge_id = charge_succeeded_id,
         )
 
         append_webhook_log(webhook_event,
