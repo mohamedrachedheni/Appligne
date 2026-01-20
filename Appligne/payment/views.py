@@ -2927,47 +2927,50 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
         # ----------------------------
         from datetime import timezone as dt_timezone
+
         if bal:
             with transaction.atomic(): 
+
                 timestamp = bal.get("available_on")
                 if timestamp is not None:
                     date_mise_en_valeur = datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
                 else:
                     date_mise_en_valeur = None
 
+                # 🔐 Sécurisation Stripe (NULL fréquents)
+                source = data_object.get("source") or {}
+                payment_method_details = data_object.get("payment_method_details") or {}
+                card_details = payment_method_details.get("card") or {}
+                fee_details = bal.get("fee_details") or []
+
                 balance_txn_obj, created = BalanceTransaction.objects.update_or_create(
                     balance_txn_id=balance_txn_id,
                     defaults={
-                        "amount": bal["amount"],
-                        "fee": bal["fee"],
-                        "net": bal["net"],
+                        "amount": bal.get("amount"),
+                        "fee": bal.get("fee"),
+                        "net": bal.get("net"),
                         "currency": bal.get("currency", "eur"),
-                        "status": bal["status"],
-                        # 📅 Gestion de la disponibilité des fonds
-                        "is_available":True, # ✔️ balance.available
-                        "available_on":date_mise_en_valeur, # 👌
-                        "event_type": "charge.succeeded", # 👌
+                        "status": bal.get("status"),
+
+                        # 📅 Disponibilité des fonds
+                        "is_available": True,
+                        "available_on": date_mise_en_valeur,
+                        "event_type": "charge.succeeded",
 
                         # ---- Card details ----
-                        "payment_method_brand": data_object.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("brand"),
-
-                        "payment_method_last4": data_object.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("last4"),
-
-                        "payment_method_country": data_object.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("country"),
-
-                        "payment_method_type": data_object.get("payment_method_details", {})
-                            .get("type"),
+                        "payment_method_brand": card_details.get("brand"),
+                        "payment_method_last4": card_details.get("last4"),
+                        "payment_method_country": card_details.get("country"),
+                        "payment_method_type": payment_method_details.get("type"),
 
                         # ---- Divers ----
-                        "ip_country": data_object.get("source", {}).get("country"),
-                        "stripe_fee": sum(f["amount"] for f in bal["fee_details"]),
-                        "tax_fee": sum(f["amount"] for f in bal["fee_details"] if f.get("type") == "tax"),
+                        "ip_country": source.get("country"),
+                        "stripe_fee": sum(f.get("amount", 0) for f in fee_details),
+                        "tax_fee": sum(
+                            f.get("amount", 0)
+                            for f in fee_details
+                            if f.get("type") == "tax"
+                        ),
                         "description": data_object.get("description"),
                     }
                 )
@@ -3062,6 +3065,74 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 append_webhook_log(
                     webhook_event,
                     f"📌 Mise à jour Horaire payment_id={payment.id}."
+                )
+
+                # ============================================================
+                # 🔒 VALIDATION FINALE AVANT balance.available
+                # ============================================================
+
+                errors = []
+
+                # 1️⃣ Vérification Invoice
+                if invoice.status != Invoice.DRAFT:
+                    errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
+
+                if not invoice.stripe_charge_id:
+                    errors.append("stripe_charge_id manquant sur Invoice")
+
+                if not invoice.balance_txn_id:
+                    errors.append("balance_txn_id manquant sur Invoice")
+
+                # 2️⃣ Vérification BalanceTransaction
+                if not balance_txn_obj:
+                    errors.append("BalanceTransaction absente en BDD")
+
+                else:
+                    if balance_txn_obj.status != "pending":
+                        append_webhook_log(
+                            webhook_event,
+                            f"ℹ️ BalanceTransaction status={balance_txn_obj.status} (attendu: pending avant disponibilité)"
+                        )
+
+                # 3️⃣ Vérification Payment
+                if not Payment.objects.filter(invoice=invoice, status=Payment.APPROVED).exists():
+                    errors.append("Payment non APPROVED ou manquant")
+
+                # 4️⃣ Vérification Demande_paiement
+                if demande_paiement.statut_demande != Demande_paiement.EN_COURS:
+                    errors.append(
+                        f"Demande_paiement statut invalide ({demande_paiement.statut_demande})"
+                    )
+
+                # 5️⃣ Vérification Horaire
+                if Horaire.objects.filter(
+                    demande_paiement_id=demande_paiement.id,
+                    payment_id__isnull=True
+                ).exists():
+                    errors.append("Certains horaires ne sont pas liés au payment_id")
+
+                # ------------------------------------------------------------
+                # Résultat de validation
+                # ------------------------------------------------------------
+                if errors:
+                    error_message = "❌ Validation finale AVANT balance.available échouée :\n" + "\n".join(errors)
+
+                    append_webhook_log(webhook_event, error_message)
+
+                    _webhook_status_update(
+                        webhook_event,
+                        False,
+                        error_message
+                    )
+
+                    # ❌ NE PAS lever d'exception
+                    # ❌ NE PAS marquer PAID
+                    # ❌ balance.available devra bloquer
+                    return
+
+                append_webhook_log(
+                    webhook_event,
+                    "✅ Validation finale OK – prêt pour balance.available"
                 )
 
                 # Fin traitement avec succès
