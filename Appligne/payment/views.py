@@ -3004,13 +3004,14 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 if payment_intent_id != stripe_payment_intent_id:
                     append_webhook_log(
                         webhook_event,
-                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice_id.id} et webhook_event_id= {webhook_event.id}\n"
-                        F"incohérence entre stripe_payment_intent_id:{stripe_payment_intent_id} de la BDD et payment_intent_id: {payment_intent_id} de évènement charge_cusseeded\n"
-                        f"💥 ❌ Erreur d'enregistrement antérieur dans BDD ou erreur Stripe à vérifier manuellement par Admin"
-                        )
+                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id={webhook_event.id}\n"
+                        f"Incohérence entre stripe_payment_intent_id:{stripe_payment_intent_id} (BDD) "
+                        f"et payment_intent_id:{payment_intent_id} (charge.succeeded)\n"
+                        f"💥 ❌ Vérification manuelle requise par Admin"
+                    )
                     
-                    envoie_email_multiple(user_admin.id, [user_admin.id], f"Incohérence entre les enregistrements BDD invoice_id={invoice_id.id} et webhook_event_id= {webhook_event.id}", 
-                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice_id.id} et webhook_event_id= {webhook_event.id}\n"
+                    envoie_email_multiple(user_admin.id, [user_admin.id], f"Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id= {webhook_event.id}", 
+                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id= {webhook_event.id}\n"
                         F"incohérence entre stripe_payment_intent_id:{stripe_payment_intent_id} de la BDD et payment_intent_id: {payment_intent_id} de évènement charge_cusseeded\n"
                         f"💥 ❌ Erreur d'enregistrement antérieur dans BDD ou erreur Stripe à vérifier manuellement par Admin"
                         )
