@@ -370,16 +370,16 @@ def create_checkout_session(request):
 
         invoice.stripe_id = checkout_session.id
         invoice.save()
-        # Journalisation sous forme d'événement checkout
-        stripe_event, _ = WebhookEvent.objects.get_or_create(
-            event_id=checkout_session.id,
-            defaults={
-                "type": checkout_session.object,
-                "payload": checkout_session, # à vérifier
-                "handle_log": f"[{request.user}] ➤ Détection payment_cancel pour session {checkout_session.id}",
-                "is_processed": True,
-            }
-        )
+        # # Journalisation sous forme d'événement checkout
+        # stripe_event, _ = WebhookEvent.objects.get_or_create(
+        #     event_id=checkout_session.id,
+        #     defaults={
+        #         "type": checkout_session.object,
+        #         "payload": checkout_session, # à vérifier
+        #         "handle_log": f"[{request.user}] ➤ Détection payment_cancel pour session {checkout_session.id}",
+        #         "is_processed": True,
+        #     }
+        # )
 
 
     except Exception as e:
@@ -433,7 +433,7 @@ def payment_success(request):
                 defaults={
                     "type": session.get("object"),
                     "payload": session,
-                    "handle_log": f"[{request.user}] ➤ Session Stripe créée ({session.id})",
+                    "handle_log": f"[{request.user}] ➤ ** Session Stripe créée ({session.id})",
                     "is_processed": True,
                 })
 
