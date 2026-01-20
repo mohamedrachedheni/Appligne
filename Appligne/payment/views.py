@@ -3064,7 +3064,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 if invoice.status != Invoice.DRAFT:
                     errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
 
-                if not invoice.stripe_charge_id:
+                if  invoice.stripe_charge_id is None:
                     errors.append("stripe_charge_id manquant sur Invoice")
 
                 if not invoice.balance_txn_id:
