@@ -2883,7 +2883,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             return
 
         ancien_statut = demande_paiement.statut_demande
-        demande_paiement.statut_demande = Demande_paiement.EN_ATTENTE
+        demande_paiement.statut_demande = Demande_paiement.EN_COURS
         demande_paiement.save()
 
         append_webhook_log(webhook_event,
@@ -3067,7 +3067,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 if  invoice.stripe_charge_id is None:
                     errors.append("stripe_charge_id manquant sur Invoice")
 
-                if not invoice.balance_txn_id:
+                if invoice.balance_txn_id is None:
                     errors.append("balance_txn_id manquant sur Invoice")
 
                 # 2️⃣ Vérification BalanceTransaction
