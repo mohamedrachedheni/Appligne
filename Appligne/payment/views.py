@@ -2838,7 +2838,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         Invoice.objects.filter(id=invoice_id).update(
             status = Invoice.DRAFT, 
             paid_at = timezone.now(),
-            cancellation_reason = None,
+            stripe_charge_id = invoice.stripe_charge_id,
         )
 
         append_webhook_log(webhook_event,
@@ -2863,6 +2863,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 f"💥 Incohérence critique invoice.toal={invoice.total} centimes dans BDD\n"
                 f"data_object.get('amount')={data_object.get('amount')} centime d'évènement charge.succeeded"
                 )
+            # envoie émail *a l'admin
 
         # 📌 GÉRER LA DEMANDE DE PAIEMENT ASSOCIÉE
         if not invoice.demande_paiement:
@@ -3012,47 +3013,23 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 # --------------------------------------------------------
                 payment_intent_id = data_object.get("payment_intent")
                 stripe_payment_intent_id=invoice.stripe_payment_intent_id
-                if payment_intent_id != stripe_payment_intent_id:
+                if not stripe_payment_intent_id:
+                    invoice.stripe_payment_intent_id = payment_intent_id
+                    invoice.balance_txn_id = balance_txn_id
+                    invoice.save()
                     append_webhook_log(
-                        webhook_event,
-                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id={webhook_event.id}\n"
-                        f"Incohérence entre stripe_payment_intent_id:{stripe_payment_intent_id} (BDD) "
-                        f"et payment_intent_id:{payment_intent_id} (charge.succeeded)\n"
-                        f"💥 ❌ Vérification manuelle requise par Admin"
-                    )
-                    
-                    envoie_email_multiple(user_admin.id, [user_admin.id], f"Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id= {webhook_event.id}", 
-                        f"💥 ❌ Incohérence entre les enregistrements BDD invoice_id={invoice.id} et webhook_event_id= {webhook_event.id}\n"
-                        F"incohérence entre stripe_payment_intent_id:{stripe_payment_intent_id} de la BDD et payment_intent_id: {payment_intent_id} de évènement charge_cusseeded\n"
-                        f"💥 ❌ Erreur d'enregistrement antérieur dans BDD ou erreur Stripe à vérifier manuellement par Admin"
-                        )
-                # stripe_payment_intent_id n'est pas mis à jour car il est créé avec payment_success(à réviser)
-                # on peut ajouter un deuxième filtre pour être très rigoureux (stripe_payment_intent_id=payment_intent_id)
-                Invoice.objects.filter(id=invoice.id).update(
-                    status=Invoice.PAID,
-                    stripe_charge_id=charge_succeeded_id, # c'est la dernière charge détectée
-                    balance_txn_id=balance_txn_id,
-                    paid_at=date_mise_en_valeur,
-                )
-
+                        webhook_event, f"📌 Facture {invoice.id} mise à jour, invoice.stripe_payment_intent_id = {payment_intent_id} / invoice.balance_txn_id = {balance_txn_id} ")
+                
+                payment , created = Payment.objects.update_or_create(invoice=invoice,
+                            defaults={
+                        "amount": invoice.total / 100,
+                        "reference": stripe_payment_intent_id,
+                        "currency": data_object.get("currency", "eur"),
+                        "status": Payment.PENDING,
+                    },)
                 append_webhook_log(
-                    webhook_event,
-                    f"📌 Mise à jour Invoice PAID; stripe_charge_id={charge_succeeded_id}; balance_txn_id={balance_txn_id}; paid_at={date_mise_en_valeur} "
-                )
+                        webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} ")
 
-                # --------------------------------------------------------
-                # 2️⃣ Payment → APPROVED
-                # --------------------------------------------------------
-                Payment.objects.filter(invoice=invoice).update(
-                    status=Payment.APPROVED
-                )
-
-                append_webhook_log(
-                    webhook_event,
-                    "📌 Mise à jour Payment APPROVED "
-                )
-
-                payment = Payment.objects.get(invoice=invoice)
 
                 # --------------------------------------------------------
                 # 3️⃣ Demande_paiement → lien payment_id
@@ -3107,8 +3084,8 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                         )
 
                 # 3️⃣ Vérification Payment
-                if not Payment.objects.filter(invoice=invoice, status=Payment.APPROVED).exists():
-                    errors.append("Payment non APPROVED ou manquant")
+                if not Payment.objects.filter(invoice=invoice, status=Payment.PENDING).exists():
+                    errors.append("Payment non en attente ou manquant")
 
                 # 4️⃣ Vérification Demande_paiement
                 if demande_paiement.statut_demande != Demande_paiement.EN_COURS:
@@ -3121,7 +3098,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                     demande_paiement_id=demande_paiement.id,
                     payment_id__isnull=True
                 ).exists():
-                    errors.append("Certains horaires ne sont pas liés au payment_id")
+                    errors.append("Certains horaires ne sont pas liés au payment ")
 
                 # ------------------------------------------------------------
                 # Résultat de validation
@@ -3955,7 +3932,7 @@ def handle_payout_created(user_admin, data_object, webhook_event, bal=None):
         }, status=400)
 
 # non encore développer
-def handle_transfer_reversed(user_admin, data_object, webhook_event):
+def handle_transfer_reversed(user_admin, data_object, webhook_event, transfer=None):
     """
     ↩️ Géré lorsque Stripe annule ou reverse un transfert déjà effectué.
     
