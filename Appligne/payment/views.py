@@ -3035,7 +3035,6 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 # 3️⃣ Demande_paiement → lien payment_id
                 # --------------------------------------------------------
                 Demande_paiement.objects.filter(id=demande_paiement.id).update(
-                    payment_id=payment.id,
                     statut_demande=Demande_paiement.EN_COURS
                 )
 
