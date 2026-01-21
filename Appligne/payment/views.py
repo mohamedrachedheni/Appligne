@@ -64,7 +64,8 @@ def save_balance_transaction_from_charge(
     data_object: dict,
     balance_txn_id: str,
     charge_succeeded_id: str,
-    webhook_event
+    webhook_event,
+    payment_intent_id: str
 ):
     """
     Enregistre la BalanceTransaction Stripe depuis charge.succeeded
@@ -146,7 +147,7 @@ def save_balance_transaction_from_charge(
         PaymentIntentTransaction.objects.update_or_create(
             charge_id=charge_succeeded_id,
             defaults={
-                "payment_intent_id": data_object.get("payment_intent"),
+                "payment_intent_id": payment_intent_id,
                 "balance_txn": balance_txn_obj
             }
         )
@@ -2810,7 +2811,8 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
                     data_object=data_object,
                     balance_txn_id=balance_txn_id,
                     charge_succeeded_id=latest_charge_id,
-                    webhook_event=webhook_event
+                    webhook_event=webhook_event,
+                    payment_intent_id=payment_intent_id
                 )
 
                 if not balance_txn_obj:
@@ -3058,7 +3060,8 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                     data_object=data_object,
                     balance_txn_id=balance_txn_id,
                     charge_succeeded_id=charge_succeeded_id,
-                    webhook_event=webhook_event
+                    webhook_event=webhook_event,
+                    payment_intent_id=payment_intent_id
                 )
 
                 if not balance_txn_obj:
