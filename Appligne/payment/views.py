@@ -3155,9 +3155,9 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # ============================================================
 
             errors = []
-            if STRIPE_LIVE_MODE:
+            if STRIPE_LIVE_MODE=="True" :
                 # 1️⃣ Vérification Invoice
-                if invoice.status != Invoice.DRAFT:
+                if invoice.status  != Invoice.DRAFT:
                     errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
 
                 if  invoice.stripe_charge_id is None:
