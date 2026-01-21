@@ -51,6 +51,119 @@ User = get_user_model()
 # ... le reste de votre code ...
 
 # ----------------------------------------------------------
+# Enregistre la BalanceTransaction Stripe depuis charge.succeeded
+# ----------------------------------------------------------
+
+from datetime import datetime
+from datetime import timezone as dt_timezone
+from django.db import transaction
+
+def save_balance_transaction_from_charge(
+    *,
+    bal: dict,
+    data_object: dict,
+    balance_txn_id: str,
+    charge_succeeded_id: str,
+    webhook_event
+):
+    """
+    Enregistre la BalanceTransaction Stripe depuis charge.succeeded
+
+    Retourne:
+        (balance_txn_obj, created)
+    """
+
+    if not bal:
+        append_webhook_log(
+            webhook_event,
+            "❌ Données balance manquantes"
+        )
+        return None, False
+
+    with transaction.atomic():
+
+        # --------------------------------------------------
+        # 📅 Date de mise en valeur (available_on)
+        # --------------------------------------------------
+        timestamp = bal.get("available_on")
+        date_mise_en_valeur = (
+            datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
+            if timestamp is not None
+            else None
+        )
+
+        # --------------------------------------------------
+        # 🔐 Sécurisation Stripe (NULL fréquents)
+        # --------------------------------------------------
+        source = data_object.get("source") or {}
+        payment_method_details = data_object.get("payment_method_details") or {}
+        card_details = payment_method_details.get("card") or {}
+        fee_details = bal.get("fee_details") or []
+
+        # --------------------------------------------------
+        # 💳 Enregistrement BalanceTransaction
+        # --------------------------------------------------
+        balance_txn_obj, created = BalanceTransaction.objects.update_or_create(
+            balance_txn_id=balance_txn_id,
+            defaults={
+                "amount": bal.get("amount"),
+                "fee": bal.get("fee"),
+                "net": bal.get("net"),
+                "currency": bal.get("currency", "eur"),
+                "status": bal.get("status"),
+
+                # 📅 Disponibilité des fonds
+                "is_available": True,
+                "available_on": date_mise_en_valeur,
+                "event_type": "charge.succeeded",
+
+                # ---- Card details ----
+                "payment_method_brand": card_details.get("brand"),
+                "payment_method_last4": card_details.get("last4"),
+                "payment_method_country": card_details.get("country"),
+                "payment_method_type": payment_method_details.get("type"),
+
+                # ---- Divers ----
+                "ip_country": source.get("country"),
+                "stripe_fee": sum(f.get("amount", 0) for f in fee_details),
+                "tax_fee": sum(
+                    f.get("amount", 0)
+                    for f in fee_details
+                    if f.get("type") == "tax"
+                ),
+                "description": data_object.get("description"),
+            }
+        )
+
+        append_webhook_log(
+            webhook_event,
+            f"📌 BalanceTransaction {'créée' if created else 'mise à jour'} : {balance_txn_id}"
+        )
+
+        # --------------------------------------------------
+        # 🔗 Lien PaymentIntentTransaction
+        # --------------------------------------------------
+        PaymentIntentTransaction.objects.update_or_create(
+            charge_id=charge_succeeded_id,
+            defaults={
+                "payment_intent_id": data_object.get("payment_intent"),
+                "balance_txn": balance_txn_obj
+            }
+        )
+
+        append_webhook_log(
+            webhook_event,
+            (
+                "🔗 PaymentIntentTransaction lié : "
+                f"PI={data_object.get('payment_intent')}, "
+                f"Charge={charge_succeeded_id}"
+            )
+        )
+
+        return balance_txn_obj, created
+
+
+# ----------------------------------------------------------
 # Début traitement de paiement par carte bancaire des élèves
 # ----------------------------------------------------------
 
@@ -1591,7 +1704,7 @@ def stripe_webhook(request):
             'payment_intent.payment_failed': handle_payment_intent_failed, # Ce cas se produit lorsque le paiement a été tenté mais refusé par la banque (fonds insuffisants, carte expirée, etc.).
             'payment_intent.succeeded': handle_payment_intent_succeeded, # Mettre à jour le statut 
             # ==========================================================
-            'charge.succeeded': handle_charge_succeeded, # Enregistrer les détails financiers charge Stripe quelque seconde après payment_intent.succeeded
+            'charge.succeeded': handle_charge_succeeded, # Enregistrer les détails financiers charge Stripe quelque seconde après payment_intent.succeeded, elle contient obligatoirement balance_txn_id
             'radar.early_fraud_warning.created': handle_radar_fraud_warning, # ← Alerte après quelque seconde de  payment_intent.succeeded 
             # ou avant coup: payment_intent.succeeded en le bloquant, les evennement qui suivent peuvent être payment_intent.canceled 
             # ou payment_intent.payment_failed ou même payment_intent.succeeded
@@ -2455,8 +2568,21 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
     la recupération de charge et de la balance est facultative selon la disposition des données du Webhook
     charge et bal deux paramètres pour assurer le teste du webhook en local seulement
     """
+    payment_intent_id=None
+    invoice_id=None
 
     payment_intent_id = data_object['id']
+    if payment_intent_id is None:
+        append_webhook_log(webhook_event, 
+            "⚠️ [PaymentIntent ID ne figure pas dans data_object de Stripe ")
+        
+        _webhook_status_update(webhook_event, 
+            is_fully_completed=False,
+            message="❌ Données manquantes : PaymentIntent ID"
+        )
+
+        return JsonResponse({'error': 'PaymentIntent ID inexistant'}, status=500)
+    
     append_webhook_log(webhook_event, 
         f"✅ [PaymentIntent {payment_intent_id}] Début du traitement payment_intent.succeeded")
 
@@ -2464,7 +2590,7 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
     invoice_id = data_object.get("metadata", {}).get("invoice_id")
 
     # 🛡️ VALIDATION DES MÉTADONNÉES
-    if not invoice_id:
+    if invoice_id is None:
         append_webhook_log(webhook_event, 
             f"⚠️ [PaymentIntent {payment_intent_id}] Aucun invoice_id trouvé dans metadata")
         
@@ -2474,6 +2600,7 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
         )
 
         return JsonResponse({'error': 'Invalid invoice_id'}, status=500)
+    
 
     try:
         # 🔎 RÉCUPÉRATION DE LA FACTURE
@@ -2501,11 +2628,11 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
             return
         
         # 🟡 MARQUER LA FACTURE COMME DRAFT seule l'évènent balance.available peut changer en PAID
-        Invoice.objects.filter(id=invoice_id).update(
-            status = Invoice.DRAFT, 
-            paid_at = timezone.now(),
-            cancellation_reason = None,
-        )
+
+        invoice.status=Invoice.DRAFT
+        invoice.paid_at=timezone.now()
+        invoice.stripe_payment_intent_id=payment_intent_id
+        invoice.save()
 
         append_webhook_log(webhook_event,
             f"✅ Facture {invoice_id} marquée DRAFT (payment_intent.succeeded)"
@@ -2531,7 +2658,7 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
             _webhook_status_update(
                 webhook_event,
                 False,
-                f"ℹ️ Aucune demande de paiement associée à l'invoice {invoice_id}"
+                f"ℹ️ Aucune demande de paiement associée à l'invoice {invoice_id} Erreur BDD"
             )
             return
 
@@ -2568,6 +2695,7 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
         #   🔵 ETAPE : RÉCUPÉRATION CHARGE + BALANCE TRANSACTION
         #   (facultatif selon les données du webhook)
         # ============================================================
+        
 
         latest_charge_id = data_object.get("latest_charge")
 
@@ -2604,26 +2732,46 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
                     webhook_event,
                     f"charge = {charge}"
                 )
+            
+            if invoice.stripe_charge_id is None or invoice.stripe_charge_id=='':
+                invoice.stripe_charge_id=latest_charge_id
+                invoice.save()
+            elif invoice.stripe_charge_id!=latest_charge_id:
+                invoice.stripe_charge_id=latest_charge_id # tj prendre la dernère charge
+                invoice.save()
+            
+            append_webhook_log(
+                    webhook_event,
+                    f"✅ Mise à jour de latest_charge: invoice.stripe_charge_id = {invoice.stripe_charge_id}"
+                )
 
             # ----------------------------
             # 2️⃣ Extraction balance_transaction_id
             # ----------------------------
             balance_txn_id = None
+            retrieved_charge = stripe.Charge.retrieve(latest_charge_id)
+            if retrieved_charge:
+                charge = retrieved_charge  # overwrite uniquement si valide
+                if charge:
+                    balance_txn_id = charge.get("balance_transaction")
+                    invoice.balance_txn_id=balance_txn_id
+                    invoice.save()
+                    append_webhook_log(
+                        webhook_event,
+                        f"✅ Mise à jour de invoice.balance_txn_id={balance_txn_id}"
+                    )
 
-            if charge:
-                balance_txn_id = charge.get("balance_transaction")
+                if not balance_txn_id:
+                    append_webhook_log(
+                        webhook_event,
+                        "⚠️ Aucun balance_transaction trouvé dans la charge"
+                    )
+                    return  # pas de balance → stop la partie optionnelle
 
-            if not balance_txn_id:
                 append_webhook_log(
                     webhook_event,
-                    "⚠️ Aucun balance_transaction trouvé dans la charge"
+                    f"📌 balance_transaction détecté : {balance_txn_id}"
                 )
-                return  # pas de balance → stop la partie optionnelle
-
-            append_webhook_log(
-                webhook_event,
-                f"📌 balance_transaction détecté : {balance_txn_id}"
-            )
 
             # ----------------------------
             # 3️⃣ Récupération BALANCE TRANSACTION
@@ -2653,61 +2801,21 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
             # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
             # ----------------------------
             if charge and bal:
-                balance_txn_obj, created = BalanceTransaction.objects.update_or_create(
+                balance_txn_obj, created = save_balance_transaction_from_charge(
+                    bal=bal,
+                    data_object=data_object,
                     balance_txn_id=balance_txn_id,
-                    defaults={
-                        "amount": bal["amount"],
-                        "fee": bal["fee"],
-                        "net": bal["net"],
-                        "currency": bal.get("currency", "eur"),
-                        "status": bal["status"],
-
-                        "event_type": "payment_intent.succeeded",
-
-                        # ---- Card details ----
-                        "payment_method_brand": charge.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("brand"),
-
-                        "payment_method_last4": charge.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("last4"),
-
-                        "payment_method_country": charge.get("payment_method_details", {})
-                            .get("card", {})
-                            .get("country"),
-
-                        "payment_method_type": charge.get("payment_method_details", {})
-                            .get("type"),
-
-                        # ---- Divers ----
-                        "ip_country": charge.get("source", {}).get("country"),
-                        "stripe_fee": sum(f["amount"] for f in bal["fee_details"]),
-                        "tax_fee": sum(f["amount"] for f in bal["fee_details"] if f.get("type") == "tax"),
-                        "description": charge.get("description"),
-                    }
+                    charge_succeeded_id=latest_charge_id,
+                    webhook_event=webhook_event
                 )
 
-                append_webhook_log(
+                if not balance_txn_obj:
+                    _webhook_status_update(
                     webhook_event,
-                    f"📌 BalanceTransaction {'créée' if created else 'mise à jour'} : {balance_txn_id}"
-                )
+                    False,
+                    f"❌ Données balance manquantes attendre la correction du Webhook"
+                    ) # pas important si not balance_txn_obj
 
-                # ----------------------------
-                # 5️⃣ Lien PaymentIntentTransaction
-                # ----------------------------
-                PaymentIntentTransaction.objects.update_or_create(
-                    charge_id=latest_charge_id,
-                    defaults={
-                        "payment_intent_id": payment_intent_id,
-                        "balance_txn": balance_txn_obj
-                    }
-                )
-
-                append_webhook_log(
-                    webhook_event,
-                    f"🔗 PaymentIntentTransaction lié : PI={payment_intent_id}, Charge={latest_charge_id}"
-                )
 
     except Exception as e:
         error_msg = f"💥 Erreur critique dans traitement de payment_intent.succeeded : {e}"
@@ -2941,71 +3049,21 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
 
         if bal:
             with transaction.atomic(): 
-
-                timestamp = bal.get("available_on")
-                if timestamp is not None:
-                    date_mise_en_valeur = datetime.fromtimestamp(timestamp, tz=dt_timezone.utc)
-                else:
-                    date_mise_en_valeur = None
-
-                # 🔐 Sécurisation Stripe (NULL fréquents)
-                source = data_object.get("source") or {}
-                payment_method_details = data_object.get("payment_method_details") or {}
-                card_details = payment_method_details.get("card") or {}
-                fee_details = bal.get("fee_details") or []
-
-                balance_txn_obj, created = BalanceTransaction.objects.update_or_create(
+                balance_txn_obj, created = save_balance_transaction_from_charge(
+                    bal=bal,
+                    data_object=data_object,
                     balance_txn_id=balance_txn_id,
-                    defaults={
-                        "amount": bal.get("amount"),
-                        "fee": bal.get("fee"),
-                        "net": bal.get("net"),
-                        "currency": bal.get("currency", "eur"),
-                        "status": bal.get("status"),
-
-                        # 📅 Disponibilité des fonds
-                        "is_available": True,
-                        "available_on": date_mise_en_valeur,
-                        "event_type": "charge.succeeded",
-
-                        # ---- Card details ----
-                        "payment_method_brand": card_details.get("brand"),
-                        "payment_method_last4": card_details.get("last4"),
-                        "payment_method_country": card_details.get("country"),
-                        "payment_method_type": payment_method_details.get("type"),
-
-                        # ---- Divers ----
-                        "ip_country": source.get("country"),
-                        "stripe_fee": sum(f.get("amount", 0) for f in fee_details),
-                        "tax_fee": sum(
-                            f.get("amount", 0)
-                            for f in fee_details
-                            if f.get("type") == "tax"
-                        ),
-                        "description": data_object.get("description"),
-                    }
+                    charge_succeeded_id=charge_succeeded_id,
+                    webhook_event=webhook_event
                 )
 
-                append_webhook_log(
+                if not balance_txn_obj:
+                    _webhook_status_update(
                     webhook_event,
-                    f"📌 BalanceTransaction {'créée' if created else 'mise à jour'} : {balance_txn_id}"
-                )
-
-                # ----------------------------
-                # 5️⃣ Lien PaymentIntentTransaction
-                # ----------------------------
-                PaymentIntentTransaction.objects.update_or_create(
-                    charge_id=charge_succeeded_id,
-                    defaults={
-                        "payment_intent_id": data_object.get("payment_intent"),
-                        "balance_txn": balance_txn_obj
-                    }
-                )
-
-                append_webhook_log(
-                    webhook_event,
-                    f"🔗 PaymentIntentTransaction lié : PI={data_object.get('payment_intent')}, Charge={charge_succeeded_id}"
-                )
+                    False,
+                    f"❌ Données balance manquantes attendre la correction du Webhook"
+                    )
+                    return JsonResponse({'error Stripe': 'données balance manquante attendre la correction du Webhook'}, status=500)
 
                 # --------------------------------------------------------
                 # 1️⃣ Invoice → PAID
@@ -3149,6 +3207,8 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         )
 
         return JsonResponse({'error': 'technical_error'}, status=500)
+
+
 
  
 
