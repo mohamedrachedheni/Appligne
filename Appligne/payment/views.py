@@ -3120,8 +3120,9 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                     "amount": invoice.total / 100,
                     "reference": stripe_payment_intent_id,
                     "currency": data_object.get("currency", "eur"),
-                    "status": Payment.PENDING  if STRIPE_LIVE_MODE else Payment.APPROVED ,
                 },)
+            payment.status=Payment.PENDING  if STRIPE_LIVE_MODE else Payment.APPROVED
+            payment.save()
             append_webhook_log(
                     webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} ")
 
@@ -3129,9 +3130,8 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # --------------------------------------------------------
             # 3️⃣ Demande_paiement → lien payment_id
             # --------------------------------------------------------
-            Demande_paiement.objects.filter(id=demande_paiement.id).update(
-                statut_demande=Demande_paiement.EN_COURS  if STRIPE_LIVE_MODE else Demande_paiement.REALISER
-            )
+            demande_paiement=Demande_paiement.objects.filter(id=demande_paiement.id).first()
+            demande_paiement.statut_demande = Demande_paiement.EN_COURS  if STRIPE_LIVE_MODE else Demande_paiement.REALISER
 
             append_webhook_log(
                 webhook_event,
@@ -3141,10 +3141,8 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # --------------------------------------------------------
             # 4️⃣ Horaire → tous liés au même payment_id
             # --------------------------------------------------------
-            Horaire.objects.filter(
-                demande_paiement_id=demande_paiement.id
-            ).update(payment_id=payment.id )
-
+            horaire = Horaire.objects.filter(demande_paiement_id=demande_paiement.id).first()
+            horaire.payment_id = None if STRIPE_LIVE_MODE else payment.id
             append_webhook_log(
                 webhook_event,
                 f"📌 Mise à jour Horaire payment_id={payment.id}."
