@@ -484,17 +484,6 @@ def create_checkout_session(request):
 
         invoice.stripe_id = checkout_session.id
         invoice.save()
-        # # Journalisation sous forme d'événement checkout
-        # stripe_event, _ = WebhookEvent.objects.get_or_create(
-        #     event_id=checkout_session.id,
-        #     defaults={
-        #         "type": checkout_session.object,
-        #         "payload": checkout_session, # à vérifier
-        #         "handle_log": f"[{request.user}] ➤ Détection payment_cancel pour session {checkout_session.id}",
-        #         "is_processed": True,
-        #     }
-        # )
-
 
     except Exception as e:
         logger.error(f"[{request.user}] ❌ Erreur création session Stripe : {e}")
@@ -617,7 +606,7 @@ def payment_success(request):
             invoice.stripe_payment_intent_id = stripe_payment_intent_id # très important pour le suivi du paiement
             invoice.save()
         else:
-            msg = "ID du paement n'est pas fourni par Stripe (On peut le rècupérer par les WebHook)"
+            msg = "ID du paiement n'est pas fourni par Stripe (On peut le rècupérer par les WebHook)"
             logger.warning(f"❌ {msg}")
             append_webhook_log(stripe_event, f"❌ {msg}")
 
@@ -1450,8 +1439,27 @@ def create_transfert_session(request):
         errors = []
 
         # Vérifier le montant envoyé à Stripe
-        if stripe_amount != cart.total:
-            errors.append(f"Montant incorrect: Stripe={stripe_amount} // DB={cart.total}")
+        coherent = verifier_coherence_montants(
+                    texte1="create_transfert_session",
+                    texte2="Invoice BDD",
+                    montant1=stripe_amount,
+                    montant2=cart.total,
+                    abs_tol=5,
+                    user_admin=request.user
+                )
+        if not coherent:
+            append_webhook_log(stripe_event,
+                    f"💥 Incohérence critique invoice.toal={cart.total} centimes dans BDD\n"
+                    f"data_object.get('amount')={stripe_amount} centime d'évènement charge.succeeded"
+                    )
+            logger.warning(
+                f"💥 Incohérence critique invoice.toal={cart.total} centimes dans BDD\n"
+                f"data_object.get('amount')={stripe_amount} centime d'évènement charge.succeeded"
+                )
+            errors.append(
+                f"💥 Incohérence critique invoice.toal={cart.total} centimes dans BDD\n"
+                f"data_object.get('amount')={stripe_amount} centime d'évènement charge.succeeded"
+            )
 
         # Vérifier le compte Stripe du prof
         if stripe_destination != prof.stripe_account_id:
