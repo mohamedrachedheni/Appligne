@@ -40,6 +40,10 @@ from accounts.models import (
 from eleves.models import Eleve
 from pages.utils import decrypt_id, encrypt_id, to_cents
 from cart.models import  BalanceTransaction, PaymentIntentTransaction
+# Pour les testes Webhook mode:  teste / live
+import os
+STRIPE_LIVE_MODE = os.getenv("STRIPE_LIVE_MODE", "false").lower() == "true"
+
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -2911,6 +2915,12 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
 
     
     """
+    # Mode des Webhook Test / Live
+    append_webhook_log(
+    webhook_event,
+    f"🌍 Environnement Stripe détecté : {'LIVE' if STRIPE_LIVE_MODE else 'TEST'}"
+)
+
 
     charge_succeeded_id = data_object['id']
     append_webhook_log(webhook_event, 
@@ -2957,7 +2967,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             return
         
         # 🟡 MARQUER LA FACTURE COMME DRAFT seule l'évènent balance.available peut changer en PAID (voire le reste des informations non mises à jour)
-        invoice.status = Invoice.DRAFT
+        invoice.status = Invoice.DRAFT if STRIPE_LIVE_MODE else Invoice.PAID  # pour les testes de simulations seulement
         invoice.paid_at = timezone.now()
         invoice.stripe_charge_id = charge_succeeded_id
         invoice.save()
@@ -3005,7 +3015,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             return
 
         ancien_statut = demande_paiement.statut_demande
-        demande_paiement.statut_demande = Demande_paiement.EN_COURS
+        demande_paiement.statut_demande = Demande_paiement.EN_COURS if STRIPE_LIVE_MODE else Demande_paiement.REALISER
         demande_paiement.save()
 
         append_webhook_log(webhook_event,
@@ -3021,47 +3031,57 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         payment_intent_id = data_object.get("payment_intent")
 
         if not balance_txn_id:
-            _webhook_status_update(webhook_event,
-                False,
-                f"❌ ⚠️ Aucun balance_transaction trouvé dans charge.succeeded, attendre la correction du Webhook"
+            if STRIPE_LIVE_MODE:
+                # ❌ En LIVE → ERREUR CRITIQUE
+                _webhook_status_update(
+                    webhook_event,
+                    False,
+                    "❌ Aucun balance_transaction trouvé dans charge.succeeded (LIVE)"
                 )
-            return JsonResponse({'error': 'Aucun balance_transaction trouvé dans charge.succeeded, attendre la correction du Webhook'}, status=500)
+                return JsonResponse(
+                    {'error': 'balance_transaction missing'},
+                    status=500
+                )
+            else:
+                # 🧪 En TEST → comportement attendu
+                append_webhook_log(
+                    webhook_event,
+                    "🧪 Mode TEST : balance_transaction absente (comportement Stripe normal)"
+                )
+                bal = None
 
-        append_webhook_log(
-            webhook_event,
-            f"📌 balance_transaction détecté : {balance_txn_id}"
-        )
 
         # ----------------------------
         # 3️⃣ Récupération BALANCE TRANSACTION
         # ----------------------------
-        try:
-            retrieved_bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
-            if retrieved_bal:
-                bal = retrieved_bal
+        if bal is not None:
+            try:
+                retrieved_bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
+                if retrieved_bal:
+                    bal = retrieved_bal
+                    append_webhook_log(
+                        webhook_event,
+                        f"📘 BalanceTransaction récupérée : {balance_txn_id}"
+                    )
+                else:
+                    append_webhook_log(
+                        webhook_event,
+                        f"⚠️ BalanceTransaction vide — utilisation de la valeur par défaut."
+                    )
+            except Exception as e:
                 append_webhook_log(
                     webhook_event,
-                    f"📘 BalanceTransaction récupérée : {balance_txn_id}"
+                    f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}. "
+                    f"Utilisation de la valeur par défaut."
                 )
-            else:
-                append_webhook_log(
-                    webhook_event,
-                    f"⚠️ BalanceTransaction vide — utilisation de la valeur par défaut."
-                )
-        except Exception as e:
-            append_webhook_log(
-                webhook_event,
-                f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}. "
-                f"Utilisation de la valeur par défaut."
-            )
             
 
-        # ----------------------------
-        # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
-        # ----------------------------
-        from datetime import timezone as dt_timezone
+            # ----------------------------
+            # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
+            # ----------------------------
+            from datetime import timezone as dt_timezone
 
-        if bal:
+        
             with transaction.atomic(): 
                 balance_txn_obj, created = save_balance_transaction_from_charge(
                     bal=bal,
@@ -3097,7 +3117,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                         "amount": invoice.total / 100,
                         "reference": stripe_payment_intent_id,
                         "currency": data_object.get("currency", "eur"),
-                        "status": Payment.PENDING,
+                        "status": Payment.PENDING  if STRIPE_LIVE_MODE else Payment.APPROVED ,
                     },)
                 append_webhook_log(
                         webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} ")
@@ -3107,7 +3127,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 # 3️⃣ Demande_paiement → lien payment_id
                 # --------------------------------------------------------
                 Demande_paiement.objects.filter(id=demande_paiement.id).update(
-                    statut_demande=Demande_paiement.EN_COURS
+                    statut_demande=Demande_paiement.EN_COURS  if STRIPE_LIVE_MODE else Demande_paiement.REALISER
                 )
 
                 append_webhook_log(
@@ -3120,7 +3140,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 # --------------------------------------------------------
                 Horaire.objects.filter(
                     demande_paiement_id=demande_paiement.id
-                ).update(payment_id=payment.id)
+                ).update(payment_id=payment.id if STRIPE_LIVE_MODE else None)
 
                 append_webhook_log(
                     webhook_event,
@@ -3132,44 +3152,83 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 # ============================================================
 
                 errors = []
+                if STRIPE_LIVE_MODE:
+                    # 1️⃣ Vérification Invoice
+                    if invoice.status != Invoice.DRAFT:
+                        errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
 
-                # 1️⃣ Vérification Invoice
-                if invoice.status != Invoice.DRAFT:
-                    errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
+                    if  invoice.stripe_charge_id is None:
+                        errors.append("stripe_charge_id manquant sur Invoice")
 
-                if  invoice.stripe_charge_id is None:
-                    errors.append("stripe_charge_id manquant sur Invoice")
+                    if invoice.balance_txn_id is None:
+                        errors.append("balance_txn_id manquant sur Invoice")
 
-                if invoice.balance_txn_id is None:
-                    errors.append("balance_txn_id manquant sur Invoice")
+                    # 2️⃣ Vérification BalanceTransaction
+                    if not balance_txn_obj:
+                        errors.append("BalanceTransaction absente en BDD")
 
-                # 2️⃣ Vérification BalanceTransaction
-                if not balance_txn_obj:
-                    errors.append("BalanceTransaction absente en BDD")
+                    else:
+                        if balance_txn_obj.status != "pending":
+                            append_webhook_log(
+                                webhook_event,
+                                f"ℹ️ BalanceTransaction status={balance_txn_obj.status} (LIVE)"
+                            )
 
+
+                    # 3️⃣ Vérification Payment
+                    if not Payment.objects.filter(invoice=invoice, status=Payment.PENDING).exists():
+                        errors.append("Payment non en attente ou manquant")
+
+                    # 4️⃣ Vérification Demande_paiement
+                    if demande_paiement.statut_demande != Demande_paiement.EN_COURS:
+                        errors.append(
+                            f"Demande_paiement statut invalide ({demande_paiement.statut_demande})"
+                        )
+                        
+                    # 5️⃣ Vérification Horaire
+                    if Horaire.objects.filter(
+                        demande_paiement_id=demande_paiement.id,
+                        payment_id__isnull=True
+                    ).exists():
+                        errors.append("Certains horaires ne sont pas liés au payment ")
                 else:
-                    if balance_txn_obj.status != "pending":
+                    # 1️⃣ Vérification Invoice
+                    if invoice.status != Invoice.PAID:
+                        errors.append(f"Invoice {invoice.id} n'est pas en statut PAID (statut={invoice.status})")
+
+                    if  invoice.stripe_charge_id is None:
+                        errors.append("stripe_charge_id manquant sur Invoice")
+
+                    if invoice.balance_txn_id is None:
+                        errors.append("balance_txn_id manquant sur Invoice")
+
+                    # 2️⃣ Vérification BalanceTransaction
+                    if not balance_txn_obj:
+                        errors.append("BalanceTransaction absente en BDD")
+
+                    else:
                         append_webhook_log(
                             webhook_event,
-                            f"ℹ️ BalanceTransaction status={balance_txn_obj.status} (attendu: pending avant disponibilité)"
+                            "🧪 Mode TEST : statut balance non bloquant"
                         )
 
-                # 3️⃣ Vérification Payment
-                if not Payment.objects.filter(invoice=invoice, status=Payment.PENDING).exists():
-                    errors.append("Payment non en attente ou manquant")
 
-                # 4️⃣ Vérification Demande_paiement
-                if demande_paiement.statut_demande != Demande_paiement.EN_COURS:
-                    errors.append(
-                        f"Demande_paiement statut invalide ({demande_paiement.statut_demande})"
-                    )
+                    # 3️⃣ Vérification Payment
+                    if not Payment.objects.filter(invoice=invoice, status=Payment.APPROVED).exists():
+                        errors.append("Payment non approuvé  ou manquant")
 
-                # 5️⃣ Vérification Horaire
-                if Horaire.objects.filter(
-                    demande_paiement_id=demande_paiement.id,
-                    payment_id__isnull=True
-                ).exists():
-                    errors.append("Certains horaires ne sont pas liés au payment ")
+                    # 4️⃣ Vérification Demande_paiement
+                    if demande_paiement.statut_demande != Demande_paiement.REALISER:
+                        errors.append(
+                            f"Demande_paiement statut invalide ({demande_paiement.statut_demande})"
+                        )
+
+                    # 5️⃣ Vérification Horaire
+                    if Horaire.objects.filter(
+                        demande_paiement_id=demande_paiement.id,
+                        payment_id__isnull=True
+                    ).exists():
+                        errors.append("Certains horaires ne sont pas liés au payment ")
 
                 # ------------------------------------------------------------
                 # Résultat de validation
