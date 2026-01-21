@@ -3398,6 +3398,7 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
     
     try:
         payment_intent_amount = data_object['amount']
+        stripe_payment_intent_id = data_object['id']
         # 🧾 Log initial
         append_webhook_log(webhook_event, 
             f"🆕 PaymentIntent créé : {data_object['id']} | "
@@ -3421,7 +3422,7 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
             try:
                 with transaction.atomic():
                     invoice = Invoice.objects.select_for_update().get(id=invoice_id)
-                    if  invoice.stripe_payment_intent_id != data_object['id']:
+                    if invoice.stripe_payment_intent_id and  invoice.stripe_payment_intent_id != data_object['id']:
                         texte=f"💥 invoice.stripe_payment_intent_id: {invoice.stripe_payment_intent_id}\n"
                         f"est différent de data_object['id']:{data_object['id']}"
                         envoie_email_multiple(user_admin.id, [user_admin.id], "💥 Allerte: stripe_payment_intent_id du webhook ne correspond pas à celui de la facture", texte)
@@ -3436,41 +3437,38 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                     payment, created = Payment.objects.get_or_create(invoice=invoice) 
                     status = Payment.PENDING
 
-                    # si le payment est nouvellement créé
-                    if created:
-                        demande_paiement = invoice.demande_paiement
-                        user_professeur = demande_paiement.user
-                        professeur = Professeur.objects.filter(user=user_professeur).first()
-                        eleve = demande_paiement.eleve
-                        amount = payment_intent_amount/100
-                        # tester de cohérence entre payment_intent['amount'] invoice.total
-                        coherent = verifier_coherence_montants(
-                            texte1="facture",
-                            texte2="payment_intent",
-                            montant1=invoice.total,
-                            montant2=payment_intent_amount,
-                            abs_tol=5,
-                            user_admin=user_admin
-                        )
-                        if not coherent: pass # l'email est déjà envoyé à l'admin par verifier_coherence_montants avec une allerte webhook_log
+                    demande_paiement = invoice.demande_paiement
+                    user_professeur = demande_paiement.user
+                    professeur = Professeur.objects.filter(user=user_professeur).first()
+                    eleve = demande_paiement.eleve
+                    amount = payment_intent_amount/100
+                    # tester de cohérence entre payment_intent['amount'] invoice.total
+                    coherent = verifier_coherence_montants(
+                        texte1="facture",
+                        texte2="payment_intent",
+                        montant1=invoice.total,
+                        montant2=payment_intent_amount,
+                        abs_tol=5,
+                        user_admin=user_admin
+                    )
+                    if not coherent: pass # l'email est déjà envoyé à l'admin par verifier_coherence_montants avec une allerte webhook_log
 
-                        currency = data_object['currency']
-                        payment.professeur=professeur
-                        payment.eleve=eleve
-                        payment.invoice=invoice
-                        payment.amount=amount
-                        payment.currency=currency
-                        payment.status=status
-                        payment.save()
-                        # Email d'allerte
+                    currency = data_object['currency']
+                    payment.professeur=professeur
+                    payment.eleve=eleve
+                    payment.invoice=invoice
+                    payment.amount=amount
+                    payment.currency=currency
+                    payment.status=Payment.PENDING
+                    payment.reference=stripe_payment_intent_id
+                    payment.save()
+                    # Email d'allerte
+                    if created:
                         texte= f"💥 Attention, à vérifier. Création d'un enregistrement dans Payment payment_id:{payment.id} suite à un évènement Webhook webhoohevent.event_id:{webhook_event.event_id} qui n'a pas de paiement pret défini.\n"
                         f"🆕 PaymentIntent créé : {data_object['id']} | "
                         f"Montant : {data_object['amount']/100:.2f} {data_object['currency']} | "
                         f"Statut : {data_object['status']}"
                         envoie_email_multiple(user_admin.id, [user_admin.id], "Allerte enregistrement payment ajouter suit webhook", texte)
-                    else:
-                        payment.status=status
-                        payment.save()
 
                     append_webhook_log(webhook_event, f"📝 Payment {payment.id} liée au Invoice {invoice.id}")
                     # ✅ Si tout est allé jusqu’ici sans exception, on marque le traitement comme terminé
