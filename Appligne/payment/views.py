@@ -1989,7 +1989,7 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
                     defaults={
                         "status": Payment.PENDING,  # en attente de la balance
                         "eleve": demande_paiement.eleve,
-                        "professeur": demande_paiement.user_professeur,
+                        "professeur": demande_paiement.user_professeur.professeur,
                     }
                 )
                 append_webhook_log(webhook_event, f"✅ paiement {payment.id} mise à jour : EN_COURS en attente de la balance.")
