@@ -3155,7 +3155,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # ============================================================
 
             errors = []
-            if STRIPE_LIVE_MODE=="True" :
+            if STRIPE_LIVE_MODE:
                 # 1️⃣ Vérification Invoice
                 if invoice.status  != Invoice.DRAFT:
                     errors.append(f"Invoice {invoice.id} n'est pas en statut DRAFT (statut={invoice.status})")
@@ -3231,7 +3231,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                         demande_paiement_id=demande_paiement.id,
                         payment_id__isnull=True
                     ).exists():
-                        errors.append(f"Certains horaires ne sont pas liés au payment / STRIPE_LIVE_MODE={STRIPE_LIVE_MODE} ")
+                        errors.append(f"Certains horaires ne sont pas liés au payment / STRIPE_LIVE_MODE={STRIPE_LIVE_MODE} / webhook_event.id={webhook_event.id}")
 
                 # ------------------------------------------------------------
                 # Résultat de validation
