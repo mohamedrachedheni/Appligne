@@ -3231,7 +3231,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                         demande_paiement_id=demande_paiement.id,
                         payment_id__isnull=True
                     ).exists():
-                        errors.append(f"Certains horaires ne sont pas liés au payment / STRIPE_LIVE_MODE={STRIPE_LIVE_MODE ")
+                        errors.append(f"Certains horaires ne sont pas liés au payment / STRIPE_LIVE_MODE={STRIPE_LIVE_MODE} ")
 
                 # ------------------------------------------------------------
                 # Résultat de validation
