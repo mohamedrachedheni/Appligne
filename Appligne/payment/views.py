@@ -1952,7 +1952,7 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
         append_webhook_log(webhook_event, "⚠️ Aucun `invoice_id` trouvé dans les métadonnées de la session.")
         _webhook_status_update(webhook_event, is_fully_completed=False, 
                 message="❌ Données manquantes: invoice_id non trouvé dans les métadonnées")
-        return
+        return # évènement non important
 
     try:
         # Utilisation d'une transaction atomique pour garantir l'intégrité des données
@@ -1961,7 +1961,7 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
         # sans try / except
         with transaction.atomic(): 
             invoice = Invoice.objects.select_related("demande_paiement").get(id=invoice_id)
-            if invoice.status=='paid':
+            if invoice.status=='paid': # cas très rare
                 append_webhook_log(webhook_event, "⚠️ La facture est déjà marqué PAID.")
                 _webhook_status_update(webhook_event, is_fully_completed=True, 
                 message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ La facture est déjà marqué PAID.")
@@ -1984,11 +1984,15 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
                 demande_paiement.save(update_fields=["statut_demande"])
                 append_webhook_log(webhook_event, f"✅ Demande de paiement {demande_paiement.id} mise à jour : EN_COURS.")
                 # Payment
-                payment= Payment.objects.filter(invoice=invoice).first()
-                if payment:
-                    payment.status= Payment.PENDING # en etente de la balance
-                    payment.save()
-                    append_webhook_log(webhook_event, f"✅ paiement {payment.id} mise à jour : EN_COURS en attente de la balance.")
+                payment, created = Payment.objects.update_or_create(
+                    invoice=invoice,
+                    defaults={
+                        "status": Payment.PENDING,  # en attente de la balance
+                        "eleve": demande_paiement.eleve,
+                        "professeur": demande_paiement.user_professeur,
+                    }
+                )
+                append_webhook_log(webhook_event, f"✅ paiement {payment.id} mise à jour : EN_COURS en attente de la balance.")
                 # Invoice
                 invoice.status=Invoice.DRAFT
                 invoice.save()
