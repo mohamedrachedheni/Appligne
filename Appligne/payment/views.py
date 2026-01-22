@@ -3286,6 +3286,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         )
 
         return JsonResponse({'error': 'technical_error'}, status=500)
+    return HttpResponse(status=200)
 
 
 
