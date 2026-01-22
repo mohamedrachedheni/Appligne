@@ -3115,14 +3115,16 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 append_webhook_log(
                     webhook_event, f"📌 Facture {invoice.id} mise à jour, invoice.stripe_payment_intent_id = {payment_intent_id} / invoice.balance_txn_id = {balance_txn_id} ")
             
-            payment , created = Payment.objects.update_or_create(invoice=invoice,
-                        defaults={
+            payment, created = Payment.objects.update_or_create(
+                invoice=invoice,
+                defaults={
                     "amount": invoice.total / 100,
                     "reference": stripe_payment_intent_id,
                     "currency": data_object.get("currency", "eur"),
-                },)
-            payment.status=Payment.PENDING  if STRIPE_LIVE_MODE else Payment.APPROVED
-            payment.save()
+                    "status": Payment.PENDING if STRIPE_LIVE_MODE else Payment.APPROVED,
+                }
+            )
+
             append_webhook_log(
                 webhook_event,
                 f"DEBUG Payment status après save = {payment.status} / created={created}"
