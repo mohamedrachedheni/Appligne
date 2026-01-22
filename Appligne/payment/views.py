@@ -3147,11 +3147,19 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # --------------------------------------------------------
             # 4️⃣ Horaire → tous liés au même payment_id
             # --------------------------------------------------------
-            Horaire.objects.filter(demande_paiement_id=demande_paiement.id).update(payment_id = None if STRIPE_LIVE_MODE else payment.id)
+            Horaire.objects.filter(
+                demande_paiement_id=demande_paiement.id
+            ).update(
+                payment_id=payment.id if STRIPE_LIVE_MODE else None
+            )
+
+            horaire_qs = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
+
             append_webhook_log(
                 webhook_event,
-                f"📌 Mise à jour Horaire payment_id={payment.id}."
+                f"📌 Exemple Horaire payment_id={horaire_qs.first().payment_id if horaire_qs.exists() else 'N/A'}"
             )
+
 
             # ============================================================
             # 🔒 VALIDATION FINALE AVANT balance.available
