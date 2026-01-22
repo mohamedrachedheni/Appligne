@@ -3124,6 +3124,10 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             payment.status=Payment.PENDING  if STRIPE_LIVE_MODE else Payment.APPROVED
             payment.save()
             append_webhook_log(
+                webhook_event,
+                f"DEBUG Payment status après save = {payment.status} / created={created}"
+            )
+            append_webhook_log(
                     webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} ")
 
 
