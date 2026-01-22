@@ -3150,7 +3150,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             Horaire.objects.filter(
                 demande_paiement_id=demande_paiement.id
             ).update(
-                payment_id=payment.id if STRIPE_LIVE_MODE else None
+                payment_id= None if STRIPE_LIVE_MODE else payment.id
             )
 
             horaire_qs = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
