@@ -3147,8 +3147,7 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
             # --------------------------------------------------------
             # 4️⃣ Horaire → tous liés au même payment_id
             # --------------------------------------------------------
-            horaire = Horaire.objects.filter(demande_paiement_id=demande_paiement.id).first()
-            horaire.payment_id = None if STRIPE_LIVE_MODE else payment.id
+            Horaire.objects.filter(demande_paiement_id=demande_paiement.id).update(payment_id = None if STRIPE_LIVE_MODE else payment.id)
             append_webhook_log(
                 webhook_event,
                 f"📌 Mise à jour Horaire payment_id={payment.id}."
