@@ -686,7 +686,7 @@ def payment_success(request):
         # 8) Création / mise à jour Payment interne
         # ─────────────────────────────────────────────
         payment = Payment.objects.filter(invoice=invoice).first()
-        if payment:
+        if payment: # pour nepas écraser le status et garentir la mise à jour des champs important
             payment.eleve=eleve_obj
             payment.professeur=professeur_obj
             payment.reference=stripe_payment_intent_id
