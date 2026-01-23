@@ -535,7 +535,8 @@ def payment_success(request):
         # 1) Récupération session Stripe
         # ─────────────────────────────────────────────
         session = stripe.checkout.Session.retrieve(session_id)
-        # logger.info(f"[{request.user}] ➤ Session Stripe créée ({session.id})")
+        # logger.info(f"[{request.user}] ➤ Session Stripe créée ({session.id})") 
+        # même si ce n#est pas un Webhook c#est intéressant de garderune trace
         stripe_event, _ = WebhookEvent.objects.get_or_create(event_id=session.get("id"),
                 defaults={
                     "type": session.get("object"),
@@ -684,60 +685,69 @@ def payment_success(request):
         # ─────────────────────────────────────────────
         # 8) Création / mise à jour Payment interne
         # ─────────────────────────────────────────────
-        payment, created = Payment.objects.update_or_create(
-            invoice=invoice,
-            defaults={
-                "eleve": eleve_obj,
-                "professeur": professeur_obj,
-                "status": Payment.PENDING,  # Webhook confirmera
-                "amount": round(amount_stripe / 100, 2),
-                "currency": session.currency,
-                "reference": stripe_payment_intent_id,
-            }
-        )
-
-        if created:
-            # logger.info(f"✅ Payment créé : {payment.id}")
-            append_webhook_log(stripe_event, f"✅ Payment créé : {payment.id}")
+        payment = Payment.objects.filter(invoice=invoice).first()
+        if payment:
+            if payment.status==Payment.PENDING:
+                payment.eleve=eleve_obj
+                payment.professeur=professeur_obj
+                payment.reference=stripe_payment_intent_id
+                payment.save()
+                append_webhook_log(stripe_event, f"Mise à jour Payment payment.id = {payment.id} / payment.eleve={eleve_obj} / payment.professeur={professeur_obj} / payment.reference={stripe_payment_intent_id}.")
         else:
-            # logger.info(f"♻ Payment mis à jour : {payment.id}")
-            append_webhook_log(stripe_event, f"♻ Payment mis à jour : {payment.id}")
+            payment, created = Payment.objects.update_or_create(
+                invoice=invoice,
+                defaults={
+                    "eleve": eleve_obj,
+                    "professeur": professeur_obj,
+                    "status": Payment.PENDING,  # Webhook confirmera
+                    "amount": round(amount_stripe / 100, 2),
+                    "currency": session.currency,
+                    "reference": stripe_payment_intent_id,
+                }
+            )
+
+            if created:
+                # logger.info(f"✅ Payment créé : {payment.id}")
+                append_webhook_log(stripe_event, f"✅ Payment créé : {payment.id}")
+            else:
+                # logger.info(f"♻ Payment mis à jour : {payment.id}")
+                append_webhook_log(stripe_event, f"♻ Payment mis à jour : {payment.id}")
         
-        # ─────────────────────────────────────────────
-        # 9) Mise à jour demande de paiement En cours
-        # ─────────────────────────────────────────────
-        demande_paiement = invoice.demande_paiement
-        demande_paiement.statut_demande = Demande_paiement.EN_COURS # pour suivre la logique des enregistrements
-        demande_paiement.save()
-        # logger.info(f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
-        append_webhook_log(stripe_event, f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
+            # ─────────────────────────────────────────────
+            # 9) Mise à jour demande de paiement En cours
+            # ─────────────────────────────────────────────
+            demande_paiement = invoice.demande_paiement
+            demande_paiement.statut_demande = Demande_paiement.EN_COURS # pour suivre la logique des enregistrements
+            demande_paiement.save()
+            # logger.info(f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
+            append_webhook_log(stripe_event, f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
 
-        # ─────────────────────────────────────────────
-        # 9) Email professeur + admin
-        # ─────────────────────────────────────────────
-        dp = invoice.demande_paiement
+            # ─────────────────────────────────────────────
+            # 9) Email professeur + admin
+            # ─────────────────────────────────────────────
+            dp = invoice.demande_paiement
 
-        sujet = (
-            f"Paiement confirmé : {user.first_name} {user.last_name} "
-            f"a réglé la demande du {dp.date_creation.strftime('%d/%m/%Y')}"
-        )
-        texte = (
-            f"Bonjour {professeur_obj.user.first_name},\n\n"
-            f"L'élève {user.first_name} {user.last_name} a réglé "
-            f"la demande du {dp.date_creation.strftime('%d/%m/%Y')} "
-            f"pour un montant de {dp.montant:.2f} €.\n\n"
-            f"Nous vous informerons dès que le montant sera disponible dans nos comptes.\n\n"
-            f"Cordialement,\nAdministration"
-        )
+            sujet = (
+                f"Paiement confirmé : {user.first_name} {user.last_name} "
+                f"a réglé la demande du {dp.date_creation.strftime('%d/%m/%Y')}"
+            )
+            texte = (
+                f"Bonjour {professeur_obj.user.first_name},\n\n"
+                f"L'élève {user.first_name} {user.last_name} a réglé "
+                f"la demande du {dp.date_creation.strftime('%d/%m/%Y')} "
+                f"pour un montant de {dp.montant:.2f} €.\n\n"
+                f"Nous vous informerons dès que le montant sera disponible dans nos comptes.\n\n"
+                f"Cordialement,\nAdministration"
+            )
 
-        result = envoie_email_multiple(
-            user.id, [professeur_obj.user.id, user_admin.id],
-            sujet, texte
-        )
+            result = envoie_email_multiple(
+                user.id, [professeur_obj.user.id, user_admin.id],
+                sujet, texte
+            )
 
-        if result.get("erreurs"):
-            # logger.error("⚠ Erreurs d'envoi email confirmation professeur.")
-            append_webhook_log(stripe_event, "⚠ Erreurs d'envoi email confirmation professeur.")
+            if result.get("erreurs"):
+                # logger.error("⚠ Erreurs d'envoi email confirmation professeur.")
+                append_webhook_log(stripe_event, "⚠ Erreurs d'envoi email confirmation professeur.")
 
         # ─────────────────────────────────────────────
         # 10) Nettoyage session locale
