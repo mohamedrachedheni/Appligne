@@ -3047,6 +3047,63 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
         balance_txn_id = data_object.get("balance_transaction")
         payment_intent_id = data_object.get("payment_intent")
 
+        # --------------------------------------------------------
+        # 1️⃣ Invoice → Attendre l'évènement Balance pour passer au statut PAID en mode Life
+        # --------------------------------------------------------
+        payment_intent_id = data_object.get("payment_intent")
+        stripe_payment_intent_id=invoice.stripe_payment_intent_id
+        if not stripe_payment_intent_id:
+            invoice.stripe_payment_intent_id = payment_intent_id if payment_intent_id else None
+            invoice.balance_txn_id = balance_txn_id if balance_txn_id else None
+            if STRIPE_LIVE_MODE: invoice.status = Invoice.PAID
+            invoice.save()
+            append_webhook_log(
+                webhook_event, f"📌 Facture {invoice.id} mise à jour, invoice.stripe_payment_intent_id = {payment_intent_id} / invoice.balance_txn_id = {balance_txn_id} ")
+        
+        payment, created = Payment.objects.update_or_create(
+            invoice=invoice,
+            defaults={
+                "amount": invoice.total / 100,
+                "reference": stripe_payment_intent_id if stripe_payment_intent_id else None,
+                "currency": data_object.get("currency", "eur"),
+                "status": Payment.PENDING if STRIPE_LIVE_MODE else Payment.APPROVED,
+            }
+        )
+
+        append_webhook_log(
+                webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} "
+                f"📌 DEBUG Payment status après save = {payment.status} / created={created}")
+
+
+        # --------------------------------------------------------
+        # 3️⃣ Demande_paiement → lien payment_id
+        # --------------------------------------------------------
+        demande_paiement=Demande_paiement.objects.filter(id=demande_paiement.id).first()
+        demande_paiement.statut_demande = Demande_paiement.EN_COURS  if STRIPE_LIVE_MODE else Demande_paiement.REALISER
+        demande_paiement.save()
+
+        append_webhook_log(
+            webhook_event,
+            f"📌 Mise à jour Demande_paiement payment_id={payment.id}."
+            f"📌 DEBUG Demande_paiement status après save = {demande_paiement.statut_demande}")
+
+        # --------------------------------------------------------
+        # 4️⃣ Horaire → tous liés au même payment_id
+        # --------------------------------------------------------
+        Horaire.objects.filter(
+            demande_paiement_id=demande_paiement.id
+        ).update(
+            payment_id= None if STRIPE_LIVE_MODE else payment.id
+        )
+
+        horaire_qs = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
+
+        append_webhook_log(
+            webhook_event,
+            f"📌 Exemple Horaire payment_id={horaire_qs.first().payment_id if horaire_qs.exists() else 'N/A'}"
+        )
+
+        # traitement de la balance à part
         if not balance_txn_id: # Teste bloquant en cas Life
             if STRIPE_LIVE_MODE:
                 # ❌ En LIVE → ERREUR CRITIQUE
@@ -3121,63 +3178,6 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
                 f"❌ Données balance manquantes attendre l'évènement Webhook Balance, Erreur non bloquante données Stripe manquantes ou incohérantes"
                 )
                 
-
-        # --------------------------------------------------------
-        # 1️⃣ Invoice → Attendre l'évènement Balance pour passer au statut PAID en mode Life
-        # --------------------------------------------------------
-        payment_intent_id = data_object.get("payment_intent")
-        stripe_payment_intent_id=invoice.stripe_payment_intent_id
-        if not stripe_payment_intent_id:
-            invoice.stripe_payment_intent_id = payment_intent_id
-            invoice.balance_txn_id = balance_txn_id
-            if STRIPE_LIVE_MODE: invoice.status = Invoice.PAID
-            invoice.save()
-            append_webhook_log(
-                webhook_event, f"📌 Facture {invoice.id} mise à jour, invoice.stripe_payment_intent_id = {payment_intent_id} / invoice.balance_txn_id = {balance_txn_id} ")
-        
-        payment, created = Payment.objects.update_or_create(
-            invoice=invoice,
-            defaults={
-                "amount": invoice.total / 100,
-                "reference": stripe_payment_intent_id,
-                "currency": data_object.get("currency", "eur"),
-                "status": Payment.PENDING if STRIPE_LIVE_MODE else Payment.APPROVED,
-            }
-        )
-
-        append_webhook_log(
-                webhook_event, f"📌 Payment {payment.id} créer ou  mis à jour reference = {payment_intent_id} "
-                f"📌 DEBUG Payment status après save = {payment.status} / created={created}")
-
-
-        # --------------------------------------------------------
-        # 3️⃣ Demande_paiement → lien payment_id
-        # --------------------------------------------------------
-        demande_paiement=Demande_paiement.objects.filter(id=demande_paiement.id).first()
-        demande_paiement.statut_demande = Demande_paiement.EN_COURS  if STRIPE_LIVE_MODE else Demande_paiement.REALISER
-        demande_paiement.save()
-
-        append_webhook_log(
-            webhook_event,
-            f"📌 Mise à jour Demande_paiement payment_id={payment.id}."
-            f"📌 DEBUG Demande_paiement status après save = {demande_paiement.statut_demande}")
-
-        # --------------------------------------------------------
-        # 4️⃣ Horaire → tous liés au même payment_id
-        # --------------------------------------------------------
-        Horaire.objects.filter(
-            demande_paiement_id=demande_paiement.id
-        ).update(
-            payment_id= None if STRIPE_LIVE_MODE else payment.id
-        )
-
-        horaire_qs = Horaire.objects.filter(demande_paiement_id=demande_paiement.id)
-
-        append_webhook_log(
-            webhook_event,
-            f"📌 Exemple Horaire payment_id={horaire_qs.first().payment_id if horaire_qs.exists() else 'N/A'}"
-        )
-
 
         # ============================================================
         # 🔒 VALIDATION FINALE NON BLOQUANTE
