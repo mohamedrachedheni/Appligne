@@ -687,12 +687,11 @@ def payment_success(request):
         # ─────────────────────────────────────────────
         payment = Payment.objects.filter(invoice=invoice).first()
         if payment:
-            if payment.status==Payment.PENDING:
-                payment.eleve=eleve_obj
-                payment.professeur=professeur_obj
-                payment.reference=stripe_payment_intent_id
-                payment.save()
-                append_webhook_log(stripe_event, f"Mise à jour Payment payment.id = {payment.id} / payment.eleve={eleve_obj} / payment.professeur={professeur_obj} / payment.reference={stripe_payment_intent_id}.")
+            payment.eleve=eleve_obj
+            payment.professeur=professeur_obj
+            payment.reference=stripe_payment_intent_id
+            payment.save()
+            append_webhook_log(stripe_event, f"Mise à jour Payment payment.id = {payment.id} / payment.eleve={eleve_obj} / payment.professeur={professeur_obj} / payment.reference={stripe_payment_intent_id}.")
         else:
             payment, created = Payment.objects.update_or_create(
                 invoice=invoice,
