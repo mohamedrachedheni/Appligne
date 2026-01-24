@@ -3643,10 +3643,11 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     stripe_transfer_id = data_object.get("id")
     balance_tx_id = data_object.get("balance_transaction")
     metadata = data_object.get("metadata", {}) or {}
-    stripe_invoice_id = metadata.get("invoice_transfert_id")
+    stripe_invoice_id = metadata.get("invoice_id")
     stripe_amount = data_object.get("amount")
     stripe_destination = data_object.get("destination")
     destination_payment = data_object.get("destination_payment") # utile pour suivi avancé (rarement indispensable)
+    
     missing = [name for name, value in {
         "invoice_transfert_id": stripe_invoice_id,
         "balance_transaction": balance_tx_id,
@@ -3657,11 +3658,12 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
 
     if missing:
         _webhook_status_update(
-            webhook_event, 
-            is_fully_completed=False,
-            message=f"❌ Données manquantes dans transfer.created : {', '.join(missing)}"
+            webhook_event,
+            is_fully_completed=True,
+            message=f"❌ Données manquantes dans transfer.created : {', '.join(missing)} (event ignoré)"
         )
-        return JsonResponse({'error': 'Invalid data received from Stripe'}, status=500)
+        return HttpResponse(status=200)
+        
 
     _webhook_status_update(
         webhook_event, 
@@ -3683,7 +3685,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message=f"❌ Facture introuvable ou non liée : invoice_transfert_id={stripe_invoice_id}"
         )
-        return JsonResponse({'error': 'InvoiceTransfert not found'}, status=500)
+        
 
     # ------------------------------------------------------------
     # 3️⃣ Récupération des détails du balance_transaction Stripe
@@ -3718,7 +3720,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message=f"💥 Erreur Stripe lors de retrieve(balance_transaction) : {e}"
         )
-        return JsonResponse({'error': 'Stripe error retrieving balance_transaction'}, status=500)
+        
 
     except Exception as e:
         _webhook_status_update(
@@ -3726,7 +3728,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message=f"💥 Erreur inattendue balance_transaction : {e}"
         )
-        return JsonResponse({'error': f"Unexpected error: {e}"}, status=500)
+        
 
     # ------------------------------------------------------------
     # 4️⃣ Test de cohérence : montants + compte Stripe prof
@@ -3777,11 +3779,6 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             full_error_msg
         )
 
-        return JsonResponse({
-            "error": "Transfert Stripe non conforme",
-            "details": errors
-        }, status=400)
-
     # ------------------------------------------------------------
     # 5️⃣ Mise à jour de InvoiceTransfert
     # ------------------------------------------------------------
@@ -3812,7 +3809,6 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     except Exception as e:
         msg = f"💥 Erreur mise à jour facture {invoice_transfert.id} : {e}"
         _webhook_status_update(webhook_event, False, msg)
-        return JsonResponse({'error': msg}, status=500)
 
     # ------------------------------------------------------------
     # 6️⃣ Création/Mise à jour du Transfer
@@ -3826,6 +3822,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             message=f"✅ Transfer {transfer.id} est déjà mise à jour status={transfer.status}"
         )
             return HttpResponse(status=200)
+        
         if transfer is None or transfer.status==Transfer.PENDING:
             transfer, created = Transfer.objects.update_or_create(
                 invoice_transfert=invoice_transfert,
@@ -3833,8 +3830,8 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
                 user_transfer_to=invoice_transfert.user_professeur,
                 defaults={
                     "amount": data_object.get("amount", 0),
-                    "montant_net": data_object.get("net", 0),
-                    "frais": data_object.get("fee", 0),
+                    "montant_net": montant_net_reel,
+                    "frais": frais_stripe,
                     "currency": data_object.get("currency", "eur"),
                     "status": Transfer.PENDING,
                 },
@@ -3843,7 +3840,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             _webhook_status_update(
                 webhook_event,
                 is_fully_completed=False,
-                message=f"{'🆕 Créé' if created else '🔄 Mis à jour'} Transfer ID={transfer.stripe_transfer_id}, status=APPROVED"
+                message=f"{'🆕 Créé' if created else '🔄 Mis à jour'} Transfer ID={transfer.stripe_transfer_id}, status=PENDING" 
             )
 
     except Exception as e:
@@ -3852,7 +3849,6 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message=f"💥 Erreur création/mise à jour Transfer : {e}"
         )
-        return JsonResponse({'error': e}, status=500)
 
     # ------------------------------------------------------------
     # 7️⃣ Mise à jour de l’Accord de règlement (si présent)
@@ -3876,7 +3872,6 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message="💥 Erreur lors de la mise à jour de l'accord de règlement"
         )
-        return JsonResponse({'error': e}, status=500)
 
     # ------------------------------------------------------------
     # 8️⃣ Envoi d’un email au professeur + admin
