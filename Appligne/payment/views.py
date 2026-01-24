@@ -1719,7 +1719,7 @@ def stripe_webhook(request):
         handlers_map = {
             # ==================== FLUX DE PAIEMENT ====================
 
-            #'payment_intent.created': handle_payment_intent_created, # mise à jour Invoce.stripe_payment_intent_id et création ou mise à jour d'un enregistrement dans Payment (achevé)
+            'payment_intent.created': handle_payment_intent_created, # mise à jour Invoce.stripe_payment_intent_id et création ou mise à jour d'un enregistrement dans Payment (achevé)
             'checkout.session.expired': handle_checkout_session_expired, # mise à jour Invoice.status=CANCELED et Demande_paiement.EN_ATTENTE (achevé)
             #'checkout.session.completed': handle_checkout_session_completed, # à suivre
             #'payment_intent.canceled': handle_payment_intent_canceled, # Cet événement signifie que le PaymentIntent a été annulé avant tout débit réel. Exemple : l’élève abandonne le paiement avant de valider, ou le paiement expire.
@@ -2848,7 +2848,7 @@ def handle_payment_intent_succeeded(user_admin, data_object, webhook_event, char
                 # On préfère arréter le traitement de l'év?enement àce niveau est 
                 # attendre charge.succeed si elle n'est pas encore envoyée par Stripe
                 # et ne pas passer à l'étape Payment même si les données sont isponibles
-                
+
         return HttpResponse(status=200) # car c'est une partie du cod optionnelle
 
     except Exception as e:
@@ -3497,11 +3497,12 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
     try:
         payment_intent_amount = data_object['amount']
         stripe_payment_intent_id = data_object['id']
+        if stripe_payment_intent_id is not None and payment_intent_amount is not None:
         # 🧾 Log initial
-        append_webhook_log(webhook_event, 
-            f"🆕 PaymentIntent créé : {data_object['id']} | "
-            f"Montant : {payment_intent_amount/100:.2f} {data_object['currency']} | "
-            f"Statut : {data_object['status']}" )
+            append_webhook_log(webhook_event, 
+                f"🆕 PaymentIntent créé : {data_object['id']} | "
+                f"Montant : {payment_intent_amount/100:.2f} {data_object['currency']} | "
+                f"Statut : {data_object['status']}" )
 
         # 💳 Détails de paiement
         payment_method_types = data_object.get('payment_method_types', [])
@@ -3520,26 +3521,25 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
             try:
                 with transaction.atomic():
                     invoice = Invoice.objects.select_for_update().get(id=invoice_id)
+                    if invoice.status == Invoice.PAID:
+                        _webhook_status_update(
+                            webhook_event, 
+                            True,
+                            f"🏁  Facture {invoice_id} est déjà marqué PAID."
+                            f"\n🏁 On suppose que la suite des traitement du cas Invoice.PAID est effectué."
+                        )
+                        return HttpResponse(status=200)
+                    
                     if invoice.stripe_payment_intent_id and  invoice.stripe_payment_intent_id != data_object['id']:
                         texte=f"💥 invoice.stripe_payment_intent_id: {invoice.stripe_payment_intent_id}\n"
                         f"est différent de data_object['id']:{data_object['id']}"
                         envoie_email_multiple(user_admin.id, [user_admin.id], "💥 Allerte: stripe_payment_intent_id du webhook ne correspond pas à celui de la facture", texte)
                         append_webhook_log(webhook_event, texte)
+
                     invoice.stripe_payment_intent_id = data_object['id'] # car la priorité est aux données du webhook et non pas aux données de la BDD
                     invoice.save(update_fields=["stripe_payment_intent_id"])
                     append_webhook_log(webhook_event, f"📝 Facture {invoice.id} liée au PaymentIntent {data_object['id']} du webhook")
 
-                    # mettre à jour or créer Payment tester invoice, amount, currency, màj status
-                    # Oui car la priorité est aux données du Webhook tant que stripe_payment_intent_id existe (data_object['id'])
-                    # on crée l'enregistremernt Payment s'il n'existe pas
-                    payment, created = Payment.objects.get_or_create(invoice=invoice) 
-                    status = Payment.PENDING
-
-                    demande_paiement = invoice.demande_paiement
-                    user_professeur = demande_paiement.user
-                    professeur = Professeur.objects.filter(user=user_professeur).first()
-                    eleve = demande_paiement.eleve
-                    amount = payment_intent_amount/100
                     # tester de cohérence entre payment_intent['amount'] invoice.total
                     coherent = verifier_coherence_montants(
                         texte1="facture",
@@ -3551,25 +3551,6 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                     )
                     if not coherent: pass # l'email est déjà envoyé à l'admin par verifier_coherence_montants avec une allerte webhook_log
 
-                    currency = data_object['currency']
-                    payment.professeur=professeur
-                    payment.eleve=eleve
-                    payment.invoice=invoice
-                    payment.amount=amount
-                    payment.currency=currency
-                    payment.status=Payment.PENDING
-                    payment.reference=stripe_payment_intent_id
-                    payment.save()
-                    # Email d'allerte
-                    if created:
-                        texte= f"💥 Attention, à vérifier. Création d'un enregistrement dans Payment payment_id:{payment.id} suite à un évènement Webhook webhoohevent.event_id:{webhook_event.event_id} qui n'a pas de paiement pret défini.\n"
-                        f"🆕 PaymentIntent créé : {data_object['id']} | "
-                        f"Montant : {data_object['amount']/100:.2f} {data_object['currency']} | "
-                        f"Statut : {data_object['status']}"
-                        envoie_email_multiple(user_admin.id, [user_admin.id], "Allerte enregistrement payment ajouter suit webhook", texte)
-
-                    append_webhook_log(webhook_event, f"📝 Payment {payment.id} liée au Invoice {invoice.id}")
-                    # ✅ Si tout est allé jusqu’ici sans exception, on marque le traitement comme terminé
                     _webhook_status_update(webhook_event, is_fully_completed=True, message=f"")
                     
             except Invoice.DoesNotExist:
