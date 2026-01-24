@@ -3646,7 +3646,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     stripe_invoice_id = metadata.get("invoice_transfert_id")
     stripe_amount = data_object.get("amount")
     stripe_destination = data_object.get("destination")
-
+    destination_payment = data_object.get("destination_payment") # utile pour suivi avancé (rarement indispensable)
     missing = [name for name, value in {
         "invoice_transfert_id": stripe_invoice_id,
         "balance_transaction": balance_tx_id,
@@ -3798,6 +3798,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
         invoice_transfert.balance_transaction = balance_tx_id
         invoice_transfert.frais = frais_stripe
         invoice_transfert.montant_net = montant_net_reel
+        invoice_transfert.destination_payment = destination_payment if destination_payment else None
         invoice_transfert.save()
         invoice_transfert.generate_pdf()
         invoice_transfert.save()

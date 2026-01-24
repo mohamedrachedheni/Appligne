@@ -272,6 +272,7 @@ class InvoiceTransfert(models.Model):
     stripe_transfer_id = models.CharField(max_length=255, null=True, blank=True) # identifiant unique du transfer à la création si c'est réussit et en cours grasse à API
     total = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
     balance_transaction = models.CharField(max_length=255, null=True, blank=True) # représente l’entrée dans le grand livre Stripe — contient le net, les frais, et la date de disponibilité des fonds.
+    destination_payment = models.CharField(max_length=255, null=True, blank=True) # ➡️ ID du paiement créé sur le compte connecté utile pour suivi avancé (rarement indispensable)
     frais = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
     montant_net = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)  # En centimes
     pdf = models.FileField(upload_to='invoices_transfert/', null=True, blank=True)
