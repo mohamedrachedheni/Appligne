@@ -3876,14 +3876,17 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     # ------------------------------------------------------------
     # 8️⃣ Envoi d’un email au professeur + admin
     # ------------------------------------------------------------
+    from datetime import timedelta
+    from django.utils import timezone
+    date_estimee = timezone.now().date() + timedelta(days=5)
     texte_email = f"""
     Cher Professeur {invoice_transfert.user_professeur.get_full_name()},
 
     Nous vous informons qu’un transfert de {invoice_transfert.total} € 
     a été créé en votre faveur le {invoice_transfert.created_at:%d/%m/%Y}.
 
-    Les fonds devraient être disponibles le :
-    {invoice_transfert.date_mise_en_valeur:%d/%m/%Y if invoice_transfert.date_mise_en_valeur else '—'}.
+    Les fonds devraient être disponibles au plus tard le 
+    {date_estimee.strftime('%d/%m/%Y')}.
 
     Merci pour votre collaboration.
 
