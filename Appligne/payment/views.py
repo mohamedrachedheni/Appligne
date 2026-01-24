@@ -620,7 +620,6 @@ def payment_success(request):
         # ─────────────────────────────────────────────
         amount_stripe = session.amount_total
         amount_invoice = invoice.total  # en centimes
-        # logger.info(f"Montant Stripe = {amount_stripe} centimes | ")
         append_webhook_log(stripe_event,
             f"Montant Stripe = {amount_stripe} centimes | "
             f"Montant facture = {amount_invoice} centimes"
@@ -672,7 +671,7 @@ def payment_success(request):
         try:
             user_prof = invoice.demande_paiement.user
             professeur_obj = Professeur.objects.get(user=user_prof)
-        except Eleve.DoesNotExist:
+        except Professeur.DoesNotExist:
             msg = f"⚠ Aucun profil Professeur associé à user_prof={user_prof.id}"
             # logger.info(msg)
             append_webhook_log(stripe_event, msg)
@@ -686,10 +685,10 @@ def payment_success(request):
         # 8) Création / mise à jour Payment interne
         # ─────────────────────────────────────────────
         payment = Payment.objects.filter(invoice=invoice).first()
-        if payment: # pour nepas écraser le status et garentir la mise à jour des champs important
+        if payment: # pour ne pas écraser le status et garentir la mise à jour des champs important
             payment.eleve=eleve_obj
             payment.professeur=professeur_obj
-            payment.reference=stripe_payment_intent_id
+            payment.reference=stripe_payment_intent_id if stripe_payment_intent_id else payment.reference
             payment.save()
             append_webhook_log(stripe_event, f"Mise à jour Payment payment.id = {payment.id} / payment.eleve={eleve_obj} / payment.professeur={professeur_obj} / payment.reference={stripe_payment_intent_id}.")
         else:
@@ -700,8 +699,8 @@ def payment_success(request):
                     "professeur": professeur_obj,
                     "status": Payment.PENDING,  # Webhook confirmera
                     "amount": round(amount_stripe / 100, 2),
-                    "currency": session.currency,
-                    "reference": stripe_payment_intent_id,
+                    "currency": session.currency  ,
+                    "reference": stripe_payment_intent_id if stripe_payment_intent_id else None,
                 }
             )
 
@@ -716,11 +715,18 @@ def payment_success(request):
             # 9) Mise à jour demande de paiement En cours
             # ─────────────────────────────────────────────
             demande_paiement = invoice.demande_paiement
-            demande_paiement.statut_demande = Demande_paiement.EN_COURS # pour suivre la logique des enregistrements
-            demande_paiement.save()
-            # logger.info(f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
-            append_webhook_log(stripe_event, f"✅ Demande de paiement mise à jour : {demande_paiement.id}")
-
+            if demande_paiement:
+                demande_paiement.statut_demande = Demande_paiement.EN_COURS
+                demande_paiement.save()
+                append_webhook_log(
+                    stripe_event,
+                    f"✅ Demande de paiement mise à jour : {demande_paiement.id}"
+                )
+            else:
+                append_webhook_log(
+                    stripe_event,
+                    "❌ Invoice sans demande_paiement associée"
+                )
             # ─────────────────────────────────────────────
             # 9) Email professeur + admin
             # ─────────────────────────────────────────────
@@ -755,7 +761,7 @@ def payment_success(request):
             request.session.pop(key, None)
         # logger.info(f"Affichage success avec facture {invoice.id}")
         append_webhook_log(stripe_event, f"Affichage success avec facture {invoice.id}")
-        messages.info(request, f"invoice.id = {invoice} ")
+        messages.info(request, f"Paiement enregistré pour la facture #{invoice.id}")
         return render(request, "payment/success.html", {
             "invoice": invoice,
             "total_euro": f"{invoice.total / 100:.2f}"
@@ -1393,6 +1399,13 @@ def refund_payment(request):
 def create_transfert_session(request):
     """
     Lance un transfert Stripe (validation finale par Webhook)
+    céation de InvoiceTransfert
+    Céation  stripe.Transfer.create
+    Création de WebhookEvent
+    mise à jour InvoiceTrransfet
+    Mise à jour Accord_reglement
+    Pas de création de Transfer que après handle_transfer_created
+
     """
     try:
         # --- VALIDATIONS ---
@@ -1589,19 +1602,19 @@ def handle_stripe_error(request, e, transfert_id, invoice_transfert=None):
 @user_passes_test(is_admin)
 def transfert_success(request):
     """
-    Page de succès après transfert
+    Page de succès après transfert, juste pournl'affichage
     """
     invoice_transfert_id = request.session.get('invoice_transfert_id', None)
     if not invoice_transfert_id:
         logger.warning("ID de la facture ne figure pas dans la session")
-        return JsonResponse({'error': f"ID de la facture ne figure pas dans la session"}, status=404)
+        return JsonResponse({'error': f"ID de la facture ne figure pas dans la session"}, status=404) # oui car ce n'est pas un Webhook
     
     invoice_transfert = InvoiceTransfert.objects.filter(id=invoice_transfert_id).first()
     if not invoice_transfert or not invoice_transfert.stripe_transfer_id:
         logger.warning("ID du transfert Stripe ne figure pas dans la facture")
         return JsonResponse({'error': f"ID du transfert Stripe ne figure pas dans la facture"}, status=404)
     
-    
+    # ce n'est pas un webhook mais pour suivre la trace
     stripe_event, _ = WebhookEvent.objects.get_or_create(event_id=invoice_transfert.stripe_transfer_id)
 
     # ✅ 1. Récupérer les IDs depuis la session avec sécurité
@@ -1722,7 +1735,7 @@ def stripe_webhook(request):
             'payment_intent.created': handle_payment_intent_created, # mise à jour Invoce.stripe_payment_intent_id et création ou mise à jour d'un enregistrement dans Payment (achevé)
             'checkout.session.expired': handle_checkout_session_expired, # mise à jour Invoice.status=CANCELED et Demande_paiement.EN_ATTENTE (achevé)
             'checkout.session.completed': handle_checkout_session_completed, # à suivre
-            #'payment_intent.canceled': handle_payment_intent_canceled, # Cet événement signifie que le PaymentIntent a été annulé avant tout débit réel. Exemple : l’élève abandonne le paiement avant de valider, ou le paiement expire.
+            'payment_intent.canceled': handle_payment_intent_canceled, # Cet événement signifie que le PaymentIntent a été annulé avant tout débit réel. Exemple : l’élève abandonne le paiement avant de valider, ou le paiement expire.
             'payment_intent.payment_failed': handle_payment_intent_failed, # Ce cas se produit lorsque le paiement a été tenté mais refusé par la banque (fonds insuffisants, carte expirée, etc.).
             'payment_intent.succeeded': handle_payment_intent_succeeded, # Mettre à jour le statut 
             # ==========================================================
@@ -1739,6 +1752,7 @@ def stripe_webhook(request):
 
             'payout.created': handle_payout_created, # pour les virement du compte de la plateforme au compte bancaire de l'admin (non achever)
             'payout.paid': handle_payout_paid,
+
             'payout.failed': handle_payout_failed,
             'transfer.updated': handle_transfer_updated,
             'transfer.failed': handle_transfer_failed, # apparament il n'existe pas
@@ -3675,7 +3689,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     # 3️⃣ Récupération des détails du balance_transaction Stripe
     # ------------------------------------------------------------
     try:
-        if not bal:
+        if not bal: # s'il ne s'agit pas d'un teste local
             balance_tx = stripe.BalanceTransaction.retrieve(balance_tx_id)
         if bal: # pour le teste local
             balance_tx=bal
@@ -3772,7 +3786,15 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     # 5️⃣ Mise à jour de InvoiceTransfert
     # ------------------------------------------------------------
     try:
-        invoice_transfert.status = InvoiceTransfert.PAID
+        if invoice_transfert.status == InvoiceTransfert.PAID:
+            _webhook_status_update(
+            webhook_event,
+            is_fully_completed=True,
+            message=f"✅ Facture {invoice_transfert.id} est déjà mise à jour (PAID)"
+        )
+            return HttpResponse(status=200)
+        
+        invoice_transfert.status = InvoiceTransfert.INPROGRESS
         invoice_transfert.balance_transaction = balance_tx_id
         invoice_transfert.frais = frais_stripe
         invoice_transfert.montant_net = montant_net_reel
@@ -3783,7 +3805,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
         _webhook_status_update(
             webhook_event,
             is_fully_completed=False,
-            message=f"✅ Facture {invoice_transfert.id} mise à jour (PAID)"
+            message=f"✅ Facture {invoice_transfert.id} mise à jour (PINPROGRESS)"
         )
 
     except Exception as e:
@@ -3795,24 +3817,33 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
     # 6️⃣ Création/Mise à jour du Transfer
     # ------------------------------------------------------------
     try:
-        transfer, created = Transfer.objects.update_or_create(
-            invoice_transfert=invoice_transfert,
-            stripe_transfer_id=invoice_transfert.stripe_transfer_id,
-            user_transfer_to=invoice_transfert.user_professeur,
-            defaults={
-                "amount": data_object.get("amount", 0),
-                "montant_net": data_object.get("net", 0),
-                "frais": data_object.get("fee", 0),
-                "currency": data_object.get("currency", "eur"),
-                "status": Transfer.APPROVED,
-            },
-        )
-
-        _webhook_status_update(
+        transfer = Transfer.objects.filter(invoice_transfert=invoice_transfert).first()
+        if transfer and transfer.status!=Transfer.PENDING:
+            _webhook_status_update(
             webhook_event,
-            is_fully_completed=False,
-            message=f"{'🆕 Créé' if created else '🔄 Mis à jour'} Transfer ID={transfer.stripe_transfer_id}, status=APPROVED"
+            is_fully_completed=True,
+            message=f"✅ Transfer {transfer.id} est déjà mise à jour status={transfer.status}"
         )
+            return HttpResponse(status=200)
+        if transfer is None or transfer.status==Transfer.PENDING:
+            transfer, created = Transfer.objects.update_or_create(
+                invoice_transfert=invoice_transfert,
+                stripe_transfer_id=invoice_transfert.stripe_transfer_id,
+                user_transfer_to=invoice_transfert.user_professeur,
+                defaults={
+                    "amount": data_object.get("amount", 0),
+                    "montant_net": data_object.get("net", 0),
+                    "frais": data_object.get("fee", 0),
+                    "currency": data_object.get("currency", "eur"),
+                    "status": Transfer.PENDING,
+                },
+            )
+
+            _webhook_status_update(
+                webhook_event,
+                is_fully_completed=False,
+                message=f"{'🆕 Créé' if created else '🔄 Mis à jour'} Transfer ID={transfer.stripe_transfer_id}, status=APPROVED"
+            )
 
     except Exception as e:
         _webhook_status_update(
@@ -3820,19 +3851,22 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message=f"💥 Erreur création/mise à jour Transfer : {e}"
         )
+        return JsonResponse({'error': e}, status=500)
 
     # ------------------------------------------------------------
     # 7️⃣ Mise à jour de l’Accord de règlement (si présent)
     # ------------------------------------------------------------
     try:
-        if invoice_transfert.accord_reglement:
-            invoice_transfert.accord_reglement.status = AccordReglement.COMPLETED
-            invoice_transfert.accord_reglement.save()
+        accord_reglement = invoice_transfert.accord_reglement
+        if accord_reglement and accord_reglement.status == AccordReglement.PENDING:
+            accord_reglement.status = AccordReglement.IN_PROGRESS
+            accord_reglement.transfer = transfer
+            accord_reglement.save()
 
         _webhook_status_update(
             webhook_event,
             is_fully_completed=True,
-            message="🔄 Accord de règlement mis à jour"
+            message="🔄 Accord de règlement mis à jour status = {invoice_transfert.accord_reglement.status}"
         )
 
     except Exception:
@@ -3841,6 +3875,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=False,
             message="💥 Erreur lors de la mise à jour de l'accord de règlement"
         )
+        return JsonResponse({'error': e}, status=500)
 
     # ------------------------------------------------------------
     # 8️⃣ Envoi d’un email au professeur + admin
@@ -3882,6 +3917,7 @@ def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
             is_fully_completed=True,
             message=f"✅ Envoi des e-mails pour Professeur et admin réussi"
         )
+        return HttpResponse(status=200)
 
 
 # cet évènrement est suite au virement du compte Stripe au compte bancaire administrateur
