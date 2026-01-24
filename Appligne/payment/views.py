@@ -1721,7 +1721,7 @@ def stripe_webhook(request):
 
             'payment_intent.created': handle_payment_intent_created, # mise à jour Invoce.stripe_payment_intent_id et création ou mise à jour d'un enregistrement dans Payment (achevé)
             'checkout.session.expired': handle_checkout_session_expired, # mise à jour Invoice.status=CANCELED et Demande_paiement.EN_ATTENTE (achevé)
-            #'checkout.session.completed': handle_checkout_session_completed, # à suivre
+            'checkout.session.completed': handle_checkout_session_completed, # à suivre
             #'payment_intent.canceled': handle_payment_intent_canceled, # Cet événement signifie que le PaymentIntent a été annulé avant tout débit réel. Exemple : l’élève abandonne le paiement avant de valider, ou le paiement expire.
             'payment_intent.payment_failed': handle_payment_intent_failed, # Ce cas se produit lorsque le paiement a été tenté mais refusé par la banque (fonds insuffisants, carte expirée, etc.).
             'payment_intent.succeeded': handle_payment_intent_succeeded, # Mettre à jour le statut 
@@ -1956,15 +1956,8 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
     --------------------------------------------------------
     ➤ Objectif :
         - Vérifie que la session correspond bien à une facture (invoice).
-        - Met à jour la demande de paiement, payment, invoice associée.
         - Enregistre les logs du traitement dans la table WebhookEvent.
         - Marque l'événement comme traité si tout est terminé.
-
-    🧩 Flux logique :
-        1️⃣ Vérification de la session Stripe
-        2️⃣ Récupération de la facture (Invoice)
-        3️⃣ Mise à jour de la demande de paiement, payment, invoice associée.
-        4️⃣ Journalisation complète du traitement
     """
 
     append_webhook_log(webhook_event, "💳 [checkout.session.completed] Début du traitement de la session checkout")
@@ -1975,68 +1968,50 @@ def handle_checkout_session_completed(user_admin, data_object, webhook_event):
         append_webhook_log(webhook_event, "⚠️ Aucun `invoice_id` trouvé dans les métadonnées de la session.")
         _webhook_status_update(webhook_event, is_fully_completed=False, 
                 message="❌ Données manquantes: invoice_id non trouvé dans les métadonnées")
-        return # évènement non important
+        return JsonResponse({'error': 'Invoice_id non trouvé'}, status=500)
 
     try:
-        # Utilisation d'une transaction atomique pour garantir l'intégrité des données
-        # dans notre cas elle n'est pas nécessaire vue que demande_paiement.save(update_fields=["statut_demande"])
-        #  et webhook_event.save(update_fields=["is_processed", "is_fully_completed"]) se suivent
-        # sans try / except
-        with transaction.atomic(): 
-            invoice = Invoice.objects.select_related("demande_paiement").get(id=invoice_id)
-            if invoice.status=='paid': # cas très rare
-                append_webhook_log(webhook_event, "⚠️ La facture est déjà marqué PAID.")
-                _webhook_status_update(webhook_event, is_fully_completed=True, 
-                message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ La facture est déjà marqué PAID.")
-                return
-            demande_paiement = invoice.demande_paiement
-            append_webhook_log(webhook_event, f"🧾 Facture trouvée (ID={invoice.id}), associée à la demande {demande_paiement.id}.")
+        invoice = Invoice.objects.select_related("demande_paiement").get(id=invoice_id)
+        if not invoice:
+            _webhook_status_update(webhook_event, is_fully_completed=False, 
+                            message="❌ Données manquantes: invoice_id non trouvé dans Invoice")
+            return
 
-            # 2️⃣ Vérification du statut du paiement renvoyé par Stripe
-            payment_status = data_object.get("payment_status") 
-            if not payment_status:
-                append_webhook_log(webhook_event, "⚠️ Aucun statut de paiement trouvé dans la session Stripe.")
-                _webhook_status_update(webhook_event, is_fully_completed=True, 
-                message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ Aucun statut de paiement trouvé dans la session Stripe. pas de modification dans BDD")
-                return
+        if invoice.status=='paid': # cas très rare
+            append_webhook_log(webhook_event, "✅ La facture est déjà marqué PAID.")
+            _webhook_status_update(webhook_event, is_fully_completed=True, 
+            message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ La facture est déjà marqué PAID.")
+            return HttpResponse(status=200)
+        
+        demande_paiement = invoice.demande_paiement
+        append_webhook_log(webhook_event, f"🧾 Facture trouvée (ID={invoice.id}), associée à la demande {demande_paiement.id}.")
 
-            # 3️⃣ Traitement selon le statut de paiement
-            if payment_status == "paid": # le paiement est réussi mais on attend la balance
-                # ✅ Paiement confirmé : la demande, Payment, Invoice passent "en cours"
-                demande_paiement.statut_demande = Demande_paiement.EN_COURS
-                demande_paiement.save(update_fields=["statut_demande"])
-                append_webhook_log(webhook_event, f"✅ Demande de paiement {demande_paiement.id} mise à jour : EN_COURS.")
-                # Payment
-                payment, created = Payment.objects.update_or_create(
-                    invoice=invoice,
-                    defaults={
-                        "status": Payment.PENDING,  # en attente de la balance
-                        "eleve": demande_paiement.eleve,
-                        "professeur": demande_paiement.user.professeur,
-                    }
-                )
-                append_webhook_log(webhook_event, f"✅ paiement {payment.id} mise à jour : EN_COURS en attente de la balance.")
-                # Invoice
-                invoice.status=Invoice.DRAFT
-                invoice.save()
-                append_webhook_log(webhook_event, f"✅ Invoice {invoice.id} mise à jour : DRAFT en attente de la balance.")
-                _webhook_status_update(webhook_event, is_fully_completed=True, 
-                message="🏁 Traitement de 'checkout.session.completed' complété avec succès le paiement est réussi mais on attend la balance, le status de la demande, Payment, Invoice passent 'En cours'")
+        # 2️⃣ Vérification du statut du paiement renvoyé par Stripe
+        payment_status = data_object.get("payment_status") 
+        if not payment_status:
+            append_webhook_log(webhook_event, "⚠️ Aucun statut de paiement trouvé dans la session Stripe.")
+            _webhook_status_update(webhook_event, is_fully_completed=True, 
+            message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ Aucun statut de paiement trouvé dans la session Stripe. pas de modification dans BDD")
+            return HttpResponse(status=200)
 
-            elif payment_status == "unpaid": # ⚠️ Paiement échoué ou refusé, on ne fait rien en attend la suite des évènement pour s'assurer
-
-                append_webhook_log(webhook_event, f"⚠️ Paiement non réussi : Demande de paiement {demande_paiement.id} en attente.")
-                _webhook_status_update(webhook_event, is_fully_completed=True, 
-                message="🏁 Traitement de 'checkout.session.completed' complété avec succès le ⚠️ Paiement non réussince, le status de la demande, Payment, Invoice ne change pas dans l'attente de la suite des évènement")
-            else:
-                # 📊 Cas inattendu
-                append_webhook_log(webhook_event, f"📊 Statut de paiement inattendu : {payment_status} pour demande {demande_paiement.id}.")
-                _webhook_status_update(webhook_event, is_fully_completed=True, 
-                message=f"🏁 Traitement de 'checkout.session.completed' complété avec succès . 📊 Statut de paiement inattendu : {payment_status} pour demande {demande_paiement.id}.")
+        # 3️⃣ Traitement selon le statut de paiement
+        if payment_status == "paid":
+            append_webhook_log(webhook_event, "✅ Le paiement est réralisé.")
+            _webhook_status_update(webhook_event, is_fully_completed=True, 
+            message="🏁 Traitement de 'checkout.session.completed' complété avec succès ⚠️ Aucun statut de paiement trouvé dans la session Stripe. pas de modification dans BDD")
+            return HttpResponse(status=200)
             
-    except Invoice.DoesNotExist:
-        _webhook_status_update(webhook_event, is_fully_completed=False, 
-                message=f"❌ Facture introuvable pour invoice_id={invoice_id}.")
+        elif payment_status == "unpaid": # ⚠️ Paiement échoué ou refusé, on ne fait rien en attend la suite des évènement pour s'assurer
+
+            append_webhook_log(webhook_event, f"⚠️ Paiement non réussi : Demande de paiement {demande_paiement.id} en attente.")
+            _webhook_status_update(webhook_event, is_fully_completed=True, 
+            message="🏁 Traitement de 'checkout.session.completed' complété avec succès le ⚠️ Paiement non réussince, le status de la demande, Payment, Invoice ne change pas dans l'attente de la suite des évènement")
+        else:
+            # 📊 Cas inattendu
+            append_webhook_log(webhook_event, f"📊 Statut de paiement inattendu : {payment_status} pour demande {demande_paiement.id}.")
+            _webhook_status_update(webhook_event, is_fully_completed=True, 
+            message=f"🏁 Traitement de 'checkout.session.completed' complété avec succès . 📊 Statut de paiement inattendu : {payment_status} pour demande {demande_paiement.id}.")
+        
     except Exception as e:
         _webhook_status_update(webhook_event, is_fully_completed=False, 
                 message=f"❌ Erreur inattendue lors du traitement : {str(e)}")
