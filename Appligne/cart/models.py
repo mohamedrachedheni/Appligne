@@ -403,7 +403,7 @@ class InvoiceTransfert(models.Model):
 
 
 
-class BalanceTransaction(models.Model): # elle retrace les mouvement de la balance de Stripe
+class BalanceTransaction(models.Model): # « Le solde disponible global du compte Stripe a changé »: “À partir de maintenant, X € sont disponibles”
     # 🔑 Identifiant Stripe
     balance_txn_id = models.CharField(max_length=100, unique=True)
     
@@ -415,8 +415,11 @@ class BalanceTransaction(models.Model): # elle retrace les mouvement de la balan
     status = models.CharField(max_length=50, blank=True, null=True)
     
     # 📅 Gestion de la disponibilité des fonds
-    is_available = models.BooleanField(default=False)
-    available_on = models.DateTimeField(blank=True, null=True)
+    is_available = models.BooleanField(default=False) # montant disponible ou non
+    available_on = models.DateTimeField(blank=True, null=True) # Date de disponibité attendue
+
+    # Traitement de la balance est terminé suite à l'évènement balance.available
+    is_settled = models.BooleanField(default=False)
     
     # 🏷️ Type et contexte de l'événement
     event_type = models.CharField(
