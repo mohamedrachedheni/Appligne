@@ -4451,6 +4451,14 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                 # 💳 Settlement métier UNIQUEMENT pour les charges
                 if bal.event_type == "charge":
                     handle_payment_settlement(bal)
+                elif bal.event_type == 'transfer':
+                    handle_transfer_settlement(bal)
+                # elif retrieved_bal_type == 'refund':
+                #     handle_refund_settlement(bal)
+                # elif retrieved_bal_type == 'dispute':
+                #     handle_dispute_settlement(bal)
+                # elif retrieved_bal_type == 'adjustment':
+                #handle_adjustment_settlement(bal)
 
                 # 💰 Marquage disponible APRÈS settlement réussi
                 bal.is_available = True
@@ -4460,22 +4468,12 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                     webhook_event,
                     f"✅ BalanceTransaction {bal.balance_txn_id} finalisée"
                 )
-
+                
             except Exception as e:
                 valider = False
                 validation_texte += f"\n❌ {bal.balance_txn_id} : {str(e)}"
                 append_webhook_log(webhook_event, f"💥 Erreur : {str(e)}")
                 break  # rollback total
-
-            # elif retrieved_bal_type == 'refund':
-            #     handle_refund_settlement(available_eur)
-            # elif retrieved_bal_type == 'dispute':
-            #     handle_dispute_settlement(available_eur)
-            # elif retrieved_bal_type == 'transfer':
-            #     handle_transfer_settlement(available_eur)
-            # elif retrieved_bal_type == 'adjustment':
-            #     handle_adjustment_settlement(available_eur)
-        
 
     # 🧾 Verdict webhook
     if not valider:
@@ -4485,6 +4483,96 @@ def handle_balance_available(user_admin, data_object, webhook_event):
     _webhook_status_update(webhook_event, True, "Toutes les transactions disponibles ont été traitées")
     return JsonResponse({"success": True})
 
+
+@transaction.atomic
+def handle_transfer_settlement(balance_txn):
+    """
+    💸 Settlement métier d’un TRANSFER Stripe
+
+    ⚠️ IMPORTANT :
+    - Un `transfer` Stripe n’est PAS un paiement client
+    - Il correspond à un mouvement interne de fonds déjà disponibles
+    - Ce traitement est purement comptable / métier (commission, payout à venir)
+
+    Ce handler :
+    - lie la BalanceTransaction à une InvoiceTransfert
+    - crée ou met à jour un Transfer interne
+    - met à jour les statuts métier
+    - garantit l'idempotence
+    """
+
+    # ------------------------------------------------------------------
+    # 0️⃣ Idempotence forte (webhooks Stripe = répétables)
+    # ------------------------------------------------------------------
+    if balance_txn.is_settled:
+        return  # déjà traité → sortie silencieuse
+
+    # ------------------------------------------------------------------
+    # 2️⃣ Verrouillage de la facture de transfert associée
+    # ------------------------------------------------------------------
+    invoice_transfert = (
+        InvoiceTransfert.objects
+        .select_for_update()
+        .filter(balance_transaction=balance_txn.balance_txn_id)
+        .first()
+    )
+
+    if not invoice_transfert:
+        # ❌ Pas d’exception : on log et on sort
+        logger.warning(
+            f"[TRANSFER] InvoiceTransfert introuvable "
+            f"(balance_txn_id={balance_txn.balance_txn_id})"
+        )
+        return
+    
+    # ------------------------------------------------------------------
+    # 3️⃣ Normalisation du montant
+    # Stripe envoie souvent les transfers en négatif
+    # ------------------------------------------------------------------
+    amount = abs(balance_txn.amount) / 100
+
+
+    # ------------------------------------------------------------------
+    # 4️⃣ Création / mise à jour du Transfer interne
+    # ------------------------------------------------------------------
+    transfer, created = Transfer.objects.update_or_create(
+        invoice_transfert=invoice_transfert,
+        defaults={
+            "status": Transfer.APPROVED,  # transfert validé côté Stripe
+            "amount": amount,
+            "currency": balance_txn.currency,
+            "stripe_transfer_id": balance_txn.balance_txn_id,
+            "user_transfer_to": invoice_transfert.user_professeur,
+        }
+    )
+
+    # ------------------------------------------------------------------
+    # 5️⃣ Mise à jour de la facture de transfert (logique métier)
+    # ------------------------------------------------------------------
+    invoice_transfert.status = InvoiceTransfert.TRANSFERRED
+    invoice_transfert.stripe_transfer_id = balance_txn.balance_txn_id
+    invoice_transfert.save(update_fields=["status", "stripe_transfer_id"])
+
+    # 🧾 Accord de règlement
+    if invoice_transfert.accord_reglement:
+        AccordReglement.objects.filter(
+            id=invoice_transfert.accord_reglement_id
+        ).update(status=AccordReglement.IN_PROGRESS)
+
+
+    # 🔒 Settlement final
+    balance_txn.is_settled = True
+    balance_txn.save(update_fields=["is_settled"])
+
+    # ------------------------------------------------------------------
+    # 8️⃣ Audit log final
+    # ------------------------------------------------------------------
+    logger.info(
+        f"[TRANSFER] Settlement OK | "
+        f"invoice_transfert={invoice_transfert.id} | "
+        f"transfer={transfer.id} | "
+        f"amount={amount} {balance_txn.currency}"
+    )
 
 @transaction.atomic
 def handle_payment_settlement(balance_txn):
@@ -4535,8 +4623,6 @@ def handle_payment_settlement(balance_txn):
     # 🔒 Settlement final
     balance_txn.is_settled = True
     balance_txn.save(update_fields=["is_settled"])
-
-
 
 
 

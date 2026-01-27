@@ -702,7 +702,7 @@ class DetailAccordReglement(models.Model):
         null=True, 
         blank=True
     )  # Part du professeur
-    stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer ( à supprimer)
+    # stripe_transfer_id = models.IntegerField(null=True, blank=True) # lié au Transfer ( à supprimer)
     description = models.TextField(null=True, blank=True)  # Libellé
 
     def __str__(self):

@@ -250,6 +250,7 @@ class InvoiceTransfert(models.Model):
     DRAFT='draft'
     INPROGRESS='in_progess'
     PENDING='pending'
+    TRANSFERRED='transferd'
     PAID='paid'
     FAILED='failed'
     CANCELED='canceled'
@@ -258,6 +259,7 @@ class InvoiceTransfert(models.Model):
         (DRAFT, 'Brouillon'), # créer par API stripe.transfer
         (INPROGRESS, 'En cours'), # créer mais pas encaisser
         (PENDING, 'En attente'), # momentanément bloquer
+        (TRANSFERRED, 'Transférer'), # Le montant est transféré mais pas encore encaissé (en attente du payout.succeed)
         (PAID, 'Payée'), # encaisser
         (FAILED, 'Échouée'), # encaissement échouer
         (CANCELED, 'Annulée'), # annuler par l'admin
