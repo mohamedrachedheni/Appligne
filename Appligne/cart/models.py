@@ -403,7 +403,7 @@ class InvoiceTransfert(models.Model):
 
 
 
-class BalanceTransaction(models.Model):
+class BalanceTransaction(models.Model): # elle retrace les mouvement de la balance de Stripe
     # 🔑 Identifiant Stripe
     balance_txn_id = models.CharField(max_length=100, unique=True)
     

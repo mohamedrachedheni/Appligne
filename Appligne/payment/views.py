@@ -4418,8 +4418,8 @@ def handle_balance_available(user_admin, data_object, webhook_event, data_type= 
             webhook_event,
             "⚠️ Aucun élément dans data_object['available'] — rien à traiter"
         )
-        _webhook_status_update(webhook_event, True, "Aucune transaction disponible")
-        return
+        _webhook_status_update(webhook_event, True, "✅ Aucune transaction disponible")
+        return HttpResponse(status=200)
 
     append_webhook_log(
         webhook_event,
@@ -4429,7 +4429,7 @@ def handle_balance_available(user_admin, data_object, webhook_event, data_type= 
     
 
     # ------------------------------------------
-    # 1️⃣ Parcourir chaque transaction disponible
+    # 1️⃣ Parcourir chaque transaction disponible traitable
     # ------------------------------------------
     for bal in balance_list:
         bal_id = bal.get("id")
@@ -4440,12 +4440,12 @@ def handle_balance_available(user_admin, data_object, webhook_event, data_type= 
             )
             continue
 
-        append_webhook_log(webhook_event, f"🔍 Analyse BalanceTransaction {bal_id}")
+        append_webhook_log(webhook_event, f"🔍 Analyse BalanceTransaction bal_id= {bal_id}")
 
         # Récupération complète depuis Stripe
         try:
             retrieved_bal = stripe.BalanceTransaction.retrieve(bal_id)
-            append_webhook_log(webhook_event, f"📘 Transaction Stripe récupérée : {bal_id}")
+            append_webhook_log(webhook_event, f"📘 Transaction Stripe récupérée : bal_id= {bal_id}")
         except Exception as e:
             retrieved_bal=bal # passer le contenu balance/charge de la boucle du teste local si c'est le cas
             if not retrieved_bal:
@@ -4457,12 +4457,14 @@ def handle_balance_available(user_admin, data_object, webhook_event, data_type= 
 
         # ============================================
         # 1️⃣ Mettre à jour ou créer Webhook_event_bal 
-        # de l'enregistrement bal en cours dde la boucle
+        # de l'enregistrement bal en cours de la boucle
         # ============================================
         webhook_event_bal = WebhookEvent.objects.filter(event_id=bal_id).first()
         if webhook_event_bal and webhook_event_bal.is_fully_completed:
+            append_webhook_log(webhook_event, f"✔ Webhook_event.event_id= {webhook_event_bal.event_id} est déjà traiter webhook_event_bal.is_fully_completed= {webhook_event_bal.is_fully_completed}")
             continue # l'évènement est déjà achevé passer au suivant de la boucle
-
+        
+        append_webhook_log(webhook_event, f"🔍 traitement du Webhook_event.event_id= {webhook_event_bal.event_id}  webhook_event_bal.is_fully_completed= {webhook_event_bal.is_fully_completed}")
         retrieved_bal_type = "balance.available."
         retrieved_bal_type += retrieved_bal["type"]
         webhook_event_bal, created = WebhookEvent.objects.update_or_create(
@@ -4484,7 +4486,7 @@ def handle_balance_available(user_admin, data_object, webhook_event, data_type= 
             datetime.fromtimestamp(available_on_ts, tz=dt_timezone.utc)
             if available_on_ts else None
         )
-
+        # utiliser la fonction modale de l'enreistrement balance
         bal_obj, created = BalanceTransaction.objects.update_or_create(
             balance_txn_id=bal_id,
             defaults={
@@ -4593,7 +4595,7 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
             "❌ ERROR: No charge_id in balance transaction\n"
             f"amount_eur={amount_eur} | net_eur={net_eur}\n"
         )
-        return {'success': False, 'message': msg}
+        return JsonResponse({'success': False, 'message': msg}, status=200)
     
 
     # ---------------------------------------------------------------------
@@ -4607,7 +4609,7 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
                   )
     except Exception as e:
         charge = None
-        for enr in data_type:
+        for enr in data_type: # à revoire!!
             append_webhook_log(webhook_event, f"enr['id']={enr['id']}\n")
             if enr['id']==charge_id:
                 charge = enr# récupérer la charge du teste local
@@ -4632,7 +4634,7 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
 
     append_webhook_log(
         webhook_event,
-        f"payment_intent_id={payment_intent_id} | amount_eur={amount_eur} | net_eur={net_eur} | charge_id={charge_id}\n"
+        f"Récupérer PaymentIntent (OBLIGATOIRE) payment_intent_id={payment_intent_id} | amount_eur={amount_eur} | net_eur={net_eur} | charge_id={charge_id}\n"
     )
 
     # ---------------------------------------------------------------------
@@ -4655,7 +4657,7 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
 
     if not invoice:
         msg = (
-            "❌ ERROR: No matching Invoice found for this balance transaction\n"
+            "❌ ERREUR : Aucune facture correspondante n'a été trouvée pour cette transaction de solde.\n"
             f"payment_intent_id={payment_intent_id} | charge_id={charge_id} | Balance_available.id = {webhook_event.event_id}\n"
             f"invoice_id = {charge.get('metadata', {}).get('invoice_id')}\n"
         )
@@ -4669,7 +4671,7 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
         # pas de {'success': valider, 'message': validation_texte} 
         # pour que Stripe soit appelé à envoyer l'évènement une autre fois 
         # car le problème n'est pas lié à Stripe mais dans les enregistrements de la BDD
-        return 
+        return JsonResponse({'success': False, 'message': msg}, status=200)
 
     # ---------------------------------------------------------------------
     # Mettre à jour la BDD
@@ -4717,57 +4719,41 @@ def handle_payment_settlement(user_admin, webhook_event, retrieved_bal, valider,
             
 
     # ---------------------------------------------------------------------
-    # 7️⃣ Mettre à jour ou créer Payment
+    # 7️⃣ Mettre à jour ou créer Payment à réviser
     # ---------------------------------------------------------------------
-    payment, created_payment = Payment.objects.update_or_create(
-        invoice=invoice,
-        defaults={
-            "status": Payment.APPROVED,
-        },
-    )
-
-
-    if created_payment :
-        payment.eleve=invoice.demande_paiement.eleve
-        payment.professeur=invoice.demande_paiement.user.professeur
-        payment.invoice=invoice
-        payment.amount=amount_eur / 100
-        payment.currency="eur"
-        payment.save()
+    payment = Payment.objects.filter(invoice=invoice).first()
+    if payment and payment.status==Payment.APPROVED:
+        append_webhook_log(webhook_event,
+            f"💥 Le paiement est déjà approuvé\n"
+            )
     else:
-        # tester la cohérence du montant
-        coherent = verifier_coherence_montants(
-                    texte1="balance.available.charge",
-                    texte2="Payment BDD",
-                    montant1=amount_eur,
-                    montant2=payment.amount*100,
-                    abs_tol=5,
-                    user_admin=user_admin
-                )
-        if not coherent:
-            append_webhook_log(webhook_event,
-                    f"💥 Incohérence critique payment.amount*100={payment.amount*100} centimes dans BDD\n"
-                    f"retrieved_bal.get('amount', 0)={amount_eur} centime d'évènement charge.succeeded"
-                    )
-            logger.warning(
-                f"💥 Incohérence critique payment.amount*100={payment.amount*100} centimes dans BDD\n"
-                f"retrieved_bal.get('amount', 0)={amount_eur} centime d'évènement charge.succeeded")
-
-    append_webhook_log(
-        webhook_event,
-        f"📌 {'Création' if created_payment else 'Mise à jour'} Payment id={payment.id}, payment.status = {payment.status}\n"
+        payment, created_payment = Payment.objects.update_or_create(
+            invoice=invoice,
+            defaults={
+                "status": Payment.APPROVED,
+                'eleve':invoice.demande_paiement.eleve,
+                'professeur':invoice.demande_paiement.user.professeur,
+                'invoice':invoice,
+                'amount':amount_eur / 100,
+                'currency':"eur",
+            }
         )
+
+        append_webhook_log(
+            webhook_event,
+            f"📌 {'Création' if created_payment else 'Mise à jour'} Payment id={payment.id}, payment.status = {payment.status}\n"
+            )
 
     # ---------------------------------------------------------------------
     # 8️⃣ Mettre à jour la demande de paiement
     # ---------------------------------------------------------------------
     demande_paiement = invoice.demande_paiement
-    demande_paiement.statut_demande = Demande_paiement.EN_COURS
+    demande_paiement.statut_demande = Demande_paiement.REALISER
     demande_paiement.save()
 
     append_webhook_log(
         webhook_event,
-        f"📌 Demande_paiement mise à jour : status={Demande_paiement.EN_COURS}, payment_id={payment.id}\n"
+        f"📌 Demande_paiement mise à jour : status={Demande_paiement.REALISER}, payment_id={payment.id}\n"
     )
 
     # ---------------------------------------------------------------------
