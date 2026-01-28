@@ -1287,19 +1287,21 @@ def refund_payment(request):
             # ===========================
             # CAS 1 : Paiement via PaymentIntent
             # ===========================
-            if payment.reference:
+            if payment.invoice:
+                charge_id = payment.invoice.stripe_charge_id
                 # 🔍 Récupération du PaymentIntent Stripe
-                pi = stripe.PaymentIntent.retrieve(
-                    payment.reference,
-                    expand=["charges"]  # Permet d'accéder aux charges directement
-                )
+                charge = stripe.Charge.retrieve(charge_id)
+                # pi = stripe.PaymentIntent.retrieve(
+                #     payment.reference,
+                #     expand=["charges"]  # Permet d'accéder aux charges directement
+                # )
 
-                # 🔄 Tentative 1 : Charge accessible via expand
-                if hasattr(pi, "charges") and hasattr(pi.charges, "data") and pi.charges.data:
-                    charge = pi.charges.data[0]
+                # # 🔄 Tentative 1 : Charge accessible via expand
+                # if hasattr(pi, "charges") and hasattr(pi.charges, "data") and pi.charges.data:
+                #     charge = pi.charges.data[0]
 
-                # 🔄 Tentative 2 : Fallback via la liste des charges
-                else: charge=None
+                # # 🔄 Tentative 2 : Fallback via la liste des charges
+                # else: charge=None
 
             
 
