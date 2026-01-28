@@ -120,7 +120,7 @@ def save_balance_transaction_from_charge(
                 # 📅 Disponibilité des fonds
                 "is_available": True,
                 "available_on": date_mise_en_valeur,
-                "event_type": "charge",
+                "event_type": bal.get("type"), # pour ce cas on a"charge",pour d'autre cas: "refund", "payout", stripe_fee, transfer , dispute, ...
 
                 # ---- Card details ----
                 "payment_method_brand": card_details.get("brand"),
@@ -1363,7 +1363,6 @@ def refund_payment(request):
 
             # ✅ Mise à jour du remboursement local
             refund_record.stripe_refund_id = stripe_refund.id
-            refund_record.status = stripe_refund.status
             refund_record.save()
 
             # 📢 Message succès admin
@@ -1760,14 +1759,16 @@ def stripe_webhook(request):
 
             'charge.dispute.created': handle_charge_dispute_created, # Pas encore traiter
             'charge.failed': handle_charge_failed, # Pas encore traiter
-            'charge.updated': handle_charge_updated, # Pas encore traiter
+            
             'charge.dispute.closed': handle_charge_dispute_closed, # Pas encore traiter
              
 
             # ==================== REMBOURSEMENTS =========================
-            'charge.refunded': handle_charge_refunded_unified, # Pas encore traiter
-            'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter
-            'refund.created': handle_refund_created, # Pas encore traiter
+            'refund.created': handle_refund_created, # Pas encore traiter, 1er Webhook suite à stripe.Refund.create() mais pour refund total seulement
+            'charge.updated': handle_charge_updated, # Pas encore traiter, 2° pour tous les type de refund
+            'charge.refunded': handle_charge_refunded_unified, # Pas encore traiter, ⚠️ il est OBSOLÈTE
+            'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter , 3° suivie du refundpas important
+            
             'refund.updated': handle_refund_updated, # Pas encore traiter
             'refund.failed': handle_refund_failed, # Pas encore traiter
 
@@ -3559,60 +3560,134 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
                                        message=f"❌ Erreur globale dans handle_payment_intent_created : {e}")
 
 
-# à corriger user_admin, data_object, webhook_event    
-def handle_charge_updated(charge):
+
+
+
+
+def handle_charge_updated(user_admin, data_object, webhook_event):
     """
-    📝 Traitement quand une charge est mise à jour
-    Adapté pour stripe_transfert_webhook qui passe data_object directement
     
-    Args:
-        charge: L'objet charge (déjà event['data']['object'])
     """
-    logger.info(
-        f"📝 Charge mise à jour : {charge['id']} | "
-        f"Statut : {charge.get('status', 'unknown')} | "
-        f"Capturée : {charge.get('captured', False)}"
-    )
+
+    charge_updated_id = data_object['id']
+    balance_txn_id = data_object.get("balance_transaction")
+    payment_intent_id = data_object.get("payment_intent")
+    idempotency_key = data_object.get("idempotency_key")
+    local_refund_id = data_object.get("metadata", {}).get("local_refund_id")
     
-    # ⚠️ Dans stripe_transfert_webhook, on n'a pas previous_attributes
-    # On se base uniquement sur l'état actuel pour le logging
-    status = charge.get('status')
-    captured = charge.get('captured', False)
+    append_webhook_log(webhook_event, 
+        f"✅ Début du traitement du Webhok: charge.updated"
+        f"/n1️⃣ [charge_updated_id: {charge_updated_id}] "
+        f"/n2️⃣ [balance_txn_id: {balance_txn_id}] "
+        f"/n3️⃣ [payment_intent_id: {payment_intent_id}] "
+        f"/n4️⃣ [idempotency_key: {idempotency_key}] "
+        f"/n5️⃣ [local_refund_id: {local_refund_id}] "
+        )
+
     
-    # Loguer les états importants
-    if status == 'succeeded':
-        logger.info(f"✅ Charge {charge['id']} réussie")
-    elif status == 'failed':
-        logger.info(f"❌ Charge {charge['id']} échouée")
+
+    # 🛡️ VALIDATION DES MÉTADONNÉES
+    if not local_refund_id:
+        append_webhook_log(webhook_event, 
+            f"⚠️ [charge_updated_id: {charge_updated_id}] Aucun local_refund_id trouvé dans metadata")
         
-    # Si la charge est capturée (fonds réellement prélevés)
-    if captured:
-        logger.info(f"💰 Charge {charge['id']} capturée - Fonds prélevés")
+        _webhook_status_update(webhook_event, 
+            is_fully_completed=False,
+            message="❌ Données manquantes : invoice_id absent"
+        )
+
+    #try:
+        # 🔎 RÉCUPÉRATION DE LA FACTURE
+        refund_payment = RefundPayment.objects.filter(id=local_refund_id, idempotency_key=idempotency_key).first()
+        if not refund_payment:
+            append_webhook_log(webhook_event, 
+                f"❌ [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} introuvable en BDD")
+            
+            _webhook_status_update(
+                webhook_event,
+                is_fully_completed=False,
+                message="❌ Facture introuvable en BDD"
+            )
+
+        # 🚨 Cas très rare
+        # il se peut que lévènement charge.updated a été traité 
+        # en retard et que lévènement balance.available est traité avant
+        if refund_payment.status == RefundPayment.APPROVED:
+            _webhook_status_update(
+                webhook_event, 
+                True,
+                f"🏁 [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} est déjà marqué APPROVED."
+            )
+            return HttpResponse(status=200)
         
-        # Mettre à jour la facture associée si nécessaire
-        payment_intent_id = charge.get('payment_intent')
-        if payment_intent_id:
-            try:
-                invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent_id).first()
-                if invoice:
-                    # Vérifier si pas déjà capturée pour éviter les doublons
-                    if not invoice.captured_at:
-                        invoice.captured_at = timezone.now()
-                        invoice.save()
-                        logger.info(f"✅ Facture {invoice.id} marquée comme capturée")
-                    else:
-                        logger.info(f"ℹ️ Facture {invoice.id} déjà capturée précédemment")
-                else:
-                    logger.warning(f"⚠️ Aucune facture trouvée pour PaymentIntent: {payment_intent_id}")
-            except Exception as e:
-                logger.error(f"💥 Erreur mise à jour facture: {e}")
-    
-    # Loguer d'autres informations utiles
-    if charge.get('refunded'):
-        logger.info(f"↩️ Charge {charge['id']} remboursée")
-        
-    if charge.get('dispute'):
-        logger.warning(f"⚖️ Charge {charge['id']} disputée")
+        # 🟡 MARQUER LA RefundPayment COMME PENDING et refund_payment.charge_id
+        refund_payment.status = RefundPayment.PENDING
+        refund_payment.charge_id = charge_updated_id
+        refund_payment.balance_txn_id = balance_txn_id
+        refund_payment.payment_intent_id = payment_intent_id
+        refund_payment.save()
+
+        append_webhook_log(webhook_event,
+            f"/n✅ RefundPayment {refund_payment.id} marquée PENDING / refund_payment.charge_id = {charge_updated_id}"
+            f"/n✅ balance_txn_id {balance_txn_id} / payment_intent_id = {payment_intent_id}"
+        )
+
+        # ============================================================
+        #   🔵 ETAPE :  BALANCE TRANSACTION : Obligatoire 
+        # Mise à jour / création du BalanceTransaction en BDD
+        # passer à la création Payment MáJ Demande_paiement:status, Horaire
+        # ============================================================
+
+        # traitement de la balance à part
+        if not balance_txn_id: # Teste bloquant en cas Life
+                _webhook_status_update(
+                    webhook_event,
+                    False,
+                    "❌ Aucun balance_transaction trouvé dans charge.updated"
+                )
+
+        # ----------------------------
+        # 3️⃣ Récupération BALANCE TRANSACTION
+        # ----------------------------
+
+        try:
+            bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
+            if bal:
+                
+                append_webhook_log(
+                    webhook_event,
+                    f"📘 BalanceTransaction récupérée : {balance_txn_id}"
+                )
+
+        except Exception as e:
+            append_webhook_log(
+                webhook_event,
+                f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}. "
+            )
+
+        # ----------------------------
+        # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
+        # ----------------------------
+        from datetime import timezone as dt_timezone
+
+        with transaction.atomic(): 
+            balance_txn_obj, created = save_balance_transaction_from_charge(
+                bal=bal,
+                data_object=data_object,
+                balance_txn_id=balance_txn_id,
+                charge_succeeded_id=charge_updated_id,
+                webhook_event=webhook_event,
+                payment_intent_id=payment_intent_id
+            )
+
+            if not balance_txn_obj: # Erreur non bloquante données Stripe manquantes ou incohérantes
+                _webhook_status_update(
+                webhook_event,
+                False,
+                f"❌ Données balance manquantes attendre l'évènement Webhook Balance, Erreur non bloquante données Stripe manquantes ou incohérantes"
+                )
+                
+    return HttpResponse(status=200)
 
 
 def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
@@ -4453,12 +4528,12 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                     handle_payment_settlement(bal)
                 elif bal.event_type == 'transfer':
                     handle_transfer_settlement(bal)
-                # elif retrieved_bal_type == 'refund':
-                #     handle_refund_settlement(bal)
-                # elif retrieved_bal_type == 'dispute':
+                elif bal.event_type == 'refund':
+                    handle_refund_settlement(bal)
+                # elif bal.event_type == 'dispute':
                 #     handle_dispute_settlement(bal)
-                # elif retrieved_bal_type == 'adjustment':
-                #handle_adjustment_settlement(bal)
+                # elif bal.event_type == 'adjustment':
+                #   handle_adjustment_settlement(bal)
 
                 # 💰 Marquage disponible APRÈS settlement réussi
                 bal.is_available = True
@@ -4559,6 +4634,7 @@ def handle_transfer_settlement(balance_txn):
             id=invoice_transfert.accord_reglement_id
         ).update(status=AccordReglement.IN_PROGRESS)
 
+    # la mise à jour des payments liés (reglement_realise, accord_reglement_id)se fait suite au payout.succeed
 
     # 🔒 Settlement final
     balance_txn.is_settled = True
@@ -4625,6 +4701,86 @@ def handle_payment_settlement(balance_txn):
     balance_txn.save(update_fields=["is_settled"])
 
 
+
+@transaction.atomic
+def handle_refund_settlement(balance_txn):
+    """
+    💸 Settlement métier d’un REFUND Stripe
+
+    """
+
+    # ------------------------------------------------------------------
+    # 0️⃣ Idempotence forte (webhooks Stripe = répétables)
+    # ------------------------------------------------------------------
+    if balance_txn.is_settled:
+        return  # déjà traité → sortie silencieuse
+
+    # ------------------------------------------------------------------
+    # 2️⃣ Verrouillage de la facture de transfert associée
+    # ------------------------------------------------------------------
+    invoice_transfert = (
+        InvoiceTransfert.objects
+        .select_for_update()
+        .filter(balance_transaction=balance_txn.balance_txn_id)
+        .first()
+    )
+
+    if not invoice_transfert:
+        # ❌ Pas d’exception : on log et on sort
+        logger.warning(
+            f"[TRANSFER] InvoiceTransfert introuvable "
+            f"(balance_txn_id={balance_txn.balance_txn_id})"
+        )
+        return
+    
+    # ------------------------------------------------------------------
+    # 3️⃣ Normalisation du montant
+    # Stripe envoie souvent les transfers en négatif
+    # ------------------------------------------------------------------
+    amount = abs(balance_txn.amount) / 100
+
+
+    # ------------------------------------------------------------------
+    # 4️⃣ Création / mise à jour du Transfer interne
+    # ------------------------------------------------------------------
+    transfer, created = Transfer.objects.update_or_create(
+        invoice_transfert=invoice_transfert,
+        defaults={
+            "status": Transfer.APPROVED,  # transfert validé côté Stripe
+            "amount": amount,
+            "currency": balance_txn.currency,
+            "stripe_transfer_id": balance_txn.balance_txn_id,
+            "user_transfer_to": invoice_transfert.user_professeur,
+        }
+    )
+
+    # ------------------------------------------------------------------
+    # 5️⃣ Mise à jour de la facture de transfert (logique métier)
+    # ------------------------------------------------------------------
+    invoice_transfert.status = InvoiceTransfert.TRANSFERRED
+    invoice_transfert.stripe_transfer_id = balance_txn.balance_txn_id
+    invoice_transfert.save(update_fields=["status", "stripe_transfer_id"])
+
+    # 🧾 Accord de règlement
+    if invoice_transfert.accord_reglement:
+        AccordReglement.objects.filter(
+            id=invoice_transfert.accord_reglement_id
+        ).update(status=AccordReglement.IN_PROGRESS)
+
+
+    # 🔒 Settlement final
+    balance_txn.is_settled = True
+    balance_txn.save(update_fields=["is_settled"])
+
+    # ------------------------------------------------------------------
+    # 8️⃣ Audit log final
+    # ------------------------------------------------------------------
+    logger.info(
+        f"[TRANSFER] Settlement OK | "
+        f"invoice_transfert={invoice_transfert.id} | "
+        f"transfer={transfer.id} | "
+        f"amount={amount} {balance_txn.currency}"
+    )
 
 def analyze_balance_cause(balance): # non utilisé
     """
