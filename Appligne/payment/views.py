@@ -1312,7 +1312,7 @@ def refund_payment(request):
 
             # ❌ Aucune charge récupérée → impossible de rembourser
             if not charge:
-                messages.error(request, "Aucune charge trouvée pour ce paiement.")
+                messages.error(request, f"Aucune charge trouvée pour ce paiement ID = {payment.id}.")
                 return redirect('admin_remboursement_detaille')
 
             # 💰 Calcul du montant encore remboursable sur la charge
