@@ -4368,17 +4368,6 @@ def check_and_close_accord_if_complete(accord: AccordRemboursement):
         logger.info(f"⏳ Accord {accord.id} pas encore complet - en attente d'autres remboursements")
 
 
-def handle_refund_created(user_admin, data_object, webhook_event):
-    """
-    🎯 Stripe -> refund.created non encore développé
-    """
-    _webhook_status_update(
-            webhook_event, 
-            is_fully_completed=True,
-            message=f"🎯 Stripe -> refund.created non encore développé"
-        )
-    return HttpResponse(status=200)
-
 
 def handle_refund_updated(user_admin, data_object, webhook_event):
     """
