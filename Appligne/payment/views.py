@@ -1291,19 +1291,6 @@ def refund_payment(request):
                 charge_id = payment.invoice.stripe_charge_id
                 # 🔍 Récupération du PaymentIntent Stripe
                 charge = stripe.Charge.retrieve(charge_id)
-                # pi = stripe.PaymentIntent.retrieve(
-                #     payment.reference,
-                #     expand=["charges"]  # Permet d'accéder aux charges directement
-                # )
-
-                # # 🔄 Tentative 1 : Charge accessible via expand
-                # if hasattr(pi, "charges") and hasattr(pi.charges, "data") and pi.charges.data:
-                #     charge = pi.charges.data[0]
-
-                # # 🔄 Tentative 2 : Fallback via la liste des charges
-                # else: charge=None
-
-            
 
             # ===========================
             # CAS 2 : Aucun identifiant Stripe connu
@@ -1767,11 +1754,13 @@ def stripe_webhook(request):
 
             # ==================== REMBOURSEMENTS =========================
             'refund.created': handle_refund_created, # Pas encore traiter, 1er Webhook suite à stripe.Refund.create() mais pour refund total seulement
-            'charge.updated': handle_charge_updated, # Pas encore traiter, 2° pour tous les type de refund
             'charge.refunded': handle_charge_refunded_unified, # Pas encore traiter, ⚠️ il est OBSOLÈTE
-            'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter , 3° suivie du refundpas important
-            
             'refund.updated': handle_refund_updated, # Pas encore traiter
+            'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter , 3° suivie du refundpas important
+            'charge.updated': handle_charge_updated, # Pas encore traiter, 2° pour tous les type de refund
+            
+            
+            
             'refund.failed': handle_refund_failed, # Pas encore traiter
 
             
@@ -3302,38 +3291,27 @@ def handle_charge_succeeded(user_admin, data_object, webhook_event, bal=None):
 
  
 
-def handle_charge_refunded_unified(charge):
+def handle_charge_refunded_unified(user_admin, data_object, webhook_event):
     """
-    🔄 Traitement quand un remboursement est effectué - VERSION UNIFIÉE
+    🔄 Traitement quand un remboursement est effectué - VERSION UNIFIÉE, non encore traité
     """
-    logger.info(f"🔄 Remboursement effectué : {charge['id']}")
-    
-    amount_refunded = charge.get('amount_refunded', 0)
-    currency = charge.get('currency', 'eur')
-    
-    logger.info(f"💰 Montant remboursé : {amount_refunded/100:.2f} {currency}")
-    
-    # Mettre à jour la facture associée
-    payment_intent_id = charge.get('payment_intent')
-    if payment_intent_id:
-        try:
-            invoice = Invoice.objects.filter(stripe_payment_intent_id=payment_intent_id).first()
-            if invoice:
-                invoice.status = "refunded"
-                invoice.refunded_at = timezone.now()
-                invoice.save()
-                logger.info(f"🔄 Facture ID={invoice.id} marquée comme remboursée")
-        except Exception as e:
-            logger.error(f"💥 Erreur mise à jour facture: {e}")
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"🔄 Traitement quand un remboursement est effectué - VERSION UNIFIÉE, non encore traité"
+        )
+    return HttpResponse(status=200)
 
-def handle_charge_refund_updated_unified(charge):
+def handle_charge_refund_updated_unified(user_admin, data_object, webhook_event):
     """
-    🔄 Traitement quand un remboursement est mis à jour - VERSION UNIFIÉE
+    🔄 Traitement quand un remboursement est mis à jour - non encore traité
     """
-    logger.info(
-        f"🔄 Mise à jour remboursement : {charge['id']} | "
-        f"Montant remboursé : {charge.get('amount_refunded', 0)/100:.2f} {charge['currency']}"
-    )
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=True,
+            message=f"🔄 Traitement quand un remboursement est mis à jour - non encore traité"
+        )
+    return HttpResponse(status=200)
 
 
 
@@ -3561,135 +3539,302 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
         _webhook_status_update(webhook_event, is_fully_completed=False, 
                                        message=f"❌ Erreur globale dans handle_payment_intent_created : {e}")
 
+#
+def handle_refund_created(user_admin, data_object, webhook_event):
+    """
+    🔔 Gestion du webhook Stripe : charge.updated
 
+    Rôle :
+        - Lier la Charge Stripe à un RefundPayment interne
+        - Marquer le remboursement comme PENDING
+        - Récupérer et enregistrer la BalanceTransaction
+        - Préparer la suite du flux (balance.available)
+    """
+
+    # -------------------------------------------------
+    # 1️⃣ Extraction des données Stripe
+    # -------------------------------------------------
+    charge_updated_id = data_object["id"]
+    balance_txn_id = data_object.get("balance_transaction")
+    payment_intent_id = data_object.get("payment_intent")
+    idempotency_key = data_object.get("idempotency_key")
+    local_refund_id = data_object.get("metadata", {}).get("local_refund_id")
+
+    append_webhook_log(
+        webhook_event,
+        f"✅ Début du traitement du Webhook : charge.updated"
+        f"\n1️⃣ charge_updated_id: {charge_updated_id}"
+        f"\n2️⃣ balance_txn_id: {balance_txn_id}"
+        f"\n3️⃣ payment_intent_id: {payment_intent_id}"
+        f"\n4️⃣ idempotency_key: {idempotency_key}"
+        f"\n5️⃣ local_refund_id: {local_refund_id}"
+    )
+
+    # -------------------------------------------------
+    # 2️⃣ Validation des métadonnées (OBLIGATOIRE)
+    # -------------------------------------------------
+    if not local_refund_id:
+        append_webhook_log(
+            webhook_event,
+            f"⚠️ [charge_updated_id: {charge_updated_id}] Aucun local_refund_id trouvé dans metadata"
+        )
+
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=False,
+            message="❌ Données manquantes : local_refund_id absent"
+        )
+        return HttpResponse(status=200)
+
+    # -------------------------------------------------
+    # 3️⃣ Récupération du RefundPayment en BDD
+    # -------------------------------------------------
+    refund_payment = RefundPayment.objects.filter(
+        id=local_refund_id,
+        idempotency_key=idempotency_key
+    ).first()
+
+    if not refund_payment:
+        append_webhook_log(
+            webhook_event,
+            f"❌ [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} introuvable en BDD"
+        )
+
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=False,
+            message="❌ RefundPayment introuvable en BDD"
+        )
+        return HttpResponse(status=200)
+
+    # -------------------------------------------------
+    # 4️⃣ Cas rare : charge.updated reçu APRÈS balance.available
+    # -------------------------------------------------
+    if refund_payment.status == RefundPayment.APPROVED:
+        _webhook_status_update(
+            webhook_event,
+            True,
+            f"🏁 [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} déjà APPROVED"
+        )
+        return HttpResponse(status=200)
+
+    # -------------------------------------------------
+    # 5️⃣ Marquer le remboursement comme PENDING
+    # -------------------------------------------------
+    refund_payment.status = RefundPayment.PENDING
+    refund_payment.charge_id = charge_updated_id
+    refund_payment.balance_txn_id = balance_txn_id
+    refund_payment.payment_intent_id = payment_intent_id
+    refund_payment.save()
+
+    append_webhook_log(
+        webhook_event,
+        f"\n✅ RefundPayment {refund_payment.id} marqué PENDING"
+        f"\n✅ charge_id={charge_updated_id}"
+        f"\n✅ balance_txn_id={balance_txn_id}"
+        f"\n✅ payment_intent_id={payment_intent_id}"
+    )
+
+    # -------------------------------------------------
+    # 6️⃣ BalanceTransaction : OBLIGATOIRE
+    # -------------------------------------------------
+    if not balance_txn_id:
+        _webhook_status_update(
+            webhook_event,
+            False,
+            "❌ Aucun balance_transaction trouvé dans charge.updated"
+        )
+        return HttpResponse(status=200)
+
+    # -------------------------------------------------
+    # 7️⃣ Récupération de la BalanceTransaction Stripe
+    # -------------------------------------------------
+    bal = None
+    try:
+        bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
+        if bal:
+            append_webhook_log(
+                webhook_event,
+                f"📘 BalanceTransaction récupérée : {balance_txn_id}"
+            )
+    except Exception as e:
+        append_webhook_log(
+            webhook_event,
+            f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}"
+        )
+
+    # -------------------------------------------------
+    # 8️⃣ Création / Mise à jour BalanceTransaction en BDD
+    # -------------------------------------------------
+    with transaction.atomic():
+        balance_txn_obj, created = save_balance_transaction_from_charge(
+            bal=bal,
+            data_object=data_object,
+            balance_txn_id=balance_txn_id,
+            charge_succeeded_id=charge_updated_id,
+            webhook_event=webhook_event,
+            payment_intent_id=payment_intent_id
+        )
+
+        # Erreur NON bloquante (balance.available peut arriver après)
+        if not balance_txn_obj:
+            _webhook_status_update(
+                webhook_event,
+                False,
+                "❌ Données balance manquantes — attente webhook balance.available"
+            )
+
+    return HttpResponse(status=200)
 
 
 
 
 def handle_charge_updated(user_admin, data_object, webhook_event):
     """
-    
+    🔔 Gestion du webhook Stripe : charge.updated
+
+    Rôle :
+        - Lier la Charge Stripe à un RefundPayment interne
+        - Marquer le remboursement comme PENDING
+        - Récupérer et enregistrer la BalanceTransaction
+        - Préparer la suite du flux (balance.available)
     """
 
-    charge_updated_id = data_object['id']
+    # -------------------------------------------------
+    # 1️⃣ Extraction des données Stripe
+    # -------------------------------------------------
+    charge_updated_id = data_object["id"]
     balance_txn_id = data_object.get("balance_transaction")
     payment_intent_id = data_object.get("payment_intent")
     idempotency_key = data_object.get("idempotency_key")
     local_refund_id = data_object.get("metadata", {}).get("local_refund_id")
-    
-    append_webhook_log(webhook_event, 
-        f"✅ Début du traitement du Webhok: charge.updated"
-        f"/n1️⃣ [charge_updated_id: {charge_updated_id}] "
-        f"/n2️⃣ [balance_txn_id: {balance_txn_id}] "
-        f"/n3️⃣ [payment_intent_id: {payment_intent_id}] "
-        f"/n4️⃣ [idempotency_key: {idempotency_key}] "
-        f"/n5️⃣ [local_refund_id: {local_refund_id}] "
-        )
 
-    
+    append_webhook_log(
+        webhook_event,
+        f"✅ Début du traitement du Webhook : charge.updated"
+        f"\n1️⃣ charge_updated_id: {charge_updated_id}"
+        f"\n2️⃣ balance_txn_id: {balance_txn_id}"
+        f"\n3️⃣ payment_intent_id: {payment_intent_id}"
+        f"\n4️⃣ idempotency_key: {idempotency_key}"
+        f"\n5️⃣ local_refund_id: {local_refund_id}"
+    )
 
-    # 🛡️ VALIDATION DES MÉTADONNÉES
+    # -------------------------------------------------
+    # 2️⃣ Validation des métadonnées (OBLIGATOIRE)
+    # -------------------------------------------------
     if not local_refund_id:
-        append_webhook_log(webhook_event, 
-            f"⚠️ [charge_updated_id: {charge_updated_id}] Aucun local_refund_id trouvé dans metadata")
-        
-        _webhook_status_update(webhook_event, 
+        append_webhook_log(
+            webhook_event,
+            f"⚠️ [charge_updated_id: {charge_updated_id}] Aucun local_refund_id trouvé dans metadata"
+        )
+
+        _webhook_status_update(
+            webhook_event,
             is_fully_completed=False,
-            message="❌ Données manquantes : invoice_id absent"
+            message="❌ Données manquantes : local_refund_id absent"
+        )
+        return HttpResponse(status=200)
+
+    # -------------------------------------------------
+    # 3️⃣ Récupération du RefundPayment en BDD
+    # -------------------------------------------------
+    refund_payment = RefundPayment.objects.filter(
+        id=local_refund_id,
+        idempotency_key=idempotency_key
+    ).first()
+
+    if not refund_payment:
+        append_webhook_log(
+            webhook_event,
+            f"❌ [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} introuvable en BDD"
         )
 
-    #try:
-        # 🔎 RÉCUPÉRATION DE LA FACTURE
-        refund_payment = RefundPayment.objects.filter(id=local_refund_id, idempotency_key=idempotency_key).first()
-        if not refund_payment:
-            append_webhook_log(webhook_event, 
-                f"❌ [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} introuvable en BDD")
-            
-            _webhook_status_update(
-                webhook_event,
-                is_fully_completed=False,
-                message="❌ Facture introuvable en BDD"
-            )
-
-        # 🚨 Cas très rare
-        # il se peut que lévènement charge.updated a été traité 
-        # en retard et que lévènement balance.available est traité avant
-        if refund_payment.status == RefundPayment.APPROVED:
-            _webhook_status_update(
-                webhook_event, 
-                True,
-                f"🏁 [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} est déjà marqué APPROVED."
-            )
-            return HttpResponse(status=200)
-        
-        # 🟡 MARQUER LA RefundPayment COMME PENDING et refund_payment.charge_id
-        refund_payment.status = RefundPayment.PENDING
-        refund_payment.charge_id = charge_updated_id
-        refund_payment.balance_txn_id = balance_txn_id
-        refund_payment.payment_intent_id = payment_intent_id
-        refund_payment.save()
-
-        append_webhook_log(webhook_event,
-            f"/n✅ RefundPayment {refund_payment.id} marquée PENDING / refund_payment.charge_id = {charge_updated_id}"
-            f"/n✅ balance_txn_id {balance_txn_id} / payment_intent_id = {payment_intent_id}"
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=False,
+            message="❌ RefundPayment introuvable en BDD"
         )
+        return HttpResponse(status=200)
 
-        # ============================================================
-        #   🔵 ETAPE :  BALANCE TRANSACTION : Obligatoire 
-        # Mise à jour / création du BalanceTransaction en BDD
-        # passer à la création Payment MáJ Demande_paiement:status, Horaire
-        # ============================================================
+    # -------------------------------------------------
+    # 4️⃣ Cas rare : charge.updated reçu APRÈS balance.available
+    # -------------------------------------------------
+    if refund_payment.status == RefundPayment.APPROVED:
+        _webhook_status_update(
+            webhook_event,
+            True,
+            f"🏁 [charge_updated_id {charge_updated_id}] RefundPayment {local_refund_id} déjà APPROVED"
+        )
+        return HttpResponse(status=200)
 
-        # traitement de la balance à part
-        if not balance_txn_id: # Teste bloquant en cas Life
-                _webhook_status_update(
-                    webhook_event,
-                    False,
-                    "❌ Aucun balance_transaction trouvé dans charge.updated"
-                )
+    # -------------------------------------------------
+    # 5️⃣ Marquer le remboursement comme PENDING
+    # -------------------------------------------------
+    refund_payment.status = RefundPayment.PENDING
+    refund_payment.charge_id = charge_updated_id
+    refund_payment.balance_txn_id = balance_txn_id
+    refund_payment.payment_intent_id = payment_intent_id
+    refund_payment.save()
 
-        # ----------------------------
-        # 3️⃣ Récupération BALANCE TRANSACTION
-        # ----------------------------
+    append_webhook_log(
+        webhook_event,
+        f"\n✅ RefundPayment {refund_payment.id} marqué PENDING"
+        f"\n✅ charge_id={charge_updated_id}"
+        f"\n✅ balance_txn_id={balance_txn_id}"
+        f"\n✅ payment_intent_id={payment_intent_id}"
+    )
 
-        try:
-            bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
-            if bal:
-                
-                append_webhook_log(
-                    webhook_event,
-                    f"📘 BalanceTransaction récupérée : {balance_txn_id}"
-                )
+    # -------------------------------------------------
+    # 6️⃣ BalanceTransaction : OBLIGATOIRE
+    # -------------------------------------------------
+    if not balance_txn_id:
+        _webhook_status_update(
+            webhook_event,
+            False,
+            "❌ Aucun balance_transaction trouvé dans charge.updated"
+        )
+        return HttpResponse(status=200)
 
-        except Exception as e:
+    # -------------------------------------------------
+    # 7️⃣ Récupération de la BalanceTransaction Stripe
+    # -------------------------------------------------
+    bal = None
+    try:
+        bal = stripe.BalanceTransaction.retrieve(balance_txn_id)
+        if bal:
             append_webhook_log(
                 webhook_event,
-                f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}. "
+                f"📘 BalanceTransaction récupérée : {balance_txn_id}"
             )
+    except Exception as e:
+        append_webhook_log(
+            webhook_event,
+            f"⚠️ Impossible de récupérer BalanceTransaction Stripe : {e}"
+        )
 
-        # ----------------------------
-        # 4️⃣ Mise à jour / création du BalanceTransaction en BDD
-        # ----------------------------
-        from datetime import timezone as dt_timezone
+    # -------------------------------------------------
+    # 8️⃣ Création / Mise à jour BalanceTransaction en BDD
+    # -------------------------------------------------
+    with transaction.atomic():
+        balance_txn_obj, created = save_balance_transaction_from_charge(
+            bal=bal,
+            data_object=data_object,
+            balance_txn_id=balance_txn_id,
+            charge_succeeded_id=charge_updated_id,
+            webhook_event=webhook_event,
+            payment_intent_id=payment_intent_id
+        )
 
-        with transaction.atomic(): 
-            balance_txn_obj, created = save_balance_transaction_from_charge(
-                bal=bal,
-                data_object=data_object,
-                balance_txn_id=balance_txn_id,
-                charge_succeeded_id=charge_updated_id,
-                webhook_event=webhook_event,
-                payment_intent_id=payment_intent_id
-            )
-
-            if not balance_txn_obj: # Erreur non bloquante données Stripe manquantes ou incohérantes
-                _webhook_status_update(
+        # Erreur NON bloquante (balance.available peut arriver après)
+        if not balance_txn_obj:
+            _webhook_status_update(
                 webhook_event,
                 False,
-                f"❌ Données balance manquantes attendre l'évènement Webhook Balance, Erreur non bloquante données Stripe manquantes ou incohérantes"
-                )
-                
+                "❌ Données balance manquantes — attente webhook balance.available"
+            )
+
     return HttpResponse(status=200)
+
 
 
 def handle_transfer_created(user_admin, data_object, webhook_event, bal=None):
@@ -4223,60 +4368,28 @@ def check_and_close_accord_if_complete(accord: AccordRemboursement):
         logger.info(f"⏳ Accord {accord.id} pas encore complet - en attente d'autres remboursements")
 
 
-def handle_refund_created(data):
+def handle_refund_created(user_admin, data_object, webhook_event):
     """
-    🎯 Stripe -> refund.created
+    🎯 Stripe -> refund.created non encore développé
     """
-    stripe_refund_id = data.get("id")
-    status = data.get("status")
-    metadata = data.get("metadata", {})
-    local_refund_id = metadata.get("local_refund_id")
-
-    logger.info(f"🔔 Refund créé Stripe ID={stripe_refund_id}, local_refund_id={local_refund_id}")
-
-    if not local_refund_id:
-        logger.warning(f"⚠ Refund {stripe_refund_id} sans local_refund_id → Ignoré")
-        return
-
-    try:
-        refund = RefundPayment.objects.get(id=local_refund_id)
-        refund.status = status
-        refund.stripe_refund_id = stripe_refund_id
-        refund.save()
-
-        logger.info(f"✅ Refund local #{refund.id} mis à jour → {status}")
-
-        # 🎯 Auto-check accord
-        detail = DetailAccordRemboursement.objects.filter(payment=refund.payment).first()
-        if detail:
-            check_and_close_accord_if_complete(detail.accord)
-
-    except RefundPayment.DoesNotExist:
-        logger.error(f"❌ Refund local ID={local_refund_id} introuvable")
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=True,
+            message=f"🎯 Stripe -> refund.created non encore développé"
+        )
+    return HttpResponse(status=200)
 
 
-def handle_refund_updated(data):
+def handle_refund_updated(user_admin, data_object, webhook_event):
     """
-    🔁 Stripe -> refund.updated (modification de statut après création)
+    🔁 Stripe -> refund.updated (modification de statut après création) non important non encore traité
     """
-    stripe_refund_id = data.get("id")
-    status = data.get("status")
-
-    logger.info(f"🔄 Refund update Stripe ID={stripe_refund_id} -> {status}")
-
-    try:
-        refund = RefundPayment.objects.get(stripe_refund_id=stripe_refund_id)
-        refund.status = status
-        refund.save()
-
-        logger.info(f"✅ Refund #{refund.id} mis à jour → {status}")
-
-        detail = DetailAccordRemboursement.objects.filter(payment=refund.payment).first()
-        if detail:
-            check_and_close_accord_if_complete(detail.accord)
-
-    except RefundPayment.DoesNotExist:
-        logger.warning(f"⚠ Refund Stripe ID={stripe_refund_id} reçu mais pas trouvé en base")
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=True,
+            message=f"🔁 Stripe -> refund.updated (modification de statut après création) non important non encore traité"
+        )
+    return HttpResponse(status=200)
 
 def handle_transfer_updated(data_object):
     """
