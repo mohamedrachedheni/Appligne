@@ -782,7 +782,6 @@ class RefundPayment(models.Model):
     balance_txn_id = models.CharField(max_length=255, unique=True, null=True, blank=True) # util pour la comptabilité
     payment_intent_id = models.CharField(max_length=255, unique=True, null=True, blank=True) # intention de paiement util pour Gestion erreurs et UX / Checkout 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
-    idempotency_key = models.CharField(max_length=100, unique=True, null=True, blank=True) # pour la sécurité des données
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

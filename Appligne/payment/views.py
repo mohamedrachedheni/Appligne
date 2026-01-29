@@ -1335,6 +1335,7 @@ def refund_payment(request):
             payment=enr["payment"],
             montant=enr["amount_eur"],
             status=RefundPayment.PENDING,
+            
         )
 
         # 🔐 Idempotency key : empêche les doublons Stripe ( ✔️ Garantie unique ✔️ Stable ✔️ Liée à la base de données ✔️ Compatible remboursements multiples )
@@ -3740,7 +3741,6 @@ def handle_charge_updated(user_admin, data_object, webhook_event):
     # -------------------------------------------------
     refund_payment = RefundPayment.objects.filter(
         id=local_refund_id,
-        idempotency_key=idempotency_key
     ).first()
 
     if not refund_payment:
