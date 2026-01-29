@@ -1348,7 +1348,7 @@ def refund_payment(request):
                 amount=enr["amount_cents"],
                 reason='requested_by_customer',
                 metadata={'local_refund_id': refund_record.id},
-                idempotency_key=idempotency_key
+                idempotency_key = idempotency_key
             )
 
             # ✅ Mise à jour du remboursement local
@@ -3592,7 +3592,6 @@ def handle_refund_created(user_admin, data_object, webhook_event):
     # -------------------------------------------------
     refund_payment = RefundPayment.objects.filter(
         id=local_refund_id,
-        idempotency_key=idempotency_key
     ).first()
 
     if not refund_payment:
