@@ -1741,7 +1741,6 @@ def stripe_webhook(request):
 
             'payout.created': handle_payout_created, # pour les virement du compte de la plateforme au compte bancaire de l'admin (non achever)
             'payout.paid': handle_payout_paid,
-
             'payout.failed': handle_payout_failed,
             'transfer.updated': handle_transfer_updated,
             'transfer.failed': handle_transfer_failed, # apparament il n'existe pas
@@ -1759,12 +1758,7 @@ def stripe_webhook(request):
             'refund.updated': handle_refund_updated, # Pas encore traiter
             'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter , 3° suivie du refundpas important
             'charge.updated': handle_charge_updated, # Pas encore traiter, 2° pour tous les type de refund
-            
-            
-            
             'refund.failed': handle_refund_failed, # Pas encore traiter
-
-            
             # ==================== PAYOUTS COMPTE CONNECT ====================
         }
 
@@ -4335,22 +4329,28 @@ def handle_transfer_reversed(user_admin, data_object, webhook_event, transfer=No
 
 
 
-def handle_payout_paid(payout):
+def handle_payout_paid(user_admin, data_object, webhook_event):
     """
     ✅ Géré lorsque Stripe confirme que le virement vers le compte bancaire est effectué.
     """
-    payout_id = payout.get('id')
-    logger.info(f"🏦 Virement vers le compte bancaire réussi : {payout_id}")
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"✅ Géré lorsque Stripe confirme que le virement vers le compte bancaire est effectué. Non traité"
+        )
+    return HttpResponse(status=200)
 
 
-def handle_payout_failed(payout):
+def handle_payout_failed(user_admin, data_object, webhook_event):
     """
     🚫 Géré lorsque le virement bancaire échoue.
     """
-    payout_id = payout.get('id')
-    failure_reason = payout.get('failure_message', 'Raison non spécifiée')
-    logger.error(f"🚫 Virement bancaire échoué : {payout_id} - Raison : {failure_reason}")
-
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"🚫 Géré lorsque le virement bancaire échoue. Non achevé"
+        )
+    return HttpResponse(status=200)
 
 def check_and_close_accord_if_complete(accord: AccordRemboursement):
     """
@@ -4379,45 +4379,17 @@ def handle_refund_updated(user_admin, data_object, webhook_event):
         )
     return HttpResponse(status=200)
 
-def handle_transfer_updated(data_object):
+def handle_transfer_updated(user_admin, data_object, webhook_event):
     """
     🔄 Traitement QUAND UN TRANSFERT EST MIS À JOUR
     Gère TOUS les changements de statut : created, paid, failed, etc.
     """
-    transfer = data_object
-    
-    logger.info(
-        f"🔄 Transfert mis à jour : {transfer['id']} | "
-        f"Statut : {transfer.get('status', 'unknown')} | "
-        f"Montant : {transfer['amount']/100:.2f} {transfer['currency']} | "
-        f"Destination : {transfer.get('destination', 'Unknown')}"
-    )
-    
-    # 📊 GESTION DES DIFFÉRENTS STATUTS
-    status = transfer.get('status', '')
-    
-    if status == 'pending':
-        logger.info(f"⏳ Transfert {transfer['id']} en attente")
-        # Transfert créé mais pas encore traité
-        
-    elif status == 'in_transit':
-        logger.info(f"🚚 Transfert {transfer['id']} en cours de traitement")
-        # Fonds en cours d'envoi
-        
-    elif status == 'paid':
-        logger.info(f"💰 Transfert {transfer['id']} PAYÉ avec succès!")
-        # FONDS EFFECTIVEMENT ENVOYÉS ✅
-        handle_transfer_paid_success(transfer)
-        
-    elif status == 'failed':
-        logger.error(f"❌ Transfert {transfer['id']} ÉCHOUÉ!")
-        # Le transfert a échoué
-        handle_transfer_failed(transfer)
-        
-    elif status == 'canceled':
-        logger.warning(f"🚫 Transfert {transfer['id']} ANNULÉ")
-        # Transfert annulé
-        handle_transfer_canceled(transfer)
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"🔄 Traitement QUAND UN TRANSFERT EST MIS À JOUR"
+        )
+    return HttpResponse(status=200)
 
 def handle_transfer_paid_success(transfer):
     """Traitement quand un transfert est payé avec succès"""
@@ -4438,16 +4410,15 @@ def handle_transfer_paid_success(transfer):
     except Exception as e:
         logger.error(f"❌ Erreur traitement transfert payé : {e}")
 
-def handle_transfer_failed(transfer):
+def handle_transfer_failed(user_admin, data_object, webhook_event):
     """Traitement quand un transfert échoue"""
-    logger.error(f"💥 TRANSFERT ÉCHOUÉ: {transfer['id']}")
     
-    # Raison possible de l'échec
-    failure_message = transfer.get('failure_message', 'Raison inconnue')
-    logger.error(f"   📉 Raison: {failure_message}")
-    
-    # Mettre à jour le statut en base
-    update_transfer_status(transfer['id'], 'failed')
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"🔄 Traitement quand un transfert échoue"
+        )
+    return HttpResponse(status=200)
 
 def handle_transfer_canceled(transfer):
     """Traitement quand un transfert est annulé"""
@@ -4476,25 +4447,17 @@ def update_transfer_status(transfer_id, status, teacher_id=None, invoice_id=None
     except Exception as e:
         logger.error(f"❌ Erreur mise à jour base de données : {e}")
 
-def handle_refund_failed(data_object):
+def handle_refund_failed(user_admin, data_object, webhook_event):
     """
     ❌ Traitement quand un remboursement échoue
     Événement critique - nécessite une action manuelle
     """
-    refund = data_object
-    
-    logger.error(
-        f"❌ REMBOURSEMENT ÉCHOUÉ : {refund['id']} | "
-        f"Montant : {refund['amount']/100:.2f} {refund['currency']} | "
-        f"Charge : {refund.get('charge', 'Unknown')} | "
-        f"Raison : {refund.get('failure_reason', 'Non spécifiée')}"
-    )
-    
-    # 🔥 NOTIFICATION URGENTE
-    notify_refund_failure(refund)
-    
-    # 📝 METTRE À JOUR VOTRE BASE DE DONNÉES
-    update_refund_status_in_database(refund['id'], 'failed', refund.get('failure_reason'))
+    _webhook_status_update(
+            webhook_event, 
+            is_fully_completed=False,
+            message=f"🔄 Traitement quand un remboursement est effectué - VERSION UNIFIÉE, non encore traité"
+        )
+    return HttpResponse(status=200)
 
 def notify_refund_failure(refund):
     """
@@ -4560,106 +4523,138 @@ def update_refund_status_in_database(refund_id, status, failure_reason=None):
 
 
 
-
 def handle_balance_available(user_admin, data_object, webhook_event):
     """
     💰 Gestion de l'événement Stripe `balance.available`
 
-    Cet événement est déclenché lorsque des fonds deviennent disponibles dans
-    le solde Stripe (généralement 2-7 jours après la charge).
+    Ce webhook est déclenché lorsque des fonds deviennent disponibles sur le compte Stripe
+    (en général 2-7 jours après une charge réussie).
 
-    🔥 MISSION :
-        - Marquer les BalanceTransaction comme disponibles
-        - Finaliser les paiements (Invoice → PAID)
-        - Lier Payment / Demande_paiement / Horaire
-        - Gérer les cas multi-transactions
-        - Gérer les redondances et retards dans la séquence des Webhooks
-
-    ⚠️ Attention :
-        → 'charge.succeeded' n'est pas suffisant pour considérer la facture payée
-        → SEUL 'balance.available' garantit que l’argent est réellement reçu
-    🔔 Remarque :
-        → data_type est utile seulement pour les testes locaux
-        → elle contient les Data liées aux balance/type de l'évènement principal
+    ⚡ Objectif :
+    - Identifier les transactions internes (BalanceTransaction) encore marquées comme non disponibles
+    - Vérifier leur statut réel chez Stripe
+    - Effectuer le settlement métier (finaliser paiement, transfert ou remboursement)
+    - Marquer les transactions comme disponibles
+    - Assurer l'idempotence et la cohérence comptable
     """
 
-    valider = True # si False => return JsonResponse({'error': 'technical_error'}, status=500)
-    validation_texte = "" # L'ensemble des textes d'erreurs logged
-
-    # 🔐 IDs Stripe officiellement déclarés comme disponibles
-    stripe_available_ids = [
-        bal["id"] for bal in data_object.get("available", []) if bal.get("id")
-    ]   
-
-    if not stripe_available_ids:
-        append_webhook_log(webhook_event, "ℹ️ Aucun ID Stripe dans balance.available")
-        _webhook_status_update(webhook_event, True, "Aucune transaction concernée")
-        return HttpResponse(status=200)
-
-    append_webhook_log(webhook_event, "📩 balance.available reçu — début du traitement")
-    now = timezone.now()
-
-    # 🔎 Transactions internes correspondantes
-    pending_balances = BalanceTransaction.objects.select_for_update().filter(
-        balance_txn_id__in=stripe_available_ids,
-        is_available=False
-    )
-    
-    if not pending_balances.exists():
-        append_webhook_log(webhook_event, "ℹ️ Transactions déjà traitées ou absentes")
-        _webhook_status_update(webhook_event, True, "Rien à faire (idempotent)")
-        return HttpResponse(status=200)
-
+    # ---------------------------------------------------
+    # 🔔 Signal reçu
+    # ---------------------------------------------------
     append_webhook_log(
         webhook_event,
-        f"📊 {pending_balances.count()} BalanceTransaction(s) à finaliser"
+        "📩 balance.available reçu — déclenchement de la vérification des transactions pending"
     )
 
-    # ------------------------------------------
-    # 1️⃣ Parcourir chaque transaction disponible traitable
-    # ------------------------------------------
+    # ---------------------------------------------------
+    # 🔁 Étape 2 — Sélection des transactions internes
+    # ---------------------------------------------------
+    # Récupère toutes les BalanceTransaction encore non finalisées
+    # - is_available=False : fonds pas encore marqués disponibles
+    # - status="pending" : statut Stripe connu au moment de charge.succeeded
+    # select_for_update() : verrou DB pour éviter les conflits en cas de webhooks concurrents
+    pending_balances = (
+        BalanceTransaction.objects
+        .select_for_update()
+        .filter(
+            is_available=False,
+            status="pending"
+        )
+    )
+
+    # ---------------------------------------------------
+    # 💤 Aucun travail à faire
+    # ---------------------------------------------------
+    if not pending_balances.exists():
+        append_webhook_log(
+            webhook_event,
+            "ℹ️ Aucune BalanceTransaction pending à vérifier"
+        )
+        _webhook_status_update(webhook_event, True, "Rien à traiter (idempotent)")
+        return HttpResponse(status=200)
+
+    # ---------------------------------------------------
+    # 🔁 Étape 4 — Boucle principale : vérification et settlement
+    # ---------------------------------------------------
+    append_webhook_log(
+        webhook_event,
+        f"📊 Vérification de {pending_balances.count()} BalanceTransaction(s) pending"
+    )
+
+    # Transaction atomique : rollback si une erreur survient
     with transaction.atomic():
         for bal in pending_balances:
+
             append_webhook_log(
                 webhook_event,
-                f"🔍 Traitement balance_txn_id={bal.balance_txn_id}"
+                f"🔍 Vérification Stripe balance_txn_id={bal.balance_txn_id}"
             )
 
+            # ---------------------------------------------------
+            # 🌐 Vérification du statut réel chez Stripe
+            # ---------------------------------------------------
+            # On recharge la transaction via l'API Stripe pour vérifier si elle est maintenant disponible
+            stripe_txn = stripe.BalanceTransaction.retrieve(
+                bal.balance_txn_id
+            )
+
+            # ⏳ Si elle n'est pas encore disponible, on ignore pour l'instant
+            if stripe_txn.status != "available":
+                append_webhook_log(
+                    webhook_event,
+                    f"⏳ Toujours pending chez Stripe"
+                )
+                continue
+
+            # ---------------------------------------------------
+            # 💼 Settlement métier
+            # ---------------------------------------------------
+            # Ici l'argent est effectivement disponible
+            # On applique la logique métier selon le type de transaction
             try:
-                # 💳 Settlement métier UNIQUEMENT pour les charges
                 if bal.event_type == "charge":
+                    # Paiement client → finaliser facture, cours, horaires, etc.
                     handle_payment_settlement(bal)
                 elif bal.event_type == 'transfer':
+                    # Transfert vers compte connecté
                     handle_transfer_settlement(bal)
                 elif bal.event_type == 'refund':
+                    # Remboursement confirmé
                     handle_refund_settlement(bal)
                 # elif bal.event_type == 'dispute':
                 #     handle_dispute_settlement(bal)
                 # elif bal.event_type == 'adjustment':
-                #   handle_adjustment_settlement(bal)
+                #     handle_adjustment_settlement(bal)
 
-                # 💰 Marquage disponible APRÈS settlement réussi
+                # ---------------------------------------------------
+                # ✅ Marquage interne : transaction finalisée
+                # ---------------------------------------------------
+                bal.status = "available"
                 bal.is_available = True
-                bal.save(update_fields=["is_available", "updated_at"])
+                bal.available_on = timezone.now()
+                bal.save(update_fields=[
+                    "status",
+                    "is_available",
+                    "available_on",
+                    "updated_at"
+                ])
 
                 append_webhook_log(
                     webhook_event,
                     f"✅ BalanceTransaction {bal.balance_txn_id} finalisée"
                 )
-                
+
+            # ---------------------------------------------------
+            # 💥 Gestion des erreurs critiques
+            # ---------------------------------------------------
+            # Une erreur stoppe tout le batch et rollback la transaction
             except Exception as e:
-                valider = False
-                validation_texte += f"\n❌ {bal.balance_txn_id} : {str(e)}"
-                append_webhook_log(webhook_event, f"💥 Erreur : {str(e)}")
-                break  # rollback total
+                append_webhook_log(
+                    webhook_event,
+                    f"💥 Erreur settlement {bal.balance_txn_id} : {str(e)}"
+                )
+                raise  # rollback transaction.atomic()
 
-    # 🧾 Verdict webhook
-    if not valider:
-        append_webhook_log(webhook_event, validation_texte)
-        return JsonResponse({"success": False, "errors": validation_texte}, status=500)
-
-    _webhook_status_update(webhook_event, True, "Toutes les transactions disponibles ont été traitées")
-    return JsonResponse({"success": True})
 
 
 @transaction.atomic
