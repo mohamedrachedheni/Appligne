@@ -4749,54 +4749,138 @@ def handle_transfer_settlement(balance_txn):
     )
 
 @transaction.atomic
-def handle_payment_settlement(balance_txn):
+def handle_payment_settlement(bal):
     """
-    💳 Finalisation métier d’un paiement APRÈS confirmation Stripe
+    💳 Finalisation MÉTIER d’un paiement APRÈS confirmation Stripe
+
+    Cette fonction est appelée UNIQUEMENT lorsque :
+    - balance.available a confirmé que l'argent est réellement encaissé
+
+    Garanties :
+    - idempotence
+    - cohérence comptable
+    - rollback automatique en cas d’erreur
     """
 
-    if balance_txn.is_settled:
-        return  # idempotent
-
-    invoice = Invoice.objects.select_for_update().filter(
-        balance_txn_id=balance_txn.balance_txn_id
+    # ---------------------------------------------------
+    # 🔎 Récupération du webhook associé (si existant)
+    # ---------------------------------------------------
+    webhook_event = WebhookEvent.objects.filter(
+        event_id=bal.balance_txn_id
     ).first()
 
-    if not invoice:
-        raise Exception("Invoice introuvable pour cette BalanceTransaction")
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"🔁 Début settlement paiement pour balance_txn_id={bal.balance_txn_id}"
+        )
 
-    if invoice.status == Invoice.PAID:
-        balance_txn.is_settled = True
-        balance_txn.save(update_fields=["is_settled"])
+    # ---------------------------------------------------
+    # 🛑 Idempotence : settlement déjà effectué
+    # ---------------------------------------------------
+    if bal.is_settled:
+        if webhook_event:
+            _webhook_status_update(
+                webhook_event,
+                is_fully_completed=True,
+                message="✅ Settlement déjà effectué (idempotent)"
+            )
         return
 
-    payment, _ = Payment.objects.update_or_create(
+    # ---------------------------------------------------
+    # 📄 Récupération de la facture liée
+    # ---------------------------------------------------
+    invoice = (
+        Invoice.objects
+        .select_for_update()
+        .filter(balance_txn_id=bal.balance_txn_id)
+        .first()
+    )
+
+    if not invoice:
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                "💥 Invoice introuvable pour cette BalanceTransaction"
+            )
+        raise Exception("Invoice introuvable pour cette BalanceTransaction")
+
+    # ---------------------------------------------------
+    # 💳 Création / mise à jour du paiement interne
+    # ---------------------------------------------------
+    payment, created = Payment.objects.update_or_create(
         invoice=invoice,
         defaults={
             "status": Payment.APPROVED,
-            "amount": balance_txn.amount / 100,
-            "currency": balance_txn.currency,
+            # ⚠️ supposé en euros (float). Si tu stockes en centimes → enlève /100
+            "amount": bal.amount / 100,
+            "currency": bal.currency,
             "eleve": invoice.demande_paiement.eleve,
             "professeur": invoice.demande_paiement.user.professeur,
         }
     )
 
-    # 📄 Facture
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"✅ Paiement ID {payment.id} → status APPROVED"
+        )
+
+    # ---------------------------------------------------
+    # 📄 Mise à jour de la facture
+    # ---------------------------------------------------
     invoice.status = Invoice.PAID
     invoice.save(update_fields=["status"])
 
-    # 🧾 Demande paiement
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"✅ Facture ID {invoice.id} → status PAID"
+        )
+
+    # ---------------------------------------------------
+    # 🧾 Mise à jour de la demande de paiement
+    # ---------------------------------------------------
     Demande_paiement.objects.filter(
         id=invoice.demande_paiement_id
-    ).update(statut_demande=Demande_paiement.REALISER)
+    ).update(
+        statut_demande=Demande_paiement.REALISER
+    )
 
-    # 🕒 Horaires
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"✅ Demande_paiement ID {invoice.demande_paiement_id} → REALISER"
+        )
+
+    # ---------------------------------------------------
+    # 🕒 Association des horaires au paiement
+    # ---------------------------------------------------
     Horaire.objects.filter(
         demande_paiement_id=invoice.demande_paiement_id
     ).update(payment=payment)
 
-    # 🔒 Settlement final
-    balance_txn.is_settled = True
-    balance_txn.save(update_fields=["is_settled"])
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            "✅ Horaires liés au paiement"
+        )
+
+    # ---------------------------------------------------
+    # ✅ Marquage FINAL du settlement
+    # ---------------------------------------------------
+    bal.is_settled = True
+    bal.save(update_fields=["is_settled", "updated_at"])
+
+    if webhook_event:
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=True,
+            message="✅ Settlement paiement terminé avec succès"
+        )
+
+    
+
 
 
 
