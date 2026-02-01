@@ -1753,7 +1753,7 @@ def stripe_webhook(request):
              
 
             # ==================== REMBOURSEMENTS =========================
-            'refund.created': handle_refund_created, # Pas encore traiter, 1er Webhook suite à stripe.Refund.create() mais pour refund total seulement
+            'refund.created': handle_refund_created, #  traiter, 1er Webhook suite à stripe.Refund.create() mais pour refund total seulement
             'charge.refunded': handle_charge_refunded_unified, # Pas encore traiter, ⚠️ il est OBSOLÈTE
             'refund.updated': handle_refund_updated, # Pas encore traiter
             'charge.refund.updated': handle_charge_refund_updated_unified, # Pas encore traiter , 3° suivie du refundpas important
@@ -3534,7 +3534,7 @@ def handle_payment_intent_created( user_admin, data_object, webhook_event):
         _webhook_status_update(webhook_event, is_fully_completed=False, 
                                        message=f"❌ Erreur globale dans handle_payment_intent_created : {e}")
 
-#
+
 def handle_refund_created(user_admin, data_object, webhook_event):
     """
     🔔 Gestion du webhook Stripe : charge.updated
@@ -4790,124 +4790,6 @@ def handle_payment_settlement(bal):
 
 
 
-# @transaction.atomic
-# def handle_transfer_settlement(bal):
-#     """
-  
-#     """
-
-#     # ---------------------------------------------------
-#     # 🔎 Récupération du webhook associé (si existant)
-#     # ---------------------------------------------------
-#     webhook_event = WebhookEvent.objects.filter(
-#         event_id=bal.balance_txn_id
-#     ).first()
-
-#     if webhook_event:
-#         append_webhook_log(
-#             webhook_event,
-#             f"🔁 Début settlement transfer pour balance_txn_id={bal.balance_txn_id}"
-#         )
-
-#     # ---------------------------------------------------
-#     # 🛑 Idempotence : settlement déjà effectué
-#     # ---------------------------------------------------
-#     if bal.is_settled:
-#         if webhook_event:
-#             _webhook_status_update(
-#                 webhook_event,
-#                 is_fully_completed=True,
-#                 message="✅ Settlement transfer déjà effectué (idempotent)"
-#             )
-#         return
-
-
-#     # ------------------------------------------------------------------
-#     # 2️⃣ Verrouillage de la facture de transfert associée
-#     # ------------------------------------------------------------------
-#     invoice_transfert = (
-#         InvoiceTransfert.objects
-#         .select_for_update()
-#         .filter(balance_transaction=bal.balance_txn_id)
-#         .first()
-#     )
-#     append_webhook_log(
-#             webhook_event,
-#             f"🔁 Verrouillage de la facture de transfert associée ID={invoice_transfert.id}"
-#         )
-
-#     if not invoice_transfert:
-#         append_webhook_log(
-#             webhook_event,
-#            f"❌ [TRANSFER] InvoiceTransfert introuvable "
-#         )
-#         return
-    
-#     # ------------------------------------------------------------------
-#     # 3️⃣ Normalisation du montant
-#     # Stripe envoie souvent les transfers en négatif
-#     # ------------------------------------------------------------------
-#     amount = abs(bal.amount) / 100
-
-
-#     # ------------------------------------------------------------------
-#     # 4️⃣ Création / mise à jour du Transfer interne
-#     # ------------------------------------------------------------------
-#     transfer, created = Transfer.objects.update_or_create(
-#         invoice_transfert=invoice_transfert,
-#         defaults={
-#             "status": Transfer.APPROVED,  # transfert validé côté Stripe
-#             "amount": amount,
-#             "currency": bal.currency,
-#             "user_transfer_to": invoice_transfert.user_professeur,
-#             "stripe_transfer_id": invoice_transfert.stripe_transfer_id if invoice_transfert.stripe_transfer_id else None
-#         }
-#     )
-
-#     append_webhook_log(
-#             webhook_event,
-#            f"✅ Création / mise à jour du Transfer ID ={transfer.id}"
-#         )
-
-#     # ------------------------------------------------------------------
-#     # 5️⃣ Mise à jour de la facture de transfert (logique métier)
-#     # ------------------------------------------------------------------
-#     invoice_transfert.status = InvoiceTransfert.TRANSFERRED
-#     invoice_transfert.balance_transaction = bal.balance_txn_id
-#     invoice_transfert.save(update_fields=["status", "balance_transaction"])
-#     append_webhook_log(
-#             webhook_event,
-#            f"✅ Mise à jour de la facture de transfert (logique métier) ID ={invoice_transfert.id}"
-#         )
-
-
-#     # 🧾 Accord de règlement
-#     if invoice_transfert.accord_reglement:
-#         AccordReglement.objects.filter(
-#             id=invoice_transfert.accord_reglement_id
-#         ).update(status=AccordReglement.IN_PROGRESS)
-#         append_webhook_log(
-#             webhook_event,
-#            f"✅ Mise à jour de l'AccordReglement ID ={invoice_transfert.accord_reglement_id}"
-#         )
-
-
-#     # la mise à jour des payments liés (reglement_realise, accord_reglement_id)se fait suite au payout.succeed
-
-#     # 🔒 Settlement final
-#     bal.is_settled = True
-#     bal.save(update_fields=["is_settled"])
-
-#     _webhook_status_update(
-#                 webhook_event,
-#                 is_fully_completed=True,
-#                 message="✅ Finalisation du settlement transfer"
-#                         f"[TRANSFER] Settlement OK | "
-#                         f"invoice_transfert={invoice_transfert.id} | "
-#                         f"transfer={transfer.id} | "
-#                         f"amount={amount} {bal.currency}"
-#             )
-
 @transaction.atomic
 def handle_transfer_settlement(bal):
     """
@@ -5046,92 +4928,237 @@ def handle_transfer_settlement(bal):
             )
         )
     
-    if not STRIPE_LIVE_MODE:
-        transfer_id = invoice_transfert.stripe_transfer_id # ID Stripe du transfer
-        # je veux manuellement créer payout.created
-        pass
-
 
 
 @transaction.atomic
-def handle_refund_settlement(balance_txn):
+def handle_refund_settlement(bal):
     """
-    💸 Settlement métier d’un REFUND Stripe
+    💸 Settlement d'un REFUND Stripe devenu AVAILABLE
 
+    Ce handler est appelé depuis `balance.available`
+    lorsque Stripe confirme que le remboursement est
+    définitivement pris en compte côté solde.
+
+    🎯 Objectifs :
+    - Finaliser le RefundPayment interne
+    - Mettre à jour l'AccordRemboursement si tous les refunds sont prêts
+    - Garantir l'idempotence et la cohérence comptable
     """
 
-    # ------------------------------------------------------------------
-    # 0️⃣ Idempotence forte (webhooks Stripe = répétables)
-    # ------------------------------------------------------------------
-    if balance_txn.is_settled:
-        return  # déjà traité → sortie silencieuse
+    # ---------------------------------------------------
+    # 🔎 Récupération du webhook associé (si existant)
+    # ⚠️ event_id != balance_txn_id chez Stripe
+    # → utilisé ici uniquement pour le logging interne
+    # ---------------------------------------------------
+    webhook_event = WebhookEvent.objects.filter(
+        event_id=bal.balance_txn_id
+    ).first()
 
-    # ------------------------------------------------------------------
-    # 2️⃣ Verrouillage de la facture de transfert associée
-    # ------------------------------------------------------------------
-    invoice_transfert = (
-        InvoiceTransfert.objects
-        .select_for_update()
-        .filter(balance_transaction=balance_txn.balance_txn_id)
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"🔁 Début settlement REFUND pour balance_txn_id={bal.balance_txn_id}"
+        )
+
+    # ---------------------------------------------------
+    # 🛑 Idempotence — settlement déjà effectué
+    # ---------------------------------------------------
+    if bal.is_settled:
+        if webhook_event:
+            _webhook_status_update(
+                webhook_event,
+                is_fully_completed=True,
+                message="✅ Settlement refund déjà effectué (idempotent)"
+            )
+        return
+
+    # ---------------------------------------------------
+    # 💰 Normalisation du montant
+    # Stripe renvoie souvent les refunds en négatif
+    # ---------------------------------------------------
+    amount = abs(bal.amount) / 100  # centimes → devise
+
+    # ---------------------------------------------------
+    # 🔄 Mise à jour du RefundPayment interne
+    # ---------------------------------------------------
+    refund_payment = RefundPayment.objects.filter(
+        balance_txn_id=bal.balance_txn_id
+    ).first()
+
+    if not refund_payment:
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                "❌ RefundPayment introuvable pour cette balance_transaction"
+            )
+        return
+
+    refund_payment.montant = amount
+    refund_payment.status = RefundPayment.APPROVED
+    refund_payment.save(update_fields=["montant", "status"])
+
+    if webhook_event:
+        append_webhook_log(
+            webhook_event,
+            f"✅ RefundPayment ID={refund_payment.id} validé (APPROVED)"
+        )
+
+    # ---------------------------------------------------
+    # 🔎 Récupération du détail d'accord lié au paiement
+    # ---------------------------------------------------
+    detail = (
+        DetailAccordRemboursement.objects
+        .select_related("accord")
+        .filter(payment=refund_payment.payment)
         .first()
     )
 
-    if not invoice_transfert:
-        # ❌ Pas d’exception : on log et on sort
-        logger.warning(
-            f"[TRANSFER] InvoiceTransfert introuvable "
-            f"(balance_txn_id={balance_txn.balance_txn_id})"
-        )
+    # Aucun accord associé → rien à mettre à jour
+    if not detail:
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                "ℹ️ Aucun DetailAccordRemboursement associé à ce paiement"
+            )
+        bal.is_settled = True
+        bal.save(update_fields=["is_settled"])
         return
-    
-    # ------------------------------------------------------------------
-    # 3️⃣ Normalisation du montant
-    # Stripe envoie souvent les transfers en négatif
-    # ------------------------------------------------------------------
-    amount = abs(balance_txn.amount) / 100
+
+    # ---------------------------------------------------
+    # 🔗 Lien refund → détail (si pas déjà fait)
+    # ---------------------------------------------------
+    if detail.refund_payment_id != refund_payment.id:
+        detail.refund_payment_id = refund_payment.id
+        detail.save(update_fields=["refund_payment_id"])
+
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                f"🔗 DetailAccordRemboursement ID={detail.id} "
+                f"lié au RefundPayment ID={refund_payment.id}"
+            )
+
+    accord = detail.accord
+
+    # ---------------------------------------------------
+    # 🔍 Vérification globale de l'accord
+    # Tous les détails ont-ils un refund ?
+    # ---------------------------------------------------
+    has_pending_refunds = accord.details.filter(
+        refund_payment_id__isnull=True
+    ).exists()
+
+    # ---------------------------------------------------
+    # ✅ Passage de l'accord en IN_PROGRESS
+    # (tous les refunds Stripe sont confirmés)
+    # ---------------------------------------------------
+    if not has_pending_refunds and accord.status != AccordRemboursement.COMPLETED:
+        accord.status = AccordRemboursement.IN_PROGRESS
+        accord.save(update_fields=["status"])
+
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                f"🤝 AccordRemboursement ID={accord.id} → IN_PROGRESS"
+            )
+
+    # ---------------------------------------------------
+    # 🔒 Settlement final de la BalanceTransaction
+    # ---------------------------------------------------
+    bal.is_settled = True
+    bal.save(update_fields=["is_settled"])
+
+    if webhook_event:
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=True,
+            message="✅ Settlement refund achevé avec succès"
+        )
 
 
-    # ------------------------------------------------------------------
-    # 4️⃣ Création / mise à jour du Transfer interne
-    # ------------------------------------------------------------------
-    transfer, created = Transfer.objects.update_or_create(
-        invoice_transfert=invoice_transfert,
-        defaults={
-            "status": Transfer.APPROVED,  # transfert validé côté Stripe
-            "amount": amount,
-            "currency": balance_txn.currency,
-            "stripe_transfer_id": balance_txn.balance_txn_id,
-            "user_transfer_to": invoice_transfert.user_professeur,
-        }
+
+from django.db import transaction
+
+@transaction.atomic
+def update_accord_remboursement_after_refund(refund_payment):
+    """
+    🔄 Mise à jour d'un AccordRemboursement suite à un refund Stripe
+
+    Logique :
+    - Lier le refund au DetailAccordRemboursement
+    - Vérifier si tous les détails ont un refund_payment_id
+    - Passer l'accord en IN_PROGRESS si complet
+    """
+
+    # ---------------------------------------------------
+    # 🔎 Récupération du détail lié au paiement remboursé
+    # ---------------------------------------------------
+    detail = (
+        DetailAccordRemboursement.objects
+        .select_related("accord")
+        .filter(payment=refund_payment.payment)
+        .first()
     )
 
-    # ------------------------------------------------------------------
-    # 5️⃣ Mise à jour de la facture de transfert (logique métier)
-    # ------------------------------------------------------------------
-    invoice_transfert.status = InvoiceTransfert.TRANSFERRED
-    invoice_transfert.stripe_transfer_id = balance_txn.balance_txn_id
-    invoice_transfert.save(update_fields=["status", "stripe_transfer_id"])
+    if not detail:
+        # Rien à mettre à jour → idempotence
+        return
 
-    # 🧾 Accord de règlement
+    # ---------------------------------------------------
+    # 🔗 Lien refund → détail
+    # ---------------------------------------------------
+    if detail.refund_payment_id != refund_payment.id:
+        detail.refund_payment_id = refund_payment.id
+        detail.save(update_fields=["refund_payment_id"])
+
+    accord = detail.accord
+
+    # ---------------------------------------------------
+    # 🔍 Vérification : reste-t-il des refunds manquants ?
+    # ---------------------------------------------------
+    has_pending_refunds = accord.details.filter(
+        refund_payment_id__isnull=True
+    ).exists()
+
+    # ---------------------------------------------------
+    # ✅ Tous les refunds sont maintenant liés
+    # ---------------------------------------------------
+    if not has_pending_refunds and accord.status != AccordRemboursement.IN_PROGRESS:
+        accord.status = AccordRemboursement.IN_PROGRESS
+        accord.save(update_fields=["status"])
+
+
     if invoice_transfert.accord_reglement:
         AccordReglement.objects.filter(
             id=invoice_transfert.accord_reglement_id
         ).update(status=AccordReglement.IN_PROGRESS)
 
+        if webhook_event:
+            append_webhook_log(
+                webhook_event,
+                f"🤝 AccordReglement mis à jour ID={invoice_transfert.accord_reglement_id}"
+            )
 
-    # 🔒 Settlement final
-    balance_txn.is_settled = True
-    balance_txn.save(update_fields=["is_settled"])
+    # ---------------------------------------------------
+    # 🔒 Settlement final de la BalanceTransaction
+    # ---------------------------------------------------
+    bal.is_settled = True
+    bal.save(update_fields=["is_settled"])
 
-    # ------------------------------------------------------------------
-    # 8️⃣ Audit log final
-    # ------------------------------------------------------------------
-    logger.info(
-        f"[TRANSFER] Settlement OK | "
-        f"invoice_transfert={invoice_transfert.id} | "
-        f"transfer={transfer.id} | "
-        f"amount={amount} {balance_txn.currency}"
-    )
+    if webhook_event:
+        _webhook_status_update(
+            webhook_event,
+            is_fully_completed=True,
+            message=(
+                "✅ Settlement TRANSFER finalisé | "
+                f"invoice_transfert={invoice_transfert.id} | "
+                f"transfer={transfer.id} | "
+                f"amount={amount} {bal.currency}"
+            )
+        )
+
+
+
 
 def analyze_balance_cause(balance): # non utilisé
     """

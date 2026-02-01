@@ -753,6 +753,7 @@ class DetailAccordRemboursement(models.Model):
         blank=True
     )  # Montant remboursé
     description = models.TextField(null=True, blank=True)  # Libellé
+    refund_payment_id = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"Détail Accord Remboursement - Accord ID: {self.accord.id}"
