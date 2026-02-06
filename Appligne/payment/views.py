@@ -4523,66 +4523,189 @@ def update_refund_status_in_database(refund_id, status, failure_reason=None):
 
 
 
+# def handle_balance_available(user_admin, data_object, webhook_event):
+#     """
+#     💰 Gestion de l'événement Stripe `balance.available`
+
+#     Ce webhook est déclenché lorsque des fonds deviennent disponibles sur le compte Stripe
+#     (en général 2-7 jours après une charge réussie).
+
+#     ⚡ Objectif :
+#     - Identifier les transactions internes (BalanceTransaction) encore marquées comme non disponibles
+#     - Vérifier leur statut réel chez Stripe
+#     - Effectuer le settlement métier (finaliser paiement, transfert ou remboursement)
+#     - Marquer les transactions comme disponibles
+#     - Assurer l'idempotence et la cohérence comptable
+#     """
+
+#     # ---------------------------------------------------
+#     # 🔔 Signal reçu
+#     # ---------------------------------------------------
+#     append_webhook_log(
+#         webhook_event,
+#         "📩 balance.available reçu — déclenchement de la vérification des transactions pending"
+#     )
+
+#     # ---------------------------------------------------
+#     # 🔁 Étape 2 — Sélection des transactions internes
+#     # ---------------------------------------------------
+#     # Récupère toutes les BalanceTransaction encore non finalisées
+#     # - is_available=False : fonds pas encore marqués disponibles
+#     # - status="pending" : statut Stripe connu au moment de charge.succeeded
+#     # select_for_update() : verrou DB pour éviter les conflits en cas de webhooks concurrents
+#     pending_balances = (
+#         BalanceTransaction.objects
+#         .select_for_update()
+#         .filter(
+#             is_available=False,
+#             status="pending"
+#         )
+#     )
+
+#     # ---------------------------------------------------
+#     # 💤 Aucun travail à faire
+#     # ---------------------------------------------------
+#     if not pending_balances.exists():
+#         append_webhook_log(
+#             webhook_event,
+#             "ℹ️ Aucune BalanceTransaction pending à vérifier"
+#         )
+#         _webhook_status_update(webhook_event, True, "Rien à traiter (idempotent)")
+#         return HttpResponse(status=200)
+
+#     # ---------------------------------------------------
+#     # 🔁 Étape 4 — Boucle principale : vérification et settlement
+#     # ---------------------------------------------------
+#     append_webhook_log(
+#         webhook_event,
+#         f"📊 Vérification de {pending_balances.count()} BalanceTransaction(s) pending"
+#     )
+
+#     # Transaction atomique : rollback si une erreur survient
+#     with transaction.atomic():
+#         for bal in pending_balances:
+
+#             append_webhook_log(
+#                 webhook_event,
+#                 f"🔍 Vérification Stripe balance_txn_id={bal.balance_txn_id}"
+#             )
+
+#             # ---------------------------------------------------
+#             # 🌐 Vérification du statut réel chez Stripe
+#             # ---------------------------------------------------
+#             # On recharge la transaction via l'API Stripe pour vérifier si elle est maintenant disponible
+#             stripe_txn = stripe.BalanceTransaction.retrieve(
+#                 bal.balance_txn_id
+#             )
+
+#             # ⏳ Si elle n'est pas encore disponible, on ignore pour l'instant
+#             if stripe_txn.status != "available":
+#                 append_webhook_log(
+#                     webhook_event,
+#                     f"⏳ Toujours pending chez Stripe"
+#                 )
+#                 continue
+
+#             # ---------------------------------------------------
+#             # 💼 Settlement métier
+#             # ---------------------------------------------------
+#             # Ici l'argent est effectivement disponible
+#             # On applique la logique métier selon le type de transaction
+#             try:
+#                 if bal.event_type == "charge":
+#                     # Paiement client → finaliser facture, cours, horaires, etc.
+#                     handle_payment_settlement(bal)
+#                 elif bal.event_type == 'transfer':
+#                     # Transfert vers compte connecté
+#                     handle_transfer_settlement(bal)
+#                 elif bal.event_type == 'refund':
+#                     # Remboursement confirmé
+#                     handle_refund_settlement(bal)
+#                 # elif bal.event_type == 'dispute':
+#                 #     handle_dispute_settlement(bal)
+#                 # elif bal.event_type == 'adjustment':
+#                 #     handle_adjustment_settlement(bal)
+
+#                 # ---------------------------------------------------
+#                 # ✅ Marquage interne : transaction finalisée
+#                 # ---------------------------------------------------
+#                 bal.status = "available"
+#                 bal.is_available = True
+#                 bal.available_on = timezone.now()
+#                 bal.save(update_fields=[
+#                     "status",
+#                     "is_available",
+#                     "available_on",
+#                     "updated_at"
+#                 ])
+
+#                 append_webhook_log(
+#                     webhook_event,
+#                     f"✅ BalanceTransaction {bal.balance_txn_id} finalisée"
+#                 )
+
+#             # ---------------------------------------------------
+#             # 💥 Gestion des erreurs critiques
+#             # ---------------------------------------------------
+#             # Une erreur stoppe tout le batch et rollback la transaction
+#             except Exception as e:
+#                 append_webhook_log(
+#                     webhook_event,
+#                     f"💥 Erreur settlement {bal.balance_txn_id} : {str(e)}"
+#                 )
+#                 raise  # rollback transaction.atomic()7
+
 def handle_balance_available(user_admin, data_object, webhook_event):
     """
     💰 Gestion de l'événement Stripe `balance.available`
-
-    Ce webhook est déclenché lorsque des fonds deviennent disponibles sur le compte Stripe
-    (en général 2-7 jours après une charge réussie).
-
-    ⚡ Objectif :
-    - Identifier les transactions internes (BalanceTransaction) encore marquées comme non disponibles
-    - Vérifier leur statut réel chez Stripe
-    - Effectuer le settlement métier (finaliser paiement, transfert ou remboursement)
-    - Marquer les transactions comme disponibles
-    - Assurer l'idempotence et la cohérence comptable
     """
 
-    # ---------------------------------------------------
-    # 🔔 Signal reçu
-    # ---------------------------------------------------
     append_webhook_log(
         webhook_event,
         "📩 balance.available reçu — déclenchement de la vérification des transactions pending"
     )
 
     # ---------------------------------------------------
-    # 🔁 Étape 2 — Sélection des transactions internes
+    # 🔁 Transaction atomique OBLIGATOIRE pour select_for_update
     # ---------------------------------------------------
-    # Récupère toutes les BalanceTransaction encore non finalisées
-    # - is_available=False : fonds pas encore marqués disponibles
-    # - status="pending" : statut Stripe connu au moment de charge.succeeded
-    # select_for_update() : verrou DB pour éviter les conflits en cas de webhooks concurrents
-    pending_balances = (
-        BalanceTransaction.objects
-        .select_for_update()
-        .filter(
-            is_available=False,
-            status="pending"
-        )
-    )
+    with transaction.atomic():
 
-    # ---------------------------------------------------
-    # 💤 Aucun travail à faire
-    # ---------------------------------------------------
-    if not pending_balances.exists():
+        # ---------------------------------------------------
+        # 🔁 Sélection des transactions internes pending
+        # ---------------------------------------------------
+        #     # Récupère toutes les BalanceTransaction encore non finalisées
+        # - is_available=False : fonds pas encore marqués disponibles
+        # - status="pending" : statut Stripe connu au moment de charge.succeeded
+        # select_for_update() : verrou DB pour éviter les conflits en cas de webhooks concurrents
+        # select_for_update() doit être utilisé dans transaction si non => erreur
+        pending_balances = (
+            BalanceTransaction.objects
+            .select_for_update()
+            .filter(
+                is_available=False,
+                status="pending"
+            )
+        )
+
+        # ---------------------------------------------------
+        # 💤 Aucun travail à faire
+        # ---------------------------------------------------
+        if not pending_balances.exists():
+            append_webhook_log(
+                webhook_event,
+                "ℹ️ Aucune BalanceTransaction pending à vérifier"
+            )
+            _webhook_status_update(webhook_event, True, "Rien à traiter (idempotent)")
+            return HttpResponse(status=200)
+
         append_webhook_log(
             webhook_event,
-            "ℹ️ Aucune BalanceTransaction pending à vérifier"
+            f"📊 Vérification de {pending_balances.count()} BalanceTransaction(s) pending"
         )
-        _webhook_status_update(webhook_event, True, "Rien à traiter (idempotent)")
-        return HttpResponse(status=200)
 
-    # ---------------------------------------------------
-    # 🔁 Étape 4 — Boucle principale : vérification et settlement
-    # ---------------------------------------------------
-    append_webhook_log(
-        webhook_event,
-        f"📊 Vérification de {pending_balances.count()} BalanceTransaction(s) pending"
-    )
-
-    # Transaction atomique : rollback si une erreur survient
-    with transaction.atomic():
+        # ---------------------------------------------------
+        # 🔁 Boucle principale : vérification et settlement
+        # ---------------------------------------------------
         for bal in pending_balances:
 
             append_webhook_log(
@@ -4590,45 +4713,36 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                 f"🔍 Vérification Stripe balance_txn_id={bal.balance_txn_id}"
             )
 
-            # ---------------------------------------------------
-            # 🌐 Vérification du statut réel chez Stripe
-            # ---------------------------------------------------
-            # On recharge la transaction via l'API Stripe pour vérifier si elle est maintenant disponible
             stripe_txn = stripe.BalanceTransaction.retrieve(
                 bal.balance_txn_id
             )
 
-            # ⏳ Si elle n'est pas encore disponible, on ignore pour l'instant
+            # ⏳ Toujours pending chez Stripe
             if stripe_txn.status != "available":
                 append_webhook_log(
                     webhook_event,
-                    f"⏳ Toujours pending chez Stripe"
+                    "⏳ Toujours pending chez Stripe"
                 )
                 continue
 
-            # ---------------------------------------------------
-            # 💼 Settlement métier
-            # ---------------------------------------------------
-            # Ici l'argent est effectivement disponible
-            # On applique la logique métier selon le type de transaction
             try:
+                # --------------------------------------------
+                # 💼 Settlement métier
+                # --------------------------------------------
                 if bal.event_type == "charge":
-                    # Paiement client → finaliser facture, cours, horaires, etc.
                     handle_payment_settlement(bal)
-                elif bal.event_type == 'transfer':
-                    # Transfert vers compte connecté
+                elif bal.event_type == "transfer":
                     handle_transfer_settlement(bal)
-                elif bal.event_type == 'refund':
-                    # Remboursement confirmé
-                    handle_refund_settlement(bal)
+                elif bal.event_type == "refund":
+                    handle_refund_settlement(bal)7
                 # elif bal.event_type == 'dispute':
                 #     handle_dispute_settlement(bal)
                 # elif bal.event_type == 'adjustment':
                 #     handle_adjustment_settlement(bal)
 
-                # ---------------------------------------------------
-                # ✅ Marquage interne : transaction finalisée
-                # ---------------------------------------------------
+                # --------------------------------------------
+                # ✅ Finalisation interne
+                # --------------------------------------------
                 bal.status = "available"
                 bal.is_available = True
                 bal.available_on = timezone.now()
@@ -4644,16 +4758,13 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                     f"✅ BalanceTransaction {bal.balance_txn_id} finalisée"
                 )
 
-            # ---------------------------------------------------
-            # 💥 Gestion des erreurs critiques
-            # ---------------------------------------------------
-            # Une erreur stoppe tout le batch et rollback la transaction
             except Exception as e:
                 append_webhook_log(
                     webhook_event,
                     f"💥 Erreur settlement {bal.balance_txn_id} : {str(e)}"
                 )
-                raise  # rollback transaction.atomic()
+                raise  # rollback complet
+
 
 
 
@@ -5079,83 +5190,83 @@ def handle_refund_settlement(bal):
 
 from django.db import transaction
 
-@transaction.atomic
-def update_accord_remboursement_after_refund(refund_payment):
-    """
-    🔄 Mise à jour d'un AccordRemboursement suite à un refund Stripe
+# # @transaction.atomic
+# # def update_accord_remboursement_after_refund(refund_payment):
+# #     """
+# #     🔄 Mise à jour d'un AccordRemboursement suite à un refund Stripe
 
-    Logique :
-    - Lier le refund au DetailAccordRemboursement
-    - Vérifier si tous les détails ont un refund_payment_id
-    - Passer l'accord en IN_PROGRESS si complet
-    """
+# #     Logique :
+# #     - Lier le refund au DetailAccordRemboursement
+# #     - Vérifier si tous les détails ont un refund_payment_id
+# #     - Passer l'accord en IN_PROGRESS si complet
+# #     """
 
-    # ---------------------------------------------------
-    # 🔎 Récupération du détail lié au paiement remboursé
-    # ---------------------------------------------------
-    detail = (
-        DetailAccordRemboursement.objects
-        .select_related("accord")
-        .filter(payment=refund_payment.payment)
-        .first()
-    )
+# #     # ---------------------------------------------------
+# #     # 🔎 Récupération du détail lié au paiement remboursé
+# #     # ---------------------------------------------------
+# #     detail = (
+# #         DetailAccordRemboursement.objects
+# #         .select_related("accord")
+# #         .filter(payment=refund_payment.payment)
+# #         .first()
+# #     )
 
-    if not detail:
-        # Rien à mettre à jour → idempotence
-        return
+# #     if not detail:
+# #         # Rien à mettre à jour → idempotence
+# #         return
 
-    # ---------------------------------------------------
-    # 🔗 Lien refund → détail
-    # ---------------------------------------------------
-    if detail.refund_payment_id != refund_payment.id:
-        detail.refund_payment_id = refund_payment.id
-        detail.save(update_fields=["refund_payment_id"])
+# #     # ---------------------------------------------------
+# #     # 🔗 Lien refund → détail
+# #     # ---------------------------------------------------
+# #     if detail.refund_payment_id != refund_payment.id:
+# #         detail.refund_payment_id = refund_payment.id
+# #         detail.save(update_fields=["refund_payment_id"])
 
-    accord = detail.accord
+# #     accord = detail.accord
 
-    # ---------------------------------------------------
-    # 🔍 Vérification : reste-t-il des refunds manquants ?
-    # ---------------------------------------------------
-    has_pending_refunds = accord.details.filter(
-        refund_payment_id__isnull=True
-    ).exists()
+# #     # ---------------------------------------------------
+# #     # 🔍 Vérification : reste-t-il des refunds manquants ?
+# #     # ---------------------------------------------------
+# #     has_pending_refunds = accord.details.filter(
+# #         refund_payment_id__isnull=True
+# #     ).exists()
 
-    # ---------------------------------------------------
-    # ✅ Tous les refunds sont maintenant liés
-    # ---------------------------------------------------
-    if not has_pending_refunds and accord.status != AccordRemboursement.IN_PROGRESS:
-        accord.status = AccordRemboursement.IN_PROGRESS
-        accord.save(update_fields=["status"])
+# #     # ---------------------------------------------------
+# #     # ✅ Tous les refunds sont maintenant liés
+# #     # ---------------------------------------------------
+# #     if not has_pending_refunds and accord.status != AccordRemboursement.IN_PROGRESS:
+# #         accord.status = AccordRemboursement.IN_PROGRESS
+# #         accord.save(update_fields=["status"])
 
 
-    if invoice_transfert.accord_reglement:
-        AccordReglement.objects.filter(
-            id=invoice_transfert.accord_reglement_id
-        ).update(status=AccordReglement.IN_PROGRESS)
+# #     if invoice_transfert.accord_reglement:
+# #         AccordReglement.objects.filter(
+# #             id=invoice_transfert.accord_reglement_id
+# #         ).update(status=AccordReglement.IN_PROGRESS)
 
-        if webhook_event:
-            append_webhook_log(
-                webhook_event,
-                f"🤝 AccordReglement mis à jour ID={invoice_transfert.accord_reglement_id}"
-            )
+# #         if webhook_event:
+# #             append_webhook_log(
+# #                 webhook_event,
+# #                 f"🤝 AccordReglement mis à jour ID={invoice_transfert.accord_reglement_id}"
+# #             )
 
-    # ---------------------------------------------------
-    # 🔒 Settlement final de la BalanceTransaction
-    # ---------------------------------------------------
-    bal.is_settled = True
-    bal.save(update_fields=["is_settled"])
+#     # ---------------------------------------------------
+#     # 🔒 Settlement final de la BalanceTransaction
+#     # ---------------------------------------------------
+#     bal.is_settled = True
+#     bal.save(update_fields=["is_settled"])
 
-    if webhook_event:
-        _webhook_status_update(
-            webhook_event,
-            is_fully_completed=True,
-            message=(
-                "✅ Settlement TRANSFER finalisé | "
-                f"invoice_transfert={invoice_transfert.id} | "
-                f"transfer={transfer.id} | "
-                f"amount={amount} {bal.currency}"
-            )
-        )
+#     if webhook_event:
+#         _webhook_status_update(
+#             webhook_event,
+#             is_fully_completed=True,
+#             message=(
+#                 "✅ Settlement TRANSFER finalisé | "
+#                 f"invoice_transfert={invoice_transfert.id} | "
+#                 f"transfer={transfer.id} | "
+#                 f"amount={amount} {bal.currency}"
+#             )
+#         )
 
 
 
