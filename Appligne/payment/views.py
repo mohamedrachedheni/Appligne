@@ -4734,7 +4734,7 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                 elif bal.event_type == "transfer":
                     handle_transfer_settlement(bal)
                 elif bal.event_type == "refund":
-                    handle_refund_settlement(bal)7
+                    handle_refund_settlement(bal)
                 # elif bal.event_type == 'dispute':
                 #     handle_dispute_settlement(bal)
                 # elif bal.event_type == 'adjustment':
