@@ -4739,7 +4739,6 @@ def handle_balance_available(user_admin, data_object, webhook_event):
                 #     handle_dispute_settlement(bal)
                 # elif bal.event_type == 'adjustment':
                 #     handle_adjustment_settlement(bal)
-
                 # --------------------------------------------
                 # ✅ Finalisation interne
                 # --------------------------------------------
